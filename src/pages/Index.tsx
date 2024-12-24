@@ -1,9 +1,54 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePlanSelection = async (plan: string) => {
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // If user is not logged in, redirect to signup with selected plan
+        navigate('/signup', { state: { selectedPlan: plan } });
+        return;
+      }
+
+      // If user is logged in, update their subscription plan
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_plan: plan })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Plan Selected",
+        description: `You've selected the ${plan} plan.`,
+      });
+
+      // Redirect to dashboard or appropriate page
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error selecting plan:', error);
+      toast({
+        title: "Error",
+        description: "Failed to select plan. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate">
       {/* Navigation */}
@@ -34,7 +79,11 @@ const Index = () => {
           <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto animate-fade-up">
             Instant, accurate contract interpretation for airline professionals. Get the answers you need, when you need them.
           </p>
-          <Button asChild className="animate-fade-up bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold">
+          <Button 
+            asChild 
+            className="animate-fade-up bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold"
+            onClick={() => navigate('/signup')}
+          >
             <Link to="/signup">Get Started Free</Link>
           </Button>
         </div>
@@ -59,7 +108,13 @@ const Index = () => {
                   <PricingFeature text="Basic Features" />
                   <PricingFeature text="No Credit Card Required" />
                 </ul>
-                <Button className="w-full mt-6 bg-white/10 hover:bg-white/20 backdrop-blur-sm">Start Free Trial</Button>
+                <Button 
+                  className="w-full mt-6 bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+                  onClick={() => handlePlanSelection('free')}
+                  disabled={isLoading}
+                >
+                  Start Free Trial
+                </Button>
               </CardContent>
             </Card>
 
@@ -75,7 +130,11 @@ const Index = () => {
                   <PricingFeature text="All Features" />
                   <PricingFeature text="Priority Support" />
                 </ul>
-                <Button className="w-full mt-6 bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold">
+                <Button 
+                  className="w-full mt-6 bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold"
+                  onClick={() => handlePlanSelection('monthly')}
+                  disabled={isLoading}
+                >
                   Choose Monthly
                 </Button>
               </CardContent>
@@ -97,7 +156,11 @@ const Index = () => {
                   <PricingFeature text="Priority Support" />
                   <PricingFeature text="Save $10" />
                 </ul>
-                <Button className="w-full mt-6 bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold">
+                <Button 
+                  className="w-full mt-6 bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold"
+                  onClick={() => handlePlanSelection('annual')}
+                  disabled={isLoading}
+                >
                   Choose Annual
                 </Button>
               </CardContent>
