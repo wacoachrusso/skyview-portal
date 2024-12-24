@@ -19,12 +19,22 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     setMessage("");
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (message.trim() && !isLoading) {
+        handleSubmit(e);
+      }
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="p-4 bg-[#151821] border-t border-white/10">
       <div className="flex gap-2 items-end max-w-5xl mx-auto">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Message SkyGuide..."
           className="min-h-[50px] resize-none bg-white/5 border-white/10 text-white placeholder:text-gray-400"
         />
