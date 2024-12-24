@@ -4,13 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatList } from "@/components/chat/ChatList";
 import { Message } from "@/types/chat";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Settings, Search, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ChatHeader } from "@/components/chat/ChatHeader";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { useToast } from "@/hooks/use-toast";
-
-// Constants for the application
-const AI_USER_ID = '00000000-0000-0000-0000-000000000000'; // Special UUID for AI messages
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -18,7 +14,6 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,12 +39,9 @@ export default function Chat() {
       if (existingConversation) {
         conversationId = existingConversation.id;
       } else {
-        // Create new conversation
         const { data: newConversation, error: conversationError } = await supabase
           .from('conversations')
-          .insert([
-            { user_id: user.id }
-          ])
+          .insert([{ user_id: user.id }])
           .select()
           .single();
 
@@ -137,13 +129,13 @@ export default function Chat() {
 
       if (error) throw error;
 
-      // Save AI response with the special AI UUID
+      // Save AI response with NULL user_id
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert([
           {
             content: data.response,
-            user_id: AI_USER_ID, // Using the special AI UUID instead of "ai"
+            user_id: null, // Using NULL for AI messages
             role: 'assistant',
             conversation_id: currentConversationId
           }
@@ -165,52 +157,9 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen bg-[#1A1F2C]">
-      <div className="w-80 border-r border-white/10 flex flex-col">
-        <div className="p-4 flex items-center justify-between border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <img src="/placeholder.svg" alt="SkyGuide" className="h-8 w-8" />
-            <span className="text-white font-semibold">SkyGuide</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/10"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <div className="p-4 border-b border-white/10">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conversations..."
-              className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-400"
-            />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {/* Conversation history would go here */}
-        </div>
-      </div>
-      
-      {/* Main Chat Area */}
+      <ChatSidebar />
       <div className="flex-1 flex flex-col">
-        <header className="flex items-center gap-4 p-4 border-b border-white/10">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/')}
-            className="text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl font-semibold text-white">Know Your Contract</h1>
-        </header>
-        
+        <ChatHeader onBack={() => navigate('/')} />
         <main className="flex-1 overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto p-4">
             {messages.length === 0 && (
