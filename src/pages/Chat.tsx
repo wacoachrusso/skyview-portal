@@ -65,7 +65,22 @@ export default function Chat() {
       console.log('User authenticated:', user.id);
       setCurrentUserId(user.id);
       
-      await createNewConversation(user.id);
+      const conversationId = await createNewConversation(user.id);
+      if (conversationId) {
+        // Fetch existing messages for this conversation
+        const { data: existingMessages, error: messagesError } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true });
+
+        if (messagesError) {
+          console.error('Error fetching messages:', messagesError);
+        } else if (existingMessages) {
+          console.log('Loaded existing messages:', existingMessages);
+          setMessages(existingMessages);
+        }
+      }
     };
 
     checkAuth();
@@ -104,6 +119,11 @@ export default function Chat() {
     
     if (!currentUserId || !currentConversationId) {
       console.error('No user ID or conversation ID available', { currentUserId, currentConversationId });
+      toast({
+        title: "Error",
+        description: "Unable to send message. Please try refreshing the page.",
+        variant: "destructive"
+      });
       return;
     }
     
