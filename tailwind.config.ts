@@ -25,12 +25,17 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#2563eb",
+          DEFAULT: "#1a365d",
           foreground: "#ffffff",
         },
         secondary: {
           DEFAULT: "#1e293b",
           foreground: "#ffffff",
+        },
+        brand: {
+          gold: "#D4AF37",
+          navy: "#1a365d",
+          slate: "#334155",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -48,6 +53,10 @@ export default {
           DEFAULT: "#1e293b",
           foreground: "#ffffff",
         },
+      },
+      backgroundImage: {
+        'hero-gradient': 'linear-gradient(135deg, #1a365d 0%, #334155 100%)',
+        'card-gradient': 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
+    --background: 217.2 32.6% 17.5%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
@@ -39,18 +39,10 @@
   }
 }
 
-.hero-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-}
-
 .nav-link {
   @apply px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors;
 }
 
-.btn-primary {
-  @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors;
-}
-
 .card-hover {
-  @apply transition-transform duration-300 hover:-translate-y-1;
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-gold/5;
 }
