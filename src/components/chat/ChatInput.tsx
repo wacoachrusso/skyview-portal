@@ -13,9 +13,13 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting message:', message);
-    if (!message.trim()) return;
+    console.log('ChatInput - Submitting message:', message);
+    if (!message.trim()) {
+      console.log('ChatInput - Empty message, not submitting');
+      return;
+    }
     
+    console.log('ChatInput - Calling onSendMessage with:', message);
     onSendMessage(message);
     setMessage("");
   };
@@ -23,9 +27,15 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      console.log('Enter key pressed, message:', message);
+      console.log('ChatInput - Enter key pressed, message:', message);
       if (message.trim() && !isLoading) {
+        console.log('ChatInput - Submitting via Enter key');
         handleSubmit(e);
+      } else {
+        console.log('ChatInput - Not submitting: empty message or loading', { 
+          messageEmpty: !message.trim(), 
+          isLoading 
+        });
       }
     }
   };
@@ -35,7 +45,10 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       <div className="flex gap-2 items-end max-w-5xl mx-auto">
         <Textarea
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            console.log('ChatInput - Message changed:', e.target.value);
+            setMessage(e.target.value);
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Message SkyGuide..."
           className="min-h-[50px] resize-none bg-white/5 border-white/10 text-white placeholder:text-gray-400"

@@ -46,7 +46,10 @@ export default function Chat() {
   };
 
   const handleNewChat = async () => {
-    if (!currentUserId) return;
+    if (!currentUserId) {
+      console.error('No current user ID available for new chat');
+      return;
+    }
     await createNewConversation(currentUserId);
   };
 
@@ -62,13 +65,11 @@ export default function Chat() {
       console.log('User authenticated:', user.id);
       setCurrentUserId(user.id);
       
-      // Always create a new conversation when mounting the component
       await createNewConversation(user.id);
     };
 
     checkAuth();
 
-    // Subscribe to new messages
     console.log('Setting up real-time subscription...');
     const channel = supabase
       .channel('messages_channel')
@@ -85,6 +86,8 @@ export default function Chat() {
           if (newMessage.conversation_id === currentConversationId) {
             console.log('Adding message to chat:', newMessage);
             setMessages(prev => [...prev, newMessage]);
+          } else {
+            console.log('Message not for current conversation, ignoring');
           }
         }
       )
@@ -97,15 +100,19 @@ export default function Chat() {
   }, [navigate, currentConversationId]);
 
   const handleSendMessage = async (content: string) => {
+    console.log('handleSendMessage called with content:', content);
+    
     if (!currentUserId || !currentConversationId) {
-      console.error('No user ID or conversation ID available');
+      console.error('No user ID or conversation ID available', { currentUserId, currentConversationId });
       return;
     }
     
     console.log('Sending message:', { content, conversationId: currentConversationId });
     setIsLoading(true);
+    
     try {
       // Update conversation's last_message_at
+      console.log('Updating conversation last_message_at');
       const { error: updateError } = await supabase
         .from('conversations')
         .update({ last_message_at: new Date().toISOString() })
