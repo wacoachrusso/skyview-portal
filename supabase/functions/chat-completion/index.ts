@@ -31,12 +31,16 @@ serve(async (req) => {
       body: JSON.stringify({})
     });
 
+    if (!threadResponse.ok) {
+      throw new Error(`Failed to create thread: ${await threadResponse.text()}`);
+    }
+
     const thread = await threadResponse.json();
     console.log('Thread created:', thread.id);
 
     // Add message to thread
     console.log('Adding message to thread...');
-    await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
+    const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -48,6 +52,10 @@ serve(async (req) => {
         content: content
       })
     });
+
+    if (!messageResponse.ok) {
+      throw new Error(`Failed to add message: ${await messageResponse.text()}`);
+    }
 
     // Run the assistant
     console.log('Running assistant...');
@@ -62,6 +70,10 @@ serve(async (req) => {
         assistant_id: assistantId
       })
     });
+
+    if (!runResponse.ok) {
+      throw new Error(`Failed to run assistant: ${await runResponse.text()}`);
+    }
 
     const run = await runResponse.json();
     console.log('Run created:', run.id);
@@ -114,6 +126,10 @@ serve(async (req) => {
       }
     });
 
+    if (!messagesResponse.ok) {
+      throw new Error(`Failed to retrieve messages: ${await messagesResponse.text()}`);
+    }
+
     const messages = await messagesResponse.json();
     const assistantMessage = messages.data[0].content[0].text.value;
     console.log('Assistant response received');
@@ -128,7 +144,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
   }
