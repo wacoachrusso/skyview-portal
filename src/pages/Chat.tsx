@@ -127,28 +127,19 @@ export default function Chat() {
 
       if (userMessageError) throw userMessageError;
 
-      // Get AI response
-      const response = await fetch('https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/chat-completion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({ content })
+      // Get AI response using Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('chat-completion', {
+        body: { content }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-
-      const { response: aiResponse } = await response.json();
+      if (error) throw error;
 
       // Save AI response
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert([
           {
-            content: aiResponse,
+            content: data.response,
             user_id: 'ai',
             role: 'assistant',
             conversation_id: currentConversationId
