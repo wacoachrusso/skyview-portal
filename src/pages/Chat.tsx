@@ -9,6 +9,9 @@ import { ArrowLeft, Settings, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+// Constants for the application
+const AI_USER_ID = '00000000-0000-0000-0000-000000000000'; // Special UUID for AI messages
+
 export default function Chat() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -134,13 +137,13 @@ export default function Chat() {
 
       if (error) throw error;
 
-      // Save AI response
+      // Save AI response with the special AI UUID
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert([
           {
             content: data.response,
-            user_id: 'ai',
+            user_id: AI_USER_ID, // Using the special AI UUID instead of "ai"
             role: 'assistant',
             conversation_id: currentConversationId
           }
