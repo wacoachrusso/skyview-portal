@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send } from "lucide-react";
+import { Mic, Send } from "lucide-react";
 import { useState } from "react";
 
 interface ChatInputProps {
@@ -20,21 +20,31 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 p-4 bg-white/5">
-      <Textarea
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type your message..."
-        className="min-h-[50px] resize-none bg-white/10"
-      />
-      <Button 
-        type="submit" 
-        size="icon"
-        disabled={isLoading || !message.trim()}
-        className="bg-brand-navy hover:bg-brand-navy/90"
-      >
-        <Send className="h-4 w-4" />
-      </Button>
+    <form onSubmit={handleSubmit} className="p-4 bg-[#151821] border-t border-white/10">
+      <div className="flex gap-2 items-end max-w-5xl mx-auto">
+        <Textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Message SkyGuide..."
+          className="min-h-[50px] resize-none bg-white/5 border-white/10 text-white placeholder:text-gray-400"
+        />
+        <Button 
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="text-white hover:bg-white/10"
+        >
+          <Mic className="h-5 w-5" />
+        </Button>
+        <Button 
+          type="submit" 
+          size="icon"
+          disabled={isLoading || !message.trim()}
+          className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white"
+        >
+          <Send className="h-5 w-5" />
+        </Button>
+      </div>
     </form>
   );
 }

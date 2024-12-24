@@ -19,8 +19,8 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
         className={cn(
           "flex max-w-[80%] flex-col gap-1 rounded-lg px-4 py-2",
           isCurrentUser
-            ? "bg-brand-navy text-white"
-            : "bg-gray-100 text-gray-900"
+            ? "bg-[#2563EB] text-white"
+            : "bg-white/5 text-white"
         )}
       >
         <p className="text-sm">{message.content}</p>
