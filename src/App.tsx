@@ -4,6 +4,7 @@ import Index from "@/pages/Index";
 import SignUp from "@/pages/SignUp";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import Chat from "@/pages/Chat";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/chat" element={<Chat />} />
       </Routes>
       <Toaster />
     </Router>
