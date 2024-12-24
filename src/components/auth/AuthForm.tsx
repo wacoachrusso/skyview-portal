@@ -17,10 +17,7 @@ const airlines = [
 
 const jobTitles = [
   "Pilot",
-  "Flight Attendant",
-  "Ground Staff",
-  "Maintenance Technician",
-  "Other"
+  "Flight Attendant"
 ];
 
 interface AuthFormProps {
@@ -121,7 +118,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <Label htmlFor="jobTitle" className="text-gray-200">Select Job Title</Label>
               <Select 
                 value={formData.jobTitle}
@@ -130,9 +127,13 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
                   <SelectValue placeholder="Select Job Title" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-900 border-white/20 text-white z-50">
                   {jobTitles.map((title) => (
-                    <SelectItem key={title} value={title.toLowerCase()}>
+                    <SelectItem 
+                      key={title} 
+                      value={title.toLowerCase()}
+                      className="hover:bg-white/10"
+                    >
                       {title}
                     </SelectItem>
                   ))}
@@ -140,7 +141,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
               </Select>
             </div>
 
-            <div>
+            <div className="relative">
               <Label htmlFor="airline" className="text-gray-200">Select Airline</Label>
               <Select
                 value={formData.airline}
@@ -149,9 +150,13 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
                   <SelectValue placeholder="Select Airline" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-900 border-white/20 text-white z-50">
                   {airlines.map((airline) => (
-                    <SelectItem key={airline} value={airline.toLowerCase()}>
+                    <SelectItem 
+                      key={airline} 
+                      value={airline.toLowerCase()}
+                      className="hover:bg-white/10"
+                    >
                       {airline}
                     </SelectItem>
                   ))}
