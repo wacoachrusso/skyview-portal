@@ -13,34 +13,103 @@ serve(async (req) => {
 
   try {
     const { content } = await req.json()
+    const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Create a thread
+    const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
+      },
+      body: JSON.stringify({})
+    });
+
+    const thread = await threadResponse.json();
+
+    // Add message to thread
+    await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are SkyGuide, an AI assistant specialized in helping airline employees understand their contracts. Be concise, accurate, and helpful. When you are not sure about something, be honest about it.',
-          },
-          { role: 'user', content }
-        ],
-      }),
-    })
+        role: 'user',
+        content: content
+      })
+    });
 
-    const data = await openAIResponse.json()
-    const aiMessage = data.choices[0].message.content
+    // Run the assistant
+    const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
+      },
+      body: JSON.stringify({
+        assistant_id: assistantId
+      })
+    });
+
+    const run = await runResponse.json();
+
+    // Poll for completion
+    let runStatus = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`, {
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'OpenAI-Beta': 'assistants=v2'
+      }
+    });
+    
+    let runStatusData = await runStatus.json();
+    
+    // Wait for completion (with timeout)
+    const startTime = Date.now();
+    const timeout = 30000; // 30 seconds timeout
+    
+    while (runStatusData.status === 'queued' || runStatusData.status === 'in_progress') {
+      if (Date.now() - startTime > timeout) {
+        throw new Error('Request timeout');
+      }
+      
+      // Wait for 1 second before polling again
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      runStatus = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`, {
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'OpenAI-Beta': 'assistants=v2'
+        }
+      });
+      runStatusData = await runStatus.json();
+    }
+
+    if (runStatusData.status !== 'completed') {
+      throw new Error(`Run failed with status: ${runStatusData.status}`);
+    }
+
+    // Get messages
+    const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'OpenAI-Beta': 'assistants=v2'
+      }
+    });
+
+    const messages = await messagesResponse.json();
+    const assistantMessage = messages.data[0].content[0].text.value;
 
     return new Response(
-      JSON.stringify({ response: aiMessage }),
+      JSON.stringify({ response: assistantMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
