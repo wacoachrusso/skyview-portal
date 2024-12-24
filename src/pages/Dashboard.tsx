@@ -1,25 +1,108 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/signup');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+        setUserEmail(user.email);
+        console.log("User logged in:", user.email);
+      } catch (error) {
+        console.error("Error checking user:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "There was a problem loading your information"
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
     checkUser();
-  }, [navigate]);
+  }, [navigate, toast]);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+      toast({
+        title: "Signed out successfully",
+        description: "You have been logged out of your account"
+      });
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "There was a problem signing out"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex items-center justify-center p-4">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate p-8">
-      <h1 className="text-3xl font-bold text-white">Welcome to SkyGuide</h1>
-      <p className="text-gray-200 mt-4">Your dashboard is being set up...</p>
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome to SkyGuide</h1>
+            <p className="text-gray-300">{userEmail}</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleSignOut}
+            className="text-white hover:text-brand-navy"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link to="/chat">
+              <Button 
+                className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold h-24"
+              >
+                <MessageSquare className="h-6 w-6 mr-2" />
+                Start Chatting with AI
+              </Button>
+            </Link>
+            {/* Additional quick action buttons can be added here */}
+          </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Recent Activity</h2>
+          <p className="text-gray-300">Your recent chat history and activities will appear here.</p>
+        </div>
+      </div>
     </div>
   );
 };
