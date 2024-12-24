@@ -16,6 +16,35 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
+  const createNewConversation = async (userId: string) => {
+    try {
+      const { data: newConversation, error: conversationError } = await supabase
+        .from('conversations')
+        .insert([{ user_id: userId }])
+        .select()
+        .single();
+
+      if (conversationError) throw conversationError;
+      
+      setCurrentConversationId(newConversation.id);
+      setMessages([]);
+      
+      return newConversation.id;
+    } catch (error) {
+      console.error('Error creating new conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new conversation",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleNewChat = async () => {
+    if (!currentUserId) return;
+    await createNewConversation(currentUserId);
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -25,51 +54,8 @@ export default function Chat() {
       }
       setCurrentUserId(user.id);
       
-      // Create or get latest conversation
-      const { data: existingConversation } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('last_message_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      let conversationId: string;
-      
-      if (existingConversation) {
-        conversationId = existingConversation.id;
-      } else {
-        const { data: newConversation, error: conversationError } = await supabase
-          .from('conversations')
-          .insert([{ user_id: user.id }])
-          .select()
-          .single();
-
-        if (conversationError) {
-          console.error('Error creating conversation:', conversationError);
-          toast({
-            title: "Error",
-            description: "Failed to create conversation",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        conversationId = newConversation.id;
-      }
-      
-      setCurrentConversationId(conversationId);
-
-      // Load messages for this conversation
-      const { data: messages } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-      
-      if (messages) {
-        setMessages(messages);
-      }
+      // Always create a new conversation when mounting the component
+      await createNewConversation(user.id);
     };
 
     checkAuth();
@@ -85,7 +71,10 @@ export default function Chat() {
           table: 'messages'
         },
         (payload) => {
-          setMessages(prev => [...prev, payload.new as Message]);
+          const newMessage = payload.new as Message;
+          if (newMessage.conversation_id === currentConversationId) {
+            setMessages(prev => [...prev, newMessage]);
+          }
         }
       )
       .subscribe();
@@ -135,7 +124,7 @@ export default function Chat() {
         .insert([
           {
             content: data.response,
-            user_id: null, // Using NULL for AI messages
+            user_id: null,
             role: 'assistant',
             conversation_id: currentConversationId
           }
@@ -159,7 +148,7 @@ export default function Chat() {
     <div className="flex h-screen bg-[#1A1F2C]">
       <ChatSidebar />
       <div className="flex-1 flex flex-col">
-        <ChatHeader onBack={() => navigate('/')} />
+        <ChatHeader onBack={() => navigate('/')} onNewChat={handleNewChat} />
         <main className="flex-1 overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto p-4">
             {messages.length === 0 && (
