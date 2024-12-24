@@ -24,10 +24,12 @@ serve(async (req) => {
     const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
     
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
     
     if (!assistantId) {
+      console.error('OpenAI Assistant ID not configured');
       throw new Error('OpenAI Assistant ID not configured');
     }
 
@@ -43,8 +45,10 @@ serve(async (req) => {
     });
 
     if (!threadResponse.ok) {
-      console.error('Thread creation error:', await threadResponse.text());
-      throw new Error('Failed to create thread');
+      const errorText = await threadResponse.text();
+      console.error('Thread creation error response:', errorText);
+      console.error('Thread creation status:', threadResponse.status);
+      throw new Error(`Failed to create thread: ${errorText}`);
     }
 
     const thread = await threadResponse.json();
@@ -66,8 +70,9 @@ serve(async (req) => {
     });
 
     if (!messageResponse.ok) {
-      console.error('Message creation error:', await messageResponse.text());
-      throw new Error('Failed to add message to thread');
+      const errorText = await messageResponse.text();
+      console.error('Message creation error:', errorText);
+      throw new Error(`Failed to add message to thread: ${errorText}`);
     }
 
     // Run the assistant
@@ -85,8 +90,9 @@ serve(async (req) => {
     });
 
     if (!runResponse.ok) {
-      console.error('Run creation error:', await runResponse.text());
-      throw new Error('Failed to run assistant');
+      const errorText = await runResponse.text();
+      console.error('Run creation error:', errorText);
+      throw new Error(`Failed to run assistant: ${errorText}`);
     }
 
     const run = await runResponse.json();
@@ -94,7 +100,14 @@ serve(async (req) => {
 
     // Poll for completion
     let runStatus;
+    let attempts = 0;
+    const maxAttempts = 30; // Maximum number of polling attempts
+    
     do {
+      if (attempts >= maxAttempts) {
+        throw new Error('Timeout waiting for assistant response');
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between polls
       
       const statusResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`, {
@@ -105,12 +118,14 @@ serve(async (req) => {
       });
 
       if (!statusResponse.ok) {
-        console.error('Status check error:', await statusResponse.text());
-        throw new Error('Failed to check run status');
+        const errorText = await statusResponse.text();
+        console.error('Status check error:', errorText);
+        throw new Error(`Failed to check run status: ${errorText}`);
       }
 
       runStatus = await statusResponse.json();
       console.log('Run status:', runStatus.status);
+      attempts++;
     } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
     if (runStatus.status !== 'completed') {
@@ -127,8 +142,9 @@ serve(async (req) => {
     });
 
     if (!messagesResponse.ok) {
-      console.error('Messages retrieval error:', await messagesResponse.text());
-      throw new Error('Failed to retrieve messages');
+      const errorText = await messagesResponse.text();
+      console.error('Messages retrieval error:', errorText);
+      throw new Error(`Failed to retrieve messages: ${errorText}`);
     }
 
     const messages = await messagesResponse.json();
