@@ -1,22 +1,26 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { content } = await req.json()
+    const { content } = await req.json();
     const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
+    console.log('Starting chat completion with content:', content);
+
     // Create a thread
+    console.log('Creating thread...');
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
       headers: {
@@ -28,8 +32,10 @@ serve(async (req) => {
     });
 
     const thread = await threadResponse.json();
+    console.log('Thread created:', thread.id);
 
     // Add message to thread
+    console.log('Adding message to thread...');
     await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
       headers: {
@@ -44,6 +50,7 @@ serve(async (req) => {
     });
 
     // Run the assistant
+    console.log('Running assistant...');
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
       headers: {
@@ -57,8 +64,10 @@ serve(async (req) => {
     });
 
     const run = await runResponse.json();
+    console.log('Run created:', run.id);
 
     // Poll for completion
+    console.log('Polling for completion...');
     let runStatus = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`, {
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -67,6 +76,7 @@ serve(async (req) => {
     });
     
     let runStatusData = await runStatus.json();
+    console.log('Initial run status:', runStatusData.status);
     
     // Wait for completion (with timeout)
     const startTime = Date.now();
@@ -87,13 +97,16 @@ serve(async (req) => {
         }
       });
       runStatusData = await runStatus.json();
+      console.log('Updated run status:', runStatusData.status);
     }
 
     if (runStatusData.status !== 'completed') {
+      console.error('Run failed with status:', runStatusData.status);
       throw new Error(`Run failed with status: ${runStatusData.status}`);
     }
 
     // Get messages
+    console.log('Retrieving messages...');
     const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -103,19 +116,20 @@ serve(async (req) => {
 
     const messages = await messagesResponse.json();
     const assistantMessage = messages.data[0].content[0].text.value;
+    console.log('Assistant response received');
 
     return new Response(
       JSON.stringify({ response: assistantMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
+    );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in chat completion:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       },
-    )
+    );
   }
-})
+});
