@@ -16,6 +16,7 @@ export default function Chat() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,10 +27,49 @@ export default function Chat() {
       }
       setCurrentUserId(user.id);
       
-      // Load initial messages
+      // Create or get latest conversation
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('last_message_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      let conversationId: string;
+      
+      if (existingConversation) {
+        conversationId = existingConversation.id;
+      } else {
+        // Create new conversation
+        const { data: newConversation, error: conversationError } = await supabase
+          .from('conversations')
+          .insert([
+            { user_id: user.id }
+          ])
+          .select()
+          .single();
+
+        if (conversationError) {
+          console.error('Error creating conversation:', conversationError);
+          toast({
+            title: "Error",
+            description: "Failed to create conversation",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        conversationId = newConversation.id;
+      }
+      
+      setCurrentConversationId(conversationId);
+
+      // Load messages for this conversation
       const { data: messages } = await supabase
         .from('messages')
         .select('*')
+        .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
       
       if (messages) {
@@ -58,13 +98,19 @@ export default function Chat() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSendMessage = async (content: string) => {
-    if (!currentUserId) return;
+    if (!currentUserId || !currentConversationId) return;
     
     setIsLoading(true);
     try {
+      // Update conversation's last_message_at
+      await supabase
+        .from('conversations')
+        .update({ last_message_at: new Date().toISOString() })
+        .eq('id', currentConversationId);
+
       // Save user message
       const { data: userMessage, error: userMessageError } = await supabase
         .from('messages')
@@ -73,7 +119,7 @@ export default function Chat() {
             content,
             user_id: currentUserId,
             role: 'user',
-            conversation_id: '123'
+            conversation_id: currentConversationId
           }
         ])
         .select()
@@ -105,7 +151,7 @@ export default function Chat() {
             content: aiResponse,
             user_id: 'ai',
             role: 'assistant',
-            conversation_id: '123'
+            conversation_id: currentConversationId
           }
         ]);
 
@@ -125,7 +171,6 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen bg-[#1A1F2C]">
-      {/* Sidebar */}
       <div className="w-80 border-r border-white/10 flex flex-col">
         <div className="p-4 flex items-center justify-between border-b border-white/10">
           <div className="flex items-center gap-2">
@@ -157,7 +202,7 @@ export default function Chat() {
           {/* Conversation history would go here */}
         </div>
       </div>
-
+      
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         <header className="flex items-center gap-4 p-4 border-b border-white/10">
