@@ -11,16 +11,17 @@ interface ChatInputProps {
 export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('ChatInput - Submitting message:', message);
+    
     if (!message.trim()) {
       console.log('ChatInput - Empty message, not submitting');
       return;
     }
     
     console.log('ChatInput - Calling onSendMessage with:', message);
-    onSendMessage(message);
+    await onSendMessage(message);
     setMessage("");
   };
 
@@ -31,11 +32,6 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       if (message.trim() && !isLoading) {
         console.log('ChatInput - Submitting via Enter key');
         handleSubmit(e);
-      } else {
-        console.log('ChatInput - Not submitting: empty message or loading', { 
-          messageEmpty: !message.trim(), 
-          isLoading 
-        });
       }
     }
   };
