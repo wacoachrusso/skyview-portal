@@ -7,9 +7,11 @@ import { Message } from "@/types/chat";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +65,8 @@ export default function Chat() {
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Save user message
+      const { data: userMessage, error: userMessageError } = await supabase
         .from('messages')
         .insert([
           {
@@ -76,13 +79,45 @@ export default function Chat() {
         .select()
         .single();
 
-      if (error) throw error;
-      
-      if (data) {
-        setMessages(prev => [...prev, data]);
+      if (userMessageError) throw userMessageError;
+
+      // Get AI response
+      const response = await fetch('https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/chat-completion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ content })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
       }
+
+      const { response: aiResponse } = await response.json();
+
+      // Save AI response
+      const { error: aiMessageError } = await supabase
+        .from('messages')
+        .insert([
+          {
+            content: aiResponse,
+            user_id: 'ai',
+            role: 'assistant',
+            conversation_id: '123'
+          }
+        ]);
+
+      if (aiMessageError) throw aiMessageError;
+
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error in chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
