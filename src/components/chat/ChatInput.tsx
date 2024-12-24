@@ -13,6 +13,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting message:', message);
     if (!message.trim()) return;
     
     onSendMessage(message);
@@ -22,6 +23,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      console.log('Enter key pressed, message:', message);
       if (message.trim() && !isLoading) {
         handleSubmit(e);
       }
@@ -37,12 +39,14 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           onKeyDown={handleKeyDown}
           placeholder="Message SkyGuide..."
           className="min-h-[50px] resize-none bg-white/5 border-white/10 text-white placeholder:text-gray-400"
+          disabled={isLoading}
         />
         <Button 
           type="button"
           size="icon"
           variant="ghost"
           className="text-white hover:bg-white/10"
+          disabled={isLoading}
         >
           <Mic className="h-5 w-5" />
         </Button>

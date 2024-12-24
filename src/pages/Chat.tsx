@@ -17,6 +17,7 @@ export default function Chat() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   const createNewConversation = async (userId: string) => {
+    console.log('Creating new conversation for user:', userId);
     try {
       const { data: newConversation, error: conversationError } = await supabase
         .from('conversations')
@@ -24,8 +25,12 @@ export default function Chat() {
         .select()
         .single();
 
-      if (conversationError) throw conversationError;
+      if (conversationError) {
+        console.error('Error creating conversation:', conversationError);
+        throw conversationError;
+      }
       
+      console.log('New conversation created:', newConversation);
       setCurrentConversationId(newConversation.id);
       setMessages([]);
       
@@ -47,11 +52,14 @@ export default function Chat() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('Checking authentication...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.log('No user found, redirecting to login');
         navigate('/login');
         return;
       }
+      console.log('User authenticated:', user.id);
       setCurrentUserId(user.id);
       
       // Always create a new conversation when mounting the component
@@ -61,6 +69,7 @@ export default function Chat() {
     checkAuth();
 
     // Subscribe to new messages
+    console.log('Setting up real-time subscription...');
     const channel = supabase
       .channel('messages_channel')
       .on(
@@ -71,8 +80,10 @@ export default function Chat() {
           table: 'messages'
         },
         (payload) => {
+          console.log('New message received:', payload);
           const newMessage = payload.new as Message;
           if (newMessage.conversation_id === currentConversationId) {
+            console.log('Adding message to chat:', newMessage);
             setMessages(prev => [...prev, newMessage]);
           }
         }
@@ -80,22 +91,33 @@ export default function Chat() {
       .subscribe();
 
     return () => {
+      console.log('Cleaning up subscription');
       supabase.removeChannel(channel);
     };
-  }, [navigate, toast]);
+  }, [navigate, currentConversationId]);
 
   const handleSendMessage = async (content: string) => {
-    if (!currentUserId || !currentConversationId) return;
+    if (!currentUserId || !currentConversationId) {
+      console.error('No user ID or conversation ID available');
+      return;
+    }
     
+    console.log('Sending message:', { content, conversationId: currentConversationId });
     setIsLoading(true);
     try {
       // Update conversation's last_message_at
-      await supabase
+      const { error: updateError } = await supabase
         .from('conversations')
         .update({ last_message_at: new Date().toISOString() })
         .eq('id', currentConversationId);
 
+      if (updateError) {
+        console.error('Error updating conversation:', updateError);
+        throw updateError;
+      }
+
       // Save user message
+      console.log('Saving user message to database...');
       const { data: userMessage, error: userMessageError } = await supabase
         .from('messages')
         .insert([
@@ -109,16 +131,28 @@ export default function Chat() {
         .select()
         .single();
 
-      if (userMessageError) throw userMessageError;
+      if (userMessageError) {
+        console.error('Error saving user message:', userMessageError);
+        throw userMessageError;
+      }
+
+      console.log('User message saved:', userMessage);
 
       // Get AI response using Supabase Edge Function
+      console.log('Calling AI completion function...');
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { content }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from AI completion:', error);
+        throw error;
+      }
 
-      // Save AI response with NULL user_id
+      console.log('AI response received:', data);
+
+      // Save AI response
+      console.log('Saving AI response to database...');
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert([
@@ -130,10 +164,13 @@ export default function Chat() {
           }
         ]);
 
-      if (aiMessageError) throw aiMessageError;
+      if (aiMessageError) {
+        console.error('Error saving AI message:', aiMessageError);
+        throw aiMessageError;
+      }
 
     } catch (error) {
-      console.error('Error in chat:', error);
+      console.error('Error in chat flow:', error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
