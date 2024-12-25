@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 type NotificationToggleProps = {
   notifications: boolean;
@@ -13,12 +15,15 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
   useEffect(() => {
     const handleNotificationPermission = async () => {
       if (notifications) {
+        console.log("Checking notification permissions...");
+        
         // First check if notifications are supported
         if (!("Notification" in window)) {
+          console.log("Notifications not supported");
           setNotifications(false);
           toast({
             title: "Notifications Not Supported",
-            description: "Your browser doesn't support notifications",
+            description: "Your browser doesn't support notifications. You won't receive important updates.",
             variant: "destructive",
           });
           return;
@@ -26,10 +31,11 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
 
         // Check if permission is already denied
         if (Notification.permission === "denied") {
+          console.log("Notifications blocked by browser");
           setNotifications(false);
           toast({
-            title: "Notifications Blocked",
-            description: "Please enable notifications in your browser settings to receive updates",
+            title: "Important Updates Blocked",
+            description: "Please enable notifications in your browser settings to receive contract updates, grievance notifications, and other important information.",
             variant: "destructive",
           });
           return;
@@ -38,13 +44,22 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
         // Request permission only if not already granted
         if (Notification.permission !== "granted") {
           try {
+            console.log("Requesting notification permission");
             const permission = await Notification.requestPermission();
             if (permission !== "granted") {
+              console.log("Permission denied by user");
               setNotifications(false);
               toast({
-                title: "Notifications Permission Denied",
-                description: "You won't receive notifications about updates",
+                title: "Updates Will Be Missed",
+                description: "You won't receive notifications about contract changes, grievance updates, or important announcements.",
                 variant: "destructive",
+              });
+            } else {
+              console.log("Permission granted");
+              // Send a test notification
+              new Notification("Notifications Enabled", {
+                body: "You'll now receive updates about contract changes, grievances, and important announcements.",
+                icon: "/favicon.ico"
               });
             }
           } catch (error) {
@@ -52,7 +67,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
             setNotifications(false);
             toast({
               title: "Error Enabling Notifications",
-              description: "There was a problem enabling notifications",
+              description: "There was a problem enabling notifications. Please try again.",
               variant: "destructive",
             });
           }
@@ -66,9 +81,10 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
 
   const handleToggle = async (checked: boolean) => {
     if (checked && Notification.permission === "denied") {
+      console.log("Attempting to enable notifications while blocked");
       toast({
-        title: "Notifications Blocked",
-        description: "Please enable notifications in your browser settings and try again",
+        title: "Important Updates Blocked",
+        description: "To receive contract updates, grievance notifications, and other important information, please enable notifications in your browser settings and try again.",
         variant: "destructive",
       });
       return;
@@ -77,16 +93,32 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="space-y-0.5">
-        <label className="text-sm font-medium text-white">Notifications</label>
-        <p className="text-sm text-gray-400">Receive notifications about updates</p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <label className="text-sm font-medium text-white">Important Updates</label>
+          <p className="text-sm text-gray-400">Receive notifications about contract changes and grievances</p>
+        </div>
+        <Switch
+          checked={notifications}
+          onCheckedChange={handleToggle}
+          className="data-[state=checked]:bg-primary"
+        />
       </div>
-      <Switch
-        checked={notifications}
-        onCheckedChange={handleToggle}
-        className="data-[state=checked]:bg-primary"
-      />
+      
+      {notifications && (
+        <Alert className="bg-white/5 border-white/10">
+          <Info className="h-4 w-4 text-white" />
+          <AlertDescription className="text-sm text-gray-300">
+            You will receive notifications for:
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Contract updates and revisions</li>
+              <li>Grievance status changes</li>
+              <li>Important app announcements</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }
