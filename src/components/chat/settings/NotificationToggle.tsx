@@ -20,16 +20,25 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
   }, [notifications, setNotifications]);
 
   const handleToggle = async (checked: boolean) => {
-    if (checked && Notification.permission === "denied") {
-      console.log("Attempting to enable notifications while blocked");
-      toast({
-        title: "Important Updates Blocked",
-        description: "To receive notifications, please enable them in your browser settings and try again.",
-        variant: "destructive",
-      });
-      return;
+    if (checked) {
+      if (Notification.permission === "denied") {
+        console.log("Notifications are blocked by browser settings");
+        toast({
+          title: "Important Updates Blocked",
+          description: "To receive notifications, please enable them in your browser settings and try again.",
+          variant: "destructive",
+        });
+        setNotifications(false);
+        return;
+      }
+      
+      const permissionResult = await handleNotificationPermission({ setNotifications });
+      if (!permissionResult) {
+        setNotifications(false);
+      }
+    } else {
+      setNotifications(false);
     }
-    setNotifications(checked);
   };
 
   return (
