@@ -31,7 +31,11 @@ export function useChat() {
       // Update conversation's last_message_at
       const { error: updateError } = await supabase
         .from('conversations')
-        .update({ last_message_at: new Date().toISOString() })
+        .update({ 
+          last_message_at: new Date().toISOString(),
+          // Update title with first message content if it's the first message
+          ...(messages.length === 0 && { title: content.slice(0, 50) }) // Limit title to 50 chars
+        })
         .eq('id', currentConversationId);
 
       if (updateError) throw updateError;
@@ -51,11 +55,6 @@ export function useChat() {
         .single();
 
       if (userMessageError) throw userMessageError;
-
-      // Update conversation title if this is the first message
-      if (messages.length === 0) {
-        await updateConversationTitle(currentConversationId, content);
-      }
 
       // Get AI response
       const { data, error } = await supabase.functions.invoke('chat-completion', {
