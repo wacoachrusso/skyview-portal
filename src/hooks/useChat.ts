@@ -92,14 +92,14 @@ export function useChat() {
   useEffect(() => {
     const checkAuth = async () => {
       console.log('Checking authentication...');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         console.log('No user found, redirecting to login');
         return null;
       }
-      console.log('User authenticated:', user.id);
-      setCurrentUserId(user.id);
-      return user.id;
+      console.log('User authenticated:', session.user.id);
+      setCurrentUserId(session.user.id);
+      return session.user.id;
     };
 
     const setupChat = async () => {
@@ -108,6 +108,7 @@ export function useChat() {
 
       // Only create a new conversation if we don't have one
       if (!currentConversationId) {
+        console.log('No current conversation, creating new one...');
         const conversationId = await createNewConversation(userId);
         if (conversationId) {
           const messages = await loadConversation(conversationId);
@@ -152,6 +153,10 @@ export function useChat() {
     createNewConversation,
     currentConversationId,
     loadConversation: async (conversationId: string) => {
+      if (!conversationId) {
+        console.log('No conversation ID provided');
+        return;
+      }
       const messages = await loadConversation(conversationId);
       setMessages(messages);
     }

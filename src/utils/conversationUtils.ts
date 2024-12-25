@@ -1,6 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const updateConversationTitle = async (conversationId: string, content: string) => {
+  if (!conversationId) {
+    console.error('No conversation ID provided for title update');
+    return;
+  }
+
   console.log('Updating conversation title for:', conversationId);
   // Generate a title from the first message content (max 50 chars)
   const title = content.length > 50 ? `${content.substring(0, 47)}...` : content;
@@ -23,6 +28,11 @@ export const updateConversationTitle = async (conversationId: string, content: s
 };
 
 export const loadConversationMessages = async (conversationId: string) => {
+  if (!conversationId) {
+    console.error('No conversation ID provided for loading messages');
+    return [];
+  }
+
   console.log('Loading messages for conversation:', conversationId);
   const { data: messages, error } = await supabase
     .from('messages')

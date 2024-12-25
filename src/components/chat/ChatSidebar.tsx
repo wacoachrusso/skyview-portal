@@ -60,6 +60,11 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
   };
 
   const deleteConversation = async (conversationId: string) => {
+    if (!conversationId) {
+      console.error('No conversation ID provided for deletion');
+      return;
+    }
+
     console.log('Deleting conversation:', conversationId);
     const { error } = await supabase
       .from('conversations')
