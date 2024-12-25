@@ -9,6 +9,36 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
+  const formatTableContent = (content: string) => {
+    if (content.includes("years of service")) {
+      const rows = content.split(/\d+\.\s+/).filter(Boolean);
+      return (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr>
+                <th className="py-2 px-4 bg-white/5 text-white font-semibold">Years of Service</th>
+                <th className="py-2 px-4 bg-white/5 text-white font-semibold">Vacation Days</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => {
+                const [years, days] = row.split(':').map(s => s.trim());
+                return (
+                  <tr key={index} className="border-t border-white/10">
+                    <td className="py-2 px-4">{years}</td>
+                    <td className="py-2 px-4">{days}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    return content;
+  };
+
   return (
     <div
       className={cn(
@@ -27,13 +57,9 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
         {isCurrentUser ? (
           <p className="text-sm sm:text-base">{message.content}</p>
         ) : (
-          <TypeAnimation
-            sequence={[message.content]}
-            wrapper="p"
-            speed={99}
-            className="text-sm sm:text-base min-h-[20px]"
-            cursor={false}
-          />
+          <div className="text-sm sm:text-base min-h-[20px]">
+            {typeof message.content === 'string' ? formatTableContent(message.content) : message.content}
+          </div>
         )}
         <span className="text-[10px] sm:text-xs opacity-50">
           {format(new Date(message.created_at), "h:mm a")}

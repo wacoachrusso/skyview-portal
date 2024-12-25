@@ -50,7 +50,7 @@ export default function Chat() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
       {!isMobile && <ChatSidebar />}
-      <div className="flex-1 flex flex-col chat-container">
+      <div className="flex-1 flex flex-col h-full">
         <div className="flex items-center">
           {isMobile && (
             <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -75,39 +75,43 @@ export default function Chat() {
             />
           </div>
         </div>
-        <main className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C]">
-          {messages.length === 0 && !isLoading && (
-            <div className="flex-1 flex items-center justify-center p-4">
-              <div className="text-center space-y-4">
-                <div className="inline-block p-6 rounded-full bg-gradient-to-br from-[#2A2F3C] to-[#1A1F2C]">
-                  <svg
-                    className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                    />
-                  </svg>
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          <div className="flex-1 overflow-y-auto">
+            {messages.length === 0 && !isLoading && (
+              <div className="flex-1 flex items-center justify-center p-4">
+                <div className="text-center space-y-4">
+                  <div className="inline-block p-6 rounded-full bg-gradient-to-br from-[#2A2F3C] to-[#1A1F2C]">
+                    <svg
+                      className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
+                  <p className="text-sm sm:text-base text-gray-400 max-w-sm mx-auto">
+                    Ask me anything about your contract and I'll help you understand it better.
+                  </p>
                 </div>
-                <h2 className="text-lg sm:text-xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
-                <p className="text-sm sm:text-base text-gray-400 max-w-sm mx-auto">
-                  Ask me anything about your contract and I'll help you understand it better.
-                </p>
               </div>
-            </div>
-          )}
-          <ChatList 
-            messages={messages} 
-            currentUserId={currentUserId || ''} 
-            isLoading={isLoading}
-          />
-          <ChatInput onSendMessage={sendMessage} isLoading={isLoading} />
-        </main>
+            )}
+            <ChatList 
+              messages={messages} 
+              currentUserId={currentUserId || ''} 
+              isLoading={isLoading}
+            />
+          </div>
+          <div className="sticky bottom-0 w-full bg-[#1A1F2C] border-t border-white/10">
+            <ChatInput onSendMessage={sendMessage} isLoading={isLoading} />
+          </div>
+        </div>
       </div>
     </div>
   );
