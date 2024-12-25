@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { NotificationDescription } from "./notifications/NotificationDescription";
-import { handleNotificationPermission } from "./notifications/NotificationPermissionHandler";
 
 type NotificationToggleProps = {
   notifications: boolean;
@@ -13,30 +12,56 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
   const { toast } = useToast();
 
   useEffect(() => {
-    if (notifications) {
-      handleNotificationPermission({ setNotifications });
-    }
     localStorage.setItem("chat-notifications", notifications.toString());
-  }, [notifications, setNotifications]);
+  }, [notifications]);
 
   const handleToggle = async (checked: boolean) => {
+    console.log("Notification toggle clicked:", checked);
+    
     if (checked) {
-      if (Notification.permission === "denied") {
-        console.log("Notifications are blocked by browser settings");
+      if (!("Notification" in window)) {
+        console.log("Browser doesn't support notifications");
         toast({
-          title: "Important Updates Blocked",
-          description: "To receive notifications, please enable them in your browser settings and try again.",
+          title: "Notifications Not Supported",
+          description: "Your browser doesn't support notifications",
           variant: "destructive",
         });
         setNotifications(false);
         return;
       }
-      
-      const permissionResult = await handleNotificationPermission({ setNotifications });
-      if (!permissionResult) {
+
+      try {
+        console.log("Requesting notification permission...");
+        const permission = await Notification.requestPermission();
+        console.log("Permission result:", permission);
+        
+        if (permission === "granted") {
+          console.log("Permission granted, enabling notifications");
+          setNotifications(true);
+          new Notification("Notifications Enabled", {
+            body: "You'll now receive important updates and notifications.",
+            icon: "/favicon.ico"
+          });
+        } else {
+          console.log("Permission denied, disabling notifications");
+          setNotifications(false);
+          toast({
+            title: "Notifications Blocked",
+            description: "Please allow notifications in your browser settings to receive important updates.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error requesting notification permission:", error);
         setNotifications(false);
+        toast({
+          title: "Notification Error",
+          description: "There was a problem enabling notifications. Please try again.",
+          variant: "destructive",
+        });
       }
     } else {
+      console.log("Notifications disabled by user");
       setNotifications(false);
     }
   };
