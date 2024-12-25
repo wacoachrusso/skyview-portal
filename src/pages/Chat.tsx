@@ -78,7 +78,7 @@ export default function Chat() {
     <div className="flex-1 flex items-center justify-center p-4">
       <div className="text-center space-y-6">
         <div className="inline-block p-6 rounded-full bg-gradient-to-br from-brand-navy to-brand-slate">
-          <MessageSquare className="w-12 h-12 sm:w-16 sm:h-16 text-brand-gold" />
+          <MessageSquare className="w-12 h-12 sm:w-16 sm:h-16 text-brand-gold" strokeWidth={1.5} />
         </div>
         <div className="space-y-4">
           <h2 className="text-2xl sm:text-3xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
