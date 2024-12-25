@@ -15,7 +15,7 @@ export async function handleNotificationPermission({ setNotifications }: Notific
     setNotifications(false);
     toast({
       title: "Notifications Not Supported",
-      description: "Your browser doesn't support notifications. You won't receive important updates.",
+      description: "Your browser doesn't support notifications",
       variant: "destructive",
     });
     return false;
@@ -26,8 +26,8 @@ export async function handleNotificationPermission({ setNotifications }: Notific
     console.log("Notifications blocked by browser");
     setNotifications(false);
     toast({
-      title: "Important Updates Blocked",
-      description: "To receive contract updates, grievance notifications, and other important information, please enable notifications in your browser settings and try again.",
+      title: "Notifications Blocked",
+      description: "Please enable notifications in your browser settings and try again.",
       variant: "destructive",
     });
     return false;
@@ -42,8 +42,8 @@ export async function handleNotificationPermission({ setNotifications }: Notific
         console.log("Permission denied by user");
         setNotifications(false);
         toast({
-          title: "Updates Will Be Missed",
-          description: "You won't receive notifications about important contract changes and updates.",
+          title: "Notifications Disabled",
+          description: "You won't receive important updates and notifications.",
           variant: "destructive",
         });
         return false;
@@ -51,7 +51,7 @@ export async function handleNotificationPermission({ setNotifications }: Notific
         console.log("Permission granted");
         // Send a test notification
         new Notification("Notifications Enabled", {
-          body: "You'll now receive notifications about important contract and grievance updates.",
+          body: "You'll now receive important updates and notifications.",
           icon: "/favicon.ico"
         });
         return true;
