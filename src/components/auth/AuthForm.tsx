@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   });
 
   // Add auth state change listener
-  useState(() => {
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
       if (event === 'SIGNED_IN') {
