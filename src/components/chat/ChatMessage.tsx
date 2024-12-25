@@ -9,33 +9,43 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
-  const formatTableContent = (content: string) => {
-    if (content.includes("years of service")) {
-      const rows = content.split(/\d+\.\s+/).filter(Boolean);
+  const formatContent = (content: string) => {
+    // Check if content contains a list or table-like structure
+    if (content.includes("1.") || content.includes("•") || content.includes("|")) {
+      const rows = content.split(/\d+\.\s+|\n/).filter(Boolean);
+      
+      // Check if it's a table structure (contains ":" or "|")
+      if (content.includes(":") || content.includes("|")) {
+        return (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <tbody>
+                {rows.map((row, index) => {
+                  const [header, value] = row.split(/[:|]/).map(s => s.trim());
+                  if (!header || !value) return null;
+                  return (
+                    <tr key={index} className="border-t border-white/10">
+                      <td className="py-2 px-4 font-medium">{header}</td>
+                      <td className="py-2 px-4">{value}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+      
+      // If it's a list, format as bullet points
       return (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 bg-white/5 text-white font-semibold">Years of Service</th>
-                <th className="py-2 px-4 bg-white/5 text-white font-semibold">Vacation Days</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => {
-                const [years, days] = row.split(':').map(s => s.trim());
-                return (
-                  <tr key={index} className="border-t border-white/10">
-                    <td className="py-2 px-4">{years}</td>
-                    <td className="py-2 px-4">{days}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ul className="list-disc list-inside space-y-2">
+          {rows.map((item, index) => (
+            <li key={index} className="pl-2">{item.trim()}</li>
+          ))}
+        </ul>
       );
     }
+    
     return content;
   };
 
@@ -58,7 +68,14 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
           <p className="text-sm sm:text-base">{message.content}</p>
         ) : (
           <div className="text-sm sm:text-base min-h-[20px]">
-            {typeof message.content === 'string' ? formatTableContent(message.content) : message.content}
+            <TypeAnimation
+              sequence={[message.content]}
+              wrapper="div"
+              cursor={false}
+              repeat={0}
+              speed={70}
+              className="whitespace-pre-wrap"
+            />
           </div>
         )}
         <span className="text-[10px] sm:text-xs opacity-50">
