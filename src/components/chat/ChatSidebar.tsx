@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { SearchBar } from "./sidebar/SearchBar";
 import { ConversationList } from "./sidebar/ConversationList";
+import { useNavigate } from "react-router-dom";
 
 interface ChatSidebarProps {
   onSelectConversation: (conversationId: string) => void;
@@ -15,23 +16,26 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const loadConversations = async () => {
     console.log('Loading conversations...');
     
-    // Check authentication first
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.log('No active session found');
-      toast({
-        title: "Authentication required",
-        description: "Please log in to view conversations",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
+      // Check authentication first
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
+
+      if (!session) {
+        console.log('No active session found, redirecting to login');
+        navigate('/login');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
@@ -39,23 +43,19 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
 
       if (error) {
         console.error('Error loading conversations:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load conversations",
-          variant: "destructive",
-        });
-        return;
+        throw error;
       }
 
       console.log('Loaded conversations:', data);
       setConversations(data || []);
     } catch (error) {
-      console.error('Unexpected error loading conversations:', error);
+      console.error('Error in loadConversations:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to load conversations. Please try logging in again.",
         variant: "destructive",
       });
+      navigate('/login');
     }
   };
 
@@ -65,60 +65,61 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
       return;
     }
 
-    console.log('Deleting conversation:', conversationId);
-    const { error } = await supabase
-      .from('conversations')
-      .delete()
-      .eq('id', conversationId);
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId);
 
-    if (error) {
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Conversation deleted",
+      });
+
+      if (currentConversationId === conversationId) {
+        onSelectConversation('');
+      }
+    } catch (error) {
       console.error('Error deleting conversation:', error);
       toast({
         title: "Error",
         description: "Failed to delete conversation",
         variant: "destructive",
       });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: "Conversation deleted",
-    });
-
-    if (currentConversationId === conversationId) {
-      onSelectConversation('');
     }
   };
 
   const deleteAllConversations = async () => {
-    console.log('Deleting all conversations...');
-    const { error } = await supabase
-      .from('conversations')
-      .delete()
-      .not('id', 'is', null);
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .not('id', 'is', null);
 
-    if (error) {
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "All conversations deleted",
+      });
+      
+      onSelectConversation('');
+    } catch (error) {
       console.error('Error deleting all conversations:', error);
       toast({
         title: "Error",
         description: "Failed to delete all conversations",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Success",
-      description: "All conversations deleted",
-    });
-    
-    onSelectConversation('');
   };
 
   useEffect(() => {
     loadConversations();
 
+    // Set up real-time subscription
     const channel = supabase
       .channel('conversations_channel')
       .on(
