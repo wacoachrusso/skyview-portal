@@ -25,6 +25,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
           title: "Notifications Not Supported",
           description: "Your browser doesn't support notifications",
           variant: "destructive",
+          duration: 2000, // 2 seconds
         });
         setNotifications(false);
         return;
@@ -49,6 +50,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
             title: "Notifications Blocked",
             description: "Please allow notifications in your browser settings to receive important updates.",
             variant: "destructive",
+            duration: 2000, // 2 seconds
           });
         }
       } catch (error) {
@@ -58,6 +60,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
           title: "Notification Error",
           description: "There was a problem enabling notifications. Please try again.",
           variant: "destructive",
+          duration: 2000, // 2 seconds
         });
       }
     } else {
