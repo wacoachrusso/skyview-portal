@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Mic, MicOff, Send } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/hooks/use-toast";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -12,118 +12,14 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const [isListening, setIsListening] = useState(false);
   const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-      
-      if (SpeechRecognitionAPI) {
-        console.log('Speech recognition is supported');
-        recognitionRef.current = new SpeechRecognitionAPI();
-        
-        if (recognitionRef.current) {
-          recognitionRef.current.continuous = true;
-          recognitionRef.current.interimResults = true;
-
-          recognitionRef.current.onresult = (event) => {
-            console.log('Speech recognition result received');
-            // Reset the silence timeout whenever we get a result
-            if (silenceTimeoutRef.current) {
-              clearTimeout(silenceTimeoutRef.current);
-            }
-
-            const transcript = Array.from(event.results)
-              .map(result => result[0])
-              .map(result => result.transcript)
-              .join('');
-            
-            console.log('Speech recognition result:', transcript);
-            setMessage(transcript);
-
-            // Set a new timeout for silence detection
-            silenceTimeoutRef.current = setTimeout(() => {
-              console.log('Silence detected, stopping recognition');
-              if (recognitionRef.current && isListening) {
-                recognitionRef.current.stop();
-                setIsListening(false);
-              }
-            }, 1500); // Stop after 1.5 seconds of silence
-          };
-
-          recognitionRef.current.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-            setIsListening(false);
-            if (silenceTimeoutRef.current) {
-              clearTimeout(silenceTimeoutRef.current);
-            }
-            toast({
-              title: "Error",
-              description: "There was an error with speech recognition. Please try again.",
-              variant: "destructive",
-            });
-          };
-
-          recognitionRef.current.onend = () => {
-            console.log('Speech recognition ended');
-            setIsListening(false);
-            if (silenceTimeoutRef.current) {
-              clearTimeout(silenceTimeoutRef.current);
-            }
-          };
-        }
-      } else {
-        console.log('Speech recognition is not supported');
-      }
-    }
-
-    return () => {
-      if (recognitionRef.current && isListening) {
-        recognitionRef.current.stop();
-      }
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const toggleListening = async () => {
-    if (!recognitionRef.current) {
-      console.log('Speech recognition is not available');
-      toast({
-        title: "Not Supported",
-        description: "Speech recognition is not supported in your browser.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isListening) {
-      console.log('Stopping speech recognition');
-      recognitionRef.current.stop();
-      setIsListening(false);
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-    } else {
-      try {
-        console.log('Starting speech recognition');
-        await recognitionRef.current.start();
-        setIsListening(true);
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-        toast({
-          title: "Error",
-          description: "Could not start speech recognition. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
+  const { 
+    isListening, 
+    transcript, 
+    toggleListening, 
+    stopListening, 
+    setTranscript 
+  } = useSpeechRecognition();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,16 +31,13 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     }
     
     if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
+      stopListening();
     }
     
     console.log('ChatInput - Calling onSendMessage with:', message);
     await onSendMessage(message);
     setMessage("");
+    setTranscript("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -157,6 +50,13 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       }
     }
   };
+
+  // Update message when transcript changes
+  useState(() => {
+    if (transcript) {
+      setMessage(transcript);
+    }
+  }, [transcript]);
 
   return (
     <form onSubmit={handleSubmit} className="p-2 sm:p-4 bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10">
