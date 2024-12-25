@@ -47,17 +47,26 @@ export function PricingSection() {
   };
 
   return (
-    <div id="pricing-section" className="py-20 px-4 bg-gray-50">
+    <div id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto">
-        <h2 className="text-3xl font-bold text-center text-brand-navy mb-12">
+        <h2 className="text-3xl font-bold text-center text-brand-navy mb-4">
           Simple, Transparent Pricing
         </h2>
+        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+          Choose the plan that best fits your needs. All plans include access to our core features.
+        </p>
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Free Trial */}
-          <Card className="bg-white border-2 border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-brand-navy">Free Trial</CardTitle>
-              <div className="text-3xl font-bold text-brand-navy">Free</div>
+          <Card className="relative bg-white border-2 border-gray-100 transform hover:scale-105 transition-transform duration-300 hover:shadow-xl">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-navy text-white px-4 py-1 rounded-full text-sm">
+              Try it Free
+            </div>
+            <CardHeader className="space-y-2">
+              <CardTitle className="text-xl text-brand-navy">Free Trial</CardTitle>
+              <div className="text-4xl font-bold text-brand-navy">
+                $0
+                <span className="text-lg font-normal text-gray-500">/forever</span>
+              </div>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 mb-6">
@@ -67,7 +76,7 @@ export function PricingSection() {
               </ul>
               <Button 
                 variant="outline"
-                className="w-full bg-white hover:bg-gray-50 text-brand-navy border-brand-navy"
+                className="w-full bg-white hover:bg-gray-50 text-brand-navy border-brand-navy hover:border-brand-navy/80"
                 onClick={() => handlePlanSelection('free')}
                 disabled={isLoading}
               >
@@ -77,21 +86,25 @@ export function PricingSection() {
           </Card>
 
           {/* Monthly Plan */}
-          <Card className="bg-white border-2 border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-brand-navy">Monthly Plan</CardTitle>
-              <div className="text-3xl font-bold text-brand-navy">
-                $4.99<span className="text-lg font-normal">/month</span>
+          <Card className="relative bg-gradient-to-br from-brand-navy to-brand-slate transform hover:scale-105 transition-transform duration-300 hover:shadow-xl border-0">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-gold text-white px-4 py-1 rounded-full text-sm">
+              Most Popular
+            </div>
+            <CardHeader className="space-y-2">
+              <CardTitle className="text-xl text-white">Monthly Plan</CardTitle>
+              <div className="text-4xl font-bold text-white">
+                $4.99
+                <span className="text-lg font-normal text-gray-200">/month</span>
               </div>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 mb-6">
-                <PricingFeature text="Unlimited Queries" />
-                <PricingFeature text="All Features" />
-                <PricingFeature text="Priority Support" />
+                <PricingFeature text="Unlimited Queries" textColor="text-gray-200" />
+                <PricingFeature text="All Features" textColor="text-gray-200" />
+                <PricingFeature text="Priority Support" textColor="text-gray-200" />
               </ul>
               <Button 
-                className="w-full bg-brand-navy hover:bg-brand-navy/90"
+                className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold"
                 onClick={() => handlePlanSelection('monthly')}
                 disabled={isLoading}
               >
@@ -101,25 +114,27 @@ export function PricingSection() {
           </Card>
 
           {/* Annual Plan */}
-          <Card className="bg-white border-2 border-brand-gold relative">
-            <div className="absolute -top-3 right-4 bg-brand-gold text-white px-3 py-1 rounded-full text-sm font-semibold">
+          <Card className="relative bg-white border-2 border-brand-gold transform hover:scale-105 transition-transform duration-300 hover:shadow-xl">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-1 rounded-full text-sm">
               Best Value
             </div>
-            <CardHeader>
-              <CardTitle className="text-brand-navy">Annual Plan</CardTitle>
-              <div className="text-3xl font-bold text-brand-navy">
-                $49.99<span className="text-lg font-normal">/year</span>
+            <CardHeader className="space-y-2">
+              <CardTitle className="text-xl text-brand-navy">Annual Plan</CardTitle>
+              <div className="text-4xl font-bold text-brand-navy">
+                $49.99
+                <span className="text-lg font-normal text-gray-500">/year</span>
               </div>
+              <div className="text-sm text-green-600 font-medium">Save $10 annually</div>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 mb-6">
                 <PricingFeature text="Unlimited Queries" />
                 <PricingFeature text="All Features" />
                 <PricingFeature text="Priority Support" />
-                <PricingFeature text="Save $10" />
+                <PricingFeature text="Annual Savings" />
               </ul>
               <Button 
-                className="w-full bg-brand-gold hover:bg-brand-gold/90 text-white"
+                className="w-full bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold"
                 onClick={() => handlePlanSelection('annual')}
                 disabled={isLoading}
               >
@@ -133,9 +148,9 @@ export function PricingSection() {
   );
 }
 
-const PricingFeature = ({ text }: { text: string }) => (
-  <li className="flex items-center gap-2 text-gray-600">
-    <Check className="h-4 w-4 text-brand-navy" />
-    <span className="text-sm">{text}</span>
+const PricingFeature = ({ text, textColor = "text-gray-600" }: { text: string; textColor?: string }) => (
+  <li className="flex items-center gap-2">
+    <Check className="h-4 w-4 text-brand-gold" />
+    <span className={`text-sm ${textColor}`}>{text}</span>
   </li>
 );
