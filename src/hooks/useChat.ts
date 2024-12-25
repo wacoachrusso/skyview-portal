@@ -27,7 +27,7 @@ export function useChat() {
         title: "Error",
         description: "Unable to send message. Please try refreshing the page.",
         variant: "destructive",
-        duration: 3000
+        duration: 2000
       });
       return;
     }
@@ -95,7 +95,7 @@ export function useChat() {
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
-        duration: 3000
+        duration: 2000
       });
     } finally {
       setIsLoading(false);
@@ -158,10 +158,12 @@ export function useChat() {
     loadConversation: async (conversationId: string) => {
       if (!conversationId) {
         console.log('No conversation ID provided');
+        setMessages([]);
         return;
       }
       const messages = await loadConversation(conversationId);
       setMessages(messages);
-    }
+    },
+    setCurrentConversationId
   };
 }

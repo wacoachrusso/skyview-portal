@@ -8,8 +8,7 @@ export function useConversation() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   const createNewConversation = async (userId: string) => {
-    console.log('Setting up for new conversation...');
-    // Just clear the current conversation ID without creating a new one yet
+    console.log('Creating new conversation...');
     setCurrentConversationId(null);
     return null;
   };
@@ -20,7 +19,10 @@ export function useConversation() {
       try {
         const { data: newConversation, error: conversationError } = await supabase
           .from('conversations')
-          .insert([{ user_id: userId }])
+          .insert([{ 
+            user_id: userId,
+            title: 'New Chat'
+          }])
           .select()
           .single();
 
@@ -38,7 +40,7 @@ export function useConversation() {
           title: "Error",
           description: "Failed to create new conversation",
           variant: "destructive",
-          duration: 3000
+          duration: 2000
         });
         return null;
       }
@@ -58,7 +60,7 @@ export function useConversation() {
         title: "Error",
         description: "Failed to load conversation",
         variant: "destructive",
-        duration: 3000
+        duration: 2000
       });
       return [];
     }

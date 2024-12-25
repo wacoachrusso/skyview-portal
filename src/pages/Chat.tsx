@@ -23,20 +23,16 @@ export default function Chat() {
     sendMessage, 
     createNewConversation,
     currentConversationId,
-    loadConversation 
+    loadConversation,
+    setCurrentConversationId 
   } = useChat();
 
   const handleNewChat = async () => {
     console.log('Creating new chat...');
     if (currentUserId) {
-      const newConversationId = await createNewConversation(currentUserId);
-      if (newConversationId) {
-        console.log('New conversation created:', newConversationId);
-        // Only load the conversation if we have messages
-        if (messages.length > 0) {
-          await loadConversation(newConversationId);
-        }
-      }
+      setCurrentConversationId(null);
+      // Clear messages when starting a new chat
+      loadConversation('');
     }
   };
 
