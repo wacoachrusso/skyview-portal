@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, MessageSquare } from "lucide-react";
+import { Menu } from "lucide-react";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -78,7 +78,11 @@ export default function Chat() {
     <div className="flex-1 flex items-center justify-center p-4">
       <div className="text-center space-y-6">
         <div className="inline-block p-6 rounded-full bg-gradient-to-br from-brand-navy to-brand-slate">
-          <MessageSquare className="w-12 h-12 sm:w-16 sm:h-16 text-brand-gold" strokeWidth={1.5} />
+          <img 
+            src="/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png" 
+            alt="SkyGuide Logo" 
+            className="w-12 h-12 sm:w-16 sm:h-16"
+          />
         </div>
         <div className="space-y-4">
           <h2 className="text-2xl sm:text-3xl font-semibold text-white">Welcome to SkyGuide Chat</h2>

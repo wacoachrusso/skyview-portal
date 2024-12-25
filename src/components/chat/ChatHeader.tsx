@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, MessageSquare } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatHeaderProps {
@@ -22,7 +22,11 @@ export function ChatHeader({ onBack, onNewChat }: ChatHeaderProps) {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-brand-gold" strokeWidth={1.5} />
+          <img 
+            src="/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png" 
+            alt="SkyGuide Logo" 
+            className="h-5 w-5"
+          />
           <h1 className="text-base sm:text-xl font-semibold text-white">Know Your Contract</h1>
         </div>
       </div>
