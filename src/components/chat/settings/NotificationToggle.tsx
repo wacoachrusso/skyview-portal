@@ -35,7 +35,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
           setNotifications(false);
           toast({
             title: "Important Updates Blocked",
-            description: "Please enable notifications in your browser settings to receive contract updates, grievance notifications, and other important information.",
+            description: "To receive contract updates, grievance notifications, and other important information, please enable notifications in your browser settings and try again.",
             variant: "destructive",
           });
           return;
@@ -51,14 +51,14 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
               setNotifications(false);
               toast({
                 title: "Updates Will Be Missed",
-                description: "You won't receive notifications about contract changes, grievance updates, or important announcements.",
+                description: "You won't receive notifications about important contract changes and updates.",
                 variant: "destructive",
               });
             } else {
               console.log("Permission granted");
               // Send a test notification
               new Notification("Notifications Enabled", {
-                body: "You'll now receive updates about contract changes, grievances, and important announcements.",
+                body: "You'll now receive notifications about important contract and grievance updates.",
                 icon: "/favicon.ico"
               });
             }
@@ -84,7 +84,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
       console.log("Attempting to enable notifications while blocked");
       toast({
         title: "Important Updates Blocked",
-        description: "To receive contract updates, grievance notifications, and other important information, please enable notifications in your browser settings and try again.",
+        description: "To receive notifications, please enable them in your browser settings and try again.",
         variant: "destructive",
       });
       return;
@@ -97,7 +97,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <label className="text-sm font-medium text-white">Important Updates</label>
-          <p className="text-sm text-gray-400">Receive notifications about contract changes and grievances</p>
+          <p className="text-sm text-gray-400">Get notified about critical changes and updates</p>
         </div>
         <Switch
           checked={notifications}
@@ -110,11 +110,12 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
         <Alert className="bg-white/5 border-white/10">
           <Info className="h-4 w-4 text-white" />
           <AlertDescription className="text-sm text-gray-300">
-            You will receive notifications for:
+            You'll receive notifications for:
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Contract updates and revisions</li>
+              <li>Contract revisions and amendments</li>
               <li>Grievance status changes</li>
-              <li>Important app announcements</li>
+              <li>Important policy updates</li>
+              <li>System maintenance notices</li>
             </ul>
           </AlertDescription>
         </Alert>
