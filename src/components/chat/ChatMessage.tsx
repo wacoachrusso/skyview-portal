@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
 import { format } from "date-fns";
+import { TypeAnimation } from 'react-type-animation';
 
 interface ChatMessageProps {
   message: Message;
@@ -23,7 +24,17 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
             : "bg-white/5 text-white"
         )}
       >
-        <p className="text-sm">{message.content}</p>
+        {isCurrentUser ? (
+          <p className="text-sm">{message.content}</p>
+        ) : (
+          <TypeAnimation
+            sequence={[message.content]}
+            wrapper="p"
+            speed={75}
+            className="text-sm min-h-[20px]"
+            cursor={false}
+          />
+        )}
         <span className="text-xs opacity-50">
           {format(new Date(message.created_at), "h:mm a")}
         </span>
