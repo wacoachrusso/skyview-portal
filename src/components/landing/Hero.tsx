@@ -3,6 +3,13 @@ import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
 
 export function Hero() {
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing-section');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="relative bg-hero-gradient py-16 overflow-hidden">
       <div className="absolute inset-0 bg-glow-gradient opacity-50" />
@@ -22,11 +29,11 @@ export function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
               <Button 
-                asChild 
                 size="lg"
                 className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold w-full sm:w-auto px-6 shadow-lg"
+                onClick={scrollToPricing}
               >
-                <Link to="/signup">Start Free Trial</Link>
+                Start Free Trial
               </Button>
               <Button
                 asChild

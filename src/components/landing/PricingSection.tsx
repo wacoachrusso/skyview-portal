@@ -47,7 +47,7 @@ export function PricingSection() {
   };
 
   return (
-    <div className="py-20 px-4 bg-gray-50">
+    <div id="pricing-section" className="py-20 px-4 bg-gray-50">
       <div className="container mx-auto">
         <h2 className="text-3xl font-bold text-center text-brand-navy mb-12">
           Simple, Transparent Pricing
