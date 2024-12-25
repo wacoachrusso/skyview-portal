@@ -26,6 +26,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log("Starting signup process with plan:", selectedPlan);
 
     try {
       // Get user's IP address
@@ -49,6 +50,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       });
 
       if (error) {
+        console.error("Signup error:", error);
         toast({
           title: "Error",
           description: error.message,
@@ -58,16 +60,39 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       }
 
       console.log("Signup successful:", data);
-      toast({
-        title: "Success!",
-        description: "Please check your email to confirm your account.",
+
+      // Sign in the user immediately after signup
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
       });
-      
-      // Navigate to login page after successful signup
-      navigate('/login');
+
+      if (signInError) {
+        console.error("Auto-login error:", signInError);
+        toast({
+          title: "Error",
+          description: "Account created but couldn't log in automatically. Please log in manually.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
+      console.log("Auto-login successful:", signInData);
+
+      // Show success message
+      toast({
+        title: "Welcome!",
+        description: selectedPlan === 'free' 
+          ? "Your free trial account has been created. You have 2 queries available."
+          : "Your account has been created successfully.",
+      });
+
+      // Redirect to chat interface
+      navigate('/chat');
       
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error("Error in signup process:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
