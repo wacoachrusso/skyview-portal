@@ -6,9 +6,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -24,10 +26,26 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
+        options: {
+          // Set session expiry to 14 days if rememberMe is true, otherwise default to 1 hour
+          expiresIn: formData.rememberMe ? 60 * 60 * 24 * 14 : 60 * 60
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: error.message
+        });
+        throw error;
+      }
+
       console.log("Login successful:", data);
+      toast({
+        title: "Login successful",
+        description: "Welcome back!"
+      });
       navigate('/dashboard');
     } catch (error) {
       console.error("Error logging in:", error);
@@ -93,7 +111,7 @@ const Login = () => {
                 className="border-white/20"
               />
               <Label htmlFor="rememberMe" className="text-gray-200 cursor-pointer">
-                Stay logged in
+                Stay logged in for 2 weeks
               </Label>
             </div>
 
