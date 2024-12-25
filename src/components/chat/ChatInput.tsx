@@ -37,7 +37,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 bg-[#151821] border-t border-white/10">
+    <form onSubmit={handleSubmit} className="p-4 bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10">
       <div className="flex gap-2 items-end max-w-5xl mx-auto">
         <Textarea
           value={message}
@@ -47,7 +47,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           }}
           onKeyDown={handleKeyDown}
           placeholder="Message SkyGuide..."
-          className="min-h-[50px] resize-none bg-white/5 border-white/10 text-white placeholder:text-gray-400"
+          className="min-h-[50px] resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
           disabled={isLoading}
         />
         <Button 
@@ -63,7 +63,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           type="submit" 
           size="icon"
           disabled={isLoading || !message.trim()}
-          className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white"
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
         >
           <Send className="h-5 w-5" />
         </Button>

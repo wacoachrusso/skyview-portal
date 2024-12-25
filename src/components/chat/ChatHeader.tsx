@@ -8,7 +8,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ onBack, onNewChat }: ChatHeaderProps) {
   return (
-    <header className="flex items-center justify-between p-4 border-b border-white/10">
+    <header className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-[#1A1F2C] to-[#2A2F3C]">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"

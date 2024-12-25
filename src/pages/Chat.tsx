@@ -9,36 +9,50 @@ export default function Chat() {
   const navigate = useNavigate();
   const { messages, currentUserId, isLoading, sendMessage, createNewConversation } = useChat();
 
-  const handleNewChat = async () => {
-    if (!currentUserId) {
-      console.error('No current user ID available for new chat');
-      return;
-    }
-    await createNewConversation(currentUserId);
-  };
-
   return (
-    <div className="flex h-screen bg-[#1A1F2C]">
+    <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
       <ChatSidebar />
       <div className="flex-1 flex flex-col">
-        <ChatHeader onBack={() => navigate('/')} onNewChat={handleNewChat} />
-        <main className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-y-auto p-4">
-            {messages.length === 0 && !isLoading && (
-              <div className="text-center text-gray-400 mt-8">
-                <p className="text-lg">Ask me anything about your contract and I'll help you understand it...</p>
+        <ChatHeader 
+          onBack={() => navigate('/')} 
+          onNewChat={() => {
+            if (currentUserId) {
+              createNewConversation(currentUserId);
+            }
+          }} 
+        />
+        <main className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C]">
+          {messages.length === 0 && !isLoading && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <div className="inline-block p-6 rounded-full bg-gradient-to-br from-[#2A2F3C] to-[#1A1F2C]">
+                  <svg
+                    className="w-12 h-12 text-blue-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
+                <p className="text-gray-400 max-w-sm mx-auto">
+                  Ask me anything about your contract and I'll help you understand it better.
+                </p>
               </div>
-            )}
-            <ChatList 
-              messages={messages} 
-              currentUserId={currentUserId || ''} 
-              isLoading={isLoading}
-            />
-          </div>
-          <ChatInput 
-            onSendMessage={sendMessage}
+            </div>
+          )}
+          <ChatList 
+            messages={messages} 
+            currentUserId={currentUserId || ''} 
             isLoading={isLoading}
           />
+          <ChatInput onSendMessage={sendMessage} isLoading={isLoading} />
         </main>
       </div>
     </div>

@@ -20,8 +20,8 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
         className={cn(
           "flex max-w-[80%] flex-col gap-1 rounded-lg px-4 py-2",
           isCurrentUser
-            ? "bg-[#2563EB] text-white"
-            : "bg-white/5 text-white"
+            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+            : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white shadow-md"
         )}
       >
         {isCurrentUser ? (
