@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export function Hero() {
   return (
-    <div className="relative bg-hero-gradient py-32 px-4">
+    <div className="relative bg-gradient-to-r from-blue-600 to-brand-navy py-32 px-4">
       <div className="container mx-auto flex justify-between items-center">
         <div className="max-w-2xl">
           <h1 className="text-5xl font-bold text-white mb-6">
@@ -20,11 +20,11 @@ export function Hero() {
             <Link to="/signup">Get Started Free</Link>
           </Button>
         </div>
-        <div className="hidden lg:block relative z-10">
+        <div className="hidden lg:block">
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
             alt="SkyGuide Logo" 
-            className="w-96 h-auto drop-shadow-2xl animate-fade-up"
+            className="w-64 h-auto drop-shadow-2xl"
           />
         </div>
       </div>
