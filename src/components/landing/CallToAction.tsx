@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 
 export function CallToAction() {
   return (
-    <div className="py-20 bg-gradient-to-r from-brand-navy to-brand-slate">
-      <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+    <div className="relative py-20 bg-cta-gradient overflow-hidden">
+      <div className="absolute inset-0 bg-glow-gradient opacity-30" />
+      <div className="container mx-auto px-4 relative">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
           Ready to Simplify Your Contract Interpretation?
         </h2>
         <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
@@ -15,7 +16,7 @@ export function CallToAction() {
           <Button 
             asChild 
             size="lg"
-            className="bg-brand-gold hover:bg-brand-gold/90 text-white"
+            className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-white"
           >
             <Link to="/signup">Start Free Trial</Link>
           </Button>
@@ -23,7 +24,7 @@ export function CallToAction() {
             asChild 
             size="lg"
             variant="outline"
-            className="bg-transparent border-white text-white hover:bg-white/10"
+            className="bg-transparent border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
           >
             <Link to="/login">Learn More</Link>
           </Button>

@@ -57,6 +57,11 @@ export default {
       backgroundImage: {
         'hero-gradient': 'linear-gradient(135deg, #1a365d 0%, #334155 100%)',
         'card-gradient': 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+        'feature-gradient': 'linear-gradient(to right, #243949 0%, #517fa4 100%)',
+        'testimonial-gradient': 'linear-gradient(225deg, #1a365d 0%, #334155 100%)',
+        'cta-gradient': 'linear-gradient(to right, #1a365d 0%, #334155 100%)',
+        'footer-gradient': 'linear-gradient(to bottom, #1e293b 0%, #0f172a 100%)',
+        'glow-gradient': 'radial-gradient(circle at center, rgba(212,175,55,0.15) 0%, transparent 70%)',
       },
       borderRadius: {
         lg: "var(--radius)",

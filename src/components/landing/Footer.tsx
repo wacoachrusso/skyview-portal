@@ -1,7 +1,8 @@
 export function Footer() {
   return (
-    <footer className="bg-[#1A1F2C] text-gray-400 py-12 px-4">
-      <div className="container mx-auto">
+    <footer className="relative bg-footer-gradient text-gray-400 py-12 px-4">
+      <div className="absolute inset-0 bg-glow-gradient opacity-10" />
+      <div className="container mx-auto relative">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <h3 className="font-bold mb-4 text-white">SkyGuide</h3>

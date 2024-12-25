@@ -2,8 +2,9 @@ import { Award, Rocket, Globe, Clock } from "lucide-react";
 
 export function Features() {
   return (
-    <div className="py-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
-      <div className="container mx-auto px-4">
+    <div className="relative py-20 bg-feature-gradient overflow-hidden">
+      <div className="absolute inset-0 bg-glow-gradient opacity-30" />
+      <div className="container mx-auto px-4 relative">
         <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
           Why Choose SkyGuide?
         </h2>
@@ -35,11 +36,14 @@ export function Features() {
           ].map((feature, index) => (
             <div 
               key={index}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg shadow-lg border border-gray-700 hover:border-brand-gold/30 transition-all duration-300"
+              className="relative bg-card-gradient p-6 rounded-lg shadow-lg border border-white/10 hover:border-brand-gold/30 transition-all duration-300 group"
             >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-gray-300">{feature.description}</p>
+              <div className="absolute inset-0 bg-glow-gradient opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+              <div className="relative">
+                <div className="mb-4">{feature.icon}</div>
+                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-gray-300">{feature.description}</p>
+              </div>
             </div>
           ))}
         </div>

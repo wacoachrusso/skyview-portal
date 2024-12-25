@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 
 export function Hero() {
   return (
-    <div className="relative bg-gradient-to-br from-brand-navy via-brand-slate to-brand-navy py-16 overflow-hidden">
+    <div className="relative bg-hero-gradient py-16 overflow-hidden">
+      <div className="absolute inset-0 bg-glow-gradient opacity-50" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" />
       <div className="container mx-auto px-4 relative">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
@@ -38,8 +39,8 @@ export function Hero() {
           </div>
           <div className="w-full lg:w-1/2 flex items-center justify-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-lg">
-              <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/20 via-brand-gold/5 to-transparent blur-3xl rounded-full" />
-              <div className="relative bg-gradient-to-b from-slate-800/90 to-slate-900/90 p-4 md:p-6 rounded-xl shadow-2xl border border-white/10 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-glow-gradient opacity-75" />
+              <div className="relative bg-card-gradient p-4 md:p-6 rounded-xl shadow-2xl border border-white/10 backdrop-blur-sm">
                 <img 
                   src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
                   alt="SkyGuide Interface" 

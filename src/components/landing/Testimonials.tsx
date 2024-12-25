@@ -3,8 +3,9 @@ import { Star } from "lucide-react";
 
 export function Testimonials() {
   return (
-    <div className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="container mx-auto px-4">
+    <div className="relative py-20 bg-testimonial-gradient overflow-hidden">
+      <div className="absolute inset-0 bg-glow-gradient opacity-30" />
+      <div className="container mx-auto px-4 relative">
         <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
           What Aviation Professionals Say
         </h2>
@@ -32,8 +33,9 @@ export function Testimonials() {
               years: "12 years in aviation"
             }
           ].map((testimonial, index) => (
-            <Card key={index} className="card-hover bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700">
-              <CardContent className="pt-6">
+            <Card key={index} className="card-hover relative bg-card-gradient border-gray-700 group">
+              <div className="absolute inset-0 bg-glow-gradient opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+              <CardContent className="relative pt-6">
                 <div className="flex mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 fill-brand-gold text-brand-gold" />
