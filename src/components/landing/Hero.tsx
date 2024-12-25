@@ -34,10 +34,14 @@ export function Hero() {
                 variant="outline"
                 className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg"
               >
-                <Link to="/login">
+                <a 
+                  href="https://youtube.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
                   <Play className="mr-2 h-4 w-4" />
                   Watch Demo
-                </Link>
+                </a>
               </Button>
             </div>
           </div>
