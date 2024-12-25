@@ -8,31 +8,42 @@ export function useConversation() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   const createNewConversation = async (userId: string) => {
-    console.log('Creating new conversation for user:', userId);
-    try {
-      const { data: newConversation, error: conversationError } = await supabase
-        .from('conversations')
-        .insert([{ user_id: userId }])
-        .select()
-        .single();
+    console.log('Setting up for new conversation...');
+    // Just clear the current conversation ID without creating a new one yet
+    setCurrentConversationId(null);
+    return null;
+  };
 
-      if (conversationError) {
-        console.error('Error creating conversation:', conversationError);
-        throw conversationError;
+  const ensureConversation = async (userId: string) => {
+    console.log('Ensuring conversation exists before sending message...');
+    if (!currentConversationId) {
+      try {
+        const { data: newConversation, error: conversationError } = await supabase
+          .from('conversations')
+          .insert([{ user_id: userId }])
+          .select()
+          .single();
+
+        if (conversationError) {
+          console.error('Error creating conversation:', conversationError);
+          throw conversationError;
+        }
+        
+        console.log('New conversation created:', newConversation);
+        setCurrentConversationId(newConversation.id);
+        return newConversation.id;
+      } catch (error) {
+        console.error('Error creating new conversation:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create new conversation",
+          variant: "destructive",
+          duration: 3000
+        });
+        return null;
       }
-      
-      console.log('New conversation created:', newConversation);
-      setCurrentConversationId(newConversation.id);
-      return newConversation.id;
-    } catch (error) {
-      console.error('Error creating new conversation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create new conversation",
-        variant: "destructive"
-      });
-      return null;
     }
+    return currentConversationId;
   };
 
   const loadConversation = async (conversationId: string) => {
@@ -46,7 +57,8 @@ export function useConversation() {
       toast({
         title: "Error",
         description: "Failed to load conversation",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 3000
       });
       return [];
     }
@@ -55,6 +67,7 @@ export function useConversation() {
   return {
     currentConversationId,
     createNewConversation,
+    ensureConversation,
     loadConversation,
     setCurrentConversationId
   };

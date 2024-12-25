@@ -10,13 +10,19 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { currentConversationId, createNewConversation, loadConversation, setCurrentConversationId } = useConversation();
+  const { 
+    currentConversationId, 
+    createNewConversation, 
+    ensureConversation,
+    loadConversation, 
+    setCurrentConversationId 
+  } = useConversation();
 
   const sendMessage = async (content: string) => {
     console.log('Sending message:', { content, conversationId: currentConversationId });
     
-    if (!currentUserId || !currentConversationId) {
-      console.error('No user ID or conversation ID available', { currentUserId, currentConversationId });
+    if (!currentUserId) {
+      console.error('No user ID available');
       toast({
         title: "Error",
         description: "Unable to send message. Please try refreshing the page.",
@@ -29,15 +35,20 @@ export function useChat() {
     setIsLoading(true);
     
     try {
+      // Ensure we have a conversation before sending the message
+      const conversationId = await ensureConversation(currentUserId);
+      if (!conversationId) {
+        throw new Error('Failed to create or get conversation');
+      }
+
       // Update conversation's last_message_at
       const { error: updateError } = await supabase
         .from('conversations')
         .update({ 
           last_message_at: new Date().toISOString(),
-          // Update title with first message content if it's the first message
-          ...(messages.length === 0 && { title: content.slice(0, 50) }) // Limit title to 50 chars
+          title: content.slice(0, 50) // Use first message as title
         })
-        .eq('id', currentConversationId);
+        .eq('id', conversationId);
 
       if (updateError) throw updateError;
 
@@ -49,7 +60,7 @@ export function useChat() {
             content,
             user_id: currentUserId,
             role: 'user',
-            conversation_id: currentConversationId
+            conversation_id: conversationId
           }
         ])
         .select()
@@ -72,7 +83,7 @@ export function useChat() {
             content: data.response,
             user_id: null,
             role: 'assistant',
-            conversation_id: currentConversationId
+            conversation_id: conversationId
           }
         ]);
 
@@ -107,16 +118,6 @@ export function useChat() {
     const setupChat = async () => {
       const userId = await checkAuth();
       if (!userId) return;
-
-      // Only create a new conversation if we don't have one and there are messages
-      if (!currentConversationId && messages.length > 0) {
-        console.log('No current conversation and we have messages, creating new one...');
-        const conversationId = await createNewConversation(userId);
-        if (conversationId) {
-          const messages = await loadConversation(conversationId);
-          setMessages(messages);
-        }
-      }
     };
 
     setupChat();
