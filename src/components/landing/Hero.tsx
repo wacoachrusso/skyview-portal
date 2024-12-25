@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 export function Hero() {
   return (
-    <div className="relative bg-hero-gradient py-8 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/95 to-brand-slate/95" />
+    <div className="relative bg-gradient-to-br from-brand-navy via-brand-slate to-brand-navy py-16 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" />
       <div className="container mx-auto px-4 relative">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="w-full lg:w-1/2 text-center lg:text-left">
@@ -22,7 +22,7 @@ export function Hero() {
               <Button 
                 asChild 
                 size="lg"
-                className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-6"
+                className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold w-full sm:w-auto px-6"
               >
                 <Link to="/signup">Start Free Trial</Link>
               </Button>
@@ -30,7 +30,7 @@ export function Hero() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-2 border-white/20 text-white hover:bg-white/10 font-semibold w-full sm:w-auto px-6"
+                className="border-2 border-white/20 text-white hover:bg-white/10 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm"
               >
                 <Link to="/login">Watch Demo</Link>
               </Button>
@@ -38,7 +38,7 @@ export function Hero() {
           </div>
           <div className="w-full lg:w-1/2 flex items-center justify-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-lg">
-              <div className="absolute inset-0 bg-brand-gold/5 blur-3xl rounded-full" />
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/20 via-brand-gold/5 to-transparent blur-3xl rounded-full" />
               <div className="relative bg-gradient-to-b from-slate-800/90 to-slate-900/90 p-4 md:p-6 rounded-xl shadow-2xl border border-white/10 backdrop-blur-sm">
                 <img 
                   src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
