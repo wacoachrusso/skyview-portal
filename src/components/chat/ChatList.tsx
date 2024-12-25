@@ -21,10 +21,15 @@ export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) 
 
   useEffect(() => {
     // Save messages to localStorage if auto-save is enabled
-    const autoSave = localStorage.getItem("chat-auto-save") !== "false";
-    if (autoSave) {
-      console.log("Auto-saving messages to localStorage");
-      localStorage.setItem("chat-messages", JSON.stringify(messages));
+    const autoSave = localStorage.getItem("chat-auto-save") === "true";
+    if (autoSave && messages.length > 0) {
+      console.log("Auto-saving messages to localStorage:", messages.length, "messages");
+      try {
+        localStorage.setItem("chat-messages", JSON.stringify(messages));
+        console.log("Messages saved successfully");
+      } catch (error) {
+        console.error("Error saving messages to localStorage:", error);
+      }
     }
   }, [messages]);
 

@@ -73,7 +73,7 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
               wrapper="div"
               cursor={false}
               repeat={0}
-              speed={70}
+              speed={90} // Increased typing speed (lower number = faster)
               className="whitespace-pre-wrap"
             />
           </div>
