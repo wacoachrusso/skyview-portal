@@ -32,7 +32,10 @@ export default function Chat() {
       const newConversationId = await createNewConversation(currentUserId);
       if (newConversationId) {
         console.log('New conversation created:', newConversationId);
-        await loadConversation(newConversationId);
+        // Only load the conversation if we have messages
+        if (messages.length > 0) {
+          await loadConversation(newConversationId);
+        }
       }
     }
   };
@@ -54,6 +57,7 @@ export default function Chat() {
           title: "Session expired",
           description: "Please log in again to continue.",
           variant: "destructive",
+          duration: 3000
         });
         navigate('/login');
         return;

@@ -20,7 +20,8 @@ export function useChat() {
       toast({
         title: "Error",
         description: "Unable to send message. Please try refreshing the page.",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 3000
       });
       return;
     }
@@ -82,7 +83,8 @@ export function useChat() {
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 3000
       });
     } finally {
       setIsLoading(false);
@@ -106,9 +108,9 @@ export function useChat() {
       const userId = await checkAuth();
       if (!userId) return;
 
-      // Only create a new conversation if we don't have one
-      if (!currentConversationId) {
-        console.log('No current conversation, creating new one...');
+      // Only create a new conversation if we don't have one and there are messages
+      if (!currentConversationId && messages.length > 0) {
+        console.log('No current conversation and we have messages, creating new one...');
         const conversationId = await createNewConversation(userId);
         if (conversationId) {
           const messages = await loadConversation(conversationId);

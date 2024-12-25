@@ -54,6 +54,7 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
         title: "Error",
         description: "Failed to load conversations. Please try logging in again.",
         variant: "destructive",
+        duration: 3000
       });
       navigate('/login');
     }
@@ -76,6 +77,7 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
       toast({
         title: "Success",
         description: "Conversation deleted",
+        duration: 3000
       });
 
       if (currentConversationId === conversationId) {
@@ -87,6 +89,7 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
         title: "Error",
         description: "Failed to delete conversation",
         variant: "destructive",
+        duration: 3000
       });
     }
   };
@@ -103,6 +106,7 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
       toast({
         title: "Success",
         description: "All conversations deleted",
+        duration: 3000
       });
       
       onSelectConversation('');
@@ -112,6 +116,7 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
         title: "Error",
         description: "Failed to delete all conversations",
         variant: "destructive",
+        duration: 3000
       });
     }
   };
