@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, LogOut } from "lucide-react";
+import { LogOut, Search, Flag, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -54,6 +54,22 @@ const Dashboard = () => {
     }
   };
 
+  const handleDownloadContract = () => {
+    // This is a placeholder - you'll need to implement the actual PDF download
+    toast({
+      title: "Coming Soon",
+      description: "Contract download will be available shortly"
+    });
+  };
+
+  const handleFileGrievance = () => {
+    // This is a placeholder - you'll need to implement the grievance form
+    toast({
+      title: "Coming Soon",
+      description: "Grievance filing system will be available shortly"
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex items-center justify-center p-4">
@@ -85,16 +101,29 @@ const Dashboard = () => {
 
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-8">
           <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <Link to="/chat">
               <Button 
                 className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold h-24"
               >
-                <MessageSquare className="h-6 w-6 mr-2" />
-                Start Chatting with AI
+                <Search className="h-6 w-6 mr-2" />
+                Let SkyGuide Search The Contract
               </Button>
             </Link>
-            {/* Additional quick action buttons can be added here */}
+            <Button 
+              onClick={handleFileGrievance}
+              className="w-full bg-white/20 hover:bg-white/30 text-white font-semibold h-24"
+            >
+              <Flag className="h-6 w-6 mr-2" />
+              File a Grievance
+            </Button>
+            <Button 
+              onClick={handleDownloadContract}
+              className="w-full bg-white/20 hover:bg-white/30 text-white font-semibold h-24"
+            >
+              <FileText className="h-6 w-6 mr-2" />
+              Download Contract PDF
+            </Button>
           </div>
         </div>
 
