@@ -10,14 +10,23 @@ interface ChatListProps {
 
 export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    if (messages.length === 0) {
+      scrollToTop();
+    } else {
+      scrollToBottom();
+    }
+  }, [messages]);
 
   useEffect(() => {
     // Save messages to localStorage if auto-save is enabled
@@ -35,7 +44,7 @@ export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto">
+      <div ref={containerRef} className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-2 p-2 sm:p-4">
           {messages.map((message) => (
             <ChatMessage
