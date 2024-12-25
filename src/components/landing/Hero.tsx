@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Play } from "lucide-react";
 
 export function Hero() {
   return (
@@ -23,7 +24,7 @@ export function Hero() {
               <Button 
                 asChild 
                 size="lg"
-                className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold w-full sm:w-auto px-6"
+                className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold w-full sm:w-auto px-6 shadow-lg"
               >
                 <Link to="/signup">Start Free Trial</Link>
               </Button>
@@ -31,9 +32,12 @@ export function Hero() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-2 border-white/20 text-white hover:bg-white/10 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm"
+                className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg"
               >
-                <Link to="/login">Watch Demo</Link>
+                <Link to="/login">
+                  <Play className="mr-2 h-4 w-4" />
+                  Watch Demo
+                </Link>
               </Button>
             </div>
           </div>

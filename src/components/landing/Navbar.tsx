@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { LogIn } from "lucide-react";
 
 export function Navbar() {
   return (
@@ -14,11 +15,21 @@ export function Navbar() {
             />
             <span className="text-brand-navy text-lg font-bold">SkyGuide</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" className="text-brand-navy hover:bg-gray-100">
-              <Link to="/login">Login</Link>
+          <div className="flex items-center gap-3">
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="text-brand-navy hover:bg-brand-navy/10 font-medium"
+            >
+              <Link to="/login">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Link>
             </Button>
-            <Button asChild className="bg-brand-navy text-white hover:bg-brand-navy/90">
+            <Button 
+              asChild 
+              className="bg-brand-navy text-white hover:bg-brand-navy/90 font-semibold shadow-sm"
+            >
               <Link to="/signup">Sign Up</Link>
             </Button>
           </div>
