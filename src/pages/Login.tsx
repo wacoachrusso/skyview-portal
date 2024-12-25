@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,8 +27,11 @@ const Login = () => {
         email: formData.email,
         password: formData.password,
         options: {
+          data: {
+            remember_me: formData.rememberMe
+          },
           // Set session expiry to 14 days if rememberMe is true, otherwise default to 1 hour
-          expiresIn: formData.rememberMe ? 60 * 60 * 24 * 14 : 60 * 60
+          persistSession: formData.rememberMe
         }
       });
 
