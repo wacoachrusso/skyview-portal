@@ -2,69 +2,15 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
+import { useConversation } from "./useConversation";
+import { updateConversationTitle } from "@/utils/conversationUtils";
 
 export function useChat() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-
-  const loadConversation = async (conversationId: string) => {
-    console.log('Loading conversation:', conversationId);
-    try {
-      const { data: existingMessages, error: messagesError } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (messagesError) {
-        console.error('Error fetching messages:', messagesError);
-        throw messagesError;
-      }
-
-      console.log('Loaded messages:', existingMessages);
-      setMessages(existingMessages || []);
-      setCurrentConversationId(conversationId);
-    } catch (error) {
-      console.error('Error loading conversation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load conversation",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const createNewConversation = async (userId: string) => {
-    console.log('Creating new conversation for user:', userId);
-    try {
-      const { data: newConversation, error: conversationError } = await supabase
-        .from('conversations')
-        .insert([{ user_id: userId }])
-        .select()
-        .single();
-
-      if (conversationError) {
-        console.error('Error creating conversation:', conversationError);
-        throw conversationError;
-      }
-      
-      console.log('New conversation created:', newConversation);
-      setCurrentConversationId(newConversation.id);
-      setMessages([]); // Clear messages for new conversation
-      return newConversation.id;
-    } catch (error) {
-      console.error('Error creating new conversation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create new conversation",
-        variant: "destructive"
-      });
-      return null;
-    }
-  };
+  const { currentConversationId, createNewConversation, loadConversation, setCurrentConversationId } = useConversation();
 
   const sendMessage = async (content: string) => {
     console.log('Sending message:', { content, conversationId: currentConversationId });
@@ -105,6 +51,11 @@ export function useChat() {
         .single();
 
       if (userMessageError) throw userMessageError;
+
+      // Update conversation title if this is the first message
+      if (messages.length === 0) {
+        await updateConversationTitle(currentConversationId, content);
+      }
 
       // Get AI response
       const { data, error } = await supabase.functions.invoke('chat-completion', {
@@ -160,7 +111,8 @@ export function useChat() {
       if (!currentConversationId) {
         const conversationId = await createNewConversation(userId);
         if (conversationId) {
-          await loadConversation(conversationId);
+          const messages = await loadConversation(conversationId);
+          setMessages(messages);
         }
       }
     };
@@ -200,6 +152,9 @@ export function useChat() {
     sendMessage,
     createNewConversation,
     currentConversationId,
-    loadConversation
+    loadConversation: async (conversationId: string) => {
+      const messages = await loadConversation(conversationId);
+      setMessages(messages);
+    }
   };
 }
