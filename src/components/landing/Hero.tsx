@@ -24,7 +24,7 @@ export function Hero() {
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
             alt="SkyGuide Logo" 
-            className="w-64 h-auto drop-shadow-2xl"
+            className="w-96 h-auto drop-shadow-2xl animate-fade-up"
           />
         </div>
       </div>
