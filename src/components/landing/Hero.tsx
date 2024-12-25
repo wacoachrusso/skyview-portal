@@ -20,12 +20,14 @@ export function Hero() {
             <Link to="/signup">Get Started Free</Link>
           </Button>
         </div>
-        <div className="hidden lg:block">
-          <img 
-            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
-            alt="SkyGuide Logo" 
-            className="w-96 h-auto drop-shadow-2xl animate-fade-up"
-          />
+        <div className="hidden lg:flex items-center justify-center">
+          <div className="bg-slate-800/90 p-8 rounded-lg shadow-xl">
+            <img 
+              src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+              alt="SkyGuide Logo" 
+              className="w-80 h-auto animate-fade-up"
+            />
+          </div>
         </div>
       </div>
     </div>

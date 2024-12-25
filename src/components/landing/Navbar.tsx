@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 export function Navbar() {
   return (
     <nav className="bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="flex items-center gap-3">
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
             alt="SkyGuide Logo" 
-            className="h-8 w-auto"
+            className="h-10 w-auto"
           />
           <span className="text-brand-navy text-xl font-bold">SkyGuide</span>
         </div>
