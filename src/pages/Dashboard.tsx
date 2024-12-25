@@ -107,7 +107,7 @@ const Dashboard = () => {
                 className="w-full bg-gradient-to-r from-[#D4AF37] to-[#F0C75E] hover:from-[#D4AF37]/90 hover:to-[#F0C75E]/90 text-[#1a365d] font-semibold h-28 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]"
               >
                 <Search className="h-6 w-6 mr-3" />
-                <span className="text-lg">Let SkyGuide Search The Contract</span>
+                <span className="text-lg whitespace-normal leading-tight">Search Contract</span>
               </Button>
             </Link>
             <Button 
