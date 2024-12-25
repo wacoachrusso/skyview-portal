@@ -24,7 +24,7 @@ export default function Chat() {
         <ChatHeader onBack={() => navigate('/')} onNewChat={handleNewChat} />
         <main className="flex-1 overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto p-4">
-            {messages.length === 0 && (
+            {messages.length === 0 && !isLoading && (
               <div className="text-center text-gray-400 mt-8">
                 <p className="text-lg">Ask me anything about your contract and I'll help you understand it...</p>
               </div>
@@ -32,6 +32,7 @@ export default function Chat() {
             <ChatList 
               messages={messages} 
               currentUserId={currentUserId || ''} 
+              isLoading={isLoading}
             />
           </div>
           <ChatInput 

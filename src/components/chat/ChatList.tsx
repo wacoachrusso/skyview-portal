@@ -5,9 +5,10 @@ import { useEffect, useRef } from "react";
 interface ChatListProps {
   messages: Message[];
   currentUserId: string;
+  isLoading?: boolean;
 }
 
-export function ChatList({ messages, currentUserId }: ChatListProps) {
+export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -16,7 +17,7 @@ export function ChatList({ messages, currentUserId }: ChatListProps) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
   return (
     <div className="flex flex-col gap-2 p-4 overflow-y-auto">
@@ -27,6 +28,18 @@ export function ChatList({ messages, currentUserId }: ChatListProps) {
           isCurrentUser={message.user_id === currentUserId}
         />
       ))}
+      {isLoading && (
+        <div className="flex w-full gap-2 p-2 justify-start">
+          <div className="flex max-w-[80%] flex-col gap-1 rounded-lg px-4 py-2 bg-white/5 text-white">
+            <div className="flex items-center gap-2">
+              <div className="animate-pulse w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="animate-pulse w-2 h-2 bg-blue-500 rounded-full delay-150"></div>
+              <div className="animate-pulse w-2 h-2 bg-blue-500 rounded-full delay-300"></div>
+              <span className="text-sm ml-2">Searching the contract...</span>
+            </div>
+          </div>
+        </div>
+      )}
       <div ref={messagesEndRef} />
     </div>
   );

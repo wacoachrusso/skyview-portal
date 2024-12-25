@@ -30,7 +30,7 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
           <TypeAnimation
             sequence={[message.content]}
             wrapper="p"
-            speed={75}
+            speed={99}
             className="text-sm min-h-[20px]"
             cursor={false}
           />
