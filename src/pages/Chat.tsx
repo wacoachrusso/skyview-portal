@@ -7,10 +7,12 @@ import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { useChat } from "@/hooks/useChat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Chat() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const { messages, currentUserId, isLoading, sendMessage, createNewConversation } = useChat();
 
   useEffect(() => {
@@ -27,7 +29,6 @@ export default function Chat() {
         return;
       }
       
-      // Set up auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         if (!session) {
           console.log("Auth state changed: no session, redirecting to login");
@@ -45,7 +46,7 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
-      <ChatSidebar />
+      {!isMobile && <ChatSidebar />}
       <div className="flex-1 flex flex-col chat-container">
         <ChatHeader 
           onBack={() => navigate('/')} 
@@ -57,11 +58,11 @@ export default function Chat() {
         />
         <main className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C]">
           {messages.length === 0 && !isLoading && (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center p-4">
               <div className="text-center space-y-4">
                 <div className="inline-block p-6 rounded-full bg-gradient-to-br from-[#2A2F3C] to-[#1A1F2C]">
                   <svg
-                    className="w-12 h-12 text-blue-500"
+                    className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -74,8 +75,8 @@ export default function Chat() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
-                <p className="text-gray-400 max-w-sm mx-auto">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
+                <p className="text-sm sm:text-base text-gray-400 max-w-sm mx-auto">
                   Ask me anything about your contract and I'll help you understand it better.
                 </p>
               </div>

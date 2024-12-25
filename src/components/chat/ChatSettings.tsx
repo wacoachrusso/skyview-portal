@@ -10,6 +10,7 @@ import { FontSizeSelector } from "./settings/FontSizeSelector";
 import { NotificationToggle } from "./settings/NotificationToggle";
 import { AutoSaveToggle } from "./settings/AutoSaveToggle";
 import { AccountInfo } from "./settings/AccountInfo";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function ChatSettings() {
   const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");
@@ -17,6 +18,7 @@ export function ChatSettings() {
   const [autoSave, setAutoSave] = useState(() => localStorage.getItem("chat-auto-save") !== "false");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     try {
@@ -25,7 +27,6 @@ export function ChatSettings() {
       if (error) throw error;
       
       console.log("Sign out successful, clearing local storage...");
-      // Clear any stored tokens or user data
       localStorage.removeItem("sb-xnlzqsoujwsffoxhhybk-auth-token");
       
       console.log("Redirecting to home page...");
@@ -44,7 +45,6 @@ export function ChatSettings() {
     }
   };
 
-  // Check auth status when component mounts
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -62,15 +62,15 @@ export function ChatSettings() {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
+          size={isMobile ? "sm" : "icon"}
           className="text-white hover:bg-white/10"
         >
-          <Settings className="h-5 w-5" />
+          <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C] border-l border-white/10">
+      <SheetContent className="w-[90vw] sm:w-[400px] bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C] border-l border-white/10">
         <SheetHeader>
-          <SheetTitle className="text-2xl font-bold text-white">Settings</SheetTitle>
+          <SheetTitle className="text-xl sm:text-2xl font-bold text-white">Settings</SheetTitle>
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
