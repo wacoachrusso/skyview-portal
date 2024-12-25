@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Mic, MicOff, Send } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
@@ -52,7 +52,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   };
 
   // Update message when transcript changes
-  useState(() => {
+  useEffect(() => {
     if (transcript) {
       setMessage(transcript);
     }
