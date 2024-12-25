@@ -16,7 +16,9 @@ export default function Chat() {
     createNewConversation,
     currentConversationId,
     loadConversation,
-    setCurrentConversationId
+    setCurrentConversationId,
+    currentUserId,
+    userProfile
   } = useChat();
 
   const handleBack = () => {
@@ -47,7 +49,12 @@ export default function Chat() {
       <div className="flex-1 flex flex-col">
         <ChatHeader onBack={handleBack} onNewChat={handleNewChat} />
         <div className="flex-1 overflow-y-auto">
-          <ChatList messages={messages} isLoading={isLoading} />
+          <ChatList 
+            messages={messages} 
+            isLoading={isLoading} 
+            currentUserId={currentUserId}
+            subscriptionPlan={userProfile?.subscription_plan}
+          />
         </div>
         <ChatInput onSendMessage={sendMessage} isLoading={isLoading} />
       </div>
