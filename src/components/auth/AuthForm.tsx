@@ -61,35 +61,24 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
       console.log("Signup successful:", data);
 
-      // Sign in the user immediately after signup
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (signInError) {
-        console.error("Auto-login error:", signInError);
+      // Show appropriate success message based on whether email confirmation is required
+      if (!data.session) {
+        // Email confirmation is required
         toast({
-          title: "Error",
-          description: "Account created but couldn't log in automatically. Please log in manually.",
-          variant: "destructive",
+          title: "Check your email",
+          description: "Please check your email to confirm your account before logging in.",
         });
         navigate('/login');
-        return;
+      } else {
+        // Email confirmation was not required, user is automatically signed in
+        toast({
+          title: "Welcome!",
+          description: selectedPlan === 'free' 
+            ? "Your free trial account has been created. You have 2 queries available."
+            : "Your account has been created successfully.",
+        });
+        navigate('/chat');
       }
-
-      console.log("Auto-login successful:", signInData);
-
-      // Show success message
-      toast({
-        title: "Welcome!",
-        description: selectedPlan === 'free' 
-          ? "Your free trial account has been created. You have 2 queries available."
-          : "Your account has been created successfully.",
-      });
-
-      // Redirect to chat interface
-      navigate('/chat');
       
     } catch (error) {
       console.error("Error in signup process:", error);
