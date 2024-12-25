@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Mic, MicOff, Send } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,51 +15,61 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [isListening, setIsListening] = useState(false);
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  
-  let recognition: SpeechRecognition | null = null;
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
+    // Check if the browser supports speech recognition
+    if (typeof window !== 'undefined') {
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (SpeechRecognitionAPI) {
+        console.log('Speech recognition is supported');
+        recognitionRef.current = new SpeechRecognitionAPI();
         
-        console.log('Speech recognition result:', transcript);
-        setMessage(transcript);
-      };
+        if (recognitionRef.current) {
+          recognitionRef.current.continuous = true;
+          recognitionRef.current.interimResults = true;
 
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-        toast({
-          title: "Error",
-          description: "There was an error with speech recognition. Please try again.",
-          variant: "destructive",
-        });
-      };
+          recognitionRef.current.onresult = (event) => {
+            const transcript = Array.from(event.results)
+              .map(result => result[0])
+              .map(result => result.transcript)
+              .join('');
+            
+            console.log('Speech recognition result:', transcript);
+            setMessage(transcript);
+          };
 
-      recognition.onend = () => {
-        console.log('Speech recognition ended');
-        setIsListening(false);
-      };
+          recognitionRef.current.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            setIsListening(false);
+            toast({
+              title: "Error",
+              description: "There was an error with speech recognition. Please try again.",
+              variant: "destructive",
+            });
+          };
+
+          recognitionRef.current.onend = () => {
+            console.log('Speech recognition ended');
+            setIsListening(false);
+          };
+        }
+      } else {
+        console.log('Speech recognition is not supported');
+      }
     }
 
     return () => {
-      if (recognition) {
-        recognition.stop();
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
       }
     };
   }, []);
 
   const toggleListening = async () => {
-    if (!recognition) {
+    if (!recognitionRef.current) {
+      console.log('Speech recognition is not available');
       toast({
         title: "Not Supported",
         description: "Speech recognition is not supported in your browser.",
@@ -70,12 +80,12 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
 
     if (isListening) {
       console.log('Stopping speech recognition');
-      recognition.stop();
+      recognitionRef.current.stop();
       setIsListening(false);
     } else {
       try {
         console.log('Starting speech recognition');
-        await recognition.start();
+        await recognitionRef.current.start();
         setIsListening(true);
       } catch (error) {
         console.error('Error starting speech recognition:', error);
@@ -98,7 +108,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     }
     
     if (isListening) {
-      recognition?.stop();
+      recognitionRef.current?.stop();
       setIsListening(false);
     }
     
