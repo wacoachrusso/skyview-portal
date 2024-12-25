@@ -1,16 +1,16 @@
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, MicOff, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { MicButton } from "./MicButton";
+import { SendButton } from "./SendButton";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
   isLoading?: boolean;
 }
 
-export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
+export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const isMobile = useIsMobile();
   const { 
@@ -73,29 +73,17 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           disabled={isLoading}
         />
         {!isMobile && (
-          <Button 
-            type="button"
-            size="icon"
-            variant="ghost"
-            className={`text-white hover:bg-white/10 ${isListening ? 'bg-red-500/20' : ''}`}
-            disabled={isLoading}
-            onClick={toggleListening}
-          >
-            {isListening ? (
-              <MicOff className="h-5 w-5" />
-            ) : (
-              <Mic className="h-5 w-5" />
-            )}
-          </Button>
+          <MicButton 
+            isListening={isListening}
+            isLoading={isLoading}
+            onToggle={toggleListening}
+          />
         )}
-        <Button 
-          type="submit" 
-          size={isMobile ? "sm" : "icon"}
-          disabled={isLoading || !message.trim()}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-        >
-          <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-        </Button>
+        <SendButton 
+          isLoading={isLoading}
+          hasMessage={message.trim().length > 0}
+          isMobile={isMobile}
+        />
       </div>
     </form>
   );
