@@ -40,11 +40,13 @@ export function ConversationList({
         >
           <Button
             variant="ghost"
-            className="flex-1 justify-start text-left p-3"
+            className="flex-1 justify-start text-left p-3 max-w-[calc(100%-40px)]"
             onClick={() => onSelectConversation(conversation.id)}
           >
-            <div className="truncate">
-              <div className="font-medium text-white">{conversation.title}</div>
+            <div className="w-full">
+              <div className="font-medium text-white truncate">
+                {conversation.title.replace(/【.*?】/g, '').trim()}
+              </div>
               <div className="text-xs text-gray-400">
                 {format(new Date(conversation.last_message_at), 'MMM d, yyyy')}
               </div>
@@ -55,7 +57,7 @@ export function ConversationList({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-white hover:bg-white/10"
+                className="text-gray-400 hover:text-white hover:bg-white/10 min-w-[40px]"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
