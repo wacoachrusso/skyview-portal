@@ -14,9 +14,9 @@ export function Navbar() {
           <span className="text-white text-xl font-semibold">SkyGuide</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/login" className="text-sm text-gray-300 hover:text-white transition-colors">
-            Login
-          </Link>
+          <Button asChild variant="secondary" className="bg-brand-navy hover:bg-brand-navy/90">
+            <Link to="/login">Login</Link>
+          </Button>
           <Button asChild variant="secondary" className="bg-brand-navy hover:bg-brand-navy/90">
             <Link to="/signup">Sign Up</Link>
           </Button>
