@@ -1,30 +1,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-
-const airlines = [
-  "American Airlines",
-  "Delta Air Lines",
-  "United Airlines",
-  "Southwest Airlines",
-  "Other"
-];
-
-const jobTitles = [
-  "Pilot",
-  "Flight Attendant"
-];
+import { AuthFormHeader } from "./AuthFormHeader";
+import { AuthFormFields } from "./AuthFormFields";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AuthFormProps {
   selectedPlan?: string;
 }
 
 export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -60,10 +48,31 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       console.log("Signup successful:", data);
+      toast({
+        title: "Success!",
+        description: "Please check your email to confirm your account.",
+      });
+      
+      // Navigate to login page after successful signup
+      navigate('/login');
+      
     } catch (error) {
       console.error("Error signing up:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -72,118 +81,16 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center gap-2 text-gray-300 hover:text-white mb-8">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
+        <AuthFormHeader />
 
         <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
-          <div className="mb-6 flex justify-center">
-            <img 
-              src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
-              alt="SkyGuide Logo" 
-              className="h-12 w-auto"
-            />
-          </div>
-
-          <h1 className="text-2xl font-bold text-white text-center mb-2">Create Account</h1>
-          <p className="text-gray-400 text-center mb-6">Enter your details to get started</p>
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="fullName" className="text-gray-200">Full Name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className="bg-white/10 border-white/20 text-white"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email" className="text-gray-200">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="bg-white/10 border-white/20 text-white"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="text-gray-200">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="bg-white/10 border-white/20 text-white pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Label htmlFor="jobTitle" className="text-gray-200">Select Job Title</Label>
-              <Select 
-                value={formData.jobTitle}
-                onValueChange={(value) => setFormData({ ...formData, jobTitle: value })}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Select Job Title" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/20 text-white z-50">
-                  {jobTitles.map((title) => (
-                    <SelectItem 
-                      key={title} 
-                      value={title.toLowerCase()}
-                      className="hover:bg-white/10"
-                    >
-                      {title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="relative">
-              <Label htmlFor="airline" className="text-gray-200">Select Airline</Label>
-              <Select
-                value={formData.airline}
-                onValueChange={(value) => setFormData({ ...formData, airline: value })}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Select Airline" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/20 text-white z-50">
-                  {airlines.map((airline) => (
-                    <SelectItem 
-                      key={airline} 
-                      value={airline.toLowerCase()}
-                      className="hover:bg-white/10"
-                    >
-                      {airline}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <AuthFormFields 
+              formData={formData}
+              showPassword={showPassword}
+              setFormData={setFormData}
+              setShowPassword={setShowPassword}
+            />
 
             <Button 
               type="submit" 
