@@ -18,14 +18,14 @@ export function Hero() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="w-full lg:w-1/2 text-center lg:text-left">
             <div className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-sm mb-4 animate-fade-up">
-              Your AI-Powered Contract Assistant
+              Your Professional Contract Assistant
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
               Navigate Your Contract <br className="hidden md:block" />
               With Confidence
             </h1>
             <p className="text-base md:text-lg text-gray-200 mb-6 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
-              Get instant, accurate answers to your contract questions. Let AI help you understand your rights and make informed decisions about your schedule.
+              Get instant, accurate answers to your contract questions. Our expert system helps you understand your rights and make informed decisions about your schedule.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
               <Button 
