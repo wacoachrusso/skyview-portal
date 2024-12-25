@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
+import { ChatSettings } from "./ChatSettings";
 
 export function ChatSidebar() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,13 +16,7 @@ export function ChatSidebar() {
           </div>
           <span className="text-white font-semibold">SkyGuide</span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/10"
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
+        <ChatSettings />
       </div>
       
       <div className="p-4 border-b border-white/10 bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C]">
