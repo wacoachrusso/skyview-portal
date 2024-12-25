@@ -68,15 +68,15 @@ export function useChat() {
 
       if (userMessageError) throw userMessageError;
 
-      // Get AI response
+      // Get response
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { content }
       });
 
       if (error) throw error;
 
-      // Save AI response
-      const { error: aiMessageError } = await supabase
+      // Save response
+      const { error: responseError } = await supabase
         .from('messages')
         .insert([
           {
@@ -87,7 +87,7 @@ export function useChat() {
           }
         ]);
 
-      if (aiMessageError) throw aiMessageError;
+      if (responseError) throw responseError;
 
     } catch (error) {
       console.error('Error in chat flow:', error);
