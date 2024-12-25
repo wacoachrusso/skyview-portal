@@ -30,14 +30,31 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       if (event === 'SIGNED_IN') {
         console.log("User signed in after email confirmation");
         toast({
-          title: "Welcome!",
+          title: "Welcome to SkyGuide!",
           description: selectedPlan === 'free' 
             ? "Your email has been confirmed. You have 2 queries available."
             : "Your email has been confirmed. Your account is now active.",
         });
         navigate('/chat');
+      } else if (event === 'USER_UPDATED') {
+        console.log("User updated - likely email confirmed");
+        toast({
+          title: "Email Confirmed!",
+          description: "Your email has been confirmed. You can now use SkyGuide.",
+        });
+        navigate('/chat');
       }
     });
+
+    // Check if we're on a confirmation URL
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=signup')) {
+      console.log("Found confirmation hash:", hash);
+      toast({
+        title: "Confirming your email...",
+        description: "Please wait while we confirm your email address.",
+      });
+    }
 
     return () => {
       subscription.unsubscribe();
@@ -66,7 +83,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             last_ip_address: ip,
             query_count: 0,
             last_query_timestamp: new Date().toISOString()
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/login#confirmation`
         }
       });
 
@@ -86,14 +104,14 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       if (!data.session) {
         // Email confirmation is required
         toast({
-          title: "Almost there!",
+          title: "Welcome to SkyGuide!",
           description: "We've sent you a confirmation email. Please check your inbox and click the confirmation link to activate your account. Once confirmed, you'll be automatically redirected to the chat interface.",
         });
         navigate('/login');
       } else {
         // Email confirmation was not required, user is automatically signed in
         toast({
-          title: "Welcome!",
+          title: "Welcome to SkyGuide!",
           description: selectedPlan === 'free' 
             ? "Your free trial account has been created. You have 2 queries available."
             : "Your account has been created successfully.",
