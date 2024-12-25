@@ -1,13 +1,47 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { useChat } from "@/hooks/useChat";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { messages, currentUserId, isLoading, sendMessage, createNewConversation } = useChat();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log("No active session found, redirecting to login");
+        toast({
+          title: "Session expired",
+          description: "Please log in again to continue.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+      
+      // Set up auth state change listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!session) {
+          console.log("Auth state changed: no session, redirecting to login");
+          navigate('/login');
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+
+    checkAuth();
+  }, [navigate, toast]);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,15 @@ export function ChatSettings() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log("Attempting to sign out...");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      console.log("Sign out successful, clearing local storage...");
+      // Clear any stored tokens or user data
+      localStorage.removeItem("sb-xnlzqsoujwsffoxhhybk-auth-token");
+      
+      console.log("Redirecting to home page...");
       navigate("/");
       toast({
         title: "Logged out successfully",
@@ -35,6 +43,19 @@ export function ChatSettings() {
       });
     }
   };
+
+  // Check auth status when component mounts
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log("No active session in settings, redirecting to login");
+        navigate('/login');
+      }
+    };
+
+    checkSession();
+  }, [navigate]);
 
   return (
     <Sheet>
