@@ -31,7 +31,6 @@ export default function Chat() {
     console.log('Creating new chat...');
     if (currentUserId) {
       setCurrentConversationId(null);
-      // Clear messages when starting a new chat
       loadConversation('');
     }
   };
@@ -53,7 +52,7 @@ export default function Chat() {
           title: "Session expired",
           description: "Please log in again to continue.",
           variant: "destructive",
-          duration: 3000
+          duration: 2000
         });
         navigate('/login');
         return;
