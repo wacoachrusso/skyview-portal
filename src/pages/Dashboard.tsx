@@ -72,64 +72,66 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#1a365d] to-[#334155] flex items-center justify-center p-4">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading your dashboard...</p>
+          <p className="text-sm font-medium">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a365d] to-[#334155] p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-12">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome to SkyGuide</h1>
-            <p className="text-gray-300">{userEmail}</p>
+            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Welcome to SkyGuide</h1>
+            <p className="text-gray-300 text-lg">{userEmail}</p>
           </div>
           <Button 
             variant="outline" 
             onClick={handleSignOut}
-            className="text-white hover:text-brand-navy"
+            className="bg-white/10 text-white hover:bg-white/20 border-white/20 transition-all duration-200"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Link to="/chat">
+        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/10 shadow-xl">
+          <h2 className="text-2xl font-semibold text-white mb-6">Quick Actions</h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            <Link to="/chat" className="block">
               <Button 
-                className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold h-24"
+                className="w-full bg-gradient-to-r from-[#D4AF37] to-[#F0C75E] hover:from-[#D4AF37]/90 hover:to-[#F0C75E]/90 text-[#1a365d] font-semibold h-28 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]"
               >
-                <Search className="h-6 w-6 mr-2" />
-                Let SkyGuide Search The Contract
+                <Search className="h-6 w-6 mr-3" />
+                <span className="text-lg">Let SkyGuide Search The Contract</span>
               </Button>
             </Link>
             <Button 
               onClick={handleFileGrievance}
-              className="w-full bg-white/20 hover:bg-white/30 text-white font-semibold h-24"
+              className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold h-28 rounded-xl border border-white/10 shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
-              <Flag className="h-6 w-6 mr-2" />
-              File a Grievance
+              <Flag className="h-6 w-6 mr-3" />
+              <span className="text-lg">File a Grievance</span>
             </Button>
             <Button 
               onClick={handleDownloadContract}
-              className="w-full bg-white/20 hover:bg-white/30 text-white font-semibold h-24"
+              className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold h-28 rounded-xl border border-white/10 shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
-              <FileText className="h-6 w-6 mr-2" />
-              Download Contract PDF
+              <FileText className="h-6 w-6 mr-3" />
+              <span className="text-lg">Download Contract PDF</span>
             </Button>
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Recent Activity</h2>
-          <p className="text-gray-300">Your recent chat history and activities will appear here.</p>
+        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-xl">
+          <h2 className="text-2xl font-semibold text-white mb-6">Recent Activity</h2>
+          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+            <p className="text-gray-300 text-lg">Your recent chat history and activities will appear here.</p>
+          </div>
         </div>
       </div>
     </div>
