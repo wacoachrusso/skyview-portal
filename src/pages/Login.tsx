@@ -27,10 +27,7 @@ const Login = () => {
         email: formData.email,
         password: formData.password,
         options: {
-          data: {
-            remember_me: formData.rememberMe
-          },
-          // Set session expiry to 14 days if rememberMe is true, otherwise default to 1 hour
+          // Set session persistence based on rememberMe checkbox
           persistSession: formData.rememberMe
         }
       });
