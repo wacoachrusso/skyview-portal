@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatList } from "@/components/chat/ChatList";
@@ -8,11 +8,14 @@ import { useChat } from "@/hooks/useChat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 
 export default function Chat() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { messages, currentUserId, isLoading, sendMessage, createNewConversation } = useChat();
 
   useEffect(() => {
@@ -48,14 +51,30 @@ export default function Chat() {
     <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
       {!isMobile && <ChatSidebar />}
       <div className="flex-1 flex flex-col chat-container">
-        <ChatHeader 
-          onBack={() => navigate('/')} 
-          onNewChat={() => {
-            if (currentUserId) {
-              createNewConversation(currentUserId);
-            }
-          }} 
-        />
+        <div className="flex items-center">
+          {isMobile && (
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+              <SheetTrigger asChild>
+                <button className="p-2 hover:bg-white/10 rounded-lg">
+                  <Menu className="h-6 w-6 text-white" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-[280px] bg-[#1A1F2C]">
+                <ChatSidebar />
+              </SheetContent>
+            </Sheet>
+          )}
+          <div className="flex-1">
+            <ChatHeader 
+              onBack={() => navigate('/')} 
+              onNewChat={() => {
+                if (currentUserId) {
+                  createNewConversation(currentUserId);
+                }
+              }} 
+            />
+          </div>
+        </div>
         <main className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C]">
           {messages.length === 0 && !isLoading && (
             <div className="flex-1 flex items-center justify-center p-4">
