@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ChatSettings } from "./ChatSettings";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,10 +100,11 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
 
   const deleteAllConversations = async () => {
     console.log('Deleting all conversations...');
+    // Delete all conversations without using a placeholder comparison
     const { error } = await supabase
       .from('conversations')
       .delete()
-      .neq('id', 'placeholder'); // Delete all conversations
+      .not('id', 'is', null); // This will match all conversations since id is non-nullable
 
     if (error) {
       console.error('Error deleting all conversations:', error);
