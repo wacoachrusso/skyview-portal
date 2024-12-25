@@ -25,11 +25,7 @@ const Login = () => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
-        password: formData.password,
-        options: {
-          // Set session persistence based on rememberMe checkbox
-          persistSession: formData.rememberMe
-        }
+        password: formData.password
       });
 
       if (error) {
@@ -39,6 +35,14 @@ const Login = () => {
           description: error.message
         });
         throw error;
+      }
+
+      // If remember me is checked, persist the session
+      if (formData.rememberMe) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
       }
 
       console.log("Login successful:", data);
