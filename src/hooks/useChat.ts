@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
+import { useMessageHandling } from "./useMessageHandling";
 
 export function useChat() {
   const { toast } = useToast();
@@ -17,6 +18,8 @@ export function useChat() {
     loadConversation, 
     setCurrentConversationId 
   } = useConversation();
+
+  const { updateConversation, insertUserMessage, insertAIMessage } = useMessageHandling(currentUserId, currentConversationId);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -55,32 +58,9 @@ export function useChat() {
         throw new Error('Failed to create or get conversation');
       }
 
-      const { error: updateError } = await supabase
-        .from('conversations')
-        .update({ 
-          last_message_at: new Date().toISOString(),
-          title: content.slice(0, 50)
-        })
-        .eq('id', conversationId);
+      await updateConversation(conversationId, content);
+      await insertUserMessage(content, conversationId);
 
-      if (updateError) throw updateError;
-
-      const { data: userMessage, error: userMessageError } = await supabase
-        .from('messages')
-        .insert([
-          {
-            content,
-            user_id: currentUserId,
-            role: 'user',
-            conversation_id: conversationId
-          }
-        ])
-        .select()
-        .single();
-
-      if (userMessageError) throw userMessageError;
-
-      // Get response with subscription plan
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
           content,
@@ -89,19 +69,7 @@ export function useChat() {
       });
 
       if (error) throw error;
-
-      const { error: aiMessageError } = await supabase
-        .from('messages')
-        .insert([
-          {
-            content: data.response,
-            user_id: null,
-            role: 'assistant',
-            conversation_id: conversationId
-          }
-        ]);
-
-      if (aiMessageError) throw aiMessageError;
+      await insertAIMessage(data.response, conversationId);
 
     } catch (error) {
       console.error('Error in chat flow:', error);
@@ -136,7 +104,6 @@ export function useChat() {
 
     setupChat();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('messages_channel')
       .on(
