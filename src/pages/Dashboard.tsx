@@ -55,7 +55,6 @@ const Dashboard = () => {
   };
 
   const handleDownloadContract = () => {
-    // This is a placeholder - you'll need to implement the actual PDF download
     toast({
       title: "Coming Soon",
       description: "Contract download will be available shortly"
@@ -63,7 +62,6 @@ const Dashboard = () => {
   };
 
   const handleFileGrievance = () => {
-    // This is a placeholder - you'll need to implement the grievance form
     toast({
       title: "Coming Soon",
       description: "Grievance filing system will be available shortly"
@@ -82,55 +80,55 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a365d] to-[#334155] p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a365d] to-[#334155] px-4 py-6 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-12">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8 md:mb-12">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Welcome to SkyGuide</h1>
-            <p className="text-gray-300 text-lg">{userEmail}</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">Welcome to SkyGuide</h1>
+            <p className="text-gray-300 text-base md:text-lg">{userEmail}</p>
           </div>
           <Button 
             variant="outline" 
             onClick={handleSignOut}
-            className="bg-white/10 text-white hover:bg-white/20 border-white/20 transition-all duration-200"
+            className="w-full md:w-auto bg-white/10 text-white hover:bg-white/20 border-white/20 transition-all duration-200"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/10 shadow-xl">
-          <h2 className="text-2xl font-semibold text-white mb-6">Quick Actions</h2>
-          <div className="grid gap-6 md:grid-cols-3">
+        <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 md:p-8 mb-6 md:mb-8 border border-white/10 shadow-xl">
+          <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 md:mb-6">Quick Actions</h2>
+          <div className="grid gap-4 md:gap-6 md:grid-cols-3">
             <Link to="/chat" className="block">
               <Button 
-                className="w-full bg-gradient-to-r from-[#D4AF37] to-[#F0C75E] hover:from-[#D4AF37]/90 hover:to-[#F0C75E]/90 text-[#1a365d] font-semibold h-28 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]"
+                className="w-full bg-gradient-to-r from-[#D4AF37] to-[#F0C75E] hover:from-[#D4AF37]/90 hover:to-[#F0C75E]/90 text-[#1a365d] font-semibold h-24 md:h-28 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]"
               >
-                <Search className="h-6 w-6 mr-3" />
-                <span className="text-lg whitespace-normal leading-tight">Search Contract</span>
+                <Search className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+                <span className="text-base md:text-lg whitespace-normal leading-tight">Search Contract</span>
               </Button>
             </Link>
             <Button 
               onClick={handleFileGrievance}
-              className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold h-28 rounded-xl border border-white/10 shadow-lg transition-all duration-300 hover:scale-[1.02]"
+              className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold h-24 md:h-28 rounded-xl border border-white/10 shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
-              <Flag className="h-6 w-6 mr-3" />
-              <span className="text-lg">File a Grievance</span>
+              <Flag className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+              <span className="text-base md:text-lg">File a Grievance</span>
             </Button>
             <Button 
               onClick={handleDownloadContract}
-              className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold h-28 rounded-xl border border-white/10 shadow-lg transition-all duration-300 hover:scale-[1.02]"
+              className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold h-24 md:h-28 rounded-xl border border-white/10 shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
-              <FileText className="h-6 w-6 mr-3" />
-              <span className="text-lg">Download Contract PDF</span>
+              <FileText className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+              <span className="text-base md:text-lg">Download Contract PDF</span>
             </Button>
           </div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-xl">
-          <h2 className="text-2xl font-semibold text-white mb-6">Recent Activity</h2>
-          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-            <p className="text-gray-300 text-lg">Your recent chat history and activities will appear here.</p>
+        <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 md:p-8 border border-white/10 shadow-xl">
+          <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 md:mb-6">Recent Activity</h2>
+          <div className="bg-white/5 rounded-xl p-4 md:p-6 border border-white/10">
+            <p className="text-gray-300 text-base md:text-lg">Your recent chat history and activities will appear here.</p>
           </div>
         </div>
       </div>
