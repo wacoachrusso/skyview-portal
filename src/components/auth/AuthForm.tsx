@@ -23,6 +23,27 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     airline: "",
   });
 
+  // Add auth state change listener
+  useState(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session);
+      if (event === 'SIGNED_IN') {
+        console.log("User signed in after email confirmation");
+        toast({
+          title: "Welcome!",
+          description: selectedPlan === 'free' 
+            ? "Your email has been confirmed. You have 2 queries available."
+            : "Your email has been confirmed. Your account is now active.",
+        });
+        navigate('/chat');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, selectedPlan, toast]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -65,8 +86,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       if (!data.session) {
         // Email confirmation is required
         toast({
-          title: "Check your email",
-          description: "Please check your email to confirm your account before logging in.",
+          title: "Almost there!",
+          description: "We've sent you a confirmation email. Please check your inbox and click the confirmation link to activate your account. Once confirmed, you'll be automatically redirected to the chat interface.",
         });
         navigate('/login');
       } else {
