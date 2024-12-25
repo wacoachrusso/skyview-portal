@@ -6,20 +6,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const demoResponses = [
+  "This is a demo response to showcase the interface. For accurate contract analysis, please watch our demo video or upgrade to a paid plan.",
+  "Here's another example response. To get real answers from your actual contract, consider subscribing to our monthly plan.",
+  "This is a demonstration of how the system works. For precise contract interpretation, please upgrade your account."
+];
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     console.log('Received request to chat-completion function');
-    const { content } = await req.json();
+    const { content, subscriptionPlan } = await req.json();
     
     if (!content) {
       throw new Error('No content provided');
     }
 
+    // For free trial users, return a demo response
+    if (subscriptionPlan === 'free') {
+      console.log('Free trial user - returning demo response');
+      const randomResponse = demoResponses[Math.floor(Math.random() * demoResponses.length)];
+      return new Response(
+        JSON.stringify({ 
+          response: randomResponse + "\n\nTo access real contract analysis, please upgrade to our monthly plan or watch our demo video to see the full capabilities."
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // For paid users, continue with normal processing
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
     

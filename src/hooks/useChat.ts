@@ -3,13 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
-import { updateConversationTitle } from "@/utils/conversationUtils";
 
 export function useChat() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { 
     currentConversationId, 
     createNewConversation, 
@@ -17,6 +17,21 @@ export function useChat() {
     loadConversation, 
     setCurrentConversationId 
   } = useConversation();
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        setUserProfile(profile);
+      }
+    };
+    loadUserProfile();
+  }, []);
 
   const sendMessage = async (content: string) => {
     console.log('Sending message:', { content, conversationId: currentConversationId });
@@ -35,24 +50,21 @@ export function useChat() {
     setIsLoading(true);
     
     try {
-      // Ensure we have a conversation before sending the message
       const conversationId = await ensureConversation(currentUserId);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
       }
 
-      // Update conversation's last_message_at
       const { error: updateError } = await supabase
         .from('conversations')
         .update({ 
           last_message_at: new Date().toISOString(),
-          title: content.slice(0, 50) // Use first message as title
+          title: content.slice(0, 50)
         })
         .eq('id', conversationId);
 
       if (updateError) throw updateError;
 
-      // Save user message
       const { data: userMessage, error: userMessageError } = await supabase
         .from('messages')
         .insert([
@@ -68,14 +80,16 @@ export function useChat() {
 
       if (userMessageError) throw userMessageError;
 
-      // Get AI response
+      // Get response with subscription plan
       const { data, error } = await supabase.functions.invoke('chat-completion', {
-        body: { content }
+        body: { 
+          content,
+          subscriptionPlan: userProfile?.subscription_plan || 'free'
+        }
       });
 
       if (error) throw error;
 
-      // Save AI response
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert([
@@ -155,15 +169,8 @@ export function useChat() {
     sendMessage,
     createNewConversation,
     currentConversationId,
-    loadConversation: async (conversationId: string) => {
-      if (!conversationId) {
-        console.log('No conversation ID provided');
-        setMessages([]);
-        return;
-      }
-      const messages = await loadConversation(conversationId);
-      setMessages(messages);
-    },
-    setCurrentConversationId
+    loadConversation,
+    setCurrentConversationId,
+    userProfile
   };
 }

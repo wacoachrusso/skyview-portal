@@ -1,14 +1,17 @@
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ChatListProps {
   messages: Message[];
   currentUserId: string;
   isLoading?: boolean;
+  subscriptionPlan?: string;
 }
 
-export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) {
+export function ChatList({ messages, currentUserId, isLoading, subscriptionPlan }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,7 +32,6 @@ export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) 
   }, [messages]);
 
   useEffect(() => {
-    // Save messages to localStorage if auto-save is enabled
     const autoSave = localStorage.getItem("chat-auto-save") === "true";
     if (autoSave && messages.length > 0) {
       console.log("Auto-saving messages to localStorage:", messages.length, "messages");
@@ -44,6 +46,15 @@ export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) 
 
   return (
     <div className="flex flex-col h-full">
+      {subscriptionPlan === 'free' && (
+        <Alert className="m-4 bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            You are using the free trial version. Responses are for demonstration purposes only and do not reflect actual contract analysis. 
+            Watch our demo or upgrade to a paid plan to access real contract interpretation.
+          </AlertDescription>
+        </Alert>
+      )}
       <div ref={containerRef} className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-2 p-2 sm:p-4">
           {messages.map((message) => (
