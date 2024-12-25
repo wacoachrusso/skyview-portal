@@ -16,9 +16,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Check if the browser supports speech recognition
     if (typeof window !== 'undefined') {
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       
@@ -31,6 +31,12 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           recognitionRef.current.interimResults = true;
 
           recognitionRef.current.onresult = (event) => {
+            console.log('Speech recognition result received');
+            // Reset the silence timeout whenever we get a result
+            if (silenceTimeoutRef.current) {
+              clearTimeout(silenceTimeoutRef.current);
+            }
+
             const transcript = Array.from(event.results)
               .map(result => result[0])
               .map(result => result.transcript)
@@ -38,11 +44,23 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
             
             console.log('Speech recognition result:', transcript);
             setMessage(transcript);
+
+            // Set a new timeout for silence detection
+            silenceTimeoutRef.current = setTimeout(() => {
+              console.log('Silence detected, stopping recognition');
+              if (recognitionRef.current && isListening) {
+                recognitionRef.current.stop();
+                setIsListening(false);
+              }
+            }, 1500); // Stop after 1.5 seconds of silence
           };
 
           recognitionRef.current.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
             setIsListening(false);
+            if (silenceTimeoutRef.current) {
+              clearTimeout(silenceTimeoutRef.current);
+            }
             toast({
               title: "Error",
               description: "There was an error with speech recognition. Please try again.",
@@ -53,6 +71,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           recognitionRef.current.onend = () => {
             console.log('Speech recognition ended');
             setIsListening(false);
+            if (silenceTimeoutRef.current) {
+              clearTimeout(silenceTimeoutRef.current);
+            }
           };
         }
       } else {
@@ -63,6 +84,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     return () => {
       if (recognitionRef.current && isListening) {
         recognitionRef.current.stop();
+      }
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
       }
     };
   }, []);
@@ -82,6 +106,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       console.log('Stopping speech recognition');
       recognitionRef.current.stop();
       setIsListening(false);
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
     } else {
       try {
         console.log('Starting speech recognition');
@@ -110,6 +137,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
     }
     
     console.log('ChatInput - Calling onSendMessage with:', message);
