@@ -3,6 +3,13 @@ import { Link } from "react-router-dom";
 import { LogIn } from "lucide-react";
 
 export function Navbar() {
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing-section');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <nav className="bg-white border-b border-gray-100">
       <div className="container mx-auto px-4">
@@ -26,10 +33,10 @@ export function Navbar() {
               </Link>
             </Button>
             <Button 
-              asChild 
+              onClick={scrollToPricing}
               className="bg-brand-navy text-white hover:bg-brand-navy/90 font-semibold shadow-sm"
             >
-              <Link to="/signup">Sign Up</Link>
+              Sign Up
             </Button>
           </div>
         </div>

@@ -35,6 +35,13 @@ export function Hero() {
               >
                 Start Free Trial
               </Button>
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold w-full sm:w-auto px-6 shadow-lg"
+                onClick={scrollToPricing}
+              >
+                Sign Up Now
+              </Button>
               <Button
                 asChild
                 size="lg"
