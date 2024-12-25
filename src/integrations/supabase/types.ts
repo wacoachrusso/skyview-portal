@@ -74,6 +74,8 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          last_ip_address: string | null
+          last_query_timestamp: string | null
           query_count: number | null
           subscription_plan: string | null
           user_type: string | null
@@ -83,6 +85,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          last_ip_address?: string | null
+          last_query_timestamp?: string | null
           query_count?: number | null
           subscription_plan?: string | null
           user_type?: string | null
@@ -92,6 +96,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          last_ip_address?: string | null
+          last_query_timestamp?: string | null
           query_count?: number | null
           subscription_plan?: string | null
           user_type?: string | null

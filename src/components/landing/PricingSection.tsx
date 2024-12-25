@@ -21,9 +21,20 @@ export function PricingSection() {
         return;
       }
 
+      // Get user's IP address using a public API
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const { ip } = await ipResponse.json();
+
+      const updates = {
+        subscription_plan: plan,
+        last_ip_address: ip,
+        query_count: 0, // Reset query count when changing plans
+        last_query_timestamp: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update({ subscription_plan: plan })
+        .update(updates)
         .eq('id', user.id);
 
       if (error) throw error;

@@ -40,6 +40,10 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setLoading(true);
 
     try {
+      // Get user's IP address
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const { ip } = await ipResponse.json();
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -48,7 +52,10 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             full_name: formData.fullName,
             user_type: formData.jobTitle,
             airline: formData.airline,
-            subscription_plan: selectedPlan || "free"
+            subscription_plan: selectedPlan || "free",
+            last_ip_address: ip,
+            query_count: 0,
+            last_query_timestamp: new Date().toISOString()
           }
         }
       });
