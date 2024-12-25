@@ -38,7 +38,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
       <Switch
         checked={notifications}
         onCheckedChange={setNotifications}
-        className="data-[state=checked]:bg-blue-600"
+        className="data-[state=checked]:bg-primary"
       />
     </div>
   );
