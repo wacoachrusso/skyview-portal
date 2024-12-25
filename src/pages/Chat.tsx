@@ -12,7 +12,7 @@ export default function Chat() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
       <ChatSidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col chat-container">
         <ChatHeader 
           onBack={() => navigate('/')} 
           onNewChat={() => {

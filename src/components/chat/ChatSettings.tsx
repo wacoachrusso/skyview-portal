@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,59 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
+// Font size utility
+const FONT_SIZES = {
+  small: "text-sm",
+  medium: "text-base",
+  large: "text-lg"
+};
+
 export function ChatSettings() {
   const { theme, setTheme } = useTheme();
-  const [fontSize, setFontSize] = useState("medium");
-  const [notifications, setNotifications] = useState(false);
-  const [autoSave, setAutoSave] = useState(true);
+  const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");
+  const [notifications, setNotifications] = useState(() => localStorage.getItem("chat-notifications") === "true");
+  const [autoSave, setAutoSave] = useState(() => localStorage.getItem("chat-auto-save") !== "false");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Apply font size to the chat container
+  useEffect(() => {
+    const chatContainer = document.querySelector('.chat-container');
+    if (chatContainer) {
+      // Remove all font size classes
+      Object.values(FONT_SIZES).forEach(size => {
+        chatContainer.classList.remove(size);
+      });
+      // Add the selected font size class
+      chatContainer.classList.add(FONT_SIZES[fontSize as keyof typeof FONT_SIZES]);
+    }
+    localStorage.setItem("chat-font-size", fontSize);
+  }, [fontSize]);
+
+  // Handle notifications
+  useEffect(() => {
+    const handleNotificationPermission = async () => {
+      if (notifications) {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          setNotifications(false);
+          toast({
+            title: "Notification Permission Denied",
+            description: "Please enable notifications in your browser settings.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    handleNotificationPermission();
+    localStorage.setItem("chat-notifications", notifications.toString());
+  }, [notifications, toast]);
+
+  // Handle auto-save
+  useEffect(() => {
+    localStorage.setItem("chat-auto-save", autoSave.toString());
+  }, [autoSave]);
 
   const handleLogout = async () => {
     try {
@@ -32,6 +78,19 @@ export function ChatSettings() {
         description: "There was a problem logging out. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const showNotification = (title: string, body: string) => {
+    if (notifications && Notification.permission === "granted") {
+      new Notification(title, { body });
+    }
+  };
+
+  // Example of how to trigger a notification (you can use this function where needed)
+  const triggerTestNotification = () => {
+    if (notifications) {
+      showNotification("Test Notification", "Notifications are working!");
     }
   };
 
