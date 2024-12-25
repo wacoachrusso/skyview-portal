@@ -18,8 +18,7 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             <Button 
               asChild 
-              variant="outline"
-              className="border-brand-navy/30 bg-white text-brand-navy hover:bg-brand-navy hover:text-white font-medium transition-colors shadow-sm"
+              className="bg-brand-navy text-white hover:bg-brand-navy/90 font-semibold shadow-sm"
             >
               <Link to="/login">
                 <LogIn className="mr-2 h-4 w-4" />
