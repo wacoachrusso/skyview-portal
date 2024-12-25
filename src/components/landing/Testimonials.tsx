@@ -3,7 +3,7 @@ import { Star } from "lucide-react";
 
 export function Testimonials() {
   return (
-    <div className="py-20 bg-white">
+    <div className="py-20 bg-gradient-to-b from-slate-50 to-white">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center text-brand-navy mb-4">
           What Aviation Professionals Say
@@ -32,18 +32,18 @@ export function Testimonials() {
               years: "12 years in aviation"
             }
           ].map((testimonial, index) => (
-            <Card key={index} className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card key={index} className="card-hover bg-white border border-gray-100 shadow-lg">
               <CardContent className="pt-6">
                 <div className="flex mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 fill-brand-gold text-brand-gold" />
                   ))}
                 </div>
-                <p className="text-gray-700 mb-4 italic">"{testimonial.quote}"</p>
-                <div className="border-t pt-4">
-                  <p className="font-semibold text-brand-navy">{testimonial.author}</p>
-                  <p className="text-sm text-gray-600">{testimonial.role}</p>
-                  <p className="text-sm text-brand-gold mt-1">{testimonial.years}</p>
+                <p className="text-gray-700 mb-6 italic text-lg leading-relaxed">"{testimonial.quote}"</p>
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="font-semibold text-brand-navy text-lg">{testimonial.author}</p>
+                  <p className="text-sm text-gray-600 mt-1">{testimonial.role}</p>
+                  <p className="text-sm text-brand-gold font-medium mt-1">{testimonial.years}</p>
                 </div>
               </CardContent>
             </Card>
