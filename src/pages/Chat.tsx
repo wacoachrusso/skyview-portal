@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, MessageSquare } from "lucide-react";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -74,6 +74,22 @@ export default function Chat() {
     checkAuth();
   }, [navigate, toast]);
 
+  const renderWelcomeMessage = () => (
+    <div className="flex-1 flex items-center justify-center p-4">
+      <div className="text-center space-y-6">
+        <div className="inline-block p-6 rounded-full bg-gradient-to-br from-brand-navy to-brand-slate">
+          <MessageSquare className="w-12 h-12 sm:w-16 sm:h-16 text-brand-gold" />
+        </div>
+        <div className="space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
+          <p className="text-base sm:text-lg text-gray-300 max-w-md mx-auto">
+            Ask me anything about your contract and I'll help you understand it better.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
       {!isMobile && (
@@ -108,31 +124,7 @@ export default function Chat() {
         </div>
         <div className="flex-1 flex flex-col overflow-hidden relative">
           <div className="flex-1 overflow-y-auto">
-            {messages.length === 0 && !isLoading && (
-              <div className="flex-1 flex items-center justify-center p-4">
-                <div className="text-center space-y-4">
-                  <div className="inline-block p-6 rounded-full bg-gradient-to-br from-[#2A2F3C] to-[#1A1F2C]">
-                    <svg
-                      className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
-                  <p className="text-sm sm:text-base text-gray-400 max-w-sm mx-auto">
-                    Ask me anything about your contract and I'll help you understand it better.
-                  </p>
-                </div>
-              </div>
-            )}
+            {(messages.length === 0 && !isLoading) && renderWelcomeMessage()}
             <ChatList 
               messages={messages} 
               currentUserId={currentUserId || ''} 
