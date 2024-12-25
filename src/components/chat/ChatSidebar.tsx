@@ -1,11 +1,65 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChatSettings } from "./ChatSettings";
+import { supabase } from "@/integrations/supabase/client";
+import { Conversation } from "@/types/chat";
+import { format } from "date-fns";
 
-export function ChatSidebar() {
+interface ChatSidebarProps {
+  onSelectConversation: (conversationId: string) => void;
+  currentConversationId: string | null;
+}
+
+export function ChatSidebar({ onSelectConversation, currentConversationId }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+
+  useEffect(() => {
+    const loadConversations = async () => {
+      console.log('Loading conversations...');
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .order('last_message_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading conversations:', error);
+        return;
+      }
+
+      console.log('Loaded conversations:', data);
+      setConversations(data || []);
+    };
+
+    loadConversations();
+
+    // Subscribe to new conversations
+    const channel = supabase
+      .channel('conversations_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations'
+        },
+        (payload) => {
+          console.log('Conversation change received:', payload);
+          loadConversations(); // Reload conversations when changes occur
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const filteredConversations = conversations.filter(conversation =>
+    conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="w-64 sm:w-80 bg-gradient-to-b from-[#1A1F2C] to-[#2A2F3C] border-r border-white/10 flex flex-col">
@@ -32,7 +86,25 @@ export function ChatSidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto bg-gradient-to-b from-[#2A2F3C] to-[#1A1F2C] p-2">
-        {/* Conversation history would go here */}
+        {filteredConversations.map((conversation) => (
+          <Button
+            key={conversation.id}
+            variant="ghost"
+            className={`w-full justify-start text-left mb-1 ${
+              currentConversationId === conversation.id
+                ? 'bg-white/10'
+                : 'hover:bg-white/5'
+            }`}
+            onClick={() => onSelectConversation(conversation.id)}
+          >
+            <div className="truncate">
+              <div className="font-medium text-white">{conversation.title}</div>
+              <div className="text-xs text-gray-400">
+                {format(new Date(conversation.last_message_at), 'MMM d, yyyy')}
+              </div>
+            </div>
+          </Button>
+        ))}
       </div>
     </div>
   );

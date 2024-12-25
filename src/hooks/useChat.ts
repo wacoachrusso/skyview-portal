@@ -10,6 +10,33 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
+  const loadConversation = async (conversationId: string) => {
+    console.log('Loading conversation:', conversationId);
+    try {
+      const { data: existingMessages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+        throw messagesError;
+      }
+
+      console.log('Loaded messages:', existingMessages);
+      setMessages(existingMessages || []);
+      setCurrentConversationId(conversationId);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load conversation",
+        variant: "destructive"
+      });
+    }
+  };
+
   const createNewConversation = async (userId: string) => {
     console.log('Creating new conversation for user:', userId);
     try {
@@ -26,6 +53,7 @@ export function useChat() {
       
       console.log('New conversation created:', newConversation);
       setCurrentConversationId(newConversation.id);
+      setMessages([]); // Clear messages for new conversation
       return newConversation.id;
     } catch (error) {
       console.error('Error creating new conversation:', error);
@@ -132,18 +160,7 @@ export function useChat() {
       if (!currentConversationId) {
         const conversationId = await createNewConversation(userId);
         if (conversationId) {
-          const { data: existingMessages, error: messagesError } = await supabase
-            .from('messages')
-            .select('*')
-            .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true });
-
-          if (messagesError) {
-            console.error('Error fetching messages:', messagesError);
-          } else if (existingMessages) {
-            console.log('Loaded existing messages:', existingMessages);
-            setMessages(existingMessages);
-          }
+          await loadConversation(conversationId);
         }
       }
     };
@@ -181,6 +198,8 @@ export function useChat() {
     currentUserId,
     isLoading,
     sendMessage,
-    createNewConversation
+    createNewConversation,
+    currentConversationId,
+    loadConversation
   };
 }

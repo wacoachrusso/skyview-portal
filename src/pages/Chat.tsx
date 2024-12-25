@@ -16,7 +16,34 @@ export default function Chat() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { messages, currentUserId, isLoading, sendMessage, createNewConversation } = useChat();
+  const { 
+    messages, 
+    currentUserId, 
+    isLoading, 
+    sendMessage, 
+    createNewConversation,
+    currentConversationId,
+    loadConversation 
+  } = useChat();
+
+  const handleNewChat = async () => {
+    console.log('Creating new chat...');
+    if (currentUserId) {
+      const newConversationId = await createNewConversation(currentUserId);
+      if (newConversationId) {
+        console.log('New conversation created:', newConversationId);
+        await loadConversation(newConversationId);
+      }
+    }
+  };
+
+  const handleSelectConversation = async (conversationId: string) => {
+    console.log('Selecting conversation:', conversationId);
+    await loadConversation(conversationId);
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,7 +76,12 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
-      {!isMobile && <ChatSidebar />}
+      {!isMobile && (
+        <ChatSidebar 
+          onSelectConversation={handleSelectConversation}
+          currentConversationId={currentConversationId}
+        />
+      )}
       <div className="flex-1 flex flex-col h-full">
         <div className="flex items-center">
           {isMobile && (
@@ -60,18 +92,17 @@ export default function Chat() {
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-[280px] bg-[#1A1F2C]">
-                <ChatSidebar />
+                <ChatSidebar 
+                  onSelectConversation={handleSelectConversation}
+                  currentConversationId={currentConversationId}
+                />
               </SheetContent>
             </Sheet>
           )}
           <div className="flex-1">
             <ChatHeader 
               onBack={() => navigate('/')} 
-              onNewChat={() => {
-                if (currentUserId) {
-                  createNewConversation(currentUserId);
-                }
-              }} 
+              onNewChat={handleNewChat}
             />
           </div>
         </div>
