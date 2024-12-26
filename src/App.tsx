@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import Index from "@/pages/Index";
@@ -30,6 +30,8 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/auth/callback/*" element={<AuthCallback />} />
+                {/* Catch-all route to redirect to home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <Toaster />
             </Router>
