@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,7 +28,11 @@ const Login = () => {
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password: formData.password
+        password: formData.password,
+        options: {
+          // Set session expiry to 14 days if rememberMe is true
+          expiresIn: formData.rememberMe ? 60 * 60 * 24 * 14 : 60 * 60 // 14 days : 1 hour
+        }
       });
 
       if (error) {
@@ -41,18 +45,11 @@ const Login = () => {
         return;
       }
 
-      if (formData.rememberMe && data.session) {
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        });
-      }
-
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in."
       });
-      navigate('/chat');
+      navigate('/dashboard');
     } catch (error) {
       toast({
         variant: "destructive",
@@ -67,10 +64,29 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center gap-2 text-gray-300 hover:text-white mb-8">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
+        <div className="flex justify-between items-center mb-8">
+          <Link to="/" className="flex items-center gap-2 text-gray-300 hover:text-white">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              className="text-gray-300 hover:text-white hover:bg-white/10"
+              onClick={() => navigate('/')}
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-gray-300 hover:text-white hover:bg-white/10"
+              onClick={() => navigate('/dashboard')}
+            >
+              Dashboard
+            </Button>
+          </div>
+        </div>
 
         <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
           <div className="mb-6 flex justify-center">

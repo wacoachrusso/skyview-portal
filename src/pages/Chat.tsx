@@ -1,97 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChatHeader } from "@/components/chat/ChatHeader";
-import { useChat } from "@/hooks/useChat";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
+import ChatLayout from "@/components/chat/layout/ChatLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ChatLayout } from "@/components/chat/layout/ChatLayout";
-import { ChatContent } from "@/components/chat/ChatContent";
 
-export default function Chat() {
+const Chat = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  const { 
-    messages, 
-    currentUserId, 
-    isLoading, 
-    sendMessage, 
-    currentConversationId,
-    loadConversation,
-    setCurrentConversationId,
-    startNewChat 
-  } = useChat();
-
-  const handleNewChat = async () => {
-    console.log('Creating new chat...');
-    await startNewChat();
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
-  };
-
-  const handleSelectConversation = async (conversationId: string) => {
-    console.log('Selecting conversation:', conversationId);
-    await loadConversation(conversationId);
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
-  };
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.log("No active session found, redirecting to login");
-        toast({
-          title: "Session expired",
-          description: "Please log in again to continue.",
-          variant: "destructive",
-          duration: 2000
-        });
         navigate('/login');
-        return;
       }
-      
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session) {
-          console.log("Auth state changed: no session, redirecting to login");
-          navigate('/login');
-        }
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
     };
-
-    checkAuth();
-  }, [navigate, toast]);
+    checkSession();
+  }, [navigate]);
 
   return (
-    <ChatLayout
-      isSidebarOpen={isSidebarOpen}
-      setIsSidebarOpen={setIsSidebarOpen}
-      onSelectConversation={handleSelectConversation}
-      currentConversationId={currentConversationId}
-    >
-      <div className="flex flex-col h-full">
-        <div className="flex-none">
-          <ChatHeader 
-            onBack={() => navigate('/')} 
-            onNewChat={handleNewChat}
-          />
-        </div>
-        <ChatContent
-          messages={messages}
-          currentUserId={currentUserId}
-          isLoading={isLoading}
-          onSendMessage={sendMessage}
-        />
+    <div className="relative min-h-screen">
+      <div className="absolute top-4 left-4 z-50">
+        <Button 
+          variant="ghost" 
+          className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
+          onClick={() => navigate('/dashboard')}
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Dashboard
+        </Button>
       </div>
-    </ChatLayout>
+      <ChatLayout />
+    </div>
   );
-}
+};
+
+export default Chat;
