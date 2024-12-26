@@ -55,56 +55,62 @@ export const AuthCallback = () => {
           toast({
             variant: "destructive",
             title: "Authentication Error",
-            description: "There was an error signing in. Please try again."
+            description: error.message || "There was an error signing in. Please try again."
           });
           navigate('/login');
           return;
         }
 
-        if (session) {
-          console.log('=== Session Established ===');
-          console.log('User ID:', session.user.id);
-          console.log('Provider:', session.user.app_metadata.provider);
-          
-          // Check if profile exists and is complete
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type, airline, full_name')
-            .eq('id', session.user.id)
-            .single();
-
-          console.log('Profile data:', profile);
-
-          // For Google auth, update profile with Google user data if needed
-          if (session.user.app_metadata.provider === 'google') {
-            const { error: profileUpdateError } = await supabase
-              .from('profiles')
-              .update({
-                full_name: session.user.user_metadata.full_name
-              })
-              .eq('id', session.user.id);
-
-            if (profileUpdateError) {
-              console.error('Error updating profile:', profileUpdateError);
-            }
-          }
-
-          // Get the user's name for the welcome message
-          const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
-
-          // Redirect based on profile completion
-          if (profile?.user_type && profile?.airline) {
-            console.log('Profile complete, redirecting to dashboard');
-            showWelcomeTutorial(userName.split(' ')[0]); // Use first name only
-            navigate('/dashboard');
-          } else {
-            console.log('Profile incomplete, redirecting to complete-profile');
-            navigate('/complete-profile');
-          }
-        } else {
+        if (!session) {
           console.log('No session found, redirecting to login');
           navigate('/login');
+          return;
         }
+
+        console.log('=== Session Established ===');
+        console.log('User ID:', session.user.id);
+        console.log('Provider:', session.user.app_metadata.provider);
+        
+        // Check if profile exists and is complete
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_type, airline, full_name')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+        }
+
+        console.log('Profile data:', profile);
+
+        // For Google auth, update profile with Google user data if needed
+        if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
+          const { error: profileUpdateError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: session.user.user_metadata.full_name
+            })
+            .eq('id', session.user.id);
+
+          if (profileUpdateError) {
+            console.error('Error updating profile:', profileUpdateError);
+          }
+        }
+
+        // Get the user's name for the welcome message
+        const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
+
+        // Redirect based on profile completion
+        if (profile?.user_type && profile?.airline) {
+          console.log('Profile complete, redirecting to dashboard');
+          showWelcomeTutorial(userName.split(' ')[0]); // Use first name only
+          navigate('/dashboard');
+        } else {
+          console.log('Profile incomplete, redirecting to complete-profile');
+          navigate('/complete-profile');
+        }
+        
       } catch (error) {
         console.error('=== Unexpected Error in Auth Callback ===');
         console.error('Error details:', error);
@@ -122,9 +128,10 @@ export const AuthCallback = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-foreground">
+      <div className="text-foreground text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current mx-auto"></div>
         <p className="mt-4">Completing sign in...</p>
+        <p className="text-sm text-muted-foreground mt-2">Please wait while we set up your account.</p>
       </div>
     </div>
   );
