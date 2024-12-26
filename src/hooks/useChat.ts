@@ -53,13 +53,14 @@ export function useChat() {
     setIsLoading(true);
     
     try {
-      // If this is the first message in a new chat, create a conversation with this message as the title
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
       }
 
-      await insertUserMessage(content, conversationId);
+      console.log('Inserting user message into conversation:', conversationId);
+      const userMessage = await insertUserMessage(content, conversationId);
+      console.log('User message inserted:', userMessage);
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
@@ -69,7 +70,10 @@ export function useChat() {
       });
 
       if (error) throw error;
+      
+      console.log('Received AI response, inserting message');
       await insertAIMessage(data.response, conversationId);
+      console.log('AI message inserted successfully');
 
     } catch (error) {
       console.error('Error in chat flow:', error);
@@ -133,6 +137,30 @@ export function useChat() {
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [currentConversationId]);
+
+  // Load messages when conversation changes
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (currentConversationId) {
+        console.log('Loading messages for conversation:', currentConversationId);
+        const { data: messages, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', currentConversationId)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error loading messages:', error);
+          return;
+        }
+
+        console.log('Loaded messages:', messages?.length || 0);
+        setMessages(messages || []);
+      }
+    };
+
+    loadMessages();
   }, [currentConversationId]);
 
   return {
