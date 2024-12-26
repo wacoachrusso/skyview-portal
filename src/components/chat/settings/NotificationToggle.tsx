@@ -37,7 +37,6 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
           title: "Notifications Blocked",
           description: "Please allow notifications in your browser settings to receive important updates.",
           variant: "destructive",
-          duration: 2000,
         });
       }
     } catch (error) {
@@ -47,7 +46,6 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
         title: "Notification Error",
         description: "There was a problem enabling notifications. Please try again.",
         variant: "destructive",
-        duration: 2000,
       });
     }
   };
@@ -62,17 +60,19 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
           title: "Notifications Not Supported",
           description: "Your browser doesn't support notifications",
           variant: "destructive",
-          duration: 2000,
         });
         setNotifications(false);
         return;
       }
 
-      // Show permission dialog instead of requesting directly
       setShowPermissionDialog(true);
     } else {
       console.log("Notifications disabled by user");
       setNotifications(false);
+      toast({
+        title: "Notifications Disabled",
+        description: "You won't receive any notifications.",
+      });
     }
   };
 

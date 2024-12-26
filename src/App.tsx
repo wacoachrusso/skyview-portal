@@ -8,18 +8,23 @@ import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
 
 function App() {
+  // Get the stored theme or default to system
+  const storedTheme = localStorage.getItem("vite-ui-theme") || "system";
+
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/chat" element={<Chat />} />
-        </Routes>
-        <Toaster />
-      </Router>
+    <ThemeProvider defaultTheme={storedTheme} storageKey="vite-ui-theme">
+      <div className="min-h-screen bg-background text-foreground">
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/chat" element={<Chat />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </div>
     </ThemeProvider>
   );
 }
