@@ -57,6 +57,7 @@
   html {
     height: 100vh;
     height: -webkit-fill-available;
+    overflow: hidden;
   }
   
   body {
@@ -66,6 +67,7 @@
     min-height: -webkit-fill-available;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
 
   /* Remove browser UI on Android */
@@ -79,6 +81,15 @@
     min-height: -webkit-fill-available;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Ensure proper sizing on iOS */
+  @supports (-webkit-touch-callout: none) {
+    body,
+    #root {
+      min-height: -webkit-fill-available;
+    }
   }
 }
 
@@ -88,4 +99,23 @@
 
 .card-hover {
   @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-gold/5;
+}
+
+/* Responsive typography */
+@screen sm {
+  html {
+    font-size: 16px;
+  }
+}
+
+@screen md {
+  html {
+    font-size: 16.5px;
+  }
+}
+
+@screen lg {
+  html {
+    font-size: 17px;
+  }
 }
