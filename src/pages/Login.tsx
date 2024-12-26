@@ -25,7 +25,6 @@ const Login = () => {
 
     try {
       const email = formData.email.trim();
-      console.log("Attempting login with:", { email, passwordLength: formData.password.length });
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -33,32 +32,15 @@ const Login = () => {
       });
 
       if (error) {
-        console.error("Login error details:", {
-          message: error.message,
-          status: error.status,
-          name: error.name
-        });
-        
-        let errorMessage = "Invalid email or password. Please try again.";
-        
-        if (error.message.includes("Email not confirmed")) {
-          errorMessage = "Please confirm your email address before logging in.";
-        } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "The email or password you entered is incorrect. Please try again.";
-        }
-
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: errorMessage
+          description: "Incorrect email or password. Please try again."
         });
         return;
       }
 
-      console.log("Login successful, session:", data.session);
-
       if (formData.rememberMe && data.session) {
-        console.log("Setting persistent session");
         await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
@@ -71,11 +53,10 @@ const Login = () => {
       });
       navigate('/chat');
     } catch (error) {
-      console.error("Unexpected error during login:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "An unexpected error occurred. Please try again."
+        description: "Incorrect email or password. Please try again."
       });
     } finally {
       setLoading(false);
