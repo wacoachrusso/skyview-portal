@@ -25,8 +25,12 @@ const Login = () => {
 
     try {
       console.log("Attempting login with email:", formData.email);
+      
+      // Trim whitespace from email to prevent accidental spaces
+      const email = formData.email.trim();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+        email,
         password: formData.password
       });
 
@@ -38,7 +42,7 @@ const Login = () => {
         if (error.message.includes("Email not confirmed")) {
           errorMessage = "Please confirm your email address before logging in.";
         } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+          errorMessage = "The email or password you entered is incorrect. Please check your credentials and try again.";
         }
 
         toast({
@@ -106,6 +110,7 @@ const Login = () => {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="bg-white/10 border-white/20 text-white"
                 required
+                autoComplete="email"
               />
             </div>
 
@@ -119,6 +124,7 @@ const Login = () => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="bg-white/10 border-white/20 text-white pr-10"
                   required
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
