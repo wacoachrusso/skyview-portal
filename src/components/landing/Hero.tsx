@@ -1,61 +1,78 @@
 import { Button } from "@/components/ui/button";
-import { TypeAnimation } from "react-type-animation";
+import { Link } from "react-router-dom";
+import { Play } from "lucide-react";
 
-export const Hero = () => {
+export function Hero() {
   const scrollToPricing = () => {
-    const pricingSection = document.getElementById('pricing');
+    const pricingSection = document.getElementById('pricing-section');
     if (pricingSection) {
       pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <section className="relative overflow-hidden bg-hero-gradient py-20 sm:py-32">
-      <div className="absolute inset-0 bg-glow-gradient pointer-events-none"></div>
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center gap-4 text-center lg:text-left lg:items-start">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 lg:mb-6">
-            Your Aviation AI Assistant for
-            <br className="hidden sm:inline" />
-            <TypeAnimation
-              sequence={[
-                'Flight Operations',
-                2000,
-                'Safety Procedures',
-                2000,
-                'Weather Briefings',
-                2000,
-                'Technical Knowledge',
-                2000,
-              ]}
-              wrapper="span"
-              speed={50}
-              className="text-brand-gold"
-              repeat={Infinity}
-            />
-          </h1>
-          <p className="max-w-[600px] text-gray-300 md:text-xl dark:text-gray-400">
-            Empowering aviation professionals with instant access to regulations, procedures, and expert guidance through advanced AI technology.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
-            <Button 
-              size="lg"
-              className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
-              onClick={scrollToPricing}
-            >
-              Start Free Trial
-            </Button>
-            <Button 
-              size="lg"
-              className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
-              onClick={scrollToPricing}
-            >
-              Sign Up Now
-            </Button>
+    <div className="relative bg-hero-gradient py-16 overflow-hidden">
+      <div className="absolute inset-0 bg-glow-gradient opacity-50" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" />
+      <div className="container mx-auto px-4 relative">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
+          <div className="w-full lg:w-1/2 text-center lg:text-left">
+            <div className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-sm mb-4 animate-fade-up">
+              Your Professional Contract Assistant
+            </div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
+              Navigate Your Contract <br className="hidden md:block" />
+              With Confidence
+            </h1>
+            <p className="text-base md:text-lg text-gray-200 mb-6 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+              Get instant, accurate answers to your contract questions. Our expert system helps you understand your rights and make informed decisions about your schedule.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
+                onClick={scrollToPricing}
+              >
+                Start Free Trial
+              </Button>
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
+                onClick={scrollToPricing}
+              >
+                Sign Up Now
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg"
+              >
+                <a 
+                  href="https://youtube.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <Play className="mr-2 h-4 w-4" />
+                  Watch Demo
+                </a>
+              </Button>
+            </div>
+          </div>
+          <div className="w-full lg:w-1/2 flex items-center justify-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
+            <div className="relative w-full max-w-lg">
+              <div className="absolute inset-0 bg-glow-gradient opacity-75" />
+              <div className="relative">
+                <img 
+                  src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+                  alt="SkyGuide Interface" 
+                  className="w-full h-auto rounded-lg"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
-};
+}
