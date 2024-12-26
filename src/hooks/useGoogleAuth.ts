@@ -10,11 +10,11 @@ export const useGoogleAuth = () => {
     try {
       console.log('=== Google Sign In Process Started ===');
       
-      // Get the exact current URL
+      // Get the preview URL from window.location
       const currentUrl = window.location.origin;
-      console.log('Base URL:', currentUrl);
+      console.log('Current URL:', currentUrl);
       
-      // Construct the redirect URL
+      // Construct the redirect URL using the current origin
       const redirectUrl = `${currentUrl}/auth/callback`;
       console.log('Redirect URL:', redirectUrl);
       
