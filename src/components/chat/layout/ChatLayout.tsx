@@ -11,7 +11,7 @@ interface ChatLayoutProps {
   currentConversationId: string | null;
 }
 
-export default function ChatLayout({
+export function ChatLayout({
   children,
   isSidebarOpen,
   setIsSidebarOpen,

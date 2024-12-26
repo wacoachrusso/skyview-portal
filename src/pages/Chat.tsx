@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
-import ChatLayout from "@/components/chat/layout/ChatLayout";
+import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/hooks/useChat";
 import { ChatContent } from "@/components/chat/ChatContent";
