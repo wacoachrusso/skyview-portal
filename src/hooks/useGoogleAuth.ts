@@ -8,9 +8,12 @@ export const useGoogleAuth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('Initiating Google sign in...');
-      console.log('Current URL:', window.location.href);
-      console.log('Redirect URL:', `${window.location.origin}/auth/callback`);
+      console.log('=== Google Sign In Process Started ===');
+      console.log('Current URL:', window.location.origin);
+      console.log('Full Current URL:', window.location.href);
+      
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log('Configured Redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -19,23 +22,30 @@ export const useGoogleAuth = () => {
             access_type: 'offline',
             prompt: 'consent select_account',
           },
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: redirectUrl
         }
       });
 
       if (error) {
-        console.error('Google sign in error:', error);
-        console.error('Error details:', {
+        console.error('Google sign in error details:', {
           message: error.message,
           status: error.status,
-          name: error.name
+          name: error.name,
+          stack: error.stack
         });
         throw error;
       }
 
-      console.log('Sign in initiated successfully:', data);
+      console.log('Sign in initiated successfully:', {
+        provider: data?.provider,
+        url: data?.url
+      });
+      
     } catch (error) {
-      console.error('Detailed error in Google sign in:', error);
+      console.error('=== Detailed Google Sign In Error ===');
+      console.error('Error object:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
+      
       toast({
         variant: "destructive",
         title: "Sign in failed",
