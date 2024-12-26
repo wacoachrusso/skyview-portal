@@ -22,7 +22,6 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
     console.log('Loading conversations...');
     
     try {
-      // Check authentication first
       const { data: { session }, error: authError } = await supabase.auth.getSession();
       
       if (authError) {
@@ -46,7 +45,7 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
         throw error;
       }
 
-      console.log('Loaded conversations:', data);
+      console.log('Loaded conversations:', data?.length || 0);
       setConversations(data || []);
     } catch (error) {
       console.error('Error in loadConversations:', error);
@@ -124,9 +123,9 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
   useEffect(() => {
     loadConversations();
 
-    // Set up real-time subscription
+    // Set up real-time subscription for conversations
     const channel = supabase
-      .channel('conversations_channel')
+      .channel('conversations_changes')
       .on(
         'postgres_changes',
         {
