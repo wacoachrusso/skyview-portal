@@ -25,7 +25,16 @@ serve(async (req) => {
     const { content, subscriptionPlan } = await req.json();
     console.log('Received request with content:', content);
 
+    // Validate environment variables
+    if (!openAIApiKey) {
+      throw new Error('OPENAI_API_KEY is not set');
+    }
+    if (!assistantId) {
+      throw new Error('OPENAI_ASSISTANT_ID is not set');
+    }
+
     // Create a thread
+    console.log('Creating thread...');
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
       headers: {
@@ -36,13 +45,16 @@ serve(async (req) => {
     });
 
     if (!threadResponse.ok) {
-      throw new Error('Failed to create thread');
+      const errorData = await threadResponse.text();
+      console.error('Thread creation failed:', errorData);
+      throw new Error(`Failed to create thread: ${errorData}`);
     }
 
     const thread = await threadResponse.json();
     console.log('Created thread:', thread.id);
 
     // Add message to thread
+    console.log('Adding message to thread...');
     const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
       headers: {
@@ -57,12 +69,15 @@ serve(async (req) => {
     });
 
     if (!messageResponse.ok) {
+      const errorData = await messageResponse.text();
+      console.error('Message creation failed:', errorData);
       throw new Error('Failed to add message to thread');
     }
 
     console.log('Added message to thread');
 
     // Run the assistant
+    console.log('Running assistant...');
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
       headers: {
@@ -76,6 +91,8 @@ serve(async (req) => {
     });
 
     if (!runResponse.ok) {
+      const errorData = await runResponse.text();
+      console.error('Run creation failed:', errorData);
       throw new Error('Failed to run assistant');
     }
 
@@ -97,6 +114,8 @@ serve(async (req) => {
       );
       
       if (!statusResponse.ok) {
+        const errorData = await statusResponse.text();
+        console.error('Status check failed:', errorData);
         throw new Error('Failed to check run status');
       }
       
@@ -109,6 +128,7 @@ serve(async (req) => {
     }
 
     // Get messages
+    console.log('Retrieving messages...');
     const messagesResponse = await fetch(
       `https://api.openai.com/v1/threads/${thread.id}/messages`,
       {
@@ -120,6 +140,8 @@ serve(async (req) => {
     );
 
     if (!messagesResponse.ok) {
+      const errorData = await messagesResponse.text();
+      console.error('Messages retrieval failed:', errorData);
       throw new Error('Failed to retrieve messages');
     }
 
