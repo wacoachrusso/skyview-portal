@@ -10,8 +10,9 @@ export const useGoogleAuth = () => {
     try {
       console.log('=== Google Sign In Process Started ===');
       
-      // Use the production URL for redirect
-      const redirectUrl = `https://www.skyguide.site/auth/callback`;
+      // Get the current domain
+      const currentDomain = window.location.origin;
+      const redirectUrl = `${currentDomain}/auth/callback`;
       console.log('Redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
