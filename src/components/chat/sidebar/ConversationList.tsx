@@ -27,6 +27,14 @@ export function ConversationList({
   onSelectConversation,
   onDeleteConversation,
 }: ConversationListProps) {
+  const formatTitle = (title: string) => {
+    // Remove the source tag and any other unwanted patterns
+    return title
+      .replace(/【.*?】/g, '')
+      .replace(/\[\d+:\d+†.*?\]/g, '')
+      .trim();
+  };
+
   return (
     <div className="flex-1 overflow-y-auto">
       {conversations.map((conversation) => (
@@ -45,7 +53,7 @@ export function ConversationList({
           >
             <div className="w-full">
               <div className="font-medium text-white truncate">
-                {conversation.title.replace(/【.*?】/g, '').trim()}
+                {formatTitle(conversation.title)}
               </div>
               <div className="text-xs text-gray-400">
                 {format(new Date(conversation.last_message_at), 'MMM d, yyyy')}
