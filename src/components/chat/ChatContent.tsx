@@ -17,18 +17,16 @@ export function ChatContent({
   onSendMessage,
 }: ChatContentProps) {
   return (
-    <div className="flex-1 flex flex-col overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
-        {(messages.length === 0 && !isLoading) && <WelcomeMessage />}
+        {messages.length === 0 && !isLoading && <WelcomeMessage />}
         <ChatList 
           messages={messages} 
           currentUserId={currentUserId || ''} 
           isLoading={isLoading}
         />
       </div>
-      <div className="sticky bottom-0 w-full bg-[#1A1F2C] border-t border-white/10">
-        <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
-      </div>
+      <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
     </div>
   );
 }

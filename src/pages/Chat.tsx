@@ -78,18 +78,18 @@ export default function Chat() {
       onSelectConversation={handleSelectConversation}
       currentConversationId={currentConversationId}
     >
-      <div className="flex-1">
+      <div className="flex flex-col h-full">
         <ChatHeader 
           onBack={() => navigate('/')} 
           onNewChat={handleNewChat}
         />
+        <ChatContent
+          messages={messages}
+          currentUserId={currentUserId}
+          isLoading={isLoading}
+          onSendMessage={sendMessage}
+        />
       </div>
-      <ChatContent
-        messages={messages}
-        currentUserId={currentUserId}
-        isLoading={isLoading}
-        onSendMessage={sendMessage}
-      />
     </ChatLayout>
   );
 }

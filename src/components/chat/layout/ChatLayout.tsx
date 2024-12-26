@@ -29,24 +29,22 @@ export function ChatLayout({
         />
       )}
       <div className="flex-1 flex flex-col h-full">
-        <div className="flex items-center">
-          {isMobile && (
-            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-              <SheetTrigger asChild>
-                <button className="p-2 hover:bg-white/10 rounded-lg">
-                  <Menu className="h-6 w-6 text-white" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[280px] bg-[#1A1F2C]">
-                <ChatSidebar 
-                  onSelectConversation={onSelectConversation}
-                  currentConversationId={currentConversationId}
-                />
-              </SheetContent>
-            </Sheet>
-          )}
-          {children}
-        </div>
+        {isMobile && (
+          <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+            <SheetTrigger asChild>
+              <button className="p-2 hover:bg-white/10 rounded-lg">
+                <Menu className="h-6 w-6 text-white" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-[280px] bg-[#1A1F2C]">
+              <ChatSidebar 
+                onSelectConversation={onSelectConversation}
+                currentConversationId={currentConversationId}
+              />
+            </SheetContent>
+          </Sheet>
+        )}
+        {children}
       </div>
     </div>
   );
