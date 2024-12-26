@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff, Home } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -41,11 +41,10 @@ const Login = () => {
         return;
       }
 
-      // If login successful and rememberMe is true, update the session
       if (formData.rememberMe) {
         await supabase.auth.updateUser({
           data: { 
-            session_expires_in: 60 * 60 * 24 * 14 // 14 days in seconds
+            session_expires_in: 60 * 60 * 24 * 14
           }
         });
       }
@@ -69,20 +68,10 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="flex justify-between items-center mb-8">
-          <Link to="/" className="flex items-center gap-2 text-gray-300 hover:text-white">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
-          <Button 
-            variant="ghost" 
-            className="text-gray-300 hover:text-white hover:bg-white/10"
-            onClick={() => navigate('/')}
-          >
-            <Home className="h-4 w-4 mr-2" />
-            Home
-          </Button>
-        </div>
+        <Link to="/" className="flex items-center gap-2 text-gray-300 hover:text-white mb-8">
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Link>
 
         <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
           <div className="mb-6 flex justify-center">
@@ -132,9 +121,9 @@ const Login = () => {
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                   )}
                 </button>
               </div>

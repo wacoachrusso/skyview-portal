@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { LogIn, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { ChatSettings } from "@/components/chat/ChatSettings";
 
 export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,7 +31,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-100">
+    <nav className="bg-background border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-14">
           <div className="flex items-center gap-2">
@@ -39,21 +40,12 @@ export function Navbar() {
               alt="SkyGuide Logo" 
               className="h-8 w-auto"
             />
-            <span className="text-brand-navy text-lg font-bold">SkyGuide</span>
+            <span className="text-foreground text-lg font-bold">SkyGuide</span>
           </div>
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
               <>
-                <Button 
-                  asChild
-                  variant="ghost"
-                  className="text-brand-navy hover:bg-brand-navy/10"
-                >
-                  <Link to="/dashboard/settings">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </Link>
-                </Button>
+                <ChatSettings />
               </>
             ) : (
               <>

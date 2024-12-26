@@ -27,14 +27,14 @@ export function ChatSettings() {
         <Button
           variant="ghost"
           size={isMobile ? "sm" : "icon"}
-          className="text-white hover:bg-white/10"
+          className="text-foreground hover:bg-accent"
         >
           <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[90vw] sm:w-[400px] bg-[#1E1E2E] border-l border-white/10">
+      <SheetContent className="w-[90vw] sm:w-[400px] bg-background border-l border-border">
         <SheetHeader>
-          <SheetTitle className="text-xl sm:text-2xl font-bold text-white">Settings</SheetTitle>
+          <SheetTitle className="text-xl sm:text-2xl font-bold text-foreground">Settings</SheetTitle>
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
