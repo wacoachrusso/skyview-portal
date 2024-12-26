@@ -1,13 +1,17 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTheme } from "@/components/theme-provider";
 
-export function ThemeSelector() {
-  const { theme, setTheme } = useTheme();
+type Theme = "light" | "dark" | "system";
 
+interface ThemeSelectorProps {
+  currentTheme: Theme;
+  onThemeChange: (theme: Theme) => void;
+}
+
+export function ThemeSelector({ currentTheme, onThemeChange }: ThemeSelectorProps) {
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-white">Theme</label>
-      <Select value={theme} onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}>
+      <Select value={currentTheme} onValueChange={(value: Theme) => onThemeChange(value)}>
         <SelectTrigger className="w-full bg-white/5 border-white/10 text-white">
           <SelectValue placeholder="Select theme" />
         </SelectTrigger>

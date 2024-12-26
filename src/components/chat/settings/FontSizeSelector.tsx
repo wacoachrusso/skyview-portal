@@ -1,26 +1,13 @@
 import { useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const FONT_SIZES = {
-  small: "text-sm",
-  medium: "text-base",
-  large: "text-lg"
-};
-
-type FontSizeSelectorProps = {
+interface FontSizeSelectorProps {
   fontSize: string;
   setFontSize: (size: string) => void;
-};
+}
 
 export function FontSizeSelector({ fontSize, setFontSize }: FontSizeSelectorProps) {
   useEffect(() => {
-    const chatContainer = document.querySelector('.chat-container');
-    if (chatContainer) {
-      Object.values(FONT_SIZES).forEach(size => {
-        chatContainer.classList.remove(size);
-      });
-      chatContainer.classList.add(FONT_SIZES[fontSize as keyof typeof FONT_SIZES]);
-    }
     localStorage.setItem("chat-font-size", fontSize);
   }, [fontSize]);
 

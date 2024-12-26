@@ -11,6 +11,7 @@ import { NotificationToggle } from "./settings/NotificationToggle";
 import { AutoSaveToggle } from "./settings/AutoSaveToggle";
 import { AccountInfo } from "./settings/AccountInfo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/components/theme-provider";
 
 export function ChatSettings() {
   const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");
@@ -19,6 +20,42 @@ export function ChatSettings() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { theme, setTheme } = useTheme();
+
+  // Apply font size to chat container
+  useEffect(() => {
+    const chatContainer = document.querySelector('.chat-container');
+    if (chatContainer) {
+      chatContainer.classList.remove('text-sm', 'text-base', 'text-lg');
+      switch (fontSize) {
+        case 'small':
+          chatContainer.classList.add('text-sm');
+          break;
+        case 'medium':
+          chatContainer.classList.add('text-base');
+          break;
+        case 'large':
+          chatContainer.classList.add('text-lg');
+          break;
+      }
+    }
+  }, [fontSize]);
+
+  // Handle auto-save functionality
+  useEffect(() => {
+    if (autoSave) {
+      // Implement auto-save logic here
+      const interval = setInterval(() => {
+        const conversations = localStorage.getItem('chat-conversations');
+        if (conversations) {
+          console.log('Auto-saving conversations...');
+          // You can implement additional saving logic here
+        }
+      }, 60000); // Auto-save every minute
+
+      return () => clearInterval(interval);
+    }
+  }, [autoSave]);
 
   const handleLogout = async () => {
     try {
@@ -68,13 +105,13 @@ export function ChatSettings() {
           <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[90vw] sm:w-[400px] bg-gradient-to-b from-[#1E1E2E] to-[#2A2F3C] border-l border-white/10">
+      <SheetContent className="w-[90vw] sm:w-[400px] bg-[#1E1E2E] border-l border-white/10">
         <SheetHeader>
           <SheetTitle className="text-xl sm:text-2xl font-bold text-white">Settings</SheetTitle>
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
-          <ThemeSelector />
+          <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
           <FontSizeSelector fontSize={fontSize} setFontSize={setFontSize} />
           <NotificationToggle notifications={notifications} setNotifications={setNotifications} />
           <AutoSaveToggle autoSave={autoSave} setAutoSave={setAutoSave} />
