@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, LayoutDashboard } from "lucide-react";
+import { Home } from "lucide-react";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/hooks/useChat";
@@ -37,21 +37,13 @@ const Chat = () => {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute top-4 right-4 z-50 flex gap-3">
-        <Button 
-          variant="ghost" 
-          className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
-          onClick={() => navigate('/')}
-        >
-          <Home className="h-4 w-4 mr-2" />
-          Home
-        </Button>
+      <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="ghost" 
           className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
           onClick={() => navigate('/dashboard')}
         >
-          <LayoutDashboard className="h-4 w-4 mr-2" />
+          <Home className="h-4 w-4 mr-2" />
           Dashboard
         </Button>
       </div>

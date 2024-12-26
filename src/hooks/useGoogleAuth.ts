@@ -17,18 +17,12 @@ export const useGoogleAuth = () => {
             access_type: 'offline',
             prompt: 'consent',
           },
-          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
       if (error) {
         console.error('Google sign in error:', error);
-        toast({
-          variant: "destructive",
-          title: "Sign in failed",
-          description: error.message || "Could not sign in with Google. Please try again."
-        });
-        return;
+        throw error;
       }
 
       console.log('Sign in initiated:', data);
