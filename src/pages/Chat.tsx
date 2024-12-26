@@ -5,11 +5,19 @@ import { Home } from "lucide-react";
 import ChatLayout from "@/components/chat/layout/ChatLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/hooks/useChat";
+import { ChatContent } from "@/components/chat/ChatContent";
 
 const Chat = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { currentConversationId, loadConversation, setCurrentConversationId } = useChat();
+  const { 
+    currentConversationId, 
+    loadConversation, 
+    setCurrentConversationId,
+    messages,
+    isLoading,
+    sendMessage 
+  } = useChat();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -44,7 +52,12 @@ const Chat = () => {
         onSelectConversation={handleSelectConversation}
         currentConversationId={currentConversationId}
       >
-        {/* Chat content will go here */}
+        <ChatContent
+          messages={messages}
+          currentUserId={supabase.auth.getUser()?.data?.user?.id || null}
+          isLoading={isLoading}
+          onSendMessage={sendMessage}
+        />
       </ChatLayout>
     </div>
   );
