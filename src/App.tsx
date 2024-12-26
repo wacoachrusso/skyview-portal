@@ -7,6 +7,7 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
 import CompleteProfile from "@/pages/CompleteProfile";
+import { AuthCallback } from "@/components/auth/AuthCallback";
 import type { Theme } from "@/components/theme-provider";
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/chat" element={<Chat />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
               </Routes>
               <Toaster />
             </Router>

@@ -6,10 +6,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { handleGoogleSignIn } = useGoogleAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -91,34 +93,6 @@ const Login = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      console.log('Initiating Google sign in...');
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          queryParams: {
-            prompt: 'select_account', // This forces the account selector to appear
-            access_type: 'offline',
-          },
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      });
-
-      if (error) {
-        console.error('Google sign in error:', error);
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error signing in with Google:', error);
-      toast({
-        variant: "destructive",
-        title: "Sign in failed",
-        description: "Could not sign in with Google. Please try again."
-      });
     }
   };
 
