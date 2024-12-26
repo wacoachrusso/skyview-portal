@@ -28,11 +28,7 @@ const Login = () => {
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password: formData.password,
-        options: {
-          // Set session expiry to 14 days if rememberMe is true
-          expiresIn: formData.rememberMe ? 60 * 60 * 24 * 14 : 60 * 60 // 14 days : 1 hour
-        }
+        password: formData.password
       });
 
       if (error) {
@@ -43,6 +39,15 @@ const Login = () => {
         });
         setLoading(false);
         return;
+      }
+
+      // If login successful and rememberMe is true, update the session
+      if (formData.rememberMe) {
+        await supabase.auth.updateUser({
+          data: { 
+            session_expires_in: 60 * 60 * 24 * 14 // 14 days in seconds
+          }
+        });
       }
 
       toast({

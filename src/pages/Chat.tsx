@@ -1,30 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import ChatLayout from "@/components/chat/layout/ChatLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { useChat } from "@/hooks/useChat";
 
 const Chat = () => {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { currentConversationId, loadConversation, setCurrentConversationId } = useChat();
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.signInWithPassword({
-        email: '',
-        password: '',
-        options: {
-          // Set session expiry to 14 days if rememberMe is true
-          expiresIn: 60 * 60 * 24 * 14 // 14 days
-        }
-      });
-      
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/login');
       }
     };
     checkSession();
   }, [navigate]);
+
+  const handleSelectConversation = async (conversationId: string) => {
+    await loadConversation(conversationId);
+    setIsSidebarOpen(false);
+  };
 
   return (
     <div className="relative min-h-screen">
@@ -38,7 +38,14 @@ const Chat = () => {
           Dashboard
         </Button>
       </div>
-      <ChatLayout />
+      <ChatLayout 
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        onSelectConversation={handleSelectConversation}
+        currentConversationId={currentConversationId}
+      >
+        {/* Chat content will go here */}
+      </ChatLayout>
     </div>
   );
 };
