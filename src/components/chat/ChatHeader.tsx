@@ -1,14 +1,20 @@
-import { ChatSettings } from "./ChatSettings";
-import { NotificationBell } from "../notifications/NotificationBell";
+import React from "react";
 
-export function ChatHeader() {
+interface ChatHeaderProps {
+  onBack: () => void;
+  onNewChat: () => Promise<void>;
+}
+
+export function ChatHeader({ onBack, onNewChat }: ChatHeaderProps) {
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#1E1E2E]">
-      <h1 className="text-xl font-bold text-white">SkyGuide AI</h1>
-      <div className="flex items-center space-x-2">
-        <NotificationBell />
-        <ChatSettings />
-      </div>
-    </header>
+    <div className="flex items-center justify-between p-4 bg-gray-800">
+      <button onClick={onBack} className="text-white">
+        Back
+      </button>
+      <h1 className="text-lg font-bold text-white">Chat</h1>
+      <button onClick={onNewChat} className="text-white">
+        New Chat
+      </button>
+    </div>
   );
 }

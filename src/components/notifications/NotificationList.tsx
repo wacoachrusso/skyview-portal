@@ -20,7 +20,10 @@ export function NotificationList() {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setNotifications(data || []);
+        
+        // Explicitly type the data as Notification[]
+        const typedData = data as Notification[];
+        setNotifications(typedData);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
