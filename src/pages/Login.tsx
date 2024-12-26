@@ -37,6 +37,7 @@ const Login = () => {
           title: "Login failed",
           description: "Incorrect email or password. Please try again."
         });
+        setLoading(false);
         return;
       }
 
