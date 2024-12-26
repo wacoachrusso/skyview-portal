@@ -6,13 +6,17 @@ import SignUp from "@/pages/SignUp";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
+import type { Theme } from "@/components/theme-provider";
 
 function App() {
-  // Get the stored theme or default to system
-  const storedTheme = localStorage.getItem("vite-ui-theme") || "system";
+  // Get the stored theme and validate it's a valid Theme type
+  const storedTheme = localStorage.getItem("vite-ui-theme");
+  const validTheme: Theme = (storedTheme === "dark" || storedTheme === "light" || storedTheme === "system") 
+    ? storedTheme 
+    : "system";
 
   return (
-    <ThemeProvider defaultTheme={storedTheme} storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme={validTheme} storageKey="vite-ui-theme">
       <div className="min-h-screen bg-background text-foreground">
         <Router>
           <Routes>
