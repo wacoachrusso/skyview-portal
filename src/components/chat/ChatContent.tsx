@@ -2,8 +2,6 @@ import { ChatList } from "./ChatList";
 import { ChatInput } from "./ChatInput";
 import { Message } from "@/types/chat";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { Button } from "@/components/ui/button";
-import { Trash2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatContentProps {
