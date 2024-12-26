@@ -49,9 +49,7 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -66,7 +64,8 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     min-height: 100vh;
     min-height: -webkit-fill-available;
-    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Remove browser UI on Android */

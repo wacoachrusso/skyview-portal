@@ -31,7 +31,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="bg-background border-b border-border">
+    <nav className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-14">
           <div className="flex items-center gap-2">
@@ -44,14 +44,14 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
-              <>
-                <ChatSettings />
-              </>
+              <ChatSettings />
             ) : (
-              <>
+              <div className="flex items-center gap-2 landscape:flex portrait:flex">
                 <Button 
                   asChild 
-                  className="bg-brand-navy text-white hover:bg-brand-navy/90 font-semibold shadow-sm"
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/10"
                 >
                   <Link to="/login">
                     <LogIn className="mr-2 h-4 w-4" />
@@ -60,11 +60,12 @@ export function Navbar() {
                 </Button>
                 <Button 
                   onClick={scrollToPricing}
-                  className="bg-brand-navy text-white hover:bg-brand-navy/90 font-semibold shadow-sm"
+                  size="sm"
+                  className="bg-brand-navy text-white hover:bg-brand-navy/90"
                 >
                   Sign Up
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
