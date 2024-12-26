@@ -7,6 +7,40 @@ export const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const showWelcomeTutorial = (userName: string) => {
+    // Initial welcome
+    toast({
+      title: `Welcome to SkyGuide, ${userName}! 👋`,
+      description: "We're excited to have you here!",
+      duration: 5000,
+    });
+
+    // Delayed tutorial messages
+    setTimeout(() => {
+      toast({
+        title: "Quick Tip #1",
+        description: "Use the search bar to quickly find contract information.",
+        duration: 5000,
+      });
+    }, 6000);
+
+    setTimeout(() => {
+      toast({
+        title: "Quick Tip #2",
+        description: "Click on 'Chat' to start a conversation with our AI assistant.",
+        duration: 5000,
+      });
+    }, 12000);
+
+    setTimeout(() => {
+      toast({
+        title: "Quick Tip #3",
+        description: "Need help? Look for the '?' icon in the top right corner.",
+        duration: 5000,
+      });
+    }, 18000);
+  };
+
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
@@ -35,7 +69,7 @@ export const AuthCallback = () => {
           // Check if profile exists and is complete
           const { data: profile } = await supabase
             .from('profiles')
-            .select('user_type, airline')
+            .select('user_type, airline, full_name')
             .eq('id', session.user.id)
             .single();
 
@@ -55,13 +89,13 @@ export const AuthCallback = () => {
             }
           }
 
+          // Get the user's name for the welcome message
+          const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
+
           // Redirect based on profile completion
           if (profile?.user_type && profile?.airline) {
             console.log('Profile complete, redirecting to dashboard');
-            toast({
-              title: "Welcome back!",
-              description: "You have successfully signed in."
-            });
+            showWelcomeTutorial(userName.split(' ')[0]); // Use first name only
             navigate('/dashboard');
           } else {
             console.log('Profile incomplete, redirecting to complete-profile');
