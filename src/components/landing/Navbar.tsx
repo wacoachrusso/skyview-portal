@@ -34,14 +34,14 @@ export function Navbar() {
     <nav className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-14 md:h-16">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img 
               src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
               alt="SkyGuide Logo" 
               className="h-6 w-auto md:h-8"
             />
             <span className="text-foreground text-base md:text-lg font-bold">SkyGuide</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-2 md:gap-3">
             {isLoggedIn ? (
               <ChatSettings />
