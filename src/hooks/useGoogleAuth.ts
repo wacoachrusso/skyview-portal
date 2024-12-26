@@ -9,25 +9,33 @@ export const useGoogleAuth = () => {
   const handleGoogleSignIn = async () => {
     try {
       console.log('Initiating Google sign in...');
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Current URL:', window.location.href);
+      console.log('Redirect URL:', `${window.location.origin}/auth/callback`);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           queryParams: {
-            prompt: 'select_account',
             access_type: 'offline',
-            response_type: 'code',
+            prompt: 'select_account',
           },
-          redirectTo: `${window.location.origin}/auth/callback`,
-          skipBrowserRedirect: false
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
       if (error) {
         console.error('Google sign in error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
         throw error;
       }
+
+      console.log('Sign in successful:', data);
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      console.error('Detailed error in Google sign in:', error);
       toast({
         variant: "destructive",
         title: "Sign in failed",
