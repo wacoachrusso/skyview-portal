@@ -12,6 +12,7 @@ export const useGoogleAuth = () => {
       console.log('Current URL:', window.location.origin);
       console.log('Full Current URL:', window.location.href);
       
+      // Use the exact origin for the redirect URL
       const redirectUrl = `${window.location.origin}/auth/callback`;
       console.log('Configured Redirect URL:', redirectUrl);
       
@@ -20,7 +21,7 @@ export const useGoogleAuth = () => {
         options: {
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent select_account',
+            prompt: 'consent',
           },
           redirectTo: redirectUrl
         }

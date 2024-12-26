@@ -29,7 +29,7 @@ function App() {
                 <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/chat" element={<Chat />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/auth/callback/*" element={<AuthCallback />} />
               </Routes>
               <Toaster />
             </Router>
