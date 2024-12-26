@@ -6,10 +6,10 @@ import SignUp from "@/pages/SignUp";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
+import CompleteProfile from "@/pages/CompleteProfile";
 import type { Theme } from "@/components/theme-provider";
 
 function App() {
-  // Get the stored theme and validate it's a valid Theme type
   const storedTheme = localStorage.getItem("vite-ui-theme");
   const validTheme: Theme = (storedTheme === "dark" || storedTheme === "light" || storedTheme === "system") 
     ? storedTheme 
@@ -25,6 +25,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/chat" element={<Chat />} />
               </Routes>
