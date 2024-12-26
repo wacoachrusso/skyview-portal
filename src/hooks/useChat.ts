@@ -53,12 +53,12 @@ export function useChat() {
     setIsLoading(true);
     
     try {
-      const conversationId = await ensureConversation(currentUserId);
+      // If this is the first message in a new chat, create a conversation with this message as the title
+      const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
       }
 
-      await updateConversation(conversationId, content);
       await insertUserMessage(content, conversationId);
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
@@ -82,6 +82,12 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const startNewChat = async () => {
+    console.log('Starting new chat session...');
+    setMessages([]);
+    setCurrentConversationId(null);
   };
 
   useEffect(() => {
@@ -138,6 +144,7 @@ export function useChat() {
     currentConversationId,
     loadConversation,
     setCurrentConversationId,
-    userProfile
+    userProfile,
+    startNewChat
   };
 }

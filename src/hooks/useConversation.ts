@@ -13,15 +13,16 @@ export function useConversation() {
     return null;
   };
 
-  const ensureConversation = async (userId: string) => {
+  const ensureConversation = async (userId: string, firstMessage?: string) => {
     console.log('Ensuring conversation exists before sending message...');
     if (!currentConversationId) {
       try {
+        const title = firstMessage ? firstMessage.slice(0, 50) : 'New Chat';
         const { data: newConversation, error: conversationError } = await supabase
           .from('conversations')
           .insert([{ 
             user_id: userId,
-            title: 'New Chat'
+            title: title
           }])
           .select()
           .single();

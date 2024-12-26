@@ -24,20 +24,21 @@ export default function Chat() {
     createNewConversation,
     currentConversationId,
     loadConversation,
-    setCurrentConversationId 
+    setCurrentConversationId,
+    startNewChat 
   } = useChat();
 
   const handleNewChat = async () => {
     console.log('Creating new chat...');
-    if (currentUserId) {
-      setCurrentConversationId(null);
-      loadConversation('');
+    await startNewChat();
+    if (isMobile) {
+      setIsSidebarOpen(false);
     }
   };
 
   const handleSelectConversation = async (conversationId: string) => {
     console.log('Selecting conversation:', conversationId);
-    await loadConversation(conversationId);
+    const loadedMessages = await loadConversation(conversationId);
     if (isMobile) {
       setIsSidebarOpen(false);
     }
