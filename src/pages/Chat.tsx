@@ -79,10 +79,12 @@ export default function Chat() {
       currentConversationId={currentConversationId}
     >
       <div className="flex flex-col h-full">
-        <ChatHeader 
-          onBack={() => navigate('/')} 
-          onNewChat={handleNewChat}
-        />
+        <div className="flex-none">
+          <ChatHeader 
+            onBack={() => navigate('/')} 
+            onNewChat={handleNewChat}
+          />
+        </div>
         <ChatContent
           messages={messages}
           currentUserId={currentUserId}

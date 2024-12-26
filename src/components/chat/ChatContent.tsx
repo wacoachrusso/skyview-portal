@@ -17,7 +17,7 @@ export function ChatContent({
   onSendMessage,
 }: ChatContentProps) {
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col min-h-0">
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 && !isLoading && <WelcomeMessage />}
         <ChatList 
@@ -26,7 +26,9 @@ export function ChatContent({
           isLoading={isLoading}
         />
       </div>
-      <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+      <div className="mt-auto border-t border-white/10 bg-[#1A1F2C]">
+        <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+      </div>
     </div>
   );
 }
