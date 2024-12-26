@@ -17,7 +17,7 @@ export const useGoogleAuth = () => {
         options: {
           queryParams: {
             access_type: 'offline',
-            prompt: 'select_account',
+            prompt: 'consent select_account',
           },
           redirectTo: `${window.location.origin}/auth/callback`
         }
@@ -33,7 +33,7 @@ export const useGoogleAuth = () => {
         throw error;
       }
 
-      console.log('Sign in successful:', data);
+      console.log('Sign in initiated successfully:', data);
     } catch (error) {
       console.error('Detailed error in Google sign in:', error);
       toast({
