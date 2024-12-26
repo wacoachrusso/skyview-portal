@@ -10,7 +10,7 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the session from the URL hash
+        console.log('Handling auth callback...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -26,6 +26,7 @@ export const AuthCallback = () => {
 
         if (session) {
           console.log('Session established:', session.user.id);
+          console.log('Provider:', session.user.app_metadata.provider);
           
           // Check if profile is complete
           const { data: profile, error: profileError } = await supabase
@@ -36,6 +37,25 @@ export const AuthCallback = () => {
 
           if (profileError) {
             console.error('Error fetching profile:', profileError);
+          }
+
+          // For Google auth, we might need to create/update the profile
+          if (session.user.app_metadata.provider === 'google') {
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', session.user.id)
+              .single();
+
+            if (!existingProfile?.full_name) {
+              // Update profile with Google user's name
+              await supabase
+                .from('profiles')
+                .update({
+                  full_name: session.user.user_metadata.full_name
+                })
+                .eq('id', session.user.id);
+            }
           }
 
           if (profile?.user_type && profile?.airline) {
