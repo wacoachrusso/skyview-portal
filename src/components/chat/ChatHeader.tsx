@@ -1,44 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { ChatSettings } from "./ChatSettings";
+import { NotificationBell } from "../notifications/NotificationBell";
 
-interface ChatHeaderProps {
-  onBack: () => void;
-  onNewChat: () => void;
-}
-
-export function ChatHeader({ onBack, onNewChat }: ChatHeaderProps) {
-  const isMobile = useIsMobile();
-
+export function ChatHeader() {
   return (
-    <header className="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 bg-gradient-to-r from-[#1A1F2C] to-[#2A2F3C]">
-      <div className="flex items-center gap-2 sm:gap-4">
-        <Button
-          variant="ghost"
-          size={isMobile ? "sm" : "icon"}
-          onClick={onBack}
-          className="text-white hover:bg-white/10"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <img 
-            src="/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png" 
-            alt="SkyGuide Logo" 
-            className="h-5 w-5"
-          />
-          <h1 className="text-base sm:text-xl font-semibold text-white">Know Your Contract</h1>
-        </div>
+    <header className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#1E1E2E]">
+      <h1 className="text-xl font-bold text-white">SkyGuide AI</h1>
+      <div className="flex items-center space-x-2">
+        <NotificationBell />
+        <ChatSettings />
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onNewChat}
-        className="text-white hover:bg-white/10 flex items-center gap-2"
-      >
-        <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">New Chat</span>
-      </Button>
     </header>
   );
 }
