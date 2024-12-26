@@ -1,16 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
-import { useMessageHandling } from "./useMessageHandling";
+import { useMessageOperations } from "./useMessageOperations";
+import { useUserProfile } from "./useUserProfile";
 
 export function useChat() {
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const { currentUserId, userProfile } = useUserProfile();
   const { 
     currentConversationId, 
     createNewConversation, 
@@ -19,22 +16,15 @@ export function useChat() {
     setCurrentConversationId 
   } = useConversation();
 
-  const { updateConversation, insertUserMessage, insertAIMessage } = useMessageHandling(currentUserId, currentConversationId);
-
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        setUserProfile(profile);
-      }
-    };
-    loadUserProfile();
-  }, []);
+  const {
+    messages,
+    setMessages,
+    isLoading,
+    setIsLoading,
+    insertUserMessage,
+    insertAIMessage,
+    loadMessages
+  } = useMessageOperations(currentUserId, currentConversationId);
 
   const sendMessage = async (content: string) => {
     console.log('Sending message:', { content, conversationId: currentConversationId });
@@ -95,25 +85,6 @@ export function useChat() {
   };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      console.log('Checking authentication...');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No user found, redirecting to login');
-        return null;
-      }
-      console.log('User authenticated:', session.user.id);
-      setCurrentUserId(session.user.id);
-      return session.user.id;
-    };
-
-    const setupChat = async () => {
-      const userId = await checkAuth();
-      if (!userId) return;
-    };
-
-    setupChat();
-
     const channel = supabase
       .channel('messages_channel')
       .on(
@@ -141,26 +112,9 @@ export function useChat() {
 
   // Load messages when conversation changes
   useEffect(() => {
-    const loadMessages = async () => {
-      if (currentConversationId) {
-        console.log('Loading messages for conversation:', currentConversationId);
-        const { data: messages, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', currentConversationId)
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.error('Error loading messages:', error);
-          return;
-        }
-
-        console.log('Loaded messages:', messages?.length || 0);
-        setMessages(messages || []);
-      }
-    };
-
-    loadMessages();
+    if (currentConversationId) {
+      loadMessages(currentConversationId);
+    }
   }, [currentConversationId]);
 
   return {
