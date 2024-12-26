@@ -17,7 +17,8 @@ export const useGoogleAuth = () => {
             access_type: 'offline',
             response_type: 'code',
           },
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: false
         }
       });
 
