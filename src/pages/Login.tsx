@@ -74,23 +74,14 @@ const Login = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              className="text-gray-300 hover:text-white hover:bg-white/10"
-              onClick={() => navigate('/')}
-            >
-              <Home className="h-4 w-4 mr-2" />
-              Home
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="text-gray-300 hover:text-white hover:bg-white/10"
-              onClick={() => navigate('/dashboard')}
-            >
-              Dashboard
-            </Button>
-          </div>
+          <Button 
+            variant="ghost" 
+            className="text-gray-300 hover:text-white hover:bg-white/10"
+            onClick={() => navigate('/')}
+          >
+            <Home className="h-4 w-4 mr-2" />
+            Home
+          </Button>
         </div>
 
         <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
