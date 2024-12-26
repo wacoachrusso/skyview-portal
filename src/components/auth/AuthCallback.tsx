@@ -14,6 +14,7 @@ export const AuthCallback = () => {
         console.log('Current URL:', window.location.href);
         console.log('Search params:', window.location.search);
         console.log('Hash:', window.location.hash);
+        console.log('Pathname:', window.location.pathname);
         
         const { data: { session }, error } = await supabase.auth.getSession();
         
