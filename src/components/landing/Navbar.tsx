@@ -51,7 +51,7 @@ export function Navbar() {
                   asChild 
                   variant="ghost"
                   size="sm"
-                  className="text-white hover:bg-white/10 hidden sm:flex"
+                  className="text-white hover:bg-white/10"
                 >
                   <Link to="/login">
                     <LogIn className="mr-2 h-4 w-4" />
@@ -59,22 +59,11 @@ export function Navbar() {
                   </Link>
                 </Button>
                 <Button 
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/10 sm:hidden"
-                >
-                  <Link to="/login">
-                    <LogIn className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button 
                   onClick={scrollToPricing}
                   size="sm"
                   className="bg-brand-navy text-white hover:bg-brand-navy/90"
                 >
-                  <span className="hidden sm:inline">Sign Up</span>
-                  <span className="sm:hidden">Join</span>
+                  Sign Up
                 </Button>
               </div>
             )}
