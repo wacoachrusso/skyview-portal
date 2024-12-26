@@ -35,7 +35,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful AI assistant. Provide clear and concise responses.'
+            content: `You are a helpful AI assistant. When referencing specific quotes or contract terms, always wrap them in quotation marks and make them stand out. For example: According to section 2.1: "exact quote here". This helps users easily identify and reference specific text.`
           },
           { role: 'user', content }
         ],
