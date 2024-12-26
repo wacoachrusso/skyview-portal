@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 
 type AutoSaveToggleProps = {
   autoSave: boolean;
@@ -7,9 +8,22 @@ type AutoSaveToggleProps = {
 };
 
 export function AutoSaveToggle({ autoSave, setAutoSave }: AutoSaveToggleProps) {
+  const { toast } = useToast();
+
   useEffect(() => {
     localStorage.setItem("chat-auto-save", autoSave.toString());
   }, [autoSave]);
+
+  const handleToggle = (checked: boolean) => {
+    setAutoSave(checked);
+    toast({
+      title: checked ? "Auto-save enabled" : "Auto-save disabled",
+      description: checked 
+        ? "Your conversations will be automatically saved" 
+        : "Auto-save has been turned off",
+      duration: 2000,
+    });
+  };
 
   return (
     <div className="flex items-center justify-between">
@@ -19,7 +33,7 @@ export function AutoSaveToggle({ autoSave, setAutoSave }: AutoSaveToggleProps) {
       </div>
       <Switch
         checked={autoSave}
-        onCheckedChange={setAutoSave}
+        onCheckedChange={handleToggle}
         className="data-[state=checked]:bg-blue-600"
       />
     </div>

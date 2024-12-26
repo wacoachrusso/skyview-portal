@@ -14,9 +14,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/components/theme-provider";
 
 export function ChatSettings() {
+  // Initialize state with stored values
   const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");
   const [notifications, setNotifications] = useState(() => localStorage.getItem("chat-notifications") === "true");
   const [autoSave, setAutoSave] = useState(() => localStorage.getItem("chat-auto-save") !== "false");
+  const [isOpen, setIsOpen] = useState(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -38,18 +41,18 @@ export function ChatSettings() {
           chatContainer.classList.add('text-lg');
           break;
       }
+      localStorage.setItem("chat-font-size", fontSize);
     }
   }, [fontSize]);
 
   // Handle auto-save functionality
   useEffect(() => {
     if (autoSave) {
-      // Implement auto-save logic here
       const interval = setInterval(() => {
         const conversations = localStorage.getItem('chat-conversations');
         if (conversations) {
           console.log('Auto-saving conversations...');
-          // You can implement additional saving logic here
+          // Implement your auto-save logic here
         }
       }, 60000); // Auto-save every minute
 
@@ -67,6 +70,7 @@ export function ChatSettings() {
       localStorage.removeItem("sb-xnlzqsoujwsffoxhhybk-auth-token");
       
       console.log("Redirecting to home page...");
+      setIsOpen(false);
       navigate("/");
       toast({
         title: "Logged out successfully",
@@ -95,7 +99,7 @@ export function ChatSettings() {
   }, [navigate]);
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
