@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
 import { useMessageOperations } from "./useMessageOperations";
 import { useUserProfile } from "./useUserProfile";
+import { Message } from "@/types/chat";
 
 export function useChat() {
   const { toast } = useToast();
