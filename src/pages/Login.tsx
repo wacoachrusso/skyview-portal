@@ -24,10 +24,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      console.log("Attempting login with email:", formData.email);
-      
-      // Trim whitespace from email to prevent accidental spaces
       const email = formData.email.trim();
+      console.log("Attempting login with:", { email, passwordLength: formData.password.length });
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -35,14 +33,18 @@ const Login = () => {
       });
 
       if (error) {
-        console.error("Login error:", error);
+        console.error("Login error details:", {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        
         let errorMessage = "Invalid email or password. Please try again.";
         
-        // Provide more specific error messages based on the error type
         if (error.message.includes("Email not confirmed")) {
           errorMessage = "Please confirm your email address before logging in.";
         } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "The email or password you entered is incorrect. Please check your credentials and try again.";
+          errorMessage = "The email or password you entered is incorrect. Please try again.";
         }
 
         toast({
@@ -53,14 +55,16 @@ const Login = () => {
         return;
       }
 
-      if (formData.rememberMe) {
+      console.log("Login successful, session:", data.session);
+
+      if (formData.rememberMe && data.session) {
+        console.log("Setting persistent session");
         await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         });
       }
 
-      console.log("Login successful:", data);
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in."
@@ -111,6 +115,7 @@ const Login = () => {
                 className="bg-white/10 border-white/20 text-white"
                 required
                 autoComplete="email"
+                placeholder="Enter your email"
               />
             </div>
 
@@ -125,6 +130,7 @@ const Login = () => {
                   className="bg-white/10 border-white/20 text-white pr-10"
                   required
                   autoComplete="current-password"
+                  placeholder="Enter your password"
                 />
                 <button
                   type="button"
