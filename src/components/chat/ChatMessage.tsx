@@ -2,13 +2,16 @@ import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
 import { format } from "date-fns";
 import { TypeAnimation } from 'react-type-animation';
+import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
   message: Message;
   isCurrentUser: boolean;
+  onCopy: () => void;
 }
 
-export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
+export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps) {
   const formatContent = (content: string) => {
     // Check if content contains a list or table-like structure
     if (content.includes("1.") || content.includes("•") || content.includes("|")) {
@@ -52,13 +55,13 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
   return (
     <div
       className={cn(
-        "flex w-full gap-2 p-1 sm:p-2",
+        "flex w-full gap-2 p-1 sm:p-2 group",
         isCurrentUser ? "justify-end" : "justify-start"
       )}
     >
       <div
         className={cn(
-          "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2",
+          "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2 relative",
           isCurrentUser
             ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
             : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white shadow-md"
@@ -78,9 +81,19 @@ export function ChatMessage({ message, isCurrentUser }: ChatMessageProps) {
             />
           </div>
         )}
-        <span className="text-[10px] sm:text-xs opacity-50">
-          {format(new Date(message.created_at), "h:mm a")}
-        </span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[10px] sm:text-xs opacity-50">
+            {format(new Date(message.created_at), "h:mm a")}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="opacity-0 group-hover:opacity-100 transition-opacity -mr-2 text-white/70 hover:text-white hover:bg-white/10"
+            onClick={onCopy}
+          >
+            <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

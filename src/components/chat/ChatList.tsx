@@ -6,9 +6,10 @@ interface ChatListProps {
   messages: Message[];
   currentUserId: string;
   isLoading?: boolean;
+  onCopyMessage: (content: string) => void;
 }
 
-export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) {
+export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +51,7 @@ export function ChatList({ messages, currentUserId, isLoading }: ChatListProps) 
               key={message.id}
               message={message}
               isCurrentUser={message.user_id === currentUserId}
+              onCopy={() => onCopyMessage(message.content)}
             />
           ))}
           {isLoading && (

@@ -2,6 +2,9 @@ import { ChatList } from "./ChatList";
 import { ChatInput } from "./ChatInput";
 import { Message } from "@/types/chat";
 import { WelcomeMessage } from "./WelcomeMessage";
+import { Button } from "@/components/ui/button";
+import { Trash2, Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatContentProps {
   messages: Message[];
@@ -16,6 +19,17 @@ export function ChatContent({
   isLoading,
   onSendMessage,
 }: ChatContentProps) {
+  const { toast } = useToast();
+
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast({
+      title: "Copied to clipboard",
+      description: "Message content has been copied to your clipboard.",
+      duration: 2000,
+    });
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex-1 overflow-y-auto">
@@ -24,6 +38,7 @@ export function ChatContent({
           messages={messages} 
           currentUserId={currentUserId || ''} 
           isLoading={isLoading}
+          onCopyMessage={handleCopyMessage}
         />
       </div>
       <div className="mt-auto border-t border-white/10 bg-[#1A1F2C]">
