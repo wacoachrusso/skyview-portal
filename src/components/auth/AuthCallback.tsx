@@ -12,19 +12,12 @@ export const AuthCallback = () => {
       try {
         console.log('=== Auth Callback Started ===');
         console.log('Current URL:', window.location.href);
-        console.log('Search params:', window.location.search);
-        console.log('Hash:', window.location.hash);
-        console.log('Pathname:', window.location.pathname);
         
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('=== Auth Callback Error ===');
-          console.error('Error details:', {
-            message: error.message,
-            status: error.status,
-            name: error.name
-          });
+          console.error('Error details:', error);
           toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -38,41 +31,31 @@ export const AuthCallback = () => {
           console.log('=== Session Established ===');
           console.log('User ID:', session.user.id);
           console.log('Provider:', session.user.app_metadata.provider);
-          console.log('Email:', session.user.email);
           
-          // Check if profile is complete
-          const { data: profile, error: profileError } = await supabase
+          // Check if profile exists and is complete
+          const { data: profile } = await supabase
             .from('profiles')
             .select('user_type, airline')
             .eq('id', session.user.id)
             .single();
 
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
-          }
-
           console.log('Profile data:', profile);
 
-          // For Google auth, we might need to create/update the profile
+          // For Google auth, update profile with Google user data if needed
           if (session.user.app_metadata.provider === 'google') {
-            console.log('Updating profile for Google user');
-            const { data: existingProfile } = await supabase
+            const { error: profileUpdateError } = await supabase
               .from('profiles')
-              .select('full_name')
-              .eq('id', session.user.id)
-              .single();
+              .update({
+                full_name: session.user.user_metadata.full_name
+              })
+              .eq('id', session.user.id);
 
-            if (!existingProfile?.full_name) {
-              console.log('Updating profile with Google user name:', session.user.user_metadata.full_name);
-              await supabase
-                .from('profiles')
-                .update({
-                  full_name: session.user.user_metadata.full_name
-                })
-                .eq('id', session.user.id);
+            if (profileUpdateError) {
+              console.error('Error updating profile:', profileUpdateError);
             }
           }
 
+          // Redirect based on profile completion
           if (profile?.user_type && profile?.airline) {
             console.log('Profile complete, redirecting to dashboard');
             toast({
