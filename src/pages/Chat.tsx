@@ -10,7 +10,15 @@ const Chat = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.signInWithPassword({
+        email: '',
+        password: '',
+        options: {
+          // Set session expiry to 14 days if rememberMe is true
+          expiresIn: 60 * 60 * 24 * 14 // 14 days
+        }
+      });
+      
       if (!session) {
         navigate('/login');
       }
