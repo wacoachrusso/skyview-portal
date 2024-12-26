@@ -15,17 +15,17 @@ export const Hero = () => {
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center gap-4 text-center lg:text-left lg:items-start">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 lg:mb-6">
-            Your AI Co-Pilot for
+            Your Aviation AI Assistant for
             <br className="hidden sm:inline" />
             <TypeAnimation
               sequence={[
-                'Flight Planning',
-                2000,
-                'Weather Analysis',
-                2000,
-                'Route Optimization',
+                'Flight Operations',
                 2000,
                 'Safety Procedures',
+                2000,
+                'Weather Briefings',
+                2000,
+                'Technical Knowledge',
                 2000,
               ]}
               wrapper="span"
@@ -35,7 +35,7 @@ export const Hero = () => {
             />
           </h1>
           <p className="max-w-[600px] text-gray-300 md:text-xl dark:text-gray-400">
-            Enhance your aviation experience with our AI-powered assistant, designed specifically for pilots and flight attendants.
+            Empowering aviation professionals with instant access to regulations, procedures, and expert guidance through advanced AI technology.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
