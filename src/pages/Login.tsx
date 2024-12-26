@@ -24,18 +24,29 @@ const Login = () => {
     setLoading(true);
 
     try {
+      console.log("Attempting login with email:", formData.email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
       });
 
       if (error) {
+        console.error("Login error:", error);
+        let errorMessage = "Invalid email or password. Please try again.";
+        
+        // Provide more specific error messages based on the error type
+        if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Please confirm your email address before logging in.";
+        } else if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+        }
+
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: error.message
+          description: errorMessage
         });
-        throw error;
+        return;
       }
 
       if (formData.rememberMe) {
@@ -47,12 +58,17 @@ const Login = () => {
 
       console.log("Login successful:", data);
       toast({
-        title: "Login successful",
-        description: "Welcome back!"
+        title: "Welcome back!",
+        description: "You have successfully logged in."
       });
-      navigate('/dashboard');
+      navigate('/chat');
     } catch (error) {
-      console.error("Error logging in:", error);
+      console.error("Unexpected error during login:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again."
+      });
     } finally {
       setLoading(false);
     }
@@ -77,7 +93,7 @@ const Login = () => {
 
           <h1 className="text-2xl font-bold text-white text-center mb-2">Welcome Back</h1>
           <p className="text-gray-400 text-center mb-6">
-            Enter your credentials to continue or reset your password if needed
+            Enter your credentials to continue
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
