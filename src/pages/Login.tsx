@@ -96,14 +96,22 @@ const Login = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('Initiating Google sign in...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/complete-profile`
+          queryParams: {
+            prompt: 'select_account', // This forces the account selector to appear
+            access_type: 'offline',
+          },
+          redirectTo: `${window.location.origin}/dashboard`
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Google sign in error:', error);
+        throw error;
+      }
     } catch (error) {
       console.error('Error signing in with Google:', error);
       toast({
