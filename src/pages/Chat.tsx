@@ -16,7 +16,8 @@ const Chat = () => {
     setCurrentConversationId,
     messages,
     isLoading,
-    sendMessage 
+    sendMessage,
+    currentUserId 
   } = useChat();
 
   useEffect(() => {
@@ -54,7 +55,7 @@ const Chat = () => {
       >
         <ChatContent
           messages={messages}
-          currentUserId={supabase.auth.getUser()?.data?.user?.id || null}
+          currentUserId={currentUserId}
           isLoading={isLoading}
           onSendMessage={sendMessage}
         />
