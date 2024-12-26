@@ -10,15 +10,9 @@ export const useGoogleAuth = () => {
     try {
       console.log('=== Google Sign In Process Started ===');
       
-      // Get the current domain
-      const currentDomain = window.location.origin;
-      const redirectUrl = `${currentDomain}/auth/callback`;
-      console.log('Redirect URL:', redirectUrl);
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
