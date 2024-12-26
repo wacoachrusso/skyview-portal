@@ -30,14 +30,14 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold w-full sm:w-auto px-6 shadow-lg"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
                 onClick={scrollToPricing}
               >
                 Start Free Trial
               </Button>
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold w-full sm:w-auto px-6 shadow-lg"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
                 onClick={scrollToPricing}
               >
                 Sign Up Now
