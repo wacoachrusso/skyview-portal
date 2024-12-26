@@ -17,17 +17,21 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme={validTheme} storageKey="vite-ui-theme">
-      <div className="min-h-screen bg-background text-foreground">
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/chat" element={<Chat />} />
-          </Routes>
-          <Toaster />
-        </Router>
+      <div className="min-h-screen bg-background font-sans antialiased">
+        <div className="relative flex min-h-screen flex-col">
+          <div className="flex-1">
+            <Router>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/chat" element={<Chat />} />
+              </Routes>
+              <Toaster />
+            </Router>
+          </div>
+        </div>
       </div>
     </ThemeProvider>
   );

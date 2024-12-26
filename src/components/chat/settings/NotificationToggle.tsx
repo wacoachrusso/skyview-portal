@@ -13,8 +13,15 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("chat-notifications", notifications.toString());
-  }, [notifications]);
+    // Check initial notification permission
+    if (notifications && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        setNotifications(true);
+      } else {
+        setNotifications(false);
+      }
+    }
+  }, []);
 
   const handlePermissionRequest = async () => {
     console.log("Requesting notification permission...");
@@ -50,7 +57,7 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
     }
   };
 
-  const handleToggle = (checked: boolean) => {
+  const handleToggle = async (checked: boolean) => {
     console.log("Notification toggle clicked:", checked);
     
     if (checked) {
@@ -65,7 +72,18 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
         return;
       }
 
-      setShowPermissionDialog(true);
+      if (Notification.permission === "granted") {
+        setNotifications(true);
+      } else if (Notification.permission === "denied") {
+        toast({
+          title: "Notifications Blocked",
+          description: "Please enable notifications in your browser settings.",
+          variant: "destructive",
+        });
+        setNotifications(false);
+      } else {
+        setShowPermissionDialog(true);
+      }
     } else {
       console.log("Notifications disabled by user");
       setNotifications(false);
@@ -80,8 +98,8 @@ export function NotificationToggle({ notifications, setNotifications }: Notifica
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <label className="text-sm font-medium text-white">Important Updates</label>
-          <p className="text-sm text-gray-400">Get notified about critical changes and updates</p>
+          <label className="text-sm font-medium text-foreground">Important Updates</label>
+          <p className="text-sm text-muted-foreground">Get notified about critical changes and updates</p>
         </div>
         <Switch
           checked={notifications}
