@@ -42,22 +42,26 @@ const handler = async (req: Request): Promise<Response> => {
     if (!releaseNote) throw new Error('Release note not found')
 
     // Get all users with email notifications enabled
-    const { data: profiles, error: profilesError } = await supabase
+    const { data: subscribedUsers, error: profilesError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, email_notifications')
       .eq('email_notifications', true)
 
     if (profilesError) throw profilesError
+    console.log('Found subscribed users:', subscribedUsers)
+
+    const subscribedUserIds = subscribedUsers.map(user => user.id)
 
     // Get user emails from auth.users
-    const { data: users, error: usersError } = await supabase
+    const { data: { users }, error: usersError } = await supabase
       .auth.admin.listUsers()
 
     if (usersError) throw usersError
 
-    const emailRecipients = users.users
-      .filter(user => userIds.includes(user.id))
+    const emailRecipients = users
+      .filter(user => subscribedUserIds.includes(user.id))
       .map(user => user.email)
+      .filter((email): email is string => email !== null)
 
     if (emailRecipients.length === 0) {
       console.log('No recipients found with email notifications enabled')
@@ -66,6 +70,8 @@ const handler = async (req: Request): Promise<Response> => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log('Sending email to recipients:', emailRecipients)
 
     // Prepare email content
     const emailHtml = `
