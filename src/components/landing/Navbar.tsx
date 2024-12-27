@@ -8,19 +8,29 @@ import { ChatSettings } from "@/components/chat/ChatSettings";
 export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-      if (session?.user) {
-        setUserEmail(session.user.email || "");
+      try {
+        console.log('Checking auth state in Navbar');
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session);
+        if (session?.user) {
+          console.log('User is logged in:', session.user.email);
+          setUserEmail(session.user.email || "");
+        }
+      } catch (error) {
+        console.error('Error checking auth state:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
       setIsLoggedIn(event === 'SIGNED_IN');
       if (session?.user) {
         setUserEmail(session.user.email || "");
@@ -36,6 +46,19 @@ export function Navbar() {
       pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  if (isLoading) {
+    return (
+      <nav className="bg-background border-b border-border sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-14 md:h-16">
+            <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>
+            <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-background border-b border-border sticky top-0 z-50">
@@ -57,7 +80,7 @@ export function Navbar() {
                   asChild
                   variant="ghost"
                   size="sm"
-                  className="text-white hover:bg-white/10"
+                  className="text-foreground hover:bg-accent"
                 >
                   <Link to="/chat">
                     <MessageSquare className="mr-2 h-4 w-4" />
@@ -67,7 +90,7 @@ export function Navbar() {
                 <Button 
                   asChild
                   size="sm"
-                  className="bg-brand-navy text-white hover:bg-brand-navy/90"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <Link to="/dashboard">
                     Dashboard
@@ -80,7 +103,7 @@ export function Navbar() {
                   asChild 
                   variant="ghost"
                   size="sm"
-                  className="text-white hover:bg-white/10"
+                  className="text-foreground hover:bg-accent"
                 >
                   <Link to="/login">
                     <LogIn className="mr-2 h-4 w-4" />
@@ -90,7 +113,7 @@ export function Navbar() {
                 <Button 
                   onClick={scrollToPricing}
                   size="sm"
-                  className="bg-brand-navy text-white hover:bg-brand-navy/90"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Sign Up
                 </Button>
