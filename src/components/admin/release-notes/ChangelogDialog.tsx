@@ -47,7 +47,12 @@ export const ChangelogDialog = ({
       const { data, error } = await supabase
         .from("release_note_changes")
         .select(`
-          *,
+          id,
+          release_note_id,
+          user_id,
+          change_type,
+          changes,
+          created_at,
           profiles:user_id (
             full_name
           )
