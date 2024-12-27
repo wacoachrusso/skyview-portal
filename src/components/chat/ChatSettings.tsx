@@ -6,7 +6,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeSelector } from "./settings/ThemeSelector";
 import { FontSizeSelector } from "./settings/FontSizeSelector";
-import { NotificationToggle } from "./settings/NotificationToggle";
+import { NotificationPreferences } from "./settings/notifications/NotificationPreferences";
 import { AutoSaveToggle } from "./settings/AutoSaveToggle";
 import { AccountInfo } from "./settings/AccountInfo";
 import { LogoutButton } from "./settings/LogoutButton";
@@ -14,7 +14,6 @@ import { SessionCheck } from "./settings/SessionCheck";
 
 export function ChatSettings() {
   const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");
-  const [notifications, setNotifications] = useState(() => localStorage.getItem("chat-notifications") === "true");
   const [autoSave, setAutoSave] = useState(() => localStorage.getItem("chat-auto-save") !== "false");
   const [isOpen, setIsOpen] = useState(false);
   
@@ -41,7 +40,7 @@ export function ChatSettings() {
           <SessionCheck />
           <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
           <FontSizeSelector fontSize={fontSize} setFontSize={setFontSize} />
-          <NotificationToggle notifications={notifications} setNotifications={setNotifications} />
+          <NotificationPreferences />
           <AutoSaveToggle autoSave={autoSave} setAutoSave={setAutoSave} />
           <AccountInfo />
           <LogoutButton />
