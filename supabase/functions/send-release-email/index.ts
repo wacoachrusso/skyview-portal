@@ -23,6 +23,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured')
+    }
+
     const supabase = createClient(
       SUPABASE_URL!,
       SUPABASE_SERVICE_ROLE_KEY!
@@ -83,6 +87,11 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `
 
+    // For testing, only send to the first recipient
+    // Remove this limitation after domain verification
+    const testRecipient = emailRecipients[0]
+    console.log('Sending test email to:', testRecipient)
+
     // Send email using Resend
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -91,16 +100,18 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'updates@resend.dev',
-        to: emailRecipients,
+        from: 'onboarding@resend.dev',
+        to: [testRecipient],
         subject: `New Release: ${releaseNote.title}`,
         html: emailHtml,
       }),
     })
 
+    const resendResponse = await res.json()
+    
     if (!res.ok) {
-      const error = await res.text()
-      throw new Error(`Resend API error: ${error}`)
+      console.error('Resend API error:', resendResponse)
+      throw new Error(`Resend API error: ${JSON.stringify(resendResponse)}`)
     }
 
     // Update last_email_sent timestamp
@@ -112,7 +123,11 @@ const handler = async (req: Request): Promise<Response> => {
     if (updateError) throw updateError
 
     return new Response(
-      JSON.stringify({ success: true, recipientCount: emailRecipients.length }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Test email sent successfully',
+        recipient: testRecipient 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
