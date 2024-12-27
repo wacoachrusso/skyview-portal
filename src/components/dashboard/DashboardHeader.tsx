@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home, Bell, User } from "lucide-react";
+import { LogOut, Home, Bell, User, FileText } from "lucide-react";
 import { ChatSettings } from "@/components/chat/ChatSettings";
 
 interface DashboardHeaderProps {
@@ -23,6 +23,12 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             <h1 className="text-xl font-semibold text-foreground hidden sm:block">Dashboard</h1>
           </div>
           <div className="flex items-center space-x-2">
+            <Link to="/release-notes">
+              <Button variant="ghost" size="sm" className="hover:bg-accent">
+                <FileText className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Release Notes</span>
+              </Button>
+            </Link>
             <Button variant="ghost" size="sm" className="hover:bg-accent">
               <Bell className="h-4 w-4" />
             </Button>
