@@ -46,7 +46,7 @@ export function ChangelogDialog({
             change_type,
             changes,
             created_at,
-            profiles(full_name)
+            profiles!release_note_changes_user_id_fkey(full_name)
           `)
           .eq('release_note_id', releaseNoteId)
           .order('created_at', { ascending: false });
@@ -57,7 +57,14 @@ export function ChangelogDialog({
         }
 
         console.log('Fetched changes:', data);
-        setChanges(data as ChangelogEntry[]);
+        
+        // Transform the data to match our ChangelogEntry interface
+        const transformedData = data.map(item => ({
+          ...item,
+          profiles: item.profiles || { full_name: null }
+        }));
+
+        setChanges(transformedData as ChangelogEntry[]);
       } catch (error) {
         console.error('Error fetching changelog:', error);
       } finally {
