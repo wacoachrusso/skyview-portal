@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ReleaseNoteFormProps {
   note?: any;
@@ -29,6 +30,7 @@ interface ReleaseNoteFormProps {
 
 export const ReleaseNoteForm = ({ note, onClose, onSuccess }: ReleaseNoteFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [sendEmail, setSendEmail] = useState(false);
   const { toast } = useToast();
   const form = useForm({
     defaultValues: {
@@ -39,26 +41,64 @@ export const ReleaseNoteForm = ({ note, onClose, onSuccess }: ReleaseNoteFormPro
     },
   });
 
+  const sendReleaseEmail = async (noteId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-release-email', {
+        body: { releaseNoteId: noteId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email Notifications Sent",
+        description: "Release note email has been sent to subscribed users.",
+      });
+    } catch (error) {
+      console.error("Error sending release note email:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send email notifications",
+      });
+    }
+  };
+
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
       if (note) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("release_notes")
           .update(values)
-          .eq("id", note.id);
+          .eq("id", note.id)
+          .select()
+          .single();
         if (error) throw error;
+        
         toast({
           title: "Success",
           description: "Release note updated successfully",
         });
+
+        if (sendEmail) {
+          await sendReleaseEmail(note.id);
+        }
       } else {
-        const { error } = await supabase.from("release_notes").insert([values]);
+        const { data, error } = await supabase
+          .from("release_notes")
+          .insert([values])
+          .select()
+          .single();
         if (error) throw error;
+        
         toast({
           title: "Success",
           description: "Release note created successfully",
         });
+
+        if (sendEmail && data) {
+          await sendReleaseEmail(data.id);
+        }
       }
       onSuccess();
     } catch (error) {
@@ -141,6 +181,19 @@ export const ReleaseNoteForm = ({ note, onClose, onSuccess }: ReleaseNoteFormPro
                 </FormItem>
               )}
             />
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="sendEmail"
+                checked={sendEmail}
+                onCheckedChange={(checked) => setSendEmail(checked as boolean)}
+              />
+              <label
+                htmlFor="sendEmail"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Send email notification to subscribed users
+              </label>
+            </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={onClose}>
                 Cancel
