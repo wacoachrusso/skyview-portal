@@ -17,7 +17,7 @@ interface ChangelogEntry {
   change_type: string;
   changes: any;
   created_at: string;
-  profile: {
+  profiles: {
     full_name: string | null;
   };
 }
@@ -45,14 +45,22 @@ export function ChangelogDialog({
             change_type,
             changes,
             created_at,
-            profile:profiles(full_name)
+            profiles!release_note_changes_user_id_fkey(full_name)
           `)
           .eq('release_note_id', releaseNoteId)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        setChanges(data as ChangelogEntry[]);
+        // Transform the data to match our expected type
+        const transformedData = data?.map(item => ({
+          ...item,
+          profiles: {
+            full_name: item.profiles?.full_name || null
+          }
+        }));
+
+        setChanges(transformedData as ChangelogEntry[]);
       } catch (error) {
         console.error('Error fetching changelog:', error);
       } finally {
@@ -85,7 +93,7 @@ export function ChangelogDialog({
                   <TableCell>
                     {format(new Date(change.created_at), "MMM d, yyyy HH:mm")}
                   </TableCell>
-                  <TableCell>{change.profile?.full_name || 'Unknown User'}</TableCell>
+                  <TableCell>{change.profiles?.full_name || 'Unknown User'}</TableCell>
                   <TableCell className="capitalize">{change.change_type}</TableCell>
                   <TableCell>
                     {change.changes ? (
