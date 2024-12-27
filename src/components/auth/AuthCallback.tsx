@@ -20,9 +20,6 @@ export const AuthCallback = () => {
       try {
         console.log('=== Auth Callback Started ===');
         
-        // Clear any existing session first
-        await supabase.auth.signOut();
-        
         // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -37,27 +34,8 @@ export const AuthCallback = () => {
           return;
         }
 
-        // If no session is found, the sign-in was cancelled or failed
-        if (!session || !session.user) {
-          console.log('No valid session found, redirecting to login');
-          toast({
-            variant: "default",
-            title: "Sign in cancelled",
-            description: "The sign in process was cancelled or failed."
-          });
-          navigate('/login');
-          return;
-        }
-
-        // Check if this is a valid Google auth session
-        if (session.user.app_metadata.provider !== 'google') {
-          console.log('Invalid auth provider');
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "Invalid authentication provider."
-          });
-          await supabase.auth.signOut();
+        if (!session) {
+          console.log('No session found, redirecting to login');
           navigate('/login');
           return;
         }
@@ -77,7 +55,7 @@ export const AuthCallback = () => {
         const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
 
         // For Google auth, update profile with Google user data if needed
-        if (!profile?.full_name) {
+        if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
           const { error: profileUpdateError } = await supabase
             .from('profiles')
             .update({

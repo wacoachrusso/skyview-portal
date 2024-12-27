@@ -17,39 +17,12 @@ export const useGoogleAuth = () => {
             access_type: 'offline',
             prompt: 'consent',
           },
-          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
-      // Check if the sign-in was cancelled or failed
       if (error) {
         console.error('Google sign in error:', error);
-        if (error.message.includes('closed')) {
-          toast({
-            variant: "default",
-            title: "Sign in cancelled",
-            description: "You cancelled the Google sign in process."
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Sign in failed",
-            description: "Could not sign in with Google. Please try again."
-          });
-        }
-        return;
-      }
-
-      // If no data or provider is returned, the sign-in was cancelled
-      if (!data || !data.provider) {
-        console.log('Sign in cancelled or failed');
-        toast({
-          variant: "default",
-          title: "Sign in cancelled",
-          description: "The Google sign in process was cancelled."
-        });
-        navigate('/login');
-        return;
+        throw error;
       }
 
       console.log('Sign in initiated:', data);
@@ -63,7 +36,6 @@ export const useGoogleAuth = () => {
         title: "Sign in failed",
         description: "Could not sign in with Google. Please try again."
       });
-      navigate('/login');
     }
   };
 
