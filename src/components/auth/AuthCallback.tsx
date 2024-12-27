@@ -34,8 +34,14 @@ export const AuthCallback = () => {
           return;
         }
 
+        // If no session is found, the sign-in was likely cancelled
         if (!session) {
           console.log('No session found, redirecting to login');
+          toast({
+            variant: "default",
+            title: "Sign in cancelled",
+            description: "The sign in process was cancelled."
+          });
           navigate('/login');
           return;
         }
