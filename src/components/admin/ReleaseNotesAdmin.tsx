@@ -65,14 +65,14 @@ export const ReleaseNotesAdmin = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Release Notes Management</h1>
+        <h1 className="text-2xl font-semibold text-brand-navy">Release Notes Management</h1>
         <Button onClick={() => setIsFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Release Note
         </Button>
       </div>
 
-      <div className="bg-card rounded-lg shadow">
+      <div className="bg-white dark:bg-brand-navy/10 rounded-lg shadow-sm border border-brand-navy/10">
         <Table>
           <TableHeader>
             <TableRow>
@@ -90,7 +90,7 @@ export const ReleaseNotesAdmin = () => {
                 <TableCell>{note.title}</TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Calendar className="h-4 w-4 mr-2 text-brand-navy/70" />
                     {format(new Date(note.release_date), "MMM d, yyyy")}
                   </div>
                 </TableCell>
