@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Search, Flag, FileText, Settings } from "lucide-react";
+import { LogOut, Search, Flag, FileText, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ChatSettings } from "@/components/chat/ChatSettings";
 import { useTheme } from "@/components/theme-provider";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -83,61 +84,98 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-4 py-6 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8 md:mb-12">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">Welcome to SkyGuide</h1>
-            <p className="text-muted-foreground text-base md:text-lg">{userEmail}</p>
-          </div>
-          <div className="flex gap-2">
-            <ChatSettings />
-            <Button 
-              variant="outline" 
-              onClick={handleSignOut}
-              className="w-full md:w-auto hover:bg-accent"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-
-        <div className="bg-card backdrop-blur-md rounded-xl p-4 md:p-8 mb-6 md:mb-8 border shadow-xl">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6">Quick Actions</h2>
-          <div className="grid gap-4 md:gap-6 md:grid-cols-3">
-            <Link to="/chat" className="block">
+    <div className="min-h-screen bg-background">
+      {/* Top Navigation Bar */}
+      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="hover:bg-accent">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
+              <h1 className="text-xl font-semibold text-foreground hidden sm:block">Dashboard</h1>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground hidden sm:block">{userEmail}</span>
+              <ChatSettings />
               <Button 
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-24 md:h-28 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]"
+                variant="outline" 
+                size="sm"
+                onClick={handleSignOut}
+                className="hover:bg-accent"
               >
-                <Search className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
-                <span className="text-base md:text-lg whitespace-normal leading-tight">Search Contract</span>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </Button>
-            </Link>
-            <Button 
-              onClick={handleFileGrievance}
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold h-24 md:h-28 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            >
-              <Flag className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
-              <span className="text-base md:text-lg">File a Grievance</span>
-            </Button>
-            <Button 
-              onClick={handleDownloadContract}
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold h-24 md:h-28 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            >
-              <FileText className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
-              <span className="text-base md:text-lg">Download Contract PDF</span>
-            </Button>
+            </div>
           </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <Card className="mb-8 bg-gradient-to-br from-brand-navy to-brand-slate border-0">
+          <CardContent className="p-6 sm:p-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome to SkyGuide</h2>
+            <p className="text-white/80">Access your contract information and resources</p>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <Link to="/chat" className="block">
+            <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-primary/90 to-primary border-0">
+              <CardContent className="p-6 flex items-center space-x-4">
+                <Search className="h-6 w-6 text-white" />
+                <div>
+                  <h3 className="font-semibold text-lg text-white">Search Contract</h3>
+                  <p className="text-white/80 text-sm">Find specific contract details</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Card 
+            className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-secondary/90 to-secondary border-0"
+            onClick={handleFileGrievance}
+          >
+            <CardContent className="p-6 flex items-center space-x-4">
+              <Flag className="h-6 w-6 text-white" />
+              <div>
+                <h3 className="font-semibold text-lg text-white">File Grievance</h3>
+                <p className="text-white/80 text-sm">Submit a new grievance</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-secondary/90 to-secondary border-0"
+            onClick={handleDownloadContract}
+          >
+            <CardContent className="p-6 flex items-center space-x-4">
+              <FileText className="h-6 w-6 text-white" />
+              <div>
+                <h3 className="font-semibold text-lg text-white">Download Contract</h3>
+                <p className="text-white/80 text-sm">Get contract PDF</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="bg-card backdrop-blur-md rounded-xl p-4 md:p-8 border shadow-xl">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6">Recent Activity</h2>
-          <div className="bg-muted rounded-xl p-4 md:p-6 border">
-            <p className="text-muted-foreground text-base md:text-lg">Your recent chat history and activities will appear here.</p>
-          </div>
-        </div>
-      </div>
+        {/* Recent Activity Section */}
+        <Card className="bg-card/50 backdrop-blur-sm">
+          <CardContent className="p-6 sm:p-8">
+            <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+            <div className="bg-muted/50 rounded-lg p-4 text-muted-foreground">
+              <p>Your recent chat history and activities will appear here.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 };
