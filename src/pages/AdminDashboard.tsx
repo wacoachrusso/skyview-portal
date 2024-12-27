@@ -1,43 +1,71 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ReleaseNotesAdmin } from "@/components/admin/ReleaseNotesAdmin";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { useToast } from "@/components/ui/use-toast";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/login');
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log('No active session, redirecting to login');
+          navigate('/login');
+          return;
+        }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', session.user.id)
-        .single();
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
 
-      if (!profile?.is_admin) {
+        if (!profile?.is_admin) {
+          console.log('User is not admin, redirecting to dashboard');
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to access this page.",
+            variant: "destructive"
+          });
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        toast({
+          title: "Error",
+          description: "An error occurred while checking your permissions.",
+          variant: "destructive"
+        });
         navigate('/dashboard');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkAdminStatus();
-  }, [navigate]);
+  }, [navigate, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader userEmail={null} onSignOut={async () => {
-        await supabase.auth.signOut();
-        navigate('/login');
-      }} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-8">Admin Dashboard</h1>
         <ReleaseNotesAdmin />
-      </main>
+      </div>
     </div>
   );
 };
