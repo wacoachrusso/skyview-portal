@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { FileText, Calendar, Info, Rocket } from "lucide-react";
+import { FileText, Calendar, Info, Rocket, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const ReleaseNotes = () => {
+  const navigate = useNavigate();
   const { data: releaseNotes, isLoading } = useQuery({
     queryKey: ["releaseNotes"],
     queryFn: async () => {
@@ -34,9 +37,19 @@ const ReleaseNotes = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <div className="flex items-center space-x-3 mb-8">
-          <FileText className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Release Notes</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-3">
+            <FileText className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">Release Notes</h1>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dashboard</span>
+          </Button>
         </div>
 
         <div className="space-y-8">
