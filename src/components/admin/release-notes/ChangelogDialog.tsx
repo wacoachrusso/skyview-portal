@@ -23,6 +23,18 @@ interface ChangelogDialogProps {
   onClose: () => void;
 }
 
+interface ChangelogEntry {
+  id: string;
+  release_note_id: string;
+  user_id: string;
+  change_type: 'create' | 'update' | 'delete';
+  changes?: Record<string, any>;
+  created_at: string;
+  profiles: {
+    full_name: string | null;
+  } | null;
+}
+
 export const ChangelogDialog = ({
   releaseNoteId,
   open,
@@ -44,12 +56,12 @@ export const ChangelogDialog = ({
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as ChangelogEntry[];
     },
     enabled: open,
   });
 
-  const getChangeDescription = (change: any) => {
+  const getChangeDescription = (change: ChangelogEntry) => {
     if (change.change_type === "create") {
       return "Created release note";
     }
