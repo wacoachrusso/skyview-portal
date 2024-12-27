@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home, User, FileText } from "lucide-react";
-import { ChatSettings } from "@/components/chat/ChatSettings";
+import { LogOut, Home, User, FileText, Settings } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 
 interface DashboardHeaderProps {
@@ -42,6 +41,17 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             
             <NotificationBell />
             
+            <Link to="/settings">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200"
+              >
+                <Settings className="h-5 w-5 mr-2" />
+                <span className="hidden sm:inline">Settings</span>
+              </Button>
+            </Link>
+            
             <Button 
               variant="ghost" 
               size="sm" 
@@ -53,10 +63,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             <span className="text-sm font-medium text-white/90 hidden sm:block">
               {userEmail}
             </span>
-            
-            <div className="text-white/90 hover:text-white transition-colors duration-200">
-              <ChatSettings />
-            </div>
             
             <Button 
               variant="secondary" 
