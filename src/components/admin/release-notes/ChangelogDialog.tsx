@@ -36,6 +36,7 @@ export function ChangelogDialog({
       
       setIsLoading(true);
       try {
+        console.log('Fetching changes for release note:', releaseNoteId);
         const { data, error } = await supabase
           .from('release_note_changes')
           .select(`
@@ -45,13 +46,17 @@ export function ChangelogDialog({
             change_type,
             changes,
             created_at,
-            profiles:user_id(full_name)
+            profiles(full_name)
           `)
           .eq('release_note_id', releaseNoteId)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching changelog:', error);
+          throw error;
+        }
 
+        console.log('Fetched changes:', data);
         setChanges(data as ChangelogEntry[]);
       } catch (error) {
         console.error('Error fetching changelog:', error);
