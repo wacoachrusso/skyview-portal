@@ -10,35 +10,10 @@ export const AuthCallback = () => {
   const showWelcomeTutorial = (userName: string) => {
     // Initial welcome
     toast({
-      title: `Welcome to SkyGuide, ${userName}! 👋`,
-      description: "We're excited to have you here!",
+      title: `Welcome back to SkyGuide, ${userName}! 👋`,
+      description: "We're glad to see you again!",
       duration: 5000,
     });
-
-    // Delayed tutorial messages
-    setTimeout(() => {
-      toast({
-        title: "Quick Tip #1",
-        description: "Use the search bar to quickly find contract information.",
-        duration: 5000,
-      });
-    }, 6000);
-
-    setTimeout(() => {
-      toast({
-        title: "Quick Tip #2",
-        description: "Click on 'Chat' to start a conversation with our AI assistant.",
-        duration: 5000,
-      });
-    }, 12000);
-
-    setTimeout(() => {
-      toast({
-        title: "Quick Tip #3",
-        description: "Need help? Look for the '?' icon in the top right corner.",
-        duration: 5000,
-      });
-    }, 18000);
   };
 
   useEffect(() => {
@@ -75,8 +50,11 @@ export const AuthCallback = () => {
 
           console.log('Profile data:', profile);
 
+          // Get the user's name for the welcome message
+          const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
+
           // For Google auth, update profile with Google user data if needed
-          if (session.user.app_metadata.provider === 'google') {
+          if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
             const { error: profileUpdateError } = await supabase
               .from('profiles')
               .update({
@@ -89,10 +67,7 @@ export const AuthCallback = () => {
             }
           }
 
-          // Get the user's name for the welcome message
-          const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
-
-          // Redirect based on profile completion
+          // If profile is complete, redirect to dashboard
           if (profile?.user_type && profile?.airline) {
             console.log('Profile complete, redirecting to dashboard');
             showWelcomeTutorial(userName.split(' ')[0]); // Use first name only
