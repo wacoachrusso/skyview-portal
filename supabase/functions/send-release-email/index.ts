@@ -50,7 +50,6 @@ const handler = async (req: Request): Promise<Response> => {
     if (profilesError) throw profilesError
 
     // Get user emails from auth.users
-    const userIds = profiles.map(profile => profile.id)
     const { data: users, error: usersError } = await supabase
       .auth.admin.listUsers()
 

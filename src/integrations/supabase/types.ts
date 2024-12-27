@@ -167,8 +167,10 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string
+          email_template: string | null
           id: string
           is_major: boolean | null
+          last_email_sent: string | null
           release_date: string | null
           title: string
           version: string
@@ -176,8 +178,10 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description: string
+          email_template?: string | null
           id?: string
           is_major?: boolean | null
+          last_email_sent?: string | null
           release_date?: string | null
           title: string
           version: string
@@ -185,8 +189,10 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string
+          email_template?: string | null
           id?: string
           is_major?: boolean | null
+          last_email_sent?: string | null
           release_date?: string | null
           title?: string
           version?: string
