@@ -52,7 +52,7 @@ export function Navbar() {
           <div className="flex items-center gap-2 md:gap-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-400">Welcome, {userEmail}</span>
+                <span className="text-sm text-muted-foreground hidden md:inline">Welcome back, {userEmail}</span>
                 <Button 
                   asChild
                   variant="ghost"
@@ -61,7 +61,7 @@ export function Navbar() {
                 >
                   <Link to="/chat">
                     <MessageSquare className="mr-2 h-4 w-4" />
-                    Chat
+                    Chat Now
                   </Link>
                 </Button>
                 <Button 
