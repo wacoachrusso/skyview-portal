@@ -40,14 +40,15 @@ export const useGoogleAuth = () => {
         return;
       }
 
-      // If no provider is returned, the sign-in was cancelled
-      if (!data.provider) {
+      // If no data or provider is returned, the sign-in was cancelled
+      if (!data || !data.provider) {
         console.log('Sign in cancelled or failed');
         toast({
           variant: "default",
           title: "Sign in cancelled",
           description: "The Google sign in process was cancelled."
         });
+        navigate('/login');
         return;
       }
 
@@ -62,6 +63,7 @@ export const useGoogleAuth = () => {
         title: "Sign in failed",
         description: "Could not sign in with Google. Please try again."
       });
+      navigate('/login');
     }
   };
 
