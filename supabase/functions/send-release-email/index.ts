@@ -87,12 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `
 
-    // For testing, only send to the first recipient
-    // Remove this limitation after domain verification
-    const testRecipient = emailRecipients[0]
-    console.log('Sending test email to:', testRecipient)
-
-    // Send email using Resend
+    // Send email using Resend with verified domain
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -100,8 +95,8 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
-        to: [testRecipient],
+        from: 'updates@yourdomain.com', // Replace with your verified domain email
+        to: emailRecipients,
         subject: `New Release: ${releaseNote.title}`,
         html: emailHtml,
       }),
@@ -125,8 +120,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Test email sent successfully',
-        recipient: testRecipient 
+        message: 'Emails sent successfully',
+        recipientCount: emailRecipients.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
