@@ -2,9 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash, Calendar, Info, History } from "lucide-react";
+import { Plus, Edit, Trash, Calendar, Info } from "lucide-react";
 import { ReleaseNoteForm } from "./ReleaseNoteForm";
-import { ChangelogDialog } from "./release-notes/ChangelogDialog";
 import {
   Table,
   TableBody,
@@ -19,7 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 export const ReleaseNotesAdmin = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data: releaseNotes, refetch } = useQuery({
@@ -37,18 +35,6 @@ export const ReleaseNotesAdmin = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      // First, log the deletion
-      const { error: changeError } = await supabase
-        .from("release_note_changes")
-        .insert({
-          release_note_id: id,
-          change_type: "delete",
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-        });
-
-      if (changeError) throw changeError;
-
-      // Then delete the release note
       const { error } = await supabase
         .from("release_notes")
         .delete()
@@ -74,10 +60,6 @@ export const ReleaseNotesAdmin = () => {
   const handleEdit = (note: any) => {
     setEditingNote(note);
     setIsFormOpen(true);
-  };
-
-  const showChangelog = (noteId: string) => {
-    setSelectedNoteId(noteId);
   };
 
   return (
@@ -120,14 +102,7 @@ export const ReleaseNotesAdmin = () => {
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => showChangelog(note.id)}
-                  >
-                    <History className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -161,14 +136,6 @@ export const ReleaseNotesAdmin = () => {
             setEditingNote(null);
             refetch();
           }}
-        />
-      )}
-
-      {selectedNoteId && (
-        <ChangelogDialog
-          releaseNoteId={selectedNoteId}
-          open={!!selectedNoteId}
-          onClose={() => setSelectedNoteId(null)}
         />
       )}
     </div>
