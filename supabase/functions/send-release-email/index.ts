@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'updates@yourdomain.com', // Replace with your verified domain email
+        from: 'updates@skyguide.site',
         to: emailRecipients,
         subject: `New Release: ${releaseNote.title}`,
         html: emailHtml,
