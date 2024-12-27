@@ -74,6 +74,10 @@ export type Database = {
           id: string
           is_read: boolean | null
           message: string
+          notification_type:
+            | Database["public"]["Enums"]["notification_type"]
+            | null
+          release_note_id: string | null
           title: string
           type: string
           user_id: string
@@ -83,6 +87,10 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message: string
+          notification_type?:
+            | Database["public"]["Enums"]["notification_type"]
+            | null
+          release_note_id?: string | null
           title: string
           type: string
           user_id: string
@@ -92,20 +100,35 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message?: string
+          notification_type?:
+            | Database["public"]["Enums"]["notification_type"]
+            | null
+          release_note_id?: string | null
           title?: string
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_release_note_id_fkey"
+            columns: ["release_note_id"]
+            isOneToOne: false
+            referencedRelation: "release_notes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           airline: string | null
           created_at: string
+          email_notifications: boolean | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
           last_ip_address: string | null
           last_query_timestamp: string | null
+          push_notifications: boolean | null
           query_count: number | null
           subscription_plan: string | null
           user_type: string | null
@@ -113,10 +136,13 @@ export type Database = {
         Insert: {
           airline?: string | null
           created_at?: string
+          email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          is_admin?: boolean | null
           last_ip_address?: string | null
           last_query_timestamp?: string | null
+          push_notifications?: boolean | null
           query_count?: number | null
           subscription_plan?: string | null
           user_type?: string | null
@@ -124,13 +150,46 @@ export type Database = {
         Update: {
           airline?: string | null
           created_at?: string
+          email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           last_ip_address?: string | null
           last_query_timestamp?: string | null
+          push_notifications?: boolean | null
           query_count?: number | null
           subscription_plan?: string | null
           user_type?: string | null
+        }
+        Relationships: []
+      }
+      release_notes: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          is_major: boolean | null
+          release_date: string | null
+          title: string
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          is_major?: boolean | null
+          release_date?: string | null
+          title: string
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_major?: boolean | null
+          release_date?: string | null
+          title?: string
+          version?: string
         }
         Relationships: []
       }
@@ -142,7 +201,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      notification_type: "update" | "release" | "system"
     }
     CompositeTypes: {
       [_ in never]: never
