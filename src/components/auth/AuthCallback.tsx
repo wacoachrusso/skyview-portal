@@ -20,6 +20,9 @@ export const AuthCallback = () => {
       try {
         console.log('=== Auth Callback Started ===');
         
+        // Clear any existing session first
+        await supabase.auth.signOut();
+        
         // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -46,6 +49,19 @@ export const AuthCallback = () => {
           return;
         }
 
+        // Check if this is a valid Google auth session
+        if (session.user.app_metadata.provider !== 'google') {
+          console.log('Invalid auth provider');
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Invalid authentication provider."
+          });
+          await supabase.auth.signOut();
+          navigate('/login');
+          return;
+        }
+
         console.log('Session found, checking profile');
         
         // Check if profile exists and is complete
@@ -61,7 +77,7 @@ export const AuthCallback = () => {
         const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
 
         // For Google auth, update profile with Google user data if needed
-        if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
+        if (!profile?.full_name) {
           const { error: profileUpdateError } = await supabase
             .from('profiles')
             .update({
