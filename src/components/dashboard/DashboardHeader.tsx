@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home } from "lucide-react";
+import { LogOut, Home, Bell, Settings, User } from "lucide-react";
 import { ChatSettings } from "@/components/chat/ChatSettings";
 
 interface DashboardHeaderProps {
@@ -14,7 +14,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <Link to="/">
+            <Link to="/" replace>
               <Button variant="ghost" size="sm" className="hover:bg-accent">
                 <Home className="h-4 w-4 mr-2" />
                 Home
@@ -23,6 +23,15 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             <h1 className="text-xl font-semibold text-foreground hidden sm:block">Dashboard</h1>
           </div>
           <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" className="hover:bg-accent">
+              <Bell className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="hover:bg-accent">
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="hover:bg-accent">
+              <User className="h-4 w-4" />
+            </Button>
             <span className="text-sm text-muted-foreground hidden sm:block">{userEmail}</span>
             <ChatSettings />
             <Button 

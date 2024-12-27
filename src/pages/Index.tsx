@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
@@ -11,6 +11,7 @@ import { Footer } from "@/components/landing/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
@@ -18,9 +19,9 @@ const Index = () => {
         console.log('Checking auth state on Index page');
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (session) {
+        // Only redirect to dashboard on initial load, not when coming from dashboard
+        if (session && !location.state?.fromDashboard) {
           console.log('User is authenticated, checking profile');
-          // Check if profile is complete
           const { data: profile } = await supabase
             .from('profiles')
             .select('user_type, airline')
@@ -35,7 +36,7 @@ const Index = () => {
             navigate('/complete-profile');
           }
         } else {
-          console.log('No session found, showing landing page');
+          console.log('No session found or coming from dashboard, showing landing page');
         }
       } catch (error) {
         console.error('Error checking auth state:', error);
@@ -43,7 +44,7 @@ const Index = () => {
     };
 
     checkAuthAndRedirect();
-  }, [navigate]);
+  }, [navigate, location.state]);
 
   return (
     <div className="min-h-screen bg-background">
