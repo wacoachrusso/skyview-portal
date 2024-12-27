@@ -8,7 +8,6 @@ export const AuthCallback = () => {
   const { toast } = useToast();
 
   const showWelcomeTutorial = (userName: string) => {
-    // Initial welcome
     toast({
       title: `Welcome back to SkyGuide, ${userName}! 👋`,
       description: "We're glad to see you again!",
@@ -20,13 +19,12 @@ export const AuthCallback = () => {
     const handleAuthCallback = async () => {
       try {
         console.log('=== Auth Callback Started ===');
-        console.log('Current URL:', window.location.href);
         
+        // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('=== Auth Callback Error ===');
-          console.error('Error details:', error);
+          console.error('Auth error:', error);
           toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -36,53 +34,51 @@ export const AuthCallback = () => {
           return;
         }
 
-        if (session) {
-          console.log('=== Session Established ===');
-          console.log('User ID:', session.user.id);
-          console.log('Provider:', session.user.app_metadata.provider);
-          
-          // Check if profile exists and is complete
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type, airline, full_name')
-            .eq('id', session.user.id)
-            .single();
-
-          console.log('Profile data:', profile);
-
-          // Get the user's name for the welcome message
-          const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
-
-          // For Google auth, update profile with Google user data if needed
-          if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
-            const { error: profileUpdateError } = await supabase
-              .from('profiles')
-              .update({
-                full_name: session.user.user_metadata.full_name
-              })
-              .eq('id', session.user.id);
-
-            if (profileUpdateError) {
-              console.error('Error updating profile:', profileUpdateError);
-            }
-          }
-
-          // If profile is complete, redirect to dashboard
-          if (profile?.user_type && profile?.airline) {
-            console.log('Profile complete, redirecting to dashboard');
-            showWelcomeTutorial(userName.split(' ')[0]); // Use first name only
-            navigate('/dashboard');
-          } else {
-            console.log('Profile incomplete, redirecting to complete-profile');
-            navigate('/complete-profile');
-          }
-        } else {
+        if (!session) {
           console.log('No session found, redirecting to login');
           navigate('/login');
+          return;
+        }
+
+        console.log('Session found, checking profile');
+        
+        // Check if profile exists and is complete
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type, airline, full_name')
+          .eq('id', session.user.id)
+          .single();
+
+        console.log('Profile data:', profile);
+
+        // Get the user's name for the welcome message
+        const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
+
+        // For Google auth, update profile with Google user data if needed
+        if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
+          const { error: profileUpdateError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: session.user.user_metadata.full_name
+            })
+            .eq('id', session.user.id);
+
+          if (profileUpdateError) {
+            console.error('Error updating profile:', profileUpdateError);
+          }
+        }
+
+        // If profile is complete, redirect to dashboard immediately
+        if (profile?.user_type && profile?.airline) {
+          console.log('Profile complete, redirecting to dashboard');
+          showWelcomeTutorial(userName.split(' ')[0]); // Use first name only
+          navigate('/dashboard', { replace: true }); // Use replace to prevent back navigation
+        } else {
+          console.log('Profile incomplete, redirecting to complete-profile');
+          navigate('/complete-profile', { replace: true });
         }
       } catch (error) {
-        console.error('=== Unexpected Error in Auth Callback ===');
-        console.error('Error details:', error);
+        console.error('Unexpected error:', error);
         toast({
           variant: "destructive",
           title: "Authentication Error",
