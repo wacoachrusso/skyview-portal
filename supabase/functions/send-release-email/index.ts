@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `
 
-    // Send email using Resend with verified domain
+    // Send email using Resend with default domain
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'updates@skyguide.site',
+        from: 'onboarding@resend.dev', // Using Resend's default domain
         to: emailRecipients,
         subject: `New Release: ${releaseNote.title}`,
         html: emailHtml,
@@ -106,22 +106,6 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Resend API response:', resendResponse)
     
     if (!res.ok) {
-      // Check if it's a domain verification error
-      if (resendResponse.statusCode === 403 && resendResponse.message?.includes('domain is not verified')) {
-        console.error('Domain verification error:', resendResponse)
-        return new Response(
-          JSON.stringify({ 
-            error: 'Domain not verified',
-            message: 'The email domain is not verified. Please verify the domain in Resend.',
-            details: resendResponse
-          }),
-          { 
-            status: 403,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        )
-      }
-      
       console.error('Resend API error:', resendResponse)
       throw new Error(`Resend API error: ${JSON.stringify(resendResponse)}`)
     }
