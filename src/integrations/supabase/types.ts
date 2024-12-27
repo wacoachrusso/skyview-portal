@@ -163,6 +163,41 @@ export type Database = {
         }
         Relationships: []
       }
+      release_note_changes: {
+        Row: {
+          change_type: string
+          changes: Json | null
+          created_at: string
+          id: string
+          release_note_id: string
+          user_id: string
+        }
+        Insert: {
+          change_type: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          release_note_id: string
+          user_id: string
+        }
+        Update: {
+          change_type?: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          release_note_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_note_changes_release_note_id_fkey"
+            columns: ["release_note_id"]
+            isOneToOne: false
+            referencedRelation: "release_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       release_notes: {
         Row: {
           created_at: string | null

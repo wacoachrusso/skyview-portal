@@ -44,17 +44,46 @@ export const useReleaseNoteForm = ({ note, onSuccess }: UseReleaseNoteFormProps)
     }
   };
 
+  const logChange = async (noteId: string, changeType: string, changes?: any) => {
+    const { error } = await supabase
+      .from("release_note_changes")
+      .insert({
+        release_note_id: noteId,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        change_type: changeType,
+        changes,
+      });
+
+    if (error) {
+      console.error("Error logging change:", error);
+    }
+  };
+
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
       if (note) {
+        // Find what fields changed
+        const changes = Object.entries(values).reduce((acc: any, [key, value]) => {
+          if (note[key] !== value) {
+            acc[key] = value;
+          }
+          return acc;
+        }, {});
+
         const { data, error } = await supabase
           .from("release_notes")
           .update(values)
           .eq("id", note.id)
           .select()
           .single();
+
         if (error) throw error;
+        
+        // Log the update if there were changes
+        if (Object.keys(changes).length > 0) {
+          await logChange(note.id, "update", changes);
+        }
         
         toast({
           title: "Success",
@@ -70,7 +99,13 @@ export const useReleaseNoteForm = ({ note, onSuccess }: UseReleaseNoteFormProps)
           .insert([values])
           .select()
           .single();
+
         if (error) throw error;
+        
+        // Log the creation
+        if (data) {
+          await logChange(data.id, "create");
+        }
         
         toast({
           title: "Success",
