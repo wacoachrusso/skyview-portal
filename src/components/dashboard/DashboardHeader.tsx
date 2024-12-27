@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Home, Bell, User, FileText } from "lucide-react";
 import { ChatSettings } from "@/components/chat/ChatSettings";
+import { useEffect, useState } from "react";
+import { setupPushNotifications, requestNotificationPermission } from "@/utils/pushNotifications";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardHeaderProps {
   userEmail: string | null;
@@ -9,6 +13,50 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) => {
+  const { toast } = useToast();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      console.log("Initializing notifications...");
+      const cleanup = await setupPushNotifications();
+      
+      // Load initial unread count
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_read', false);
+        
+        setUnreadCount(count || 0);
+      }
+
+      return cleanup;
+    };
+
+    initializeNotifications();
+  }, []);
+
+  const handleNotificationClick = async () => {
+    console.log("Notification bell clicked");
+    const isGranted = await requestNotificationPermission();
+    
+    if (isGranted) {
+      toast({
+        title: "Notifications Enabled",
+        description: "You'll now receive notifications for important updates.",
+      });
+    } else {
+      toast({
+        title: "Notifications Not Enabled",
+        description: "Please enable notifications in your browser settings to receive updates.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <nav className="border-b border-border bg-card shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,8 +77,18 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 <span className="hidden sm:inline">Release Notes</span>
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-brand-navy hover:text-white">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:bg-brand-navy hover:text-white relative"
+              onClick={handleNotificationClick}
+            >
               <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
             </Button>
             <Button variant="ghost" size="sm" className="text-white hover:bg-brand-navy hover:text-white">
               <User className="h-5 w-5" />
