@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Crown } from "lucide-react";
 
 export function WelcomeCard() {
-  const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
   const [plan, setPlan] = useState("");
   const [queriesRemaining, setQueriesRemaining] = useState(0);
@@ -61,15 +59,9 @@ export function WelcomeCard() {
         <h2 className="text-2xl font-bold text-white mb-2">
           Welcome back, {userEmail}!
         </h2>
-        <p className="text-gray-200 mb-4">
+        <p className="text-gray-200">
           Current Plan: <span className="font-semibold">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
         </p>
-        <Button
-          onClick={() => navigate("/chat")}
-          className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy"
-        >
-          Start Chatting <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
       </Card>
 
       {upgradeInfo && (
@@ -94,7 +86,7 @@ export function WelcomeCard() {
             }}
             className="bg-white hover:bg-white/90 text-purple-600"
           >
-            {upgradeInfo.buttonText} <ArrowRight className="ml-2 h-4 w-4" />
+            {upgradeInfo.buttonText} <Crown className="ml-2 h-4 w-4" />
           </Button>
         </Card>
       )}
