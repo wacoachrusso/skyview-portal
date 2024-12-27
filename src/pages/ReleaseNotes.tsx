@@ -40,7 +40,7 @@ const ReleaseNotes = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
             <FileText className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Release Notes</h1>
+            <h1 className="text-3xl font-bold text-primary">Release Notes</h1>
           </div>
           <Button
             variant="outline"
@@ -56,20 +56,20 @@ const ReleaseNotes = () => {
           {releaseNotes?.map((note) => (
             <div
               key={note.id}
-              className="bg-card rounded-lg shadow-lg p-6 card-hover"
+              className="bg-white dark:bg-card rounded-lg shadow-lg p-6 card-hover border border-gray-200 dark:border-gray-800"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
                   {note.is_major ? (
                     <Rocket className="h-5 w-5 text-brand-gold" />
                   ) : (
-                    <Info className="h-5 w-5 text-muted-foreground" />
+                    <Info className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                   )}
                   <div>
-                    <h2 className="text-xl font-semibold text-foreground">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                       {note.title}
                     </h2>
-                    <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center mt-1 text-sm text-gray-600 dark:text-gray-300">
                       <Calendar className="h-4 w-4 mr-1" />
                       <span>
                         {format(new Date(note.release_date), "MMMM d, yyyy")}
@@ -80,7 +80,7 @@ const ReleaseNotes = () => {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 text-foreground whitespace-pre-wrap">
+              <div className="mt-4 text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
                 {note.description}
               </div>
             </div>
