@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeSelector } from "@/components/settings/ThemeSelector";
-import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
+import { Separator } from "@/components/ui/separator";
+import { ThemeSelector } from "@/components/chat/settings/ThemeSelector";
+import { NotificationToggle } from "@/components/chat/settings/NotificationToggle";
+import { AutoSaveToggle } from "@/components/chat/settings/AutoSaveToggle";
+import { FontSizeSelector } from "@/components/chat/settings/FontSizeSelector";
+import { AccountInfo } from "@/components/chat/settings/AccountInfo";
 import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,7 +17,9 @@ const Settings = () => {
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
-  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
+  const [fontSize, setFontSize] = useState("medium");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -27,6 +33,12 @@ const Settings = () => {
     };
 
     checkAuth();
+
+    // Load saved preferences
+    const savedFontSize = localStorage.getItem("chat-font-size") || "medium";
+    const savedAutoSave = localStorage.getItem("chat-auto-save") === "true";
+    setFontSize(savedFontSize);
+    setAutoSave(savedAutoSave);
   }, [navigate]);
 
   const handleSignOut = async () => {
@@ -48,17 +60,40 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
       <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          <Card>
+          <Card className="bg-[#2A2F3C] border-white/10">
             <CardHeader>
-              <CardTitle>Settings</CardTitle>
+              <CardTitle className="text-white">Account Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
-              <NotificationPreferences />
+              <AccountInfo />
+              <Separator className="bg-white/10" />
+              
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-white">Appearance</h3>
+                <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
+                <FontSizeSelector fontSize={fontSize} setFontSize={setFontSize} />
+              </div>
+              
+              <Separator className="bg-white/10" />
+              
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-white">Notifications</h3>
+                <NotificationToggle 
+                  notifications={notifications} 
+                  setNotifications={setNotifications} 
+                />
+              </div>
+              
+              <Separator className="bg-white/10" />
+              
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-white">Data Management</h3>
+                <AutoSaveToggle autoSave={autoSave} setAutoSave={setAutoSave} />
+              </div>
             </CardContent>
           </Card>
         </div>
