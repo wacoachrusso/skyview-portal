@@ -37,10 +37,10 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             <span className="text-sm font-semibold text-white hidden sm:block">{userEmail}</span>
             <ChatSettings />
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="sm"
               onClick={onSignOut}
-              className="text-white border-white/20 hover:bg-brand-navy hover:text-white hover:border-white"
+              className="bg-white text-brand-navy hover:bg-gray-200 hover:text-brand-navy border-none"
             >
               <LogOut className="h-5 w-5 mr-2" />
               Sign Out
