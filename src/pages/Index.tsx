@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Hero from "@/components/landing/Hero";
-import Features from "@/components/landing/Features";
-import PricingSection from "@/components/landing/PricingSection";
-import Testimonials from "@/components/landing/Testimonials";
-import CallToAction from "@/components/landing/CallToAction";
-import Navbar from "@/components/landing/Navbar";
-import Footer from "@/components/landing/Footer";
+import { Hero } from "@/components/landing/Hero";
+import { Features } from "@/components/landing/Features";
+import { PricingSection } from "@/components/landing/PricingSection";
+import { Testimonials } from "@/components/landing/Testimonials";
+import { CallToAction } from "@/components/landing/CallToAction";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
