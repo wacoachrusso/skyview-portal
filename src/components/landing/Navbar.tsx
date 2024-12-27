@@ -4,6 +4,7 @@ import { LogIn, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { ChatSettings } from "@/components/chat/ChatSettings";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 
 export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -76,6 +77,7 @@ export function Navbar() {
             {isLoggedIn ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground hidden md:inline">Welcome back, {userEmail}</span>
+                <NotificationBell />
                 <Button 
                   asChild
                   variant="ghost"
