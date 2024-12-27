@@ -23,7 +23,6 @@ export function WelcomeCard() {
           
         if (profile) {
           setPlan(profile.subscription_plan || "free");
-          // Assuming free trial has 2 queries
           setQueriesRemaining(2 - (profile.query_count || 0));
         }
       }
@@ -32,50 +31,30 @@ export function WelcomeCard() {
     loadUserInfo();
   }, []);
 
-  const getUpgradeMessage = () => {
-    if (plan === "free") {
-      return {
-        title: "Upgrade to Premium",
-        message: `You have ${queriesRemaining} queries remaining in your free trial. Upgrade now to unlock unlimited queries!`,
-        buttonText: "Upgrade Now",
-        showCrown: true
-      };
-    } else if (plan === "monthly") {
-      return {
-        title: "Save with Annual Plan",
-        message: "Switch to our annual plan and save $10! Get all premium features at a discounted rate.",
-        buttonText: "Switch to Annual",
-        showCrown: true
-      };
-    }
-    return null;
-  };
-
-  const upgradeInfo = getUpgradeMessage();
-
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Card className="p-6 bg-gradient-to-br from-brand-navy to-brand-slate">
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Welcome back, {userEmail}!
+      <Card className="p-6 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 backdrop-blur-sm border-0">
+        <h2 className="text-2xl font-semibold text-white/90 mb-2">
+          Welcome back
         </h2>
-        <p className="text-gray-200">
-          Current Plan: <span className="font-semibold">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
+        <p className="text-white/70">
+          {userEmail}
+        </p>
+        <p className="text-white/70 mt-2">
+          Plan: <span className="font-medium text-white/90">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
         </p>
       </Card>
 
-      {upgradeInfo && (
-        <Card className="p-6 bg-gradient-to-br from-purple-600 to-pink-600">
+      {plan === "free" && (
+        <Card className="p-6 bg-gradient-to-br from-purple-600/90 to-pink-600/90 backdrop-blur-sm border-0">
           <div className="flex items-start justify-between">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              {upgradeInfo.title}
+            <h2 className="text-2xl font-semibold text-white/90 mb-2">
+              Upgrade Available
             </h2>
-            {upgradeInfo.showCrown && (
-              <Crown className="h-6 w-6 text-yellow-400" />
-            )}
+            <Crown className="h-6 w-6 text-yellow-400" />
           </div>
-          <p className="text-gray-200 mb-4">
-            {upgradeInfo.message}
+          <p className="text-white/70 mb-4">
+            {queriesRemaining} queries remaining in your free trial. Upgrade for unlimited access.
           </p>
           <Button
             onClick={() => {
@@ -86,7 +65,7 @@ export function WelcomeCard() {
             }}
             className="bg-white hover:bg-white/90 text-purple-600"
           >
-            {upgradeInfo.buttonText} <Crown className="ml-2 h-4 w-4" />
+            Upgrade Now
           </Button>
         </Card>
       )}

@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Flag, FileText, Calendar, Database, ChartBar, Users, Settings } from "lucide-react";
+import { Search, FileText, Settings, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ChatSettings } from "@/components/chat/ChatSettings";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export const QuickActions = () => {
   const { toast } = useToast();
@@ -16,116 +14,57 @@ export const QuickActions = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <Link to="/chat" className="block">
-        <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-primary/90 to-primary border-0">
-          <CardContent className="p-6 flex items-center space-x-4">
-            <Search className="h-6 w-6 text-white" />
-            <div>
-              <h3 className="font-semibold text-lg text-white">Search Contract</h3>
-              <p className="text-white/80 text-sm">Find specific contract details</p>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
-
-      <Card 
-        className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-secondary/90 to-secondary border-0"
-        onClick={() => handleComingSoon("Grievance filing system")}
-      >
-        <CardContent className="p-6 flex items-center space-x-4">
-          <Flag className="h-6 w-6 text-white" />
-          <div>
-            <h3 className="font-semibold text-lg text-white">File Grievance</h3>
-            <p className="text-white/80 text-sm">Submit a new grievance</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-blue-500/90 to-blue-600 border-0"
-        onClick={() => handleComingSoon("Contract download")}
-      >
-        <CardContent className="p-6 flex items-center space-x-4">
-          <FileText className="h-6 w-6 text-white" />
-          <div>
-            <h3 className="font-semibold text-lg text-white">Download Contract</h3>
-            <p className="text-white/80 text-sm">Get contract PDF</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-purple-500/90 to-purple-600 border-0"
-        onClick={() => handleComingSoon("Calendar scheduling")}
-      >
-        <CardContent className="p-6 flex items-center space-x-4">
-          <Calendar className="h-6 w-6 text-white" />
-          <div>
-            <h3 className="font-semibold text-lg text-white">Schedule</h3>
-            <p className="text-white/80 text-sm">Manage your calendar</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-green-500/90 to-green-600 border-0"
-        onClick={() => handleComingSoon("Database access")}
-      >
-        <CardContent className="p-6 flex items-center space-x-4">
-          <Database className="h-6 w-6 text-white" />
-          <div>
-            <h3 className="font-semibold text-lg text-white">Resources</h3>
-            <p className="text-white/80 text-sm">Access knowledge base</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-yellow-500/90 to-yellow-600 border-0"
-        onClick={() => handleComingSoon("Analytics dashboard")}
-      >
-        <CardContent className="p-6 flex items-center space-x-4">
-          <ChartBar className="h-6 w-6 text-white" />
-          <div>
-            <h3 className="font-semibold text-lg text-white">Analytics</h3>
-            <p className="text-white/80 text-sm">View insights & reports</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-pink-500/90 to-pink-600 border-0"
-        onClick={() => handleComingSoon("Team management")}
-      >
-        <CardContent className="p-6 flex items-center space-x-4">
-          <Users className="h-6 w-6 text-white" />
-          <div>
-            <h3 className="font-semibold text-lg text-white">Team</h3>
-            <p className="text-white/80 text-sm">Manage your team</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Sheet>
-        <SheetTrigger asChild>
-          <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-gray-500/90 to-gray-600 border-0">
+    <div>
+      <h2 className="text-xl font-semibold mb-4 text-foreground/90">Quick Actions</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link to="/chat" className="block">
+          <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 border-0">
             <CardContent className="p-6 flex items-center space-x-4">
-              <Settings className="h-6 w-6 text-white" />
+              <MessageSquare className="h-6 w-6 text-white/90" />
               <div>
-                <h3 className="font-semibold text-lg text-white">Settings</h3>
-                <p className="text-white/80 text-sm">Configure preferences</p>
+                <h3 className="font-medium text-lg text-white/90">Chat</h3>
+                <p className="text-white/70 text-sm">Start a conversation</p>
               </div>
             </CardContent>
           </Card>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Settings</SheetTitle>
-          </SheetHeader>
-          <ChatSettings />
-        </SheetContent>
-      </Sheet>
+        </Link>
+
+        <Link to="/search" className="block">
+          <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 border-0">
+            <CardContent className="p-6 flex items-center space-x-4">
+              <Search className="h-6 w-6 text-white/90" />
+              <div>
+                <h3 className="font-medium text-lg text-white/90">Search</h3>
+                <p className="text-white/70 text-sm">Find information</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/documents" className="block">
+          <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 border-0">
+            <CardContent className="p-6 flex items-center space-x-4">
+              <FileText className="h-6 w-6 text-white/90" />
+              <div>
+                <h3 className="font-medium text-lg text-white/90">Documents</h3>
+                <p className="text-white/70 text-sm">View resources</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/settings" className="block">
+          <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 border-0">
+            <CardContent className="p-6 flex items-center space-x-4">
+              <Settings className="h-6 w-6 text-white/90" />
+              <div>
+                <h3 className="font-medium text-lg text-white/90">Settings</h3>
+                <p className="text-white/70 text-sm">Manage preferences</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
     </div>
   );
 };
