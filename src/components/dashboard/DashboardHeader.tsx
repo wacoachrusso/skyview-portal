@@ -35,7 +35,9 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
               <User className="h-5 w-5" />
             </Button>
             <span className="text-sm font-semibold text-white hidden sm:block">{userEmail}</span>
-            <ChatSettings />
+            <div className="text-white">
+              <ChatSettings />
+            </div>
             <Button 
               variant="secondary" 
               size="sm"
