@@ -15,7 +15,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
             <Link to="/" state={{ fromDashboard: true }} replace>
-              <Button variant="ghost" size="sm" className="hover:bg-accent">
+              <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent">
                 <Home className="h-4 w-4 mr-2" />
                 Home
               </Button>
@@ -24,24 +24,24 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           </div>
           <div className="flex items-center space-x-2">
             <Link to="/release-notes">
-              <Button variant="ghost" size="sm" className="hover:bg-accent">
+              <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent">
                 <FileText className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Release Notes</span>
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" className="hover:bg-accent">
+            <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent">
               <Bell className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="hover:bg-accent">
+            <Button variant="ghost" size="sm" className="text-foreground hover:bg-accent">
               <User className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-muted-foreground hidden sm:block">{userEmail}</span>
+            <span className="text-sm font-medium text-foreground hidden sm:block">{userEmail}</span>
             <ChatSettings />
             <Button 
               variant="outline" 
               size="sm"
               onClick={onSignOut}
-              className="hover:bg-accent"
+              className="text-foreground border-border hover:bg-accent hover:text-accent-foreground"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
