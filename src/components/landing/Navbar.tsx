@@ -1,23 +1,30 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { LogIn } from "lucide-react";
+import { LogIn, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { ChatSettings } from "@/components/chat/ChatSettings";
 
 export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
+      if (session?.user) {
+        setUserEmail(session.user.email || "");
+      }
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsLoggedIn(event === 'SIGNED_IN');
+      if (session?.user) {
+        setUserEmail(session.user.email || "");
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -44,7 +51,29 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             {isLoggedIn ? (
-              <ChatSettings />
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">Welcome, {userEmail}</span>
+                <Button 
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/10"
+                >
+                  <Link to="/chat">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Chat
+                  </Link>
+                </Button>
+                <Button 
+                  asChild
+                  size="sm"
+                  className="bg-brand-navy text-white hover:bg-brand-navy/90"
+                >
+                  <Link to="/dashboard">
+                    Dashboard
+                  </Link>
+                </Button>
+              </div>
             ) : (
               <div className="flex items-center gap-2 md:gap-3">
                 <Button 
