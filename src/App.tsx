@@ -5,6 +5,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import Login from "@/pages/Login";
 import Chat from "@/pages/Chat";
 import Index from "@/pages/Index";
+import ReleaseNotes from "@/pages/ReleaseNotes";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/release-notes" element={<ReleaseNotes />} />
         </Routes>
       </Router>
     </QueryClientProvider>
