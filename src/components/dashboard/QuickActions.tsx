@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Flag, FileText, Calendar, Database, ChartBar, Users, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ChatSettings } from "@/components/chat/ChatSettings";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export const QuickActions = () => {
   const { toast } = useToast();
@@ -105,18 +107,25 @@ export const QuickActions = () => {
         </CardContent>
       </Card>
 
-      <Card 
-        className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-gray-500/90 to-gray-600 border-0"
-        onClick={() => handleComingSoon("Settings configuration")}
-      >
-        <CardContent className="p-6 flex items-center space-x-4">
-          <Settings className="h-6 w-6 text-white" />
-          <div>
-            <h3 className="font-semibold text-lg text-white">Settings</h3>
-            <p className="text-white/80 text-sm">Configure preferences</p>
-          </div>
-        </CardContent>
-      </Card>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-gray-500/90 to-gray-600 border-0">
+            <CardContent className="p-6 flex items-center space-x-4">
+              <Settings className="h-6 w-6 text-white" />
+              <div>
+                <h3 className="font-semibold text-lg text-white">Settings</h3>
+                <p className="text-white/80 text-sm">Configure preferences</p>
+              </div>
+            </CardContent>
+          </Card>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Settings</SheetTitle>
+          </SheetHeader>
+          <ChatSettings />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

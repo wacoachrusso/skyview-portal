@@ -15,10 +15,10 @@ export function LogoutButton() {
       if (error) throw error;
       
       console.log("Sign out successful, clearing local storage...");
-      localStorage.removeItem("sb-xnlzqsoujwsffoxhhybk-auth-token");
+      localStorage.clear(); // Clear all local storage
       
       console.log("Redirecting to home page...");
-      navigate("/");
+      navigate("/", { replace: true, state: { fromLogout: true } });
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account",

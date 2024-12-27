@@ -19,8 +19,8 @@ const Index = () => {
         console.log('Checking auth state on Index page');
         const { data: { session } } = await supabase.auth.getSession();
         
-        // Only redirect to dashboard on initial load, not when coming from dashboard
-        if (session && !location.state?.fromDashboard) {
+        // Only redirect to dashboard if not coming from dashboard or logout
+        if (session && !location.state?.fromDashboard && !location.state?.fromLogout) {
           console.log('User is authenticated, checking profile');
           const { data: profile } = await supabase
             .from('profiles')
@@ -36,7 +36,7 @@ const Index = () => {
             navigate('/complete-profile');
           }
         } else {
-          console.log('No session found or coming from dashboard, showing landing page');
+          console.log('No session found or coming from dashboard/logout, showing landing page');
         }
       } catch (error) {
         console.error('Error checking auth state:', error);
