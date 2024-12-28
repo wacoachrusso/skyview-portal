@@ -45,9 +45,10 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
+      <div className="absolute inset-0 bg-glow-gradient pointer-events-none" />
       <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto px-4 py-8 max-w-7xl relative">
         <div className="space-y-6">
           <WelcomeCard />
           <QuickActions />
