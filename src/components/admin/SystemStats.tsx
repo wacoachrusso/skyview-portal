@@ -1,15 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useState } from "react";
 import { format, subDays } from "date-fns";
+import { MetricCard } from "./stats/MetricCard";
+import { StatsDialog } from "./stats/StatsDialog";
 
 export const SystemStats = () => {
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
@@ -18,6 +13,7 @@ export const SystemStats = () => {
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
+      console.log("Fetching admin stats...");
       const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
 
       const [
@@ -49,6 +45,13 @@ export const SystemStats = () => {
           .select("*", { count: "exact" })
           .eq("subscription_plan", "yearly"),
       ]);
+
+      console.log("Stats fetched:", {
+        monthlySubCount,
+        yearlySubCount,
+        monthlySubUsers,
+        yearlySubUsers
+      });
 
       return {
         userCount,
@@ -145,144 +148,76 @@ export const SystemStats = () => {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+        <MetricCard
+          title="Total Users"
+          value={stats?.userCount || 0}
+          icon={Users}
           onClick={() => {
             setSelectedMetric("users");
             setIsDialogOpen(true);
           }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.userCount || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+        />
+        <MetricCard
+          title="Active Users (30d)"
+          value={stats?.activeUserCount || 0}
+          icon={UserCheck}
           onClick={() => {
             setSelectedMetric("activeUsers");
             setIsDialogOpen(true);
           }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users (30d)</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.activeUserCount || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+        />
+        <MetricCard
+          title="Notifications Sent"
+          value={stats?.notificationCount || 0}
+          icon={Bell}
           onClick={() => {
             setSelectedMetric("notifications");
             setIsDialogOpen(true);
           }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Notifications Sent
-            </CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.notificationCount || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+        />
+        <MetricCard
+          title="Release Notes"
+          value={stats?.releaseNoteCount || 0}
+          icon={FileText}
           onClick={() => {
             setSelectedMetric("releaseNotes");
             setIsDialogOpen(true);
           }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Release Notes</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.releaseNoteCount || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+        />
+        <MetricCard
+          title="New Users (30d)"
+          value={stats?.newUserCount || 0}
+          icon={UserPlus}
           onClick={() => {
             setSelectedMetric("newUsers");
             setIsDialogOpen(true);
           }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Users (30d)</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.newUserCount || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+        />
+        <MetricCard
+          title="Monthly Subscribers"
+          value={stats?.monthlySubCount || 0}
+          icon={CreditCard}
           onClick={() => {
             setSelectedMetric("monthlySubUsers");
             setIsDialogOpen(true);
           }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Subscribers</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.monthlySubCount || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+        />
+        <MetricCard
+          title="Yearly Subscribers"
+          value={stats?.yearlySubCount || 0}
+          icon={CreditCard}
           onClick={() => {
             setSelectedMetric("yearlySubUsers");
             setIsDialogOpen(true);
           }}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Yearly Subscribers</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.yearlySubCount || 0}</div>
-          </CardContent>
-        </Card>
+        />
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{dialogContent?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {dialogContent?.data?.map((item, index) => (
-              <div
-                key={index}
-                className="rounded-lg border p-4 hover:bg-muted/50"
-              >
-                <h3 className="font-semibold">{item.label}</h3>
-                <p className="text-sm text-muted-foreground">{item.info}</p>
-                <p className="text-xs text-muted-foreground">{item.date}</p>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StatsDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        content={dialogContent}
+      />
     </>
   );
 };
