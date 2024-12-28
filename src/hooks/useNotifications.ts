@@ -126,7 +126,7 @@ export const useNotifications = () => {
         type: notification.type,
         notification_type: notification.type,
         profile_id: profile.id,
-        user_id: profile.id,
+        user_id: profile.id, // Set user_id to match profile_id
       }));
 
       if (notificationsToInsert.length > 0) {
