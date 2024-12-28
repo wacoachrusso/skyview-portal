@@ -109,7 +109,7 @@ export const UserManagement = () => {
       });
       
       // Immediately refetch to update the UI
-      refetch();
+      await refetch();
     } catch (error) {
       console.error(`Error ${status} user account:`, error);
       toast({
@@ -124,16 +124,8 @@ export const UserManagement = () => {
     try {
       console.log("Deleting user:", user);
 
-      // First update the account status to deleted
+      // Update account status to deleted
       await updateAccountStatus(user.id, user.email || "", "deleted");
-
-      // Then soft delete by updating account_status
-      const { error } = await supabase
-        .from("profiles")
-        .update({ account_status: 'deleted' })
-        .eq("id", user.id);
-
-      if (error) throw error;
 
       toast({
         title: "Success",
@@ -141,7 +133,7 @@ export const UserManagement = () => {
       });
 
       // Immediately refetch to update the UI
-      refetch();
+      await refetch();
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({
