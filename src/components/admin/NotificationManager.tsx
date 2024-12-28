@@ -18,7 +18,7 @@ export const NotificationManager = () => {
       console.log("Fetching notifications with profile data...");
       const { data, error } = await supabase
         .from("notifications")
-        .select("*, profiles(full_name)")
+        .select("*, profiles(full_name, email)")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -35,7 +35,7 @@ export const NotificationManager = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name");
+        .select("id, full_name, email");
       if (error) throw error;
       return data;
     },

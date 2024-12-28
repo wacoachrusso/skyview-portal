@@ -58,7 +58,7 @@ export const NewNotificationDialog = ({
                 <SelectItem value="all">All Users</SelectItem>
                 {profiles?.map((profile) => (
                   <SelectItem key={profile.id} value={profile.id}>
-                    {profile.full_name || profile.email || "Unnamed User"}
+                    {profile.full_name || "Unnamed User"} ({profile.email || "No email"})
                   </SelectItem>
                 ))}
               </SelectContent>

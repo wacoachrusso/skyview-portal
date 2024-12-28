@@ -44,7 +44,7 @@ export const NotificationDialog = ({
             <p className="text-sm text-muted-foreground">
               {notification.profile_id === "all" 
                 ? "All Users"
-                : (notification?.profiles as any)?.full_name || "N/A"}
+                : `${(notification?.profiles as any)?.full_name || "N/A"} (${(notification?.profiles as any)?.email || "No email"})`}
             </p>
           </div>
           <div>

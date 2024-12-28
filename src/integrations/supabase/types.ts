@@ -132,6 +132,7 @@ export type Database = {
         Row: {
           airline: string | null
           created_at: string
+          email: string | null
           email_notifications: boolean | null
           full_name: string | null
           id: string
@@ -146,6 +147,7 @@ export type Database = {
         Insert: {
           airline?: string | null
           created_at?: string
+          email?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id: string
@@ -160,6 +162,7 @@ export type Database = {
         Update: {
           airline?: string | null
           created_at?: string
+          email?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id?: string
