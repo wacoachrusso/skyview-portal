@@ -65,21 +65,59 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     };
   }, [navigate, finalSelectedPlan, toast]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const authFormData = {
-      email: formData.email,
-      password: formData.password,
-      full_name: formData.fullName,
-      user_type: formData.jobTitle,
-      airline: formData.airline,
-    };
-    
-    return <AuthFormSubmit 
-      formData={authFormData}
-      selectedPlan={finalSelectedPlan}
-      isSignUp={true}
-    />;
+    console.log("Form submitted with data:", formData);
+    setLoading(true);
+
+    try {
+      const authFormData = {
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.fullName,
+        user_type: formData.jobTitle,
+        airline: formData.airline,
+      };
+
+      const { data, error } = await supabase.auth.signUp({
+        email: authFormData.email,
+        password: authFormData.password,
+        options: {
+          data: {
+            full_name: authFormData.full_name,
+            user_type: authFormData.user_type,
+            airline: authFormData.airline,
+            subscription_plan: finalSelectedPlan,
+          },
+        },
+      });
+
+      if (error) {
+        console.error("Signup error:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+        return;
+      }
+
+      console.log("Signup successful:", data);
+      toast({
+        title: "Success",
+        description: "Please check your email to verify your account.",
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create account. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
