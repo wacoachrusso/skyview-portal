@@ -62,6 +62,22 @@ export const AuthFormSubmit = async ({
   console.log("Starting signup process with plan:", finalSelectedPlan);
 
   try {
+    // Check if user already exists in auth system
+    const { data: existingUser } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (existingUser?.user) {
+      toast({
+        title: "Error",
+        description: "An account with this email already exists. Please sign in or use a different email.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     // Get user's IP address
     const ipResponse = await fetch('https://api.ipify.org?format=json');
     const { ip } = await ipResponse.json();

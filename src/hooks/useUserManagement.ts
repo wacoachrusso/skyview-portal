@@ -100,15 +100,46 @@ export const useUserManagement = () => {
   const handleDeleteUser = async (user: ProfilesRow) => {
     try {
       console.log("Deleting user:", user);
+      
+      // First, delete the user from auth system using admin API
+      const { error: adminError } = await supabase.functions.invoke(
+        "delete-user-auth",
+        {
+          body: { userId: user.id },
+        }
+      );
+
+      if (adminError) {
+        console.error("Error deleting user from auth system:", adminError);
+        throw adminError;
+      }
+
+      // Then update the profile status to deleted
       await updateAccountStatus(user.id, user.email || "", "deleted");
+      
+      // Delete all user's conversations and messages
+      const { error: conversationsError } = await supabase
+        .from("conversations")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (conversationsError) {
+        console.error("Error deleting user conversations:", conversationsError);
+      }
+
       setUserToDelete(null);
       await refetch();
+
+      toast({
+        title: "Success",
+        description: "User account completely deleted from the system",
+      });
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete user account",
+        description: "Failed to delete user account completely",
       });
     }
   };
