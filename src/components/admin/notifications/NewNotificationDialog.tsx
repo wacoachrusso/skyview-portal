@@ -6,15 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { NotificationFormFields } from "./NotificationFormFields";
 
 interface NewNotificationDialogProps {
   profiles: any[];
@@ -37,6 +29,19 @@ export const NewNotificationDialog = ({
     profile_id: "",
   });
 
+  const handleFieldChange = (field: string, value: any) => {
+    setNewNotification((prev) => {
+      const updates: any = { [field]: value };
+      
+      // Sync type and notification_type when notification_type changes
+      if (field === "notification_type") {
+        updates.type = value;
+      }
+      
+      return { ...prev, ...updates };
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -44,79 +49,11 @@ export const NewNotificationDialog = ({
           <DialogTitle>Send New Notification</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="recipient">Recipient</Label>
-            <Select
-              value={newNotification.profile_id}
-              onValueChange={(value) =>
-                setNewNotification({ ...newNotification, profile_id: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select recipient" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                {profiles?.map((profile) => (
-                  <SelectItem key={profile.id} value={profile.id}>
-                    {profile.full_name || "Unnamed User"} ({profile.email || "No email"})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
-            <Select
-              value={newNotification.notification_type}
-              onValueChange={(value: "system" | "update" | "release") =>
-                setNewNotification({
-                  ...newNotification,
-                  type: value,
-                  notification_type: value,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="system">System</SelectItem>
-                <SelectItem value="update">Update</SelectItem>
-                <SelectItem value="release">Release</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={newNotification.title}
-              onChange={(e) =>
-                setNewNotification({
-                  ...newNotification,
-                  title: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
-            <Input
-              id="message"
-              value={newNotification.message}
-              onChange={(e) =>
-                setNewNotification({
-                  ...newNotification,
-                  message: e.target.value,
-                })
-              }
-            />
-          </div>
-
+          <NotificationFormFields
+            profiles={profiles}
+            notification={newNotification}
+            onChange={handleFieldChange}
+          />
           <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
