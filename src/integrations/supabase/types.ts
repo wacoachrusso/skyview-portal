@@ -77,6 +77,7 @@ export type Database = {
           notification_type:
             | Database["public"]["Enums"]["notification_type"]
             | null
+          profile_id: string
           release_note_id: string | null
           title: string
           type: string
@@ -90,6 +91,7 @@ export type Database = {
           notification_type?:
             | Database["public"]["Enums"]["notification_type"]
             | null
+          profile_id: string
           release_note_id?: string | null
           title: string
           type: string
@@ -103,12 +105,20 @@ export type Database = {
           notification_type?:
             | Database["public"]["Enums"]["notification_type"]
             | null
+          profile_id?: string
           release_note_id?: string | null
           title?: string
           type?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_release_note_id_fkey"
             columns: ["release_note_id"]

@@ -17,12 +17,17 @@ export const NotificationManager = () => {
   const { data: notifications } = useQuery({
     queryKey: ["admin-notifications"],
     queryFn: async () => {
+      console.log("Fetching notifications with profile data...");
       const { data, error } = await supabase
         .from("notifications")
         .select("*, profiles(full_name)")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        throw error;
+      }
+      console.log("Fetched notifications:", data);
       return data;
     },
   });
@@ -71,7 +76,6 @@ export const NotificationManager = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      // View notification details functionality can be added here
                       console.log("View notification details:", notification);
                     }}
                   >
