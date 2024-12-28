@@ -66,7 +66,7 @@ export function WelcomeCard() {
         </p>
         {expiryDate && (
           <p className="text-white/70 mt-2">
-            Your subscription will auto-renew on {format(expiryDate, 'MMMM d, yyyy')} unless canceled
+            Your subscription will auto-renew on <span className="font-medium text-white bg-brand-gold/20 px-2 py-0.5 rounded">{format(expiryDate, 'MMMM d, yyyy')}</span> unless canceled
           </p>
         )}
       </Card>
