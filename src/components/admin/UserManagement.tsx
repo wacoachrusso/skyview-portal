@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Eye, Ban, Trash2, AlertCircle } from "lucide-react";
+import { Eye, Ban, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,7 +80,7 @@ export const UserManagement = () => {
   const updateAccountStatus = async (
     userId: string,
     email: string,
-    status: "disabled" | "suspended" | "deleted"
+    status: "disabled" | "suspended" | "deleted" | "active"
   ) => {
     try {
       console.log(`Updating account status to ${status} for user:`, userId);
@@ -149,6 +149,54 @@ export const UserManagement = () => {
     }
   };
 
+  const getAccountActions = (user: ProfilesRow) => {
+    switch (user.account_status) {
+      case "disabled":
+        return (
+          <DropdownMenuItem
+            onClick={() => updateAccountStatus(user.id, user.email || "", "active")}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/10"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Enable Account
+          </DropdownMenuItem>
+        );
+      case "suspended":
+        return (
+          <DropdownMenuItem
+            onClick={() => updateAccountStatus(user.id, user.email || "", "active")}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/10"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Unsuspend Account
+          </DropdownMenuItem>
+        );
+      default:
+        return (
+          <>
+            <DropdownMenuItem
+              onClick={() =>
+                updateAccountStatus(user.id, user.email || "", "disabled")
+              }
+              className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
+            >
+              <Ban className="h-4 w-4 mr-2" />
+              Disable Account
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                updateAccountStatus(user.id, user.email || "", "suspended")
+              }
+              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/10"
+            >
+              <AlertCircle className="h-4 w-4 mr-2" />
+              Suspend Account
+            </DropdownMenuItem>
+          </>
+        );
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
@@ -207,31 +255,16 @@ export const UserManagement = () => {
                         align="end"
                         sideOffset={5}
                       >
-                        <DropdownMenuItem
-                          onClick={() =>
-                            updateAccountStatus(user.id, user.email || "", "disabled")
-                          }
-                          className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
-                        >
-                          <Ban className="h-4 w-4 mr-2" />
-                          Disable Account
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            updateAccountStatus(user.id, user.email || "", "suspended")
-                          }
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/10"
-                        >
-                          <AlertCircle className="h-4 w-4 mr-2" />
-                          Suspend Account
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setUserToDelete(user)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Account
-                        </DropdownMenuItem>
+                        {getAccountActions(user)}
+                        {user.account_status !== "deleted" && (
+                          <DropdownMenuItem
+                            onClick={() => setUserToDelete(user)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Account
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

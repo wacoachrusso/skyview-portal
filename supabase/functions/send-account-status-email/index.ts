@@ -10,22 +10,30 @@ const corsHeaders = {
 
 interface EmailRequest {
   email: string;
-  status: 'disabled' | 'suspended' | 'deleted';
+  status: 'disabled' | 'suspended' | 'deleted' | 'active';
 }
 
 const getEmailContent = (status: string) => {
   const statusMessages = {
-    disabled: "Your account has been temporarily disabled.",
-    suspended: "Your account has been suspended due to suspicious activity.",
-    deleted: "Your account has been deleted.",
+    disabled: "Your account has been temporarily disabled. This is usually due to suspicious activity or a violation of our terms of service.",
+    suspended: "Your account has been suspended due to suspicious activity or a violation of our terms of service.",
+    deleted: "Your account has been deleted. All your data will be permanently removed from our servers.",
+    active: "Your account has been reactivated. You can now log in and use all features of the platform.",
+  };
+
+  const statusActions = {
+    disabled: "If you believe this was done in error, please contact our support team for assistance in reactivating your account.",
+    suspended: "Our team will review your account and contact you with further information about the suspension.",
+    deleted: "If you believe this was done in error, please contact our support team immediately.",
+    active: "If you have any questions or concerns, please don't hesitate to contact our support team.",
   };
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h1 style="color: #1a365d;">Account Status Update</h1>
       <p>${statusMessages[status as keyof typeof statusMessages]}</p>
-      <p>Our team will contact you shortly with more information about your account status.</p>
-      <p>If you believe this was done in error, please contact our support team.</p>
+      <p>${statusActions[status as keyof typeof statusActions]}</p>
+      <p style="color: #666;">For security reasons, if you need to contact support, please use a different email address than your account email.</p>
     </div>
   `;
 };
@@ -48,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
-        subject: `SkyGuide Account Status Update`,
+        subject: `SkyGuide Account Status Update - ${status.charAt(0).toUpperCase() + status.slice(1)}`,
         html: getEmailContent(status),
       }),
     });
