@@ -74,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
       )
     }
 
-    console.log('Sending email to recipients:', emailRecipients)
+    console.log(`Sending individual emails to ${emailRecipients.length} recipients`)
 
     // Prepare email content
     const emailHtml = `
@@ -86,28 +86,34 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `
 
-    // Send email using Resend with verified domain
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'SkyGuide <notifications@skyguide.site>',
-        to: emailRecipients,
-        subject: `New Release: ${releaseNote.title}`,
-        html: emailHtml,
-      }),
+    // Send individual emails to each recipient
+    const emailPromises = emailRecipients.map(async (recipient) => {
+      console.log(`Sending email to: ${recipient}`)
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: 'SkyGuide <notifications@skyguide.site>',
+          to: recipient,
+          subject: `New Release: ${releaseNote.title}`,
+          html: emailHtml,
+        }),
+      })
+
+      const resendResponse = await res.json()
+      if (!res.ok) {
+        console.error(`Error sending email to ${recipient}:`, resendResponse)
+        throw new Error(`Resend API error: ${JSON.stringify(resendResponse)}`)
+      }
+      return resendResponse
     })
 
-    const resendResponse = await res.json()
-    console.log('Resend API response:', resendResponse)
-    
-    if (!res.ok) {
-      console.error('Resend API error:', resendResponse)
-      throw new Error(`Resend API error: ${JSON.stringify(resendResponse)}`)
-    }
+    // Wait for all emails to be sent
+    await Promise.all(emailPromises)
+    console.log('All emails sent successfully')
 
     // Update last_email_sent timestamp
     const { error: updateError } = await supabase
