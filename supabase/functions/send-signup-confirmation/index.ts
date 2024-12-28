@@ -9,6 +9,7 @@ const corsHeaders = {
 
 interface EmailRequest {
   email: string;
+  name: string;
   confirmationUrl: string;
 }
 
@@ -18,8 +19,22 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, confirmationUrl } = await req.json();
-    console.log("Sending signup confirmation email to:", email);
+    console.log("Starting signup confirmation email process");
+    
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("Missing RESEND_API_KEY configuration");
+    }
+
+    const { email, name, confirmationUrl } = await req.json();
+    
+    if (!email || !confirmationUrl) {
+      console.error("Missing required fields:", { email, confirmationUrl });
+      throw new Error("Missing required fields");
+    }
+
+    console.log("Sending confirmation email to:", email);
+    console.log("Confirmation URL:", confirmationUrl);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

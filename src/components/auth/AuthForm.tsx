@@ -100,6 +100,28 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
       if (data?.user) {
         console.log("Signup successful");
+        
+        // Send confirmation email via Edge Function
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
+            body: { 
+              email: formData.email,
+              name: formData.fullName,
+              confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+            }
+          });
+
+          if (emailError) {
+            console.error("Error sending confirmation email:", emailError);
+            throw emailError;
+          }
+
+          console.log("Confirmation email sent successfully");
+        } catch (emailError) {
+          console.error("Failed to send confirmation email:", emailError);
+          // Continue with signup process even if email fails
+        }
+
         toast({
           title: "Success",
           description: "Please check your email to verify your account.",
