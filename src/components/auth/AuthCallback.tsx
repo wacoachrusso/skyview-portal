@@ -8,14 +8,6 @@ export const AuthCallback = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
-  const showWelcomeTutorial = (userName: string) => {
-    toast({
-      title: `Welcome to SkyGuide, ${userName}! 👋`,
-      description: "We're glad to see you again!",
-      duration: 5000,
-    });
-  };
-
   const redirectToProduction = () => {
     // Check if it's an Android device
     const isAndroid = /Android/i.test(navigator.userAgent);
@@ -40,7 +32,7 @@ export const AuthCallback = () => {
         const token_hash = searchParams.get('token_hash');
         const type = searchParams.get('type');
         
-        console.log('Callback params:', { email, type });
+        console.log('Callback params:', { email, type, token_hash });
 
         if (type === 'signup' && email && token_hash) {
           console.log('Processing email confirmation');
@@ -61,10 +53,30 @@ export const AuthCallback = () => {
             return;
           }
 
+          // Get user profile to confirm database entry
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+          if (profile) {
+            console.log('User profile found:', profile);
+            // Update profile if needed
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ email_verified: true })
+              .eq('email', email);
+
+            if (updateError) {
+              console.error('Error updating profile:', updateError);
+            }
+          }
+
           console.log('Email confirmed successfully');
           toast({
             title: "Email Confirmed",
-            description: "Your email has been confirmed successfully. You can now log in.",
+            description: "Your email has been confirmed successfully. You can now log in to your account.",
           });
           redirectToProduction();
           return;
@@ -95,62 +107,23 @@ export const AuthCallback = () => {
         }
 
         console.log('Session found:', session.user.id);
-        console.log('Checking profile');
         
         // Check if profile exists and is complete
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_type, airline, full_name, subscription_plan')
+          .select('*')
           .eq('id', session.user.id)
           .single();
 
         console.log('Profile data:', profile);
 
-        // Get the user's name for the welcome message
-        const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
-
-        // Send welcome email
-        try {
-          console.log('Sending welcome email...');
-          const { error: welcomeEmailError } = await supabase.functions.invoke('send-welcome-email', {
-            body: { 
-              email: session.user.email,
-              name: userName,
-              plan: profile?.subscription_plan || 'free'
-            }
+        if (profile) {
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in.",
           });
-
-          if (welcomeEmailError) {
-            console.error('Error sending welcome email:', welcomeEmailError);
-          } else {
-            console.log('Welcome email sent successfully');
-          }
-        } catch (emailError) {
-          console.error('Failed to send welcome email:', emailError);
-        }
-
-        // For Google auth, update profile with Google user data if needed
-        if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
-          console.log('Updating profile with Google data');
-          const { error: profileUpdateError } = await supabase
-            .from('profiles')
-            .update({
-              full_name: session.user.user_metadata.full_name
-            })
-            .eq('id', session.user.id);
-
-          if (profileUpdateError) {
-            console.error('Error updating profile:', profileUpdateError);
-          }
-        }
-
-        // If profile is complete, redirect to dashboard immediately
-        if (profile?.user_type && profile?.airline) {
-          console.log('Profile complete, redirecting to dashboard');
-          showWelcomeTutorial(userName.split(' ')[0]); // Use first name only
-          navigate('/dashboard', { replace: true }); // Use replace to prevent back navigation
+          navigate('/dashboard', { replace: true });
         } else {
-          console.log('Profile incomplete, redirecting to complete-profile');
           navigate('/complete-profile', { replace: true });
         }
 
