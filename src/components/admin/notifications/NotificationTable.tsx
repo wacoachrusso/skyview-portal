@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,11 +14,13 @@ import {
 interface NotificationTableProps {
   notifications: any[];
   onViewDetails: (notification: any) => void;
+  onDelete: (id: string) => void;
 }
 
 export const NotificationTable = ({
   notifications,
   onViewDetails,
+  onDelete,
 }: NotificationTableProps) => {
   return (
     <div className="rounded-md border">
@@ -52,13 +55,20 @@ export const NotificationTable = ({
                   {notification.is_read ? "Read" : "Unread"}
                 </Badge>
               </TableCell>
-              <TableCell>
+              <TableCell className="space-x-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onViewDetails(notification)}
                 >
                   View Details
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(notification.id)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </TableCell>
             </TableRow>

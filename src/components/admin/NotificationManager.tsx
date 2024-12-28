@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 export const NotificationManager = () => {
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [showNewNotificationDialog, setShowNewNotificationDialog] = useState(false);
-  const { notifications, profiles, sendNotification, refetchNotifications } = useNotifications();
+  const { notifications, profiles, sendNotification, deleteNotification, refetchNotifications } = useNotifications();
   const { toast } = useToast();
 
   const handleSendNotification = async (notification: any) => {
@@ -23,6 +23,10 @@ export const NotificationManager = () => {
       setShowNewNotificationDialog(false);
       refetchNotifications();
     }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    await deleteNotification(id);
   };
 
   return (
@@ -42,6 +46,7 @@ export const NotificationManager = () => {
       <NotificationTable
         notifications={notifications || []}
         onViewDetails={setSelectedNotification}
+        onDelete={handleDeleteNotification}
       />
 
       <NotificationDialog
