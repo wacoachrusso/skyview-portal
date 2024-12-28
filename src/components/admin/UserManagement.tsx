@@ -65,6 +65,7 @@ export const UserManagement = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Full Name</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>User Type</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Query Count</TableHead>
@@ -76,6 +77,7 @@ export const UserManagement = () => {
             {users?.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.full_name || "N/A"}</TableCell>
+                <TableCell>{user.email || "N/A"}</TableCell>
                 <TableCell>{user.user_type || "N/A"}</TableCell>
                 <TableCell>
                   {format(new Date(user.created_at), "MMM d, yyyy")}
@@ -95,7 +97,6 @@ export const UserManagement = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      // View user details functionality can be added here
                       console.log("View user details:", user);
                     }}
                   >
