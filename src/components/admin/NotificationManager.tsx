@@ -1,92 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { NotificationTable } from "./notifications/NotificationTable";
 import { NotificationDialog } from "./notifications/NotificationDialog";
 import { NewNotificationDialog } from "./notifications/NewNotificationDialog";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export const NotificationManager = () => {
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [showNewNotificationDialog, setShowNewNotificationDialog] = useState(false);
-  const { toast } = useToast();
-
-  const { data: notifications, refetch } = useQuery({
-    queryKey: ["admin-notifications"],
-    queryFn: async () => {
-      console.log("Fetching notifications with profile data...");
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*, profiles(full_name, email)")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching notifications:", error);
-        throw error;
-      }
-      console.log("Fetched notifications:", data);
-      return data;
-    },
-  });
-
-  const { data: profiles } = useQuery({
-    queryKey: ["profiles"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { notifications, profiles, sendNotification, refetchNotifications } = useNotifications();
 
   const handleSendNotification = async (notification: any) => {
-    try {
-      console.log("Sending notification:", notification);
-      
-      if (notification.profile_id === "all") {
-        // Send to all users
-        const { data: allProfiles } = await supabase
-          .from("profiles")
-          .select("id");
-        
-        const notifications = allProfiles!.map(profile => ({
-          ...notification,
-          profile_id: profile.id,
-          user_id: profile.id, // Add user_id since it's required
-        }));
-        
-        const { error } = await supabase
-          .from("notifications")
-          .insert(notifications);
-
-        if (error) throw error;
-      } else {
-        // Send to single user
-        const { error } = await supabase
-          .from("notifications")
-          .insert([{
-            ...notification,
-            user_id: notification.profile_id // Add user_id since it's required
-          }]);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: "Notification sent successfully",
-      });
+    const success = await sendNotification(notification);
+    if (success) {
       setShowNewNotificationDialog(false);
-      refetch();
-    } catch (error) {
-      console.error("Error sending notification:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to send notification",
-      });
+      refetchNotifications();
     }
   };
 
