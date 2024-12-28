@@ -102,20 +102,22 @@ export const useNotifications = () => {
 
         if (insertError) throw insertError;
 
-        // Send push notification
-        await sendPushNotification(notification.title, {
+        // Send push notification with properly typed options
+        const notificationOptions: NotificationOptions = {
           body: notification.message,
           tag: notification.type,
           data: {
             type: notification.type,
             timestamp: new Date().toISOString()
           },
-          icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png", // Using existing app icon
+          icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          vibrate: [200, 100, 200], // Vibration pattern for mobile devices
-          renotify: true, // Allow notification to override previous ones
-          requireInteraction: true, // Keep notification visible until user interacts
-        });
+          vibrate: [200, 100, 200],
+          renotify: true,
+          requireInteraction: true,
+        };
+
+        await sendPushNotification(notification.title, notificationOptions);
       }
 
       toast({

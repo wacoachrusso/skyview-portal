@@ -14,3 +14,23 @@ interface SpeechRecognition {
   start: () => void;
   stop: () => void;
 }
+
+interface NotificationOptions {
+  body?: string;
+  tag?: string;
+  icon?: string;
+  badge?: string;
+  vibrate?: number[];
+  timestamp?: number;
+  data?: any;
+  renotify?: boolean;
+  requireInteraction?: boolean;
+  actions?: NotificationAction[];
+  silent?: boolean;
+}
+
+interface NotificationAction {
+  action: string;
+  title: string;
+  icon?: string;
+}

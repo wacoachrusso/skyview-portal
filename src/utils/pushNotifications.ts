@@ -18,7 +18,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 }
 
-export async function sendPushNotification(title: string, options: NotificationOptions = {}) {
+export async function sendPushNotification(title: string, options: NotificationOptions = {}): Promise<boolean> {
   console.log("Attempting to send push notification:", { title, options });
   
   if (Notification.permission !== "granted") {
@@ -30,8 +30,8 @@ export async function sendPushNotification(title: string, options: NotificationO
     // Enhanced options for better mobile support
     const enhancedOptions: NotificationOptions = {
       ...options,
-      silent: false, // Ensure sound plays on mobile
-      timestamp: Date.now(), // Add timestamp for mobile notifications
+      silent: false,
+      timestamp: Date.now(),
       actions: [
         {
           action: 'open',
@@ -44,7 +44,7 @@ export async function sendPushNotification(title: string, options: NotificationO
 
     notification.onclick = function(event) {
       console.log("Notification clicked:", event);
-      event.preventDefault(); // Prevent the browser from focusing the Notification's tab
+      event.preventDefault();
       window.focus();
       notification.close();
     };
@@ -87,16 +87,18 @@ export async function setupPushNotifications() {
           .single();
 
         if (profile?.push_notifications) {
-          await sendPushNotification(notification.title, {
+          const notificationOptions: NotificationOptions = {
             body: notification.message,
             tag: notification.id,
             data: {
               notificationId: notification.id,
               type: notification.type
             },
-            vibrate: [200, 100, 200], // Vibration pattern for mobile
-            requireInteraction: true, // Keep notification visible until user interacts
-          });
+            vibrate: [200, 100, 200],
+            requireInteraction: true,
+          };
+          
+          await sendPushNotification(notification.title, notificationOptions);
         }
       }
     )
