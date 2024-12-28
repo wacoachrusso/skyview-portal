@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, MessageSquare, Bell, FileText } from "lucide-react";
+import { Users, UserCheck, Bell, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 
 export const SystemStats = () => {
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
@@ -18,26 +18,31 @@ export const SystemStats = () => {
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
+      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+
       const [
         { count: userCount, data: users },
-        { count: messageCount, data: messages },
+        { count: activeUserCount, data: activeUsers },
         { count: notificationCount, data: notifications },
         { count: releaseNoteCount, data: releaseNotes },
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact" }),
-        supabase.from("messages").select("*", { count: "exact" }),
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact" })
+          .gte("last_query_timestamp", thirtyDaysAgo),
         supabase.from("notifications").select("*", { count: "exact" }),
         supabase.from("release_notes").select("*", { count: "exact" }),
       ]);
 
       return {
         userCount,
-        messageCount,
+        activeUserCount,
         notificationCount,
         releaseNoteCount,
         details: {
           users,
-          messages,
+          activeUsers,
           notifications,
           releaseNotes,
         },
@@ -57,12 +62,16 @@ export const SystemStats = () => {
           date: format(new Date(user.created_at), "MMM d, yyyy"),
         })),
       },
-      messages: {
-        title: "Message Details",
-        data: stats.details.messages?.map((msg) => ({
-          label: msg.content.substring(0, 50) + "...",
-          info: `Role: ${msg.role}`,
-          date: format(new Date(msg.created_at), "MMM d, yyyy"),
+      activeUsers: {
+        title: "Active User Details",
+        data: stats.details.activeUsers?.map((user) => ({
+          label: user.full_name || "Unnamed User",
+          info: `Email: ${user.email || "N/A"} | Last Active: ${
+            user.last_query_timestamp
+              ? format(new Date(user.last_query_timestamp), "MMM d, yyyy")
+              : "N/A"
+          }`,
+          date: format(new Date(user.created_at), "MMM d, yyyy"),
         })),
       },
       notifications: {
@@ -110,16 +119,16 @@ export const SystemStats = () => {
         <Card
           className="cursor-pointer transition-all hover:shadow-md"
           onClick={() => {
-            setSelectedMetric("messages");
+            setSelectedMetric("activeUsers");
             setIsDialogOpen(true);
           }}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Active Users (30d)</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.messageCount || 0}</div>
+            <div className="text-2xl font-bold">{stats?.activeUserCount || 0}</div>
           </CardContent>
         </Card>
 
