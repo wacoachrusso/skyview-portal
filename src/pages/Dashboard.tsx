@@ -14,16 +14,54 @@ const Dashboard = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No active session, redirecting to login');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Checking session in Dashboard:", session);
+        
+        if (!session) {
+          console.log("No active session, redirecting to login");
+          navigate('/login');
+          return;
+        }
+        
+        // Verify the session is still valid by getting the user
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+          console.error("Error getting user or no user found:", error);
+          await supabase.auth.signOut();
+          navigate('/login');
+          return;
+        }
+
+        setUserEmail(user.email);
+        
+      } catch (error) {
+        console.error("Error checking auth:", error);
         navigate('/login');
-      } else {
-        setUserEmail(session.user.email);
       }
     };
 
+    // Initial check
     checkAuth();
+
+    // Set up auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
+      
+      if (event === 'SIGNED_OUT' || !session) {
+        navigate('/login');
+      } else if (session?.user) {
+        setUserEmail(session.user.email);
+      }
+    });
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleSignOut = async () => {
