@@ -42,7 +42,7 @@ export const NotificationTable = ({
               <TableCell>
                 {notification.profile_id === "all" 
                   ? "All Users"
-                  : (notification.profiles as any)?.full_name || (notification.profiles as any)?.email || "N/A"}
+                  : (notification.profiles as any)?.full_name || "N/A"}
               </TableCell>
               <TableCell>
                 {format(new Date(notification.created_at), "MMM d, yyyy HH:mm")}
