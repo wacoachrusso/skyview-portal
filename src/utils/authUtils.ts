@@ -5,9 +5,11 @@ export const sendMagicLink = async (email: string) => {
   try {
     console.log('Starting magic link login process for:', email);
     
+    // Generate OTP token via Supabase but don't send email
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
+        shouldCreateUser: false,
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
@@ -15,9 +17,14 @@ export const sendMagicLink = async (email: string) => {
     if (error) throw error;
 
     // Send custom email using our Edge Function
-    await supabase.functions.invoke('send-login-link', {
-      body: { email }
+    const { error: emailError } = await supabase.functions.invoke('send-login-link', {
+      body: { 
+        email,
+        loginUrl: `${window.location.origin}/auth/callback`
+      }
     });
+
+    if (emailError) throw emailError;
 
     toast({
       title: "Check your email",
@@ -34,10 +41,26 @@ export const sendMagicLink = async (email: string) => {
 };
 
 export const handleEmailVerification = async (email: string) => {
-  await supabase.functions.invoke('send-signup-confirmation', {
-    body: { 
-      email,
-      confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(email)}`
-    }
-  });
+  try {
+    const { error } = await supabase.functions.invoke('send-signup-confirmation', {
+      body: { 
+        email,
+        confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(email)}`
+      }
+    });
+
+    if (error) throw error;
+
+    toast({
+      title: "Verification email sent",
+      description: "Please check your inbox and verify your email address.",
+    });
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Could not send verification email. Please try again.",
+    });
+  }
 };

@@ -4,8 +4,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface EmailRequest {
@@ -19,22 +18,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log("Starting login link email process");
-    
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY is not set");
-      throw new Error("Missing RESEND_API_KEY configuration");
-    }
-
     const { email, loginUrl } = await req.json();
-    
-    if (!email || !loginUrl) {
-      console.error("Missing required fields:", { email, loginUrl });
-      throw new Error("Missing required fields");
-    }
-
     console.log("Sending login link email to:", email);
-    console.log("Login URL:", loginUrl);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -81,15 +66,21 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
+    if (!res.ok) {
+      const error = await res.text();
+      console.error("Error sending login link email:", error);
+      throw new Error(error);
+    }
+
     const data = await res.json();
-    console.log("Email API response:", data);
+    console.log("Login link email sent successfully:", data);
 
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error sending login link email:", error);
+    console.error("Error in send-login-link function:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
