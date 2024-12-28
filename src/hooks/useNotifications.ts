@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { sendPushNotification } from "@/utils/pushNotifications";
@@ -15,14 +15,19 @@ interface NotificationData {
 
 export const useNotifications = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: notifications, refetch } = useQuery({
     queryKey: ["admin-notifications"],
     queryFn: async () => {
       console.log("Fetching notifications with profile data...");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
       const { data, error } = await supabase
         .from("notifications")
         .select("*, profiles(full_name, email)")
+        .eq('user_id', user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -98,14 +103,14 @@ export const useNotifications = () => {
       if (notification.profile_id === "all") {
         const { data: pushEnabledProfiles } = await supabase
           .from("profiles")
-          .select("id, push_notifications")
+          .select("id, push_notifications, push_subscription")
           .eq("push_notifications", true);
         
         usersToNotify = pushEnabledProfiles || [];
       } else {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("id, push_notifications")
+          .select("id, push_notifications, push_subscription")
           .eq("id", notification.profile_id)
           .single();
         
@@ -118,37 +123,51 @@ export const useNotifications = () => {
         title: notification.title,
         message: notification.message,
         type: notification.type,
-        notification_type: notification.type, // Ensure they stay in sync
+        notification_type: notification.type,
         profile_id: profile.id,
         user_id: profile.id,
       }));
 
       if (notificationsToInsert.length > 0) {
         console.log("Inserting notifications:", notificationsToInsert);
-        const { error: insertError } = await supabase
+        const { data: insertedNotifications, error: insertError } = await supabase
           .from("notifications")
-          .insert(notificationsToInsert);
+          .insert(notificationsToInsert)
+          .select();
 
         if (insertError) {
           console.error("Error inserting notifications:", insertError);
           throw insertError;
         }
 
-        const notificationOptions: NotificationOptions = {
-          body: notification.message,
-          icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          tag: notification.type,
-          data: {
-            type: notification.type,
-          },
-          renotify: true,
-          requireInteraction: true,
-        };
+        // Send push notifications to each user
+        for (const profile of usersToNotify) {
+          if (profile.push_subscription) {
+            try {
+              const notificationOptions = {
+                body: notification.message,
+                icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+                badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+                tag: notification.type,
+                data: {
+                  url: '/release-notes',
+                  type: notification.type,
+                  id: insertedNotifications?.[0]?.id
+                },
+                renotify: true,
+                requireInteraction: true,
+              };
 
-        await sendPushNotification(notification.title, notificationOptions);
+              await sendPushNotification(notification.title, notificationOptions);
+            } catch (error) {
+              console.error("Error sending push notification to user:", profile.id, error);
+            }
+          }
+        }
       }
 
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+      
       toast({
         title: "Success",
         description: "Notification sent successfully",

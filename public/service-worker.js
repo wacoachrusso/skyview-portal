@@ -3,21 +3,27 @@ self.addEventListener('push', function(event) {
   
   if (event.data) {
     const data = event.data.json();
+    console.log('Push data:', data);
     
     const options = {
-      body: data.body,
+      body: data.body || data.message,
       icon: data.icon || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       badge: data.badge || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       vibrate: [200, 100, 200],
-      data: data.data || {},
-      actions: data.actions || [
+      data: {
+        ...data.data,
+        url: data.url || '/release-notes',
+        notificationId: data.id
+      },
+      actions: [
         {
           action: 'open',
           title: 'View Details'
         }
       ],
-      tag: data.tag,
-      renotify: true
+      tag: data.tag || 'default',
+      renotify: true,
+      requireInteraction: true
     };
     
     event.waitUntil(
