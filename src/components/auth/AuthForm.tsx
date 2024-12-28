@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthFormHeader } from "./AuthFormHeader";
 import { AuthFormFields } from "./AuthFormFields";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AuthFormProps {
   selectedPlan?: string;
@@ -19,6 +20,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -27,7 +29,33 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     airline: "",
   });
 
-  // Add auth state change listener
+  const validatePassword = (password: string): boolean => {
+    const hasMinLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*]/.test(password);
+
+    if (!hasMinLength) {
+      setPasswordError("Password must be at least 8 characters long");
+      return false;
+    }
+    if (!hasUpperCase) {
+      setPasswordError("Password must include at least one uppercase letter");
+      return false;
+    }
+    if (!hasNumber) {
+      setPasswordError("Password must include at least one number");
+      return false;
+    }
+    if (!hasSpecialChar) {
+      setPasswordError("Password must include at least one special character (!@#$%^&*)");
+      return false;
+    }
+
+    setPasswordError(null);
+    return true;
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
@@ -50,7 +78,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       }
     });
 
-    // Check if we're on a confirmation URL
     const hash = window.location.hash;
     if (hash && hash.includes('type=signup')) {
       console.log("Found confirmation hash:", hash);
@@ -67,6 +94,11 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validatePassword(formData.password)) {
+      return;
+    }
+
     setLoading(true);
     console.log("Starting signup process with plan:", finalSelectedPlan);
 
@@ -104,20 +136,39 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
       console.log("Signup successful:", data);
 
-      // Show appropriate success message based on whether email confirmation is required
+      // Send confirmation email using our edge function
+      const confirmationUrl = `${window.location.origin}/login#confirmation`;
+      const emailResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-confirmation-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            confirmationUrl,
+          }),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        console.error("Error sending confirmation email:", await emailResponse.text());
+      }
+
+      // Show appropriate success message
       if (!data.session) {
-        // Email confirmation is required
         toast({
           title: "Welcome to SkyGuide!",
-          description: "We've sent you a confirmation email. Please check your inbox and click the confirmation link to activate your account. Once confirmed, you'll be automatically redirected to the chat interface.",
+          description: "We've sent you a confirmation email. Please check your inbox and click the confirmation link to activate your account.",
         });
         navigate('/login');
       } else {
-        // Email confirmation was not required, user is automatically signed in
         toast({
           title: "Welcome to SkyGuide!",
           description: finalSelectedPlan === 'free' 
-            ? "Your free trial account has been created. You have 2 queries available."
+            ? "Your account has been created. You have 2 queries available."
             : "Your account has been created successfully.",
         });
         navigate('/chat');
@@ -148,6 +199,12 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
               setFormData={setFormData}
               setShowPassword={setShowPassword}
             />
+
+            {passwordError && (
+              <Alert variant="destructive" className="bg-red-900/50 border-red-500/50">
+                <AlertDescription>{passwordError}</AlertDescription>
+              </Alert>
+            )}
 
             <Button 
               type="submit" 
