@@ -14,44 +14,6 @@ interface EmailRequest {
   releaseNoteId: string;
 }
 
-// Helper function to add delay between requests
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Helper function to send a single email with retry logic
-async function sendSingleEmail(recipient: string, emailHtml: string, subject: string, retryCount = 0): Promise<void> {
-  try {
-    console.log(`Attempting to send email to ${recipient} (attempt ${retryCount + 1})`);
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'SkyGuide <notifications@skyguide.site>',
-        to: recipient,
-        subject: subject,
-        html: emailHtml,
-      }),
-    });
-
-    if (!res.ok) {
-      const resendResponse = await res.json();
-      if (res.status === 429 && retryCount < 3) {
-        console.log(`Rate limit hit for ${recipient}, retrying after delay...`);
-        await delay(1000); // Wait 1 second before retry
-        return sendSingleEmail(recipient, emailHtml, subject, retryCount + 1);
-      }
-      throw new Error(`Resend API error: ${JSON.stringify(resendResponse)}`);
-    }
-
-    console.log(`Email sent successfully to ${recipient}`);
-  } catch (error) {
-    console.error(`Failed to send email to ${recipient}:`, error);
-    throw error;
-  }
-}
-
 const handler = async (req: Request): Promise<Response> => {
   console.log('Processing release note email request');
   
@@ -85,22 +47,13 @@ const handler = async (req: Request): Promise<Response> => {
     // Get all users with email notifications enabled
     const { data: subscribedUsers, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, email_notifications')
+      .select('email')
       .eq('email_notifications', true);
 
     if (profilesError) throw profilesError;
-    console.log('Found subscribed users:', subscribedUsers);
+    console.log('Found subscribed users:', subscribedUsers.length);
 
-    const subscribedUserIds = subscribedUsers.map(user => user.id);
-
-    // Get user emails from auth.users
-    const { data: { users }, error: usersError } = await supabase
-      .auth.admin.listUsers();
-
-    if (usersError) throw usersError;
-
-    const emailRecipients = users
-      .filter(user => subscribedUserIds.includes(user.id))
+    const emailRecipients = subscribedUsers
       .map(user => user.email)
       .filter((email): email is string => email !== null);
 
@@ -112,33 +65,68 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Sending emails to ${emailRecipients.length} recipients`);
-
-    // Prepare email content
+    // Create an exciting email template
     const emailHtml = `
-      <h2>New Release: ${releaseNote.title}</h2>
-      <p><strong>Version:</strong> ${releaseNote.version}</p>
-      ${releaseNote.is_major ? '<p><strong>🌟 Major Update!</strong></p>' : ''}
-      <div style="margin: 20px 0;">
-        ${releaseNote.description}
-      </div>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Release Update from SkyGuide</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://skyguide.site/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png" alt="SkyGuide Logo" style="width: 150px; height: auto;">
+          </div>
+          
+          <div style="background-color: #f8fafc; border-radius: 10px; padding: 30px; margin-bottom: 30px;">
+            <h1 style="color: #0f172a; margin-bottom: 20px; text-align: center;">🚀 New Release Alert!</h1>
+            
+            <div style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+              <h2 style="color: #0f172a; margin-bottom: 10px;">${releaseNote.title}</h2>
+              <p style="color: #64748b; margin-bottom: 15px;">Version ${releaseNote.version}</p>
+              ${releaseNote.is_major ? '<div style="background-color: #dbeafe; color: #1e40af; padding: 10px; border-radius: 6px; margin-bottom: 20px; display: inline-block;">🌟 Major Update!</div>' : ''}
+            </div>
+
+            <div style="background-color: white; border-radius: 8px; padding: 20px;">
+              <h3 style="color: #0f172a; margin-bottom: 15px;">What's New:</h3>
+              <div style="white-space: pre-wrap; color: #475569;">
+                ${releaseNote.description}
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: center;">
+            <a href="https://skyguide.site/release-notes" style="display: inline-block; background-color: #0f172a; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; margin-bottom: 20px;">View Full Release Notes</a>
+          </div>
+
+          <div style="text-align: center; color: #64748b; font-size: 14px;">
+            <p>Stay up to date with all our latest features and improvements!</p>
+            <p>The SkyGuide Team</p>
+          </div>
+        </body>
+      </html>
     `;
 
-    // Send emails sequentially with delay
-    for (const recipient of emailRecipients) {
-      try {
-        await sendSingleEmail(
-          recipient, 
-          emailHtml, 
-          `New Release: ${releaseNote.title}`
-        );
-        // Add a 500ms delay between emails to stay within rate limits
-        await delay(500);
-      } catch (error) {
-        console.error(`Failed to send email to ${recipient}:`, error);
-        // Continue with next recipient even if one fails
-        continue;
-      }
+    // Use Resend's Broadcast API for bulk sending
+    const res = await fetch("https://api.resend.com/emails/batch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "SkyGuide Updates <updates@skyguide.site>",
+        bcc: emailRecipients, // Use BCC for privacy
+        subject: `New Release: ${releaseNote.title}`,
+        html: emailHtml,
+      }),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      console.error('Resend API error:', error);
+      throw new Error(`Failed to send emails: ${error}`);
     }
 
     // Update last_email_sent timestamp
@@ -148,6 +136,8 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('id', releaseNoteId);
 
     if (updateError) throw updateError;
+
+    console.log('Successfully sent release note emails to', emailRecipients.length, 'recipients');
 
     return new Response(
       JSON.stringify({ 
