@@ -6,6 +6,8 @@ import { AuthFormHeader } from "./AuthFormHeader";
 import { AuthFormFields } from "./AuthFormFields";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthFormSubmit } from "./AuthFormSubmit";
+import { AuthFormFooter } from "./AuthFormFooter";
 
 interface AuthFormProps {
   selectedPlan?: string;
@@ -29,37 +31,24 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     airline: "",
   });
 
-  const validatePassword = (password: string): boolean => {
-    const hasMinLength = password.length >= 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecialChar = /[!@#$%^&*]/.test(password);
-
-    if (!hasMinLength) {
-      setPasswordError("Password must be at least 8 characters long");
-      return false;
-    }
-    if (!hasUpperCase) {
-      setPasswordError("Password must include at least one uppercase letter");
-      return false;
-    }
-    if (!hasNumber) {
-      setPasswordError("Password must include at least one number");
-      return false;
-    }
-    if (!hasSpecialChar) {
-      setPasswordError("Password must include at least one special character (!@#$%^&*)");
-      return false;
-    }
-
-    setPasswordError(null);
-    return true;
-  };
-
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Selected plan:', finalSelectedPlan);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
+      
       if (event === 'SIGNED_IN') {
+        if (!session?.user?.email_confirmed_at) {
+          console.log("Email not confirmed - signing out");
+          await supabase.auth.signOut();
+          toast({
+            title: "Email verification required",
+            description: "Please check your email and confirm your address before signing in.",
+            variant: "destructive"
+          });
+          navigate('/login');
+          return;
+        }
+
         console.log("User signed in after email confirmation");
         toast({
           title: "Welcome to SkyGuide!",
@@ -68,131 +57,31 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             : "Your email has been confirmed. Your account is now active.",
         });
         navigate('/chat');
-      } else if (event === 'USER_UPDATED') {
-        console.log("User updated - likely email confirmed");
-        toast({
-          title: "Email Confirmed!",
-          description: "Your email has been confirmed. You can now use SkyGuide.",
-        });
-        navigate('/chat');
       }
     });
-
-    const hash = window.location.hash;
-    if (hash && hash.includes('type=signup')) {
-      console.log("Found confirmation hash:", hash);
-      toast({
-        title: "Confirming your email...",
-        description: "Please wait while we confirm your email address.",
-      });
-    }
 
     return () => {
       subscription.unsubscribe();
     };
   }, [navigate, finalSelectedPlan, toast]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validatePassword(formData.password)) {
-      return;
-    }
-
-    setLoading(true);
-    console.log("Starting signup process with plan:", finalSelectedPlan);
-
-    try {
-      // Get user's IP address
-      const ipResponse = await fetch('https://api.ipify.org?format=json');
-      const { ip } = await ipResponse.json();
-
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            user_type: formData.jobTitle,
-            airline: formData.airline,
-            subscription_plan: finalSelectedPlan,
-            last_ip_address: ip,
-            query_count: 0,
-            last_query_timestamp: new Date().toISOString()
-          },
-          emailRedirectTo: `${window.location.origin}/login#confirmation`
-        }
-      });
-
-      if (error) {
-        console.error("Signup error:", error);
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log("Signup successful:", data);
-
-      // Send confirmation email using our edge function
-      const confirmationUrl = `${window.location.origin}/login#confirmation`;
-      const emailResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-confirmation-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            confirmationUrl,
-          }),
-        }
-      );
-
-      if (!emailResponse.ok) {
-        console.error("Error sending confirmation email:", await emailResponse.text());
-      }
-
-      // Show appropriate success message
-      if (!data.session) {
-        toast({
-          title: "Welcome to SkyGuide!",
-          description: "We've sent you a confirmation email. Please check your inbox and click the confirmation link to activate your account.",
-        });
-        navigate('/login');
-      } else {
-        toast({
-          title: "Welcome to SkyGuide!",
-          description: finalSelectedPlan === 'free' 
-            ? "Your account has been created. You have 2 queries available."
-            : "Your account has been created successfully.",
-        });
-        navigate('/chat');
-      }
-      
-    } catch (error) {
-      console.error("Error in signup process:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
         <AuthFormHeader />
-
         <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            AuthFormSubmit({
+              e,
+              formData,
+              finalSelectedPlan,
+              setLoading,
+              navigate,
+              toast,
+              setPasswordError
+            });
+          }} className="space-y-4">
             <AuthFormFields 
               formData={formData}
               showPassword={showPassword}
@@ -215,12 +104,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-gray-400">
-            Already have an account?{" "}
-            <Link to="/login" className="text-brand-gold hover:text-brand-gold/80">
-              Login
-            </Link>
-          </p>
+          <AuthFormFooter />
         </div>
       </div>
     </div>

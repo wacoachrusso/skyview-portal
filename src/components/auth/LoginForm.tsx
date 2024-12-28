@@ -51,6 +51,18 @@ export const LoginForm = () => {
         throw new Error('No session created');
       }
 
+      // Check if email is verified
+      if (!data.user.email_confirmed_at) {
+        console.log('Email not verified');
+        await supabase.auth.signOut();
+        toast({
+          variant: "destructive",
+          title: "Email not verified",
+          description: "Please check your inbox and verify your email address before signing in."
+        });
+        return;
+      }
+
       console.log('Sign in successful:', data.user?.id);
       console.log('Session established:', data.session.access_token);
 
@@ -71,7 +83,7 @@ export const LoginForm = () => {
       // Check if profile is complete
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('user_type, airline')
+        .select('user_type, airline, subscription_plan')
         .eq('id', data.user.id)
         .single();
 

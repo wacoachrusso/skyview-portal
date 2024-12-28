@@ -25,6 +25,21 @@ export const useGoogleAuth = () => {
         throw error;
       }
 
+      // Check if the user exists and has verified their email
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && !user.email_confirmed_at) {
+        console.log('Email not verified for Google user');
+        await supabase.auth.signOut();
+        toast({
+          variant: "destructive",
+          title: "Email verification required",
+          description: "Please verify your email address before signing in."
+        });
+        navigate('/login');
+        return;
+      }
+
       console.log('Sign in initiated:', data);
       
     } catch (error) {
