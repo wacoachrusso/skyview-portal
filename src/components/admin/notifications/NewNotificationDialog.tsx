@@ -8,13 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { NotificationFormFields } from "./NotificationFormFields";
 
-type NotificationType = "system" | "update" | "release";
-
 interface NotificationData {
   title: string;
   message: string;
-  type: NotificationType;
-  notification_type: NotificationType;
   profile_id: string;
 }
 
@@ -34,8 +30,6 @@ export const NewNotificationDialog = ({
   const [newNotification, setNewNotification] = useState<NotificationData>({
     title: "",
     message: "",
-    type: "system",
-    notification_type: "system",
     profile_id: "",
   });
 
@@ -44,13 +38,7 @@ export const NewNotificationDialog = ({
   };
 
   const handleSend = () => {
-    // Ensure both type fields are set to "system"
-    const notification = {
-      ...newNotification,
-      type: "system" as NotificationType,
-      notification_type: "system" as NotificationType,
-    };
-    onSend(notification);
+    onSend(newNotification);
   };
 
   return (
