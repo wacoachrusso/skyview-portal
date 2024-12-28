@@ -61,7 +61,6 @@ export const useNotifications = () => {
       let usersToNotify: any[] = [];
 
       if (notification.profile_id === "all") {
-        // Get all users with push notifications enabled
         const { data: pushEnabledProfiles } = await supabase
           .from("profiles")
           .select("id, push_notifications")
@@ -69,7 +68,6 @@ export const useNotifications = () => {
         
         usersToNotify = pushEnabledProfiles || [];
       } else {
-        // Get single user if they have push notifications enabled
         const { data: profile } = await supabase
           .from("profiles")
           .select("id, push_notifications")
@@ -81,11 +79,10 @@ export const useNotifications = () => {
         }
       }
 
-      // Insert notifications into database
       const notificationsToInsert = usersToNotify.map(profile => ({
         title: notification.title,
         message: notification.message,
-        type: notification.type,
+        type: notification.notification_type,
         notification_type: notification.notification_type,
         profile_id: profile.id,
         user_id: profile.id,
@@ -102,14 +99,13 @@ export const useNotifications = () => {
           throw insertError;
         }
 
-        // Send push notification
         const notificationOptions: NotificationOptions = {
           body: notification.message,
           icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          tag: "system",
+          tag: notification.notification_type,
           data: {
-            type: "system",
+            type: notification.notification_type,
           },
           renotify: true,
           requireInteraction: true,

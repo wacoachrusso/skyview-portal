@@ -40,7 +40,15 @@ export const NewNotificationDialog = ({
   });
 
   const handleFieldChange = (field: string, value: any) => {
-    setNewNotification((prev) => ({ ...prev, [field]: value }));
+    if (field === "notification_type") {
+      setNewNotification((prev) => ({ 
+        ...prev, 
+        [field]: value,
+        type: value // Keep type and notification_type in sync
+      }));
+    } else {
+      setNewNotification((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSend = () => {
