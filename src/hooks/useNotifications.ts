@@ -27,7 +27,6 @@ export const useNotifications = () => {
       const { data, error } = await supabase
         .from("notifications")
         .select("*, profiles(full_name, email)")
-        .eq('user_id', user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -88,6 +87,8 @@ export const useNotifications = () => {
   const sendNotification = async (notification: NotificationData) => {
     try {
       console.log("Sending notification:", notification);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
       
       if (!notification.profile_id) {
         toast({
