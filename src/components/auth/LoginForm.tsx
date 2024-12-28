@@ -24,10 +24,16 @@ export const LoginForm = () => {
     setLoading(true);
 
     try {
-      console.log('Attempting to sign in with email...');
+      console.log('Starting login process...');
+      
+      // First clear any existing session
+      await supabase.auth.signOut({ scope: 'local' });
+      console.log('Cleared existing session');
+
+      // Attempt new sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
-        password: formData.password
+        password: formData.password,
       });
 
       if (error) {
@@ -40,22 +46,38 @@ export const LoginForm = () => {
         return;
       }
 
+      if (!data.session) {
+        console.error('No session created after login');
+        throw new Error('No session created');
+      }
+
       console.log('Sign in successful:', data.user?.id);
+      console.log('Session established:', data.session.access_token);
 
       if (formData.rememberMe) {
-        await supabase.auth.updateUser({
+        console.log('Setting persistent session...');
+        const { error: persistError } = await supabase.auth.updateUser({
           data: { 
-            session_expires_in: 60 * 60 * 24 * 14
+            persistent: true,
+            session_expires_in: 60 * 60 * 24 * 14 // 14 days
           }
         });
+
+        if (persistError) {
+          console.error('Error setting persistent session:', persistError);
+        }
       }
 
       // Check if profile is complete
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('user_type, airline')
         .eq('id', data.user.id)
         .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
 
       toast({
         title: "Welcome back!",
@@ -63,8 +85,10 @@ export const LoginForm = () => {
       });
 
       if (profile?.user_type && profile?.airline) {
+        console.log('Profile complete, redirecting to dashboard');
         navigate('/dashboard');
       } else {
+        console.log('Profile incomplete, redirecting to complete-profile');
         navigate('/complete-profile');
       }
     } catch (error) {
