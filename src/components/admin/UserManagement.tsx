@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -28,18 +29,24 @@ export const UserManagement = () => {
   const { data: users, refetch } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
+      console.log("Fetching users data...");
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching users:", error);
+        throw error;
+      }
+      console.log("Users data fetched:", data);
       return data;
     },
   });
 
   const toggleAdminStatus = async (userId: string, currentStatus: boolean) => {
     try {
+      console.log("Toggling admin status for user:", userId);
       setUpdatingUser(userId);
       const { error } = await supabase
         .from("profiles")
@@ -63,6 +70,11 @@ export const UserManagement = () => {
     } finally {
       setUpdatingUser(null);
     }
+  };
+
+  const handleViewDetails = (user: any) => {
+    console.log("Opening details for user:", user);
+    setSelectedUser(user);
   };
 
   return (
@@ -103,8 +115,9 @@ export const UserManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectedUser(user)}
+                    onClick={() => handleViewDetails(user)}
                   >
+                    <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
                 </TableCell>
