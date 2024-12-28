@@ -1,43 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { NotificationTable } from "./notifications/NotificationTable";
+import { NotificationDialog } from "./notifications/NotificationDialog";
+import { NewNotificationDialog } from "./notifications/NewNotificationDialog";
 
 export const NotificationManager = () => {
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [showNewNotificationDialog, setShowNewNotificationDialog] = useState(false);
-  const [newNotification, setNewNotification] = useState({
-    title: "",
-    message: "",
-    type: "system",
-    profile_id: "",
-  });
   const { toast } = useToast();
 
   const { data: notifications, refetch } = useQuery({
@@ -46,7 +18,7 @@ export const NotificationManager = () => {
       console.log("Fetching notifications with profile data...");
       const { data, error } = await supabase
         .from("notifications")
-        .select("*, profiles(full_name)")
+        .select("*, profiles(full_name, email)")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -63,35 +35,46 @@ export const NotificationManager = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name");
+        .select("id, full_name, email");
       if (error) throw error;
       return data;
     },
   });
 
-  const handleSendNotification = async () => {
+  const handleSendNotification = async (notification: any) => {
     try {
-      console.log("Sending notification:", newNotification);
-      const { error } = await supabase.from("notifications").insert([
-        {
-          ...newNotification,
-          user_id: newNotification.profile_id, // Set user_id to match profile_id
-        },
-      ]);
+      console.log("Sending notification:", notification);
+      
+      if (notification.profile_id === "all") {
+        // Send to all users
+        const { data: allProfiles } = await supabase
+          .from("profiles")
+          .select("id");
+        
+        const notifications = allProfiles!.map(profile => ({
+          ...notification,
+          profile_id: profile.id,
+        }));
+        
+        const { error } = await supabase
+          .from("notifications")
+          .insert(notifications);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Send to single user
+        const { error } = await supabase
+          .from("notifications")
+          .insert([notification]);
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
         description: "Notification sent successfully",
       });
       setShowNewNotificationDialog(false);
-      setNewNotification({
-        title: "",
-        message: "",
-        type: "system",
-        profile_id: "",
-      });
       refetch();
     } catch (error) {
       console.error("Error sending notification:", error);
@@ -112,198 +95,23 @@ export const NotificationManager = () => {
         </Button>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Recipient</TableHead>
-              <TableHead>Sent At</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {notifications?.map((notification) => (
-              <TableRow key={notification.id}>
-                <TableCell>
-                  <Badge variant="outline">{notification.type}</Badge>
-                </TableCell>
-                <TableCell>{notification.title}</TableCell>
-                <TableCell>
-                  {(notification.profiles as any)?.full_name || "N/A"}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(notification.created_at), "MMM d, yyyy HH:mm")}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={notification.is_read ? "secondary" : "default"}
-                  >
-                    {notification.is_read ? "Read" : "Unread"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      console.log("View notification details:", notification);
-                      setSelectedNotification(notification);
-                    }}
-                  >
-                    View Details
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <NotificationTable
+        notifications={notifications || []}
+        onViewDetails={setSelectedNotification}
+      />
 
-      <Dialog
+      <NotificationDialog
+        notification={selectedNotification}
         open={!!selectedNotification}
         onOpenChange={(open) => !open && setSelectedNotification(null)}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Notification Details</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <h4 className="text-sm font-medium mb-1">Title</h4>
-              <p className="text-sm text-muted-foreground">
-                {selectedNotification?.title}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-1">Message</h4>
-              <p className="text-sm text-muted-foreground">
-                {selectedNotification?.message}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-1">Recipient</h4>
-              <p className="text-sm text-muted-foreground">
-                {(selectedNotification?.profiles as any)?.full_name || "N/A"}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-1">Type</h4>
-              <Badge variant="outline">{selectedNotification?.type}</Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-1">Status</h4>
-              <Badge
-                variant={selectedNotification?.is_read ? "secondary" : "default"}
-              >
-                {selectedNotification?.is_read ? "Read" : "Unread"}
-              </Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-1">Sent At</h4>
-              <p className="text-sm text-muted-foreground">
-                {selectedNotification &&
-                  format(
-                    new Date(selectedNotification.created_at),
-                    "MMM d, yyyy HH:mm:ss"
-                  )}
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      />
 
-      <Dialog
+      <NewNotificationDialog
+        profiles={profiles || []}
         open={showNewNotificationDialog}
         onOpenChange={setShowNewNotificationDialog}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Send New Notification</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="recipient">Recipient</Label>
-              <Select
-                value={newNotification.profile_id}
-                onValueChange={(value) =>
-                  setNewNotification({ ...newNotification, profile_id: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select recipient" />
-                </SelectTrigger>
-                <SelectContent>
-                  {profiles?.map((profile) => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.full_name || "Unnamed User"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select
-                value={newNotification.type}
-                onValueChange={(value) =>
-                  setNewNotification({ ...newNotification, type: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system">System</SelectItem>
-                  <SelectItem value="alert">Alert</SelectItem>
-                  <SelectItem value="update">Update</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={newNotification.title}
-                onChange={(e) =>
-                  setNewNotification({
-                    ...newNotification,
-                    title: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Input
-                id="message"
-                value={newNotification.message}
-                onChange={(e) =>
-                  setNewNotification({
-                    ...newNotification,
-                    message: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowNewNotificationDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSendNotification}>Send</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        onSend={handleSendNotification}
+      />
     </div>
   );
 };
