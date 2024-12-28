@@ -1,106 +1,79 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellDot } from "lucide-react";
+import { useState } from "react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
-import { requestNotificationPermission, setupPushNotifications } from "@/utils/pushNotifications";
-import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { useNotifications } from "@/hooks/useNotifications";
+import { format } from "date-fns";
+import { Trash2 } from "lucide-react";
 
 export const NotificationBell = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const { notifications, deleteNotification, refetchNotifications } = useNotifications();
+  const unreadCount = notifications?.filter((n) => !n.is_read).length || 0;
 
-  const { data: unreadCount = 0 } = useQuery({
-    queryKey: ["unreadNotifications"],
-    queryFn: async () => {
-      console.log("Fetching unread notifications count");
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return 0;
-
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-      
-      console.log("Unread notifications count:", count);
-      return count || 0;
-    },
-    refetchInterval: 30000, // Refetch every 30 seconds
-  });
-
-  const markNotificationsAsRead = useMutation({
-    mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      console.log("Marking notifications as read");
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-
-      if (error) {
-        console.error("Error marking notifications as read:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-    },
-    onError: (error) => {
-      console.error("Failed to mark notifications as read:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update notification status",
-      });
-    },
-  });
-
-  useEffect(() => {
-    const setupNotifications = async () => {
-      try {
-        const permissionGranted = await requestNotificationPermission();
-        if (permissionGranted) {
-          console.log("Setting up push notifications");
-          const cleanup = await setupPushNotifications();
-          return cleanup;
-        }
-      } catch (error) {
-        console.error("Error setting up notifications:", error);
-      }
-    };
-
-    setupNotifications();
-  }, []);
-
-  const handleClick = async () => {
-    console.log("Notification bell clicked, navigating to release notes");
-    await markNotificationsAsRead.mutateAsync();
-    navigate('/release-notes');
+  const handleDelete = async (id: string) => {
+    console.log("Deleting notification:", id);
+    await deleteNotification(id);
+    await refetchNotifications();
   };
 
   return (
-    <Button 
-      variant="ghost" 
-      size="sm" 
-      className="relative p-2"
-      onClick={handleClick}
-    >
-      {unreadCount > 0 ? (
-        <>
-          <BellDot className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-            {unreadCount}
-          </span>
-        </>
-      ) : (
-        <Bell className="h-5 w-5" />
-      )}
-    </Button>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <Badge
+              variant="destructive"
+              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center"
+            >
+              {unreadCount}
+            </Badge>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        {notifications?.length === 0 ? (
+          <DropdownMenuItem className="text-center">
+            No notifications
+          </DropdownMenuItem>
+        ) : (
+          notifications?.map((notification) => (
+            <DropdownMenuItem
+              key={notification.id}
+              className="flex flex-col items-start p-4 space-y-1 cursor-default"
+            >
+              <div className="flex justify-between items-start w-full">
+                <div>
+                  <div className="font-semibold">{notification.title}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {notification.message}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(new Date(notification.created_at), "MMM d, yyyy HH:mm")}
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(notification.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </DropdownMenuItem>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
