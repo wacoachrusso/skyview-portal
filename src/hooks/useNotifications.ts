@@ -58,12 +58,15 @@ export const useNotifications = () => {
         return false;
       }
 
-      // Validate notification type
+      // Ensure both type and notification_type are the same valid value
       const validTypes: NotificationType[] = ["system", "update", "release"];
       if (!validTypes.includes(notification.type)) {
         throw new Error("Invalid notification type");
       }
 
+      // Set both type fields to the same value to maintain consistency
+      const notificationType = notification.type;
+      
       let usersToNotify: any[] = [];
 
       if (notification.profile_id === "all") {
@@ -91,8 +94,8 @@ export const useNotifications = () => {
       const notificationsToInsert = usersToNotify.map(profile => ({
         title: notification.title,
         message: notification.message,
-        type: notification.type,
-        notification_type: notification.type,
+        type: notificationType,
+        notification_type: notificationType,
         profile_id: profile.id,
         user_id: profile.id,
       }));
@@ -107,9 +110,9 @@ export const useNotifications = () => {
         // Send push notification
         const notificationOptions: NotificationOptions = {
           body: notification.message,
-          tag: notification.type,
+          tag: notificationType,
           data: {
-            type: notification.type,
+            type: notificationType,
           },
           icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
