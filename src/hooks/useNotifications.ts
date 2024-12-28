@@ -82,8 +82,8 @@ export const useNotifications = () => {
       const notificationsToInsert = usersToNotify.map(profile => ({
         title: notification.title,
         message: notification.message,
-        type: notification.notification_type,
-        notification_type: notification.notification_type,
+        type: notification.type,
+        notification_type: notification.type, // Ensure they stay in sync
         profile_id: profile.id,
         user_id: profile.id,
       }));
@@ -103,9 +103,9 @@ export const useNotifications = () => {
           body: notification.message,
           icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          tag: notification.notification_type,
+          tag: notification.type,
           data: {
-            type: notification.notification_type,
+            type: notification.type,
           },
           renotify: true,
           requireInteraction: true,
