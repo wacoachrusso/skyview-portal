@@ -59,19 +59,27 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setPasswordError(null);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
+      // Normalize the data
+      const normalizedData = {
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
           data: {
-            full_name: formData.fullName,
-            user_type: formData.jobTitle,
-            airline: formData.airline,
+            full_name: formData.fullName.trim(),
+            user_type: formData.jobTitle.toLowerCase(),
+            airline: formData.airline.toLowerCase(),
             subscription_plan: finalSelectedPlan,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         },
+      };
+
+      console.log("Attempting signup with normalized data:", {
+        ...normalizedData,
+        password: '[REDACTED]'
       });
+
+      const { data, error } = await supabase.auth.signUp(normalizedData);
 
       if (error) {
         console.error("Signup error:", error);
@@ -93,10 +101,14 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       }
 
       console.log("Signup successful:", data);
+      
+      // Only show success toast if signup was successful
       toast({
         title: "Success",
         description: "Please check your email to verify your account.",
       });
+      
+      // Navigate to login page after successful signup
       navigate('/login');
     } catch (error) {
       console.error("Unexpected error during signup:", error);
