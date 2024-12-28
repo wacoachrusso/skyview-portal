@@ -16,10 +16,10 @@ export const useUserManagement = () => {
     queryKey: ["admin-users"],
     queryFn: async () => {
       console.log("Fetching users data...");
+      // Remove the neq filter to get all users including deleted ones
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .neq("account_status", "deleted")
         .order("created_at", { ascending: false });
 
       if (error) {
