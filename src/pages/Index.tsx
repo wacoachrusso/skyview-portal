@@ -12,6 +12,8 @@ import { Footer } from "@/components/landing/Footer";
 const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const scrollTo = searchParams.get('scrollTo');
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
@@ -19,8 +21,12 @@ const Index = () => {
         console.log('Checking auth state on Index page');
         const { data: { session } } = await supabase.auth.getSession();
         
-        // Only redirect to dashboard if not coming from dashboard or logout
-        if (session && !location.state?.fromDashboard && !location.state?.fromLogout) {
+        // Only redirect to dashboard if there's no scrollTo parameter
+        // and not coming from dashboard or logout
+        if (session && 
+            !scrollTo && 
+            !location.state?.fromDashboard && 
+            !location.state?.fromLogout) {
           console.log('User is authenticated, checking profile');
           const { data: profile } = await supabase
             .from('profiles')
@@ -35,8 +41,14 @@ const Index = () => {
             console.log('Profile incomplete, redirecting to complete-profile');
             navigate('/complete-profile');
           }
-        } else {
-          console.log('No session found or coming from dashboard/logout, showing landing page');
+        } else if (scrollTo === 'pricing') {
+          console.log('Scrolling to pricing section');
+          setTimeout(() => {
+            const pricingSection = document.getElementById('pricing-section');
+            if (pricingSection) {
+              pricingSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 100);
         }
       } catch (error) {
         console.error('Error checking auth state:', error);
@@ -44,7 +56,7 @@ const Index = () => {
     };
 
     checkAuthAndRedirect();
-  }, [navigate, location.state]);
+  }, [navigate, location.state, scrollTo]);
 
   return (
     <div className="min-h-screen bg-background">

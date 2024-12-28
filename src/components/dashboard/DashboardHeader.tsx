@@ -12,10 +12,10 @@ interface DashboardHeaderProps {
 export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) => {
   const navigate = useNavigate();
 
-  const handleLogoClick = async (e: React.MouseEvent) => {
+  const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    await supabase.auth.signOut({ scope: 'local' });
-    navigate('/', { replace: true });
+    // Navigate to home with state to prevent auto-redirect
+    navigate('/', { state: { fromDashboard: true } });
   };
 
   return (
@@ -38,7 +38,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* NotificationBell is now visible on all screen sizes */}
             <NotificationBell />
             
             <div className="hidden sm:flex items-center space-x-2">
