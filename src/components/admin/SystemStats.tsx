@@ -3,6 +3,7 @@ import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard } from "lucide-r
 import { MetricCard } from "./stats/MetricCard";
 import { StatsDialog } from "./stats/StatsDialog";
 import { useAdminStats } from "@/hooks/useAdminStats";
+import { getDialogContent } from "./stats/getDialogContent";
 
 export const SystemStats = () => {
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
