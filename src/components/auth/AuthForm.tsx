@@ -71,7 +71,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setPasswordError(null);
 
     try {
-      // Disable email confirmation in Supabase signup
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -82,9 +81,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             airline: formData.airline,
             subscription_plan: finalSelectedPlan,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          // Disable Supabase's email confirmation
-          emailConfirmation: false
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         },
       });
 
