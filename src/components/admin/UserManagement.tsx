@@ -15,36 +15,21 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Eye, Ban, Trash2, AlertCircle } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { UserStatusBadge } from "./user-management/UserStatusBadge";
+import { UserDetailsDialog } from "./user-management/UserDetailsDialog";
+import { DeleteUserDialog } from "./user-management/DeleteUserDialog";
+import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 
 export const UserManagement = () => {
   const { toast } = useToast();
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<ProfilesRow | null>(null);
+  const [userToDelete, setUserToDelete] = useState<ProfilesRow | null>(null);
 
   const { data: users, refetch } = useQuery({
     queryKey: ["admin-users"],
@@ -60,7 +45,7 @@ export const UserManagement = () => {
         throw error;
       }
       console.log("Users data fetched:", data);
-      return data;
+      return data as ProfilesRow[];
     },
   });
 
@@ -92,15 +77,14 @@ export const UserManagement = () => {
     }
   };
 
-  const handleViewDetails = (user: any) => {
-    console.log("Opening details for user:", user);
-    setSelectedUser(user);
-  };
-
-  const updateAccountStatus = async (userId: string, email: string, status: 'disabled' | 'suspended' | 'deleted') => {
+  const updateAccountStatus = async (
+    userId: string,
+    email: string,
+    status: "disabled" | "suspended" | "deleted"
+  ) => {
     try {
       console.log(`Updating account status to ${status} for user:`, userId);
-      
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ account_status: status })
@@ -109,9 +93,12 @@ export const UserManagement = () => {
       if (updateError) throw updateError;
 
       // Send email notification
-      const { error: emailError } = await supabase.functions.invoke('send-account-status-email', {
-        body: { email, status }
-      });
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-account-status-email",
+        {
+          body: { email, status },
+        }
+      );
 
       if (emailError) throw emailError;
 
@@ -130,13 +117,13 @@ export const UserManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (user: any) => {
+  const handleDeleteUser = async (user: ProfilesRow) => {
     try {
       console.log("Deleting user:", user);
-      
+
       // First update the account status and send email
-      await updateAccountStatus(user.id, user.email, 'deleted');
-      
+      await updateAccountStatus(user.id, user.email || "", "deleted");
+
       // Then delete the user profile
       const { error } = await supabase
         .from("profiles")
@@ -158,7 +145,6 @@ export const UserManagement = () => {
         description: "Failed to delete user account",
       });
     } finally {
-      setShowDeleteAlert(false);
       setUserToDelete(null);
     }
   };
@@ -190,14 +176,7 @@ export const UserManagement = () => {
                 </TableCell>
                 <TableCell>{user.query_count || 0}</TableCell>
                 <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                    user.account_status === 'disabled' ? 'bg-gray-200 text-gray-700' :
-                    user.account_status === 'suspended' ? 'bg-yellow-200 text-yellow-700' :
-                    user.account_status === 'deleted' ? 'bg-red-200 text-red-700' :
-                    'bg-green-200 text-green-700'
-                  }`}>
-                    {user.account_status || 'active'}
-                  </span>
+                  <UserStatusBadge status={user.account_status || "active"} />
                 </TableCell>
                 <TableCell>
                   <Switch
@@ -213,7 +192,7 @@ export const UserManagement = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleViewDetails(user)}
+                      onClick={() => setSelectedUser(user)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -225,24 +204,25 @@ export const UserManagement = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem
-                          onClick={() => updateAccountStatus(user.id, user.email, 'disabled')}
+                          onClick={() =>
+                            updateAccountStatus(user.id, user.email || "", "disabled")
+                          }
                           className="text-yellow-600"
                         >
                           <Ban className="h-4 w-4 mr-2" />
                           Disable Account
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => updateAccountStatus(user.id, user.email, 'suspended')}
+                          onClick={() =>
+                            updateAccountStatus(user.id, user.email || "", "suspended")
+                          }
                           className="text-orange-600"
                         >
                           <AlertCircle className="h-4 w-4 mr-2" />
                           Suspend Account
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => {
-                            setUserToDelete(user);
-                            setShowDeleteAlert(true);
-                          }}
+                          onClick={() => setUserToDelete(user)}
                           className="text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -258,87 +238,16 @@ export const UserManagement = () => {
         </Table>
       </div>
 
-      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Full Name:</div>
-                <div className="col-span-3">{selectedUser.full_name || "N/A"}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Email:</div>
-                <div className="col-span-3">{selectedUser.email || "N/A"}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">User Type:</div>
-                <div className="col-span-3">{selectedUser.user_type || "N/A"}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Airline:</div>
-                <div className="col-span-3">{selectedUser.airline || "N/A"}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Plan:</div>
-                <div className="col-span-3">
-                  {selectedUser.subscription_plan || "N/A"}
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Queries:</div>
-                <div className="col-span-3">{selectedUser.query_count || 0}</div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Last Query:</div>
-                <div className="col-span-3">
-                  {selectedUser.last_query_timestamp
-                    ? format(
-                        new Date(selectedUser.last_query_timestamp),
-                        "MMM d, yyyy HH:mm"
-                      )
-                    : "N/A"}
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Last IP:</div>
-                <div className="col-span-3">
-                  {selectedUser.last_ip_address || "N/A"}
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="font-medium">Status:</div>
-                <div className="col-span-3">
-                  {selectedUser.account_status || "active"}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <UserDetailsDialog
+        user={selectedUser}
+        onClose={() => setSelectedUser(null)}
+      />
 
-      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user's
-              account and remove their data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => userToDelete && handleDeleteUser(userToDelete)}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete Account
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteUserDialog
+        user={userToDelete}
+        onConfirm={handleDeleteUser}
+        onCancel={() => setUserToDelete(null)}
+      />
     </div>
   );
 };

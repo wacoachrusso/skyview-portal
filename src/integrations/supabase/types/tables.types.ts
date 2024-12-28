@@ -91,23 +91,26 @@ export interface NotificationsTable {
   };
 }
 
+export interface ProfilesRow {
+  airline: string | null;
+  created_at: string;
+  email: string | null;
+  email_notifications: boolean | null;
+  full_name: string | null;
+  id: string;
+  is_admin: boolean | null;
+  last_ip_address: string | null;
+  last_query_timestamp: string | null;
+  push_notifications: boolean | null;
+  push_subscription: Json | null;
+  query_count: number | null;
+  subscription_plan: string | null;
+  user_type: string | null;
+  account_status: string | null;
+}
+
 export interface ProfilesTable {
-  Row: {
-    airline: string | null;
-    created_at: string;
-    email: string | null;
-    email_notifications: boolean | null;
-    full_name: string | null;
-    id: string;
-    is_admin: boolean | null;
-    last_ip_address: string | null;
-    last_query_timestamp: string | null;
-    push_notifications: boolean | null;
-    push_subscription: Json | null;
-    query_count: number | null;
-    subscription_plan: string | null;
-    user_type: string | null;
-  };
+  Row: ProfilesRow;
   Insert: {
     airline?: string | null;
     created_at?: string;
@@ -123,6 +126,7 @@ export interface ProfilesTable {
     query_count?: number | null;
     subscription_plan?: string | null;
     user_type?: string | null;
+    account_status?: string | null;
   };
   Update: {
     airline?: string | null;
@@ -139,6 +143,7 @@ export interface ProfilesTable {
     query_count?: number | null;
     subscription_plan?: string | null;
     user_type?: string | null;
+    account_status?: string | null;
   };
 }
 

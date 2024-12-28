@@ -130,6 +130,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           airline: string | null
           created_at: string
           email: string | null
@@ -146,6 +147,7 @@ export type Database = {
           user_type: string | null
         }
         Insert: {
+          account_status?: string | null
           airline?: string | null
           created_at?: string
           email?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           user_type?: string | null
         }
         Update: {
+          account_status?: string | null
           airline?: string | null
           created_at?: string
           email?: string | null
