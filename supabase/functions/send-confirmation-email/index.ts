@@ -18,16 +18,18 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY is not set");
-      throw new Error("RESEND_API_KEY is not configured");
+      throw new Error("Missing RESEND_API_KEY configuration");
     }
 
     const { email, confirmationUrl } = await req.json();
     
-    console.log("Request data received:", { 
-      email, 
-      confirmationUrl,
-      hasResendKey: !!RESEND_API_KEY 
-    });
+    if (!email || !confirmationUrl) {
+      console.error("Missing required fields:", { email, confirmationUrl });
+      throw new Error("Missing required fields");
+    }
+
+    console.log("Sending confirmation email to:", email);
+    console.log("Confirmation URL:", confirmationUrl);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -40,10 +42,17 @@ const handler = async (req: Request): Promise<Response> => {
         to: [email],
         subject: "Welcome to SkyGuide - Confirm Your Email",
         html: `
-          <h2>Welcome to SkyGuide!</h2>
-          <p>Thank you for signing up. Please click the link below to confirm your email address:</p>
-          <p><a href="${confirmationUrl}">Confirm Email Address</a></p>
-          <p>If you didn't create this account, you can safely ignore this email.</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Welcome to SkyGuide!</h2>
+            <p>Thank you for signing up. Please click the link below to confirm your email address:</p>
+            <p style="margin: 20px 0;">
+              <a href="${confirmationUrl}" 
+                 style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                Confirm Email Address
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">If you didn't create this account, you can safely ignore this email.</p>
+          </div>
         `,
       }),
     });
@@ -56,7 +65,8 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({ 
           error: "Failed to send confirmation email",
-          details: responseData
+          details: responseData,
+          status: res.status
         }),
         {
           status: res.status,
