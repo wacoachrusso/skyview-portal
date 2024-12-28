@@ -9,8 +9,6 @@ export const useSessionHandler = () => {
 
   const handleSession = async () => {
     try {
-      console.log('Starting session handling');
-      
       // Clear any existing session first
       await supabase.auth.signOut({ scope: 'local' });
       console.log('Cleared existing session');
@@ -38,22 +36,11 @@ export const useSessionHandler = () => {
       console.log('Session found:', session.user.id);
       
       // Check if profile exists and is complete
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        toast({
-          variant: "destructive",
-          title: "Profile Error",
-          description: "There was an error accessing your profile. Please try again."
-        });
-        redirectToProduction();
-        return;
-      }
 
       console.log('Profile data:', profile);
 

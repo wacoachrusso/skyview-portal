@@ -19,26 +19,17 @@ export const AuthCallback = () => {
         const token_hash = searchParams.get('token_hash');
         const type = searchParams.get('type');
         
-        console.log('Callback params:', { email, type, token_hash: token_hash ? 'present' : 'missing' });
+        console.log('Callback params:', { email, type, token_hash });
 
         if (type === 'signup' && email && token_hash) {
-          console.log('Processing email confirmation...');
           const confirmed = await handleEmailConfirmation(email, token_hash);
-          console.log('Email confirmation result:', confirmed);
-          
           if (confirmed) {
-            console.log('Email confirmed successfully, redirecting to production');
-            redirectToProduction();
-            return;
-          } else {
-            console.error('Email confirmation failed');
             redirectToProduction();
             return;
           }
         }
 
         // Handle regular auth callback
-        console.log('Processing regular auth callback');
         await handleSession();
 
       } catch (error) {
