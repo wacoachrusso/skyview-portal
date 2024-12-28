@@ -1,161 +1,20 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { GoogleSignInButton } from "./GoogleSignInButton";
+import { useLoginForm } from "@/hooks/useLoginForm";
+import { sendMagicLink } from "@/utils/authUtils";
 
 export const LoginForm = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false
-  });
-
-  const handleMagicLinkLogin = async (email: string) => {
-    try {
-      console.log('Starting magic link login process for:', email);
-      
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-
-      if (error) throw error;
-
-      // Send custom email using our Edge Function
-      const loginUrl = data?.session?.access_token;
-      await supabase.functions.invoke('send-login-link', {
-        body: { email, loginUrl }
-      });
-
-      toast({
-        title: "Check your email",
-        description: "We've sent you a magic link to sign in.",
-      });
-    } catch (error) {
-      console.error('Magic link error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not send login link. Please try again.",
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      console.log('Starting login process...');
-      
-      // First clear any existing session
-      await supabase.auth.signOut({ scope: 'local' });
-      console.log('Cleared existing session');
-
-      // Attempt new sign in
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email.trim(),
-        password: formData.password,
-      });
-
-      if (error) {
-        console.error('Login error:', error);
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: "Incorrect email or password. Please try again."
-        });
-        return;
-      }
-
-      if (!data.session) {
-        console.error('No session created after login');
-        throw new Error('No session created');
-      }
-
-      // Check if email is verified
-      if (!data.user.email_confirmed_at) {
-        console.log('Email not verified');
-        await supabase.auth.signOut();
-        
-        // Send verification email using our Edge Function
-        await supabase.functions.invoke('send-signup-confirmation', {
-          body: { 
-            email: formData.email,
-            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
-          }
-        });
-
-        toast({
-          variant: "destructive",
-          title: "Email not verified",
-          description: "Please check your inbox and verify your email address before signing in."
-        });
-        return;
-      }
-
-      console.log('Sign in successful:', data.user?.id);
-      console.log('Session established:', data.session.access_token);
-
-      if (formData.rememberMe) {
-        console.log('Setting persistent session...');
-        const { error: persistError } = await supabase.auth.updateUser({
-          data: { 
-            persistent: true,
-            session_expires_in: 60 * 60 * 24 * 14 // 14 days
-          }
-        });
-
-        if (persistError) {
-          console.error('Error setting persistent session:', persistError);
-        }
-      }
-
-      // Check if profile is complete
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_type, airline, subscription_plan')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-      }
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in."
-      });
-
-      if (profile?.user_type && profile?.airline) {
-        console.log('Profile complete, redirecting to dashboard');
-        navigate('/dashboard');
-      } else {
-        console.log('Profile incomplete, redirecting to complete-profile');
-        navigate('/complete-profile');
-      }
-    } catch (error) {
-      console.error('Unexpected error during login:', error);
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: "An error occurred. Please try again."
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    loading,
+    showPassword,
+    formData,
+    setShowPassword,
+    setFormData,
+    handleSubmit
+  } = useLoginForm();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -236,7 +95,7 @@ export const LoginForm = () => {
       <div className="text-center">
         <button
           type="button"
-          onClick={() => handleMagicLinkLogin(formData.email)}
+          onClick={() => sendMagicLink(formData.email)}
           className="text-sm text-gray-400 hover:text-white"
         >
           Sign in with magic link instead
