@@ -3,10 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { sendPushNotification } from "@/utils/pushNotifications";
 
+type NotificationType = "system" | "update" | "release";
+
 interface NotificationData {
   title: string;
   message: string;
   profile_id: string;
+  type: NotificationType;
+  notification_type: NotificationType;
 }
 
 export const useNotifications = () => {
@@ -81,8 +85,8 @@ export const useNotifications = () => {
       const notificationsToInsert = usersToNotify.map(profile => ({
         title: notification.title,
         message: notification.message,
-        type: "system",
-        notification_type: "system",
+        type: notification.type,
+        notification_type: notification.notification_type,
         profile_id: profile.id,
         user_id: profile.id,
       }));

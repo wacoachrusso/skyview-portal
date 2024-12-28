@@ -8,10 +8,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { NotificationFormFields } from "./NotificationFormFields";
 
+type NotificationType = "system" | "update" | "release";
+
 interface NotificationData {
   title: string;
   message: string;
   profile_id: string;
+  type: NotificationType;
+  notification_type: NotificationType;
 }
 
 interface NewNotificationDialogProps {
@@ -31,6 +35,8 @@ export const NewNotificationDialog = ({
     title: "",
     message: "",
     profile_id: "",
+    type: "system",
+    notification_type: "system",
   });
 
   const handleFieldChange = (field: string, value: any) => {
