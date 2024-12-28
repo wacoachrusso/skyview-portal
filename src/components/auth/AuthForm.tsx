@@ -32,7 +32,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
   useEffect(() => {
     console.log('Selected plan:', finalSelectedPlan);
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
       
       if (event === 'SIGNED_IN') {
@@ -54,13 +54,13 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted with data:", formData);
+    if (loading) return;
+    
     setLoading(true);
     setPasswordError(null);
 
     try {
-      // Normalize the data
-      const normalizedData = {
+      const signUpData = {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
@@ -71,15 +71,23 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             subscription_plan: finalSelectedPlan,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
-        },
+        }
       };
 
-      console.log("Attempting signup with normalized data:", {
-        ...normalizedData,
+      console.log("Attempting signup with data:", {
+        ...signUpData,
         password: '[REDACTED]'
       });
 
-      const { data, error } = await supabase.auth.signUp(normalizedData);
+      let signUpResponse;
+      try {
+        signUpResponse = await supabase.auth.signUp(signUpData);
+      } catch (signUpError: any) {
+        console.error("Signup API error:", signUpError);
+        throw signUpError;
+      }
+
+      const { error } = signUpResponse;
 
       if (error) {
         console.error("Signup error:", error);
@@ -100,17 +108,14 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         return;
       }
 
-      console.log("Signup successful:", data);
-      
-      // Only show success toast if signup was successful
+      console.log("Signup successful");
       toast({
         title: "Success",
         description: "Please check your email to verify your account.",
       });
-      
-      // Navigate to login page after successful signup
       navigate('/login');
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error("Unexpected error during signup:", error);
       toast({
         variant: "destructive",
