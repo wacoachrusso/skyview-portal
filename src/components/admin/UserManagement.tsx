@@ -13,10 +13,17 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const UserManagement = () => {
   const { toast } = useToast();
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const { data: users, refetch } = useQuery({
     queryKey: ["admin-users"],
@@ -96,9 +103,7 @@ export const UserManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      console.log("View user details:", user);
-                    }}
+                    onClick={() => setSelectedUser(user)}
                   >
                     View Details
                   </Button>
@@ -108,6 +113,61 @@ export const UserManagement = () => {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">Full Name:</div>
+                <div className="col-span-3">{selectedUser.full_name || "N/A"}</div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">Email:</div>
+                <div className="col-span-3">{selectedUser.email || "N/A"}</div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">User Type:</div>
+                <div className="col-span-3">{selectedUser.user_type || "N/A"}</div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">Airline:</div>
+                <div className="col-span-3">{selectedUser.airline || "N/A"}</div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">Plan:</div>
+                <div className="col-span-3">
+                  {selectedUser.subscription_plan || "N/A"}
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">Queries:</div>
+                <div className="col-span-3">{selectedUser.query_count || 0}</div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">Last Query:</div>
+                <div className="col-span-3">
+                  {selectedUser.last_query_timestamp
+                    ? format(
+                        new Date(selectedUser.last_query_timestamp),
+                        "MMM d, yyyy HH:mm"
+                      )
+                    : "N/A"}
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="font-medium">Last IP:</div>
+                <div className="col-span-3">
+                  {selectedUser.last_ip_address || "N/A"}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
