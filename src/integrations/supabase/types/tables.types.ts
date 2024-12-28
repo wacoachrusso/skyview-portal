@@ -1,3 +1,6 @@
+import { Json } from "./base.types";
+import { NotificationType } from "./base.types";
+
 export interface ConversationsTable {
   Row: {
     created_at: string;
@@ -55,7 +58,7 @@ export interface NotificationsTable {
     id: string;
     is_read: boolean | null;
     message: string;
-    notification_type: Database["public"]["Enums"]["notification_type"] | null;
+    notification_type: NotificationType | null;
     profile_id: string;
     release_note_id: string | null;
     title: string;
@@ -67,7 +70,7 @@ export interface NotificationsTable {
     id?: string;
     is_read?: boolean | null;
     message: string;
-    notification_type?: Database["public"]["Enums"]["notification_type"] | null;
+    notification_type?: NotificationType | null;
     profile_id: string;
     release_note_id?: string | null;
     title: string;
@@ -79,7 +82,7 @@ export interface NotificationsTable {
     id?: string;
     is_read?: boolean | null;
     message?: string;
-    notification_type?: Database["public"]["Enums"]["notification_type"] | null;
+    notification_type?: NotificationType | null;
     profile_id?: string;
     release_note_id?: string | null;
     title?: string;

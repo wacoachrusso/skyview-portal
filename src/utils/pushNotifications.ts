@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types/base.types";
 
 export async function requestNotificationPermission(): Promise<boolean> {
   console.log("Requesting notification permission...");
@@ -34,7 +35,10 @@ async function registerServiceWorker() {
         applicationServerKey: 'BLBz6TyNVtami0kD6Qf2giuHcmWjFyaVGEGVUWLhHtMJWGGZ7ZFbzXHC_qYGgwqOzDZKxf0fWw3zvuONuFdqXJs'
       });
       
-      console.log('Push notification subscription:', subscription);
+      // Convert PushSubscription to Json type
+      const subscriptionJson: Json = JSON.parse(JSON.stringify(subscription));
+
+      console.log('Push notification subscription:', subscriptionJson);
       
       // Store the subscription in your backend
       const { data: { user } } = await supabase.auth.getUser();
@@ -42,7 +46,7 @@ async function registerServiceWorker() {
         const { error } = await supabase
           .from('profiles')
           .update({
-            push_subscription: subscription
+            push_subscription: subscriptionJson
           })
           .eq('id', user.id);
           

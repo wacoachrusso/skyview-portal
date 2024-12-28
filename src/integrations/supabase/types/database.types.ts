@@ -1,10 +1,12 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+import { NotificationType } from "./base.types";
+import {
+  ConversationsTable,
+  MessagesTable,
+  NotificationsTable,
+  ProfilesTable,
+  ReleaseNoteChangesTable,
+  ReleaseNotesTable,
+} from "./tables.types";
 
 export interface Database {
   public: {
@@ -23,7 +25,7 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      notification_type: "update" | "release" | "system";
+      notification_type: NotificationType;
     };
     CompositeTypes: {
       [_ in never]: never;
