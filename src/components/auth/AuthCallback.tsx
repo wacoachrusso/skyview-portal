@@ -16,6 +16,20 @@ export const AuthCallback = () => {
     });
   };
 
+  const redirectToProduction = () => {
+    // Check if it's an Android device
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      // Show app install prompt for Android users
+      if (window.confirm('Would you like to install the SkyGuide app?')) {
+        window.location.href = 'https://play.google.com/store/apps/details?id=com.skyguide.app';
+        return;
+      }
+    }
+    // Redirect to production URL
+    window.location.href = 'https://www.skyguide.site';
+  };
+
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
@@ -28,12 +42,12 @@ export const AuthCallback = () => {
         
         console.log('Callback params:', { email, type });
 
-        if (type === 'email_confirmation' && email && token_hash) {
+        if (type === 'signup' && email && token_hash) {
           console.log('Processing email confirmation');
           const { error } = await supabase.auth.verifyOtp({
             email,
             token: token_hash,
-            type: 'email_confirmation'
+            type: 'signup'
           });
 
           if (error) {
@@ -43,7 +57,7 @@ export const AuthCallback = () => {
               title: "Confirmation Failed",
               description: "There was an error confirming your email. Please try again."
             });
-            navigate('/login');
+            redirectToProduction();
             return;
           }
 
@@ -52,7 +66,7 @@ export const AuthCallback = () => {
             title: "Email Confirmed",
             description: "Your email has been confirmed successfully. You can now log in.",
           });
-          navigate('/login');
+          redirectToProduction();
           return;
         }
 
@@ -70,13 +84,13 @@ export const AuthCallback = () => {
             title: "Authentication Error",
             description: "There was an error signing in. Please try again."
           });
-          navigate('/login');
+          redirectToProduction();
           return;
         }
 
         if (!session) {
           console.log('No session found, redirecting to login');
-          navigate('/login');
+          redirectToProduction();
           return;
         }
 
@@ -147,7 +161,7 @@ export const AuthCallback = () => {
           title: "Authentication Error",
           description: "An unexpected error occurred. Please try again."
         });
-        navigate('/login');
+        redirectToProduction();
       }
     };
 
