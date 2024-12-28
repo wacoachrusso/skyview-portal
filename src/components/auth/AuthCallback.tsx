@@ -20,6 +20,10 @@ export const AuthCallback = () => {
       try {
         console.log('=== Auth Callback Started ===');
         
+        // Clear any existing session first
+        await supabase.auth.signOut({ scope: 'local' });
+        console.log('Cleared existing session');
+
         // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -40,7 +44,8 @@ export const AuthCallback = () => {
           return;
         }
 
-        console.log('Session found, checking profile');
+        console.log('Session found:', session.user.id);
+        console.log('Checking profile');
         
         // Check if profile exists and is complete
         const { data: profile } = await supabase
@@ -56,6 +61,7 @@ export const AuthCallback = () => {
 
         // For Google auth, update profile with Google user data if needed
         if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
+          console.log('Updating profile with Google data');
           const { error: profileUpdateError } = await supabase
             .from('profiles')
             .update({
