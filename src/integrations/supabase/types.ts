@@ -279,7 +279,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_email_from_deleted_profile: {
+        Args: {
+          email: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       notification_type: "update" | "release" | "system"
