@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthFormHeader } from "./AuthFormHeader";
 import { AuthFormFields } from "./AuthFormFields";
+import { AuthFormFooter } from "./AuthFormFooter";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthFormFooter } from "./AuthFormFooter";
 
 interface AuthFormProps {
   selectedPlan?: string;
@@ -15,10 +14,8 @@ interface AuthFormProps {
 export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const stateSelectedPlan = location.state?.selectedPlan;
-  const finalSelectedPlan = selectedPlan || stateSelectedPlan || 'free';
-  
   const { toast } = useToast();
+  
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -29,6 +26,9 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     jobTitle: "",
     airline: "",
   });
+
+  const stateSelectedPlan = location.state?.selectedPlan;
+  const finalSelectedPlan = selectedPlan || stateSelectedPlan || 'free';
 
   useEffect(() => {
     console.log('Selected plan:', finalSelectedPlan);
@@ -137,13 +137,13 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
               </Alert>
             )}
 
-            <Button 
+            <button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold"
+              className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold h-10 px-4 py-2 rounded-md"
               disabled={loading}
             >
               {loading ? "Signing up..." : "Sign Up"}
-            </Button>
+            </button>
           </form>
 
           <AuthFormFooter />
