@@ -53,25 +53,6 @@ export const NotificationFormFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="type">Type</Label>
-        <Select
-          value={notification.notification_type}
-          onValueChange={(value: NotificationType) =>
-            onChange("notification_type", value)
-          }
-        >
-          <SelectTrigger className="bg-background border-input">
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent className="bg-background border-2 border-input shadow-lg">
-            <SelectItem value="system" className="hover:bg-accent">System</SelectItem>
-            <SelectItem value="update" className="hover:bg-accent">Update</SelectItem>
-            <SelectItem value="release" className="hover:bg-accent">Release</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input
           id="title"

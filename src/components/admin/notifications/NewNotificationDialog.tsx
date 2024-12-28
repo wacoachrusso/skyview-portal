@@ -40,27 +40,11 @@ export const NewNotificationDialog = ({
   });
 
   const handleFieldChange = (field: string, value: any) => {
-    setNewNotification((prev) => {
-      const updates: Partial<NotificationData> = { [field]: value };
-      
-      // Sync type and notification_type when either changes
-      if (field === "notification_type" || field === "type") {
-        const notificationType = value as NotificationType;
-        updates.type = notificationType;
-        updates.notification_type = notificationType;
-      }
-      
-      return { ...prev, ...updates };
-    });
+    setNewNotification((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSend = () => {
-    // Ensure both type fields are set correctly
-    const notification = {
-      ...newNotification,
-      type: newNotification.notification_type,
-    };
-    onSend(notification);
+    onSend(newNotification);
   };
 
   return (
