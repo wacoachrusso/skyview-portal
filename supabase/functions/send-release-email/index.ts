@@ -86,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `
 
-    // Send email using Resend with verified domain
+    // Send email using Resend with onboarding address until domain is fully verified
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -94,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'SkyGuide <notifications@skyguide.app>', // Using verified domain
+        from: 'onboarding@resend.dev', // Using onboarding address until domain is verified
         to: emailRecipients,
         subject: `New Release: ${releaseNote.title}`,
         html: emailHtml,
