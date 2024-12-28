@@ -27,14 +27,24 @@ export async function sendPushNotification(title: string, options: NotificationO
   }
 
   try {
-    const notification = new Notification(title, {
-      icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-      badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png", // Add badge for mobile notifications
-      ...options
-    });
+    // Enhanced options for better mobile support
+    const enhancedOptions: NotificationOptions = {
+      ...options,
+      silent: false, // Ensure sound plays on mobile
+      timestamp: Date.now(), // Add timestamp for mobile notifications
+      actions: [
+        {
+          action: 'open',
+          title: 'View Details'
+        }
+      ],
+    };
 
-    notification.onclick = function() {
-      console.log("Notification clicked");
+    const notification = new Notification(title, enhancedOptions);
+
+    notification.onclick = function(event) {
+      console.log("Notification clicked:", event);
+      event.preventDefault(); // Prevent the browser from focusing the Notification's tab
       window.focus();
       notification.close();
     };
@@ -83,7 +93,9 @@ export async function setupPushNotifications() {
             data: {
               notificationId: notification.id,
               type: notification.type
-            }
+            },
+            vibrate: [200, 100, 200], // Vibration pattern for mobile
+            requireInteraction: true, // Keep notification visible until user interacts
           });
         }
       }

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { sendPushNotification } from "@/utils/pushNotifications";
 
 type NotificationType = "system" | "update" | "release";
 
@@ -38,7 +39,7 @@ export const useNotifications = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email");
+        .select("id, full_name, email, push_notifications");
       if (error) throw error;
       return data;
     },
@@ -48,7 +49,6 @@ export const useNotifications = () => {
     try {
       console.log("Sending notification:", notification);
       
-      // Validate profile_id
       if (!notification.profile_id) {
         toast({
           variant: "destructive",
@@ -58,49 +58,64 @@ export const useNotifications = () => {
         return false;
       }
 
-      // Ensure notification type is valid
       if (!["system", "update", "release"].includes(notification.type)) {
         throw new Error("Invalid notification type");
       }
 
+      let usersToNotify: any[] = [];
+
       if (notification.profile_id === "all") {
-        // Send to all users
-        const { data: allProfiles } = await supabase
+        // Get all users with push notifications enabled
+        const { data: pushEnabledProfiles } = await supabase
           .from("profiles")
-          .select("id");
+          .select("id, push_notifications")
+          .eq("push_notifications", true);
         
-        if (!allProfiles || allProfiles.length === 0) {
-          throw new Error("No profiles found");
-        }
-
-        const notifications = allProfiles.map(profile => ({
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          notification_type: notification.type, // Ensure both fields match
-          profile_id: profile.id,
-          user_id: profile.id,
-        }));
-        
-        const { error } = await supabase
-          .from("notifications")
-          .insert(notifications);
-
-        if (error) throw error;
+        usersToNotify = pushEnabledProfiles || [];
       } else {
-        // Send to single user
-        const { error } = await supabase
-          .from("notifications")
-          .insert([{
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            notification_type: notification.type, // Ensure both fields match
-            profile_id: notification.profile_id,
-            user_id: notification.profile_id
-          }]);
+        // Get single user if they have push notifications enabled
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, push_notifications")
+          .eq("id", notification.profile_id)
+          .single();
+        
+        if (profile?.push_notifications) {
+          usersToNotify = [profile];
+        }
+      }
 
-        if (error) throw error;
+      // Insert notifications into database
+      const notificationsToInsert = usersToNotify.map(profile => ({
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        notification_type: notification.type,
+        profile_id: profile.id,
+        user_id: profile.id,
+      }));
+
+      if (notificationsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from("notifications")
+          .insert(notificationsToInsert);
+
+        if (insertError) throw insertError;
+
+        // Send push notification
+        await sendPushNotification(notification.title, {
+          body: notification.message,
+          tag: notification.type,
+          data: {
+            type: notification.type,
+            timestamp: new Date().toISOString()
+          },
+          icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png", // Using existing app icon
+          badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+          vibrate: [200, 100, 200], // Vibration pattern for mobile devices
+          renotify: true, // Allow notification to override previous ones
+          requireInteraction: true, // Keep notification visible until user interacts
+        });
       }
 
       toast({

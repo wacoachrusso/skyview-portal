@@ -4,15 +4,22 @@ import { NotificationTable } from "./notifications/NotificationTable";
 import { NotificationDialog } from "./notifications/NotificationDialog";
 import { NewNotificationDialog } from "./notifications/NewNotificationDialog";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useToast } from "@/hooks/use-toast";
 
 export const NotificationManager = () => {
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [showNewNotificationDialog, setShowNewNotificationDialog] = useState(false);
   const { notifications, profiles, sendNotification, refetchNotifications } = useNotifications();
+  const { toast } = useToast();
 
   const handleSendNotification = async (notification: any) => {
+    console.log("Sending notification:", notification);
     const success = await sendNotification(notification);
     if (success) {
+      toast({
+        title: "Success",
+        description: "Notification sent successfully to all devices",
+      });
       setShowNewNotificationDialog(false);
       refetchNotifications();
     }
@@ -21,7 +28,12 @@ export const NotificationManager = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Notification History</h2>
+        <div>
+          <h2 className="text-xl font-semibold">Notification History</h2>
+          <p className="text-sm text-muted-foreground">
+            Send updates and alerts to all devices including mobile and tablet
+          </p>
+        </div>
         <Button onClick={() => setShowNewNotificationDialog(true)}>
           Send New Notification
         </Button>
