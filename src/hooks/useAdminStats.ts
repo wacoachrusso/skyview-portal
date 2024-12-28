@@ -19,25 +19,50 @@ export const useAdminStats = () => {
         { count: monthlySubCount, data: monthlySubUsers },
         { count: yearlySubCount, data: yearlySubUsers },
       ] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact" }),
+        // Total users (excluding deleted)
         supabase
           .from("profiles")
           .select("*", { count: "exact" })
-          .gte("last_query_timestamp", thirtyDaysAgo),
-        supabase.from("notifications").select("*", { count: "exact" }),
-        supabase.from("release_notes").select("*", { count: "exact" }),
+          .neq('account_status', 'deleted'),
+        
+        // Active users in last 30 days (excluding deleted)
         supabase
           .from("profiles")
           .select("*", { count: "exact" })
-          .gte("created_at", thirtyDaysAgo),
+          .gte("last_query_timestamp", thirtyDaysAgo)
+          .neq('account_status', 'deleted'),
+        
+        // Active notifications
+        supabase
+          .from("notifications")
+          .select("*", { count: "exact" })
+          .eq('is_read', false),
+        
+        // Release notes
+        supabase
+          .from("release_notes")
+          .select("*", { count: "exact" }),
+        
+        // New users in last 30 days (excluding deleted)
         supabase
           .from("profiles")
           .select("*", { count: "exact" })
-          .eq("subscription_plan", "monthly"),
+          .gte("created_at", thirtyDaysAgo)
+          .neq('account_status', 'deleted'),
+        
+        // Monthly subscribers (active only)
         supabase
           .from("profiles")
           .select("*", { count: "exact" })
-          .eq("subscription_plan", "yearly"),
+          .eq("subscription_plan", "monthly")
+          .neq('account_status', 'deleted'),
+        
+        // Yearly subscribers (active only)
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact" })
+          .eq("subscription_plan", "yearly")
+          .neq('account_status', 'deleted'),
       ]);
 
       console.log("Stats fetched:", {
