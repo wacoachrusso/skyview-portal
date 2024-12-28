@@ -1,12 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ReleaseNotesAdmin } from "@/components/admin/ReleaseNotesAdmin";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserManagement } from "@/components/admin/UserManagement";
+import { SystemStats } from "@/components/admin/SystemStats";
+import { NotificationManager } from "@/components/admin/NotificationManager";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     const checkAdminAccess = async () => {
@@ -20,7 +26,6 @@ const AdminDashboard = () => {
           return;
         }
 
-        // Check if user has admin privileges
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_admin')
@@ -53,7 +58,31 @@ const AdminDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
-      <ReleaseNotesAdmin />
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="release-notes">Release Notes</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <SystemStats />
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="release-notes">
+          <ReleaseNotesAdmin />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <NotificationManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
