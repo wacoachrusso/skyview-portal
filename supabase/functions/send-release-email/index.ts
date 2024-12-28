@@ -17,7 +17,6 @@ interface EmailRequest {
 const handler = async (req: Request): Promise<Response> => {
   console.log('Processing release note email request')
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -45,35 +44,11 @@ const handler = async (req: Request): Promise<Response> => {
     if (releaseError) throw releaseError
     if (!releaseNote) throw new Error('Release note not found')
 
-    // Get all users with email notifications enabled
-    const { data: subscribedUsers, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, email_notifications')
-      .eq('email_notifications', true)
-
-    if (profilesError) throw profilesError
-    console.log('Found subscribed users:', subscribedUsers)
-
-    const subscribedUserIds = subscribedUsers.map(user => user.id)
-
-    // Get user emails from auth.users
-    const { data: { users }, error: usersError } = await supabase
-      .auth.admin.listUsers()
-
-    if (usersError) throw usersError
-
-    const emailRecipients = users
-      .filter(user => subscribedUserIds.includes(user.id))
-      .map(user => user.email)
-      .filter((email): email is string => email !== null)
-
-    if (emailRecipients.length === 0) {
-      console.log('No recipients found with email notifications enabled')
-      return new Response(
-        JSON.stringify({ message: 'No recipients found' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    // In development/testing, only send to the verified email
+    const isDevelopment = true; // Set this to false when you have a verified domain
+    const emailRecipients = isDevelopment 
+      ? ['wacoachrusso@gmail.com']
+      : await getSubscribedUsers(supabase);
 
     console.log('Sending email to recipients:', emailRecipients)
 
@@ -87,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `
 
-    // Send email using Resend with default domain
+    // Send email using Resend
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -95,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev', // Using Resend's default domain
+        from: 'onboarding@resend.dev', // You'll need to change this to your verified domain
         to: emailRecipients,
         subject: `New Release: ${releaseNote.title}`,
         html: emailHtml,
@@ -121,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Emails sent successfully',
+        message: isDevelopment ? 'Test email sent successfully' : 'Emails sent successfully',
         recipientCount: emailRecipients.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -137,6 +112,31 @@ const handler = async (req: Request): Promise<Response> => {
       }
     )
   }
+}
+
+// Helper function to get subscribed users
+async function getSubscribedUsers(supabase: any) {
+  // Get all users with email notifications enabled
+  const { data: subscribedUsers, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, email_notifications')
+    .eq('email_notifications', true)
+
+  if (profilesError) throw profilesError
+  console.log('Found subscribed users:', subscribedUsers)
+
+  const subscribedUserIds = subscribedUsers.map((user: any) => user.id)
+
+  // Get user emails from auth.users
+  const { data: { users }, error: usersError } = await supabase
+    .auth.admin.listUsers()
+
+  if (usersError) throw usersError
+
+  return users
+    .filter((user: any) => subscribedUserIds.includes(user.id))
+    .map((user: any) => user.email)
+    .filter((email: string | null): email is string => email !== null)
 }
 
 serve(handler)
