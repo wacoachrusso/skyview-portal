@@ -95,25 +95,23 @@ export const AuthFormSubmit = async ({
 
     console.log("Signup successful:", data);
 
-    // Send confirmation email using our edge function
-    const confirmationUrl = `${window.location.origin}/login#confirmation`;
-    const emailResponse = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-confirmation-email`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
+    // Send welcome email
+    try {
+      const emailResponse = await supabase.functions.invoke('send-welcome-email', {
+        body: {
           email: formData.email,
-          confirmationUrl,
-        }),
-      }
-    );
+          name: formData.fullName,
+          plan: finalSelectedPlan
+        }
+      });
 
-    if (!emailResponse.ok) {
-      console.error("Error sending confirmation email:", await emailResponse.text());
+      if (!emailResponse.error) {
+        console.log("Welcome email sent successfully");
+      } else {
+        console.error("Error sending welcome email:", emailResponse.error);
+      }
+    } catch (emailError) {
+      console.error("Error invoking welcome email function:", emailError);
     }
 
     toast({
