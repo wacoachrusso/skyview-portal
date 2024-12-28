@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthFormHeader } from "./AuthFormHeader";
 import { AuthFormFields } from "./AuthFormFields";
@@ -12,6 +12,10 @@ interface AuthFormProps {
 
 export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const stateSelectedPlan = location.state?.selectedPlan;
+  const finalSelectedPlan = selectedPlan || stateSelectedPlan || 'free';
+  
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +35,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         console.log("User signed in after email confirmation");
         toast({
           title: "Welcome to SkyGuide!",
-          description: selectedPlan === 'free' 
+          description: finalSelectedPlan === 'free' 
             ? "Your email has been confirmed. You have 2 queries available."
             : "Your email has been confirmed. Your account is now active.",
         });
@@ -59,12 +63,12 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, selectedPlan, toast]);
+  }, [navigate, finalSelectedPlan, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    console.log("Starting signup process with plan:", selectedPlan);
+    console.log("Starting signup process with plan:", finalSelectedPlan);
 
     try {
       // Get user's IP address
@@ -79,7 +83,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             full_name: formData.fullName,
             user_type: formData.jobTitle,
             airline: formData.airline,
-            subscription_plan: selectedPlan || "free",
+            subscription_plan: finalSelectedPlan,
             last_ip_address: ip,
             query_count: 0,
             last_query_timestamp: new Date().toISOString()
@@ -112,7 +116,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         // Email confirmation was not required, user is automatically signed in
         toast({
           title: "Welcome to SkyGuide!",
-          description: selectedPlan === 'free' 
+          description: finalSelectedPlan === 'free' 
             ? "Your free trial account has been created. You have 2 queries available."
             : "Your account has been created successfully.",
         });

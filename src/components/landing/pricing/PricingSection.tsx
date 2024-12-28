@@ -15,6 +15,7 @@ export function PricingSection() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log("User not logged in, redirecting to signup with plan:", plan);
         navigate('/signup', { state: { selectedPlan: plan } });
         return;
       }
@@ -42,7 +43,7 @@ export function PricingSection() {
         description: `You've selected the ${plan} plan.`,
       });
 
-      navigate('/dashboard');
+      navigate('/chat');
     } catch (error) {
       console.error('Error selecting plan:', error);
       toast({
@@ -69,7 +70,8 @@ export function PricingSection() {
       badgeColor: "bg-brand-navy",
       buttonText: "Start Free Trial",
       buttonVariant: "outline" as const,
-      className: "bg-white border-2 border-gray-100"
+      className: "bg-white border-2 border-gray-100",
+      planId: "free"
     },
     {
       title: "Monthly Plan",
@@ -84,7 +86,8 @@ export function PricingSection() {
       badgeColor: "bg-brand-gold",
       buttonText: "Choose Monthly",
       className: "bg-gradient-to-br from-brand-navy to-brand-slate border-0",
-      textColor: "text-gray-200"
+      textColor: "text-gray-200",
+      planId: "monthly"
     },
     {
       title: "Annual Plan",
@@ -101,7 +104,8 @@ export function PricingSection() {
       buttonText: "Choose Annual",
       buttonVariant: "gradient" as const,
       className: "bg-white border-2 border-brand-gold",
-      savings: "Save $10 annually"
+      savings: "Save $10 annually",
+      planId: "annual"
     }
   ];
 
@@ -119,7 +123,7 @@ export function PricingSection() {
             <PricingCard
               key={index}
               {...plan}
-              onSelect={() => handlePlanSelection(plan.title.toLowerCase().split(' ')[0])}
+              onSelect={() => handlePlanSelection(plan.planId)}
               isLoading={isLoading}
             />
           ))}
