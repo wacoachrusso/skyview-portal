@@ -33,9 +33,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   useEffect(() => {
     console.log('Selected plan:', finalSelectedPlan);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
-      
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' && session) {
         console.log("User signed in");
         toast({
           title: "Welcome to SkyGuide!",
@@ -79,15 +77,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         password: '[REDACTED]'
       });
 
-      let signUpResponse;
-      try {
-        signUpResponse = await supabase.auth.signUp(signUpData);
-      } catch (signUpError: any) {
-        console.error("Signup API error:", signUpError);
-        throw signUpError;
-      }
-
-      const { error } = signUpResponse;
+      const { data, error } = await supabase.auth.signUp(signUpData);
 
       if (error) {
         console.error("Signup error:", error);
@@ -108,13 +98,14 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         return;
       }
 
-      console.log("Signup successful");
-      toast({
-        title: "Success",
-        description: "Please check your email to verify your account.",
-      });
-      navigate('/login');
-      
+      if (data?.user) {
+        console.log("Signup successful");
+        toast({
+          title: "Success",
+          description: "Please check your email to verify your account.",
+        });
+        navigate('/login');
+      }
     } catch (error: any) {
       console.error("Unexpected error during signup:", error);
       toast({
