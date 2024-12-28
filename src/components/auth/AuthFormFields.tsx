@@ -29,6 +29,25 @@ const jobTitles = [
   "Pilot"
 ];
 
+const validatePassword = (password: string) => {
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};:'"|,.<>?/`~]/.test(password);
+  const isLongEnough = password.length >= 8;
+
+  return {
+    isValid: hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && isLongEnough,
+    requirements: [
+      { met: hasLowerCase, text: "Include at least one lowercase letter (a-z)" },
+      { met: hasUpperCase, text: "Include at least one uppercase letter (A-Z)" },
+      { met: hasNumber, text: "Include at least one number (0-9)" },
+      { met: hasSpecialChar, text: "Include at least one special character (!@#$%^&*)" },
+      { met: isLongEnough, text: "Be at least 8 characters long" }
+    ]
+  };
+};
+
 export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPassword }: AuthFormFieldsProps) => {
   const isOptionEnabled = (airline: string, jobTitle: string) => {
     if (airline) {
@@ -39,6 +58,8 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
     }
     return true;
   };
+
+  const passwordValidation = validatePassword(formData.password);
 
   return (
     <div className="space-y-4">
@@ -75,7 +96,7 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
               type={showPassword ? "text" : "password"}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="bg-white/10 border-white/20 text-white pr-10"
+              className={`bg-white/10 border-white/20 text-white pr-10 ${!passwordValidation.isValid && formData.password ? 'border-red-500' : ''}`}
               required
               minLength={8}
             />
@@ -91,15 +112,22 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
               )}
             </button>
           </div>
-          <p className="text-sm text-gray-400">
-            Password must:
-            <ul className="list-disc pl-5 mt-1 space-y-1">
-              <li>Be at least 8 characters long</li>
-              <li>Include at least one uppercase letter</li>
-              <li>Include at least one number</li>
-              <li>Include at least one special character (!@#$%^&*)</li>
-            </ul>
-          </p>
+          <div className="text-sm text-gray-400">
+            Password requirements:
+            <div className="mt-1 space-y-1">
+              {passwordValidation.requirements.map((req, index) => (
+                <div 
+                  key={index} 
+                  className={`flex items-center space-x-2 ${req.met ? 'text-green-500' : 'text-gray-400'}`}
+                >
+                  <span className="text-xs">
+                    {req.met ? '✓' : '○'}
+                  </span>
+                  <span>{req.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
