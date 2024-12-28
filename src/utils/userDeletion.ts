@@ -39,7 +39,7 @@ export const handleUserDeletion = async (
     await deleteUserFromAuthSystem(user.id);
     console.log("Successfully deleted user from auth system");
 
-    // Step 2: Update account status and send email notification
+    // Step 2: Update account status
     await updateAccountStatus(user.id, user.email || "", "deleted");
     console.log("Successfully updated user account status to deleted");
 
@@ -74,11 +74,6 @@ export const handleUserDeletion = async (
     onSuccess?.();
   } catch (error) {
     console.error("Error in user deletion process:", error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "Failed to delete user account completely",
-    });
     throw error;
   }
 };

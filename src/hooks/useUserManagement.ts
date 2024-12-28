@@ -97,7 +97,12 @@ export const useUserManagement = () => {
       });
     } catch (error) {
       console.error("Error in handleDeleteUser:", error);
-      setUserToDelete(null); // Reset the state even if there's an error
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete user account",
+      });
+      setUserToDelete(null);
     }
   };
 
