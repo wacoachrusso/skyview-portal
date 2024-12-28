@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingCard } from "./PricingCard";
 
@@ -9,13 +9,20 @@ export function PricingSection() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Add scroll to top on page load/refresh
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handlePlanSelection = async (plan: string) => {
+    console.log("Plan selection initiated:", plan);
     setIsLoading(true);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        console.log("User not logged in, redirecting to signup with plan:", plan);
+        console.log("No user found, redirecting to signup with plan:", plan);
         navigate('/signup', { state: { selectedPlan: plan } });
         return;
       }
@@ -27,16 +34,20 @@ export function PricingSection() {
       const updates = {
         subscription_plan: plan,
         last_ip_address: ip,
-        query_count: 0, // Reset query count when changing plans
+        query_count: 0,
         last_query_timestamp: new Date().toISOString()
       };
 
+      console.log("Updating user profile with plan:", plan);
       const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating profile:", error);
+        throw error;
+      }
 
       toast({
         title: "Plan Selected",
@@ -119,9 +130,9 @@ export function PricingSection() {
           Choose the plan that best fits your needs. All plans include access to our core features.
         </p>
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {pricingPlans.map((plan, index) => (
+          {pricingPlans.map((plan) => (
             <PricingCard
-              key={index}
+              key={plan.planId}
               {...plan}
               onSelect={() => handlePlanSelection(plan.planId)}
               isLoading={isLoading}
