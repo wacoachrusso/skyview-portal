@@ -15,11 +15,19 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     console.log("Starting confirmation email process");
-    console.log("RESEND_API_KEY present:", !!RESEND_API_KEY);
+    
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("RESEND_API_KEY is not configured");
+    }
 
     const { email, confirmationUrl } = await req.json();
     
-    console.log("Received request data:", { email, confirmationUrl });
+    console.log("Request data received:", { 
+      email, 
+      confirmationUrl,
+      hasResendKey: !!RESEND_API_KEY 
+    });
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -40,13 +48,16 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
-    const responseText = await res.text();
-    console.log("Resend API response:", responseText);
+    const responseData = await res.text();
+    console.log("Resend API response:", responseData);
 
     if (!res.ok) {
-      console.error("Error from Resend API:", responseText);
+      console.error("Error from Resend API:", responseData);
       return new Response(
-        JSON.stringify({ error: "Failed to send confirmation email" }),
+        JSON.stringify({ 
+          error: "Failed to send confirmation email",
+          details: responseData
+        }),
         {
           status: res.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -55,7 +66,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({ message: "Confirmation email sent successfully" }),
+      JSON.stringify({ 
+        message: "Confirmation email sent successfully",
+        details: responseData 
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
