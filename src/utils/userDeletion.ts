@@ -39,13 +39,32 @@ export const handleUserDeletion = async (
     await deleteUserFromAuthSystem(user.id);
     console.log("Successfully deleted user from auth system");
 
-    // Step 2: Update account status
+    // Step 2: Update account status and send email notification
     await updateAccountStatus(user.id, user.email || "", "deleted");
     console.log("Successfully updated user account status to deleted");
 
     // Step 3: Delete conversations
     await deleteUserConversations(user.id);
     console.log("Successfully deleted user conversations");
+
+    // Step 4: Send deletion notification email via Resend
+    const { error: emailError } = await supabase.functions.invoke(
+      "send-account-status-email",
+      {
+        body: { 
+          email: user.email, 
+          status: "deleted",
+          fullName: user.full_name || "User"
+        },
+      }
+    );
+
+    if (emailError) {
+      console.error("Error sending deletion email:", emailError);
+      throw emailError;
+    }
+
+    console.log("Successfully sent deletion notification email");
 
     toast({
       title: "Success",

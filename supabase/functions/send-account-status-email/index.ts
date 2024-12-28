@@ -11,9 +11,10 @@ const corsHeaders = {
 interface EmailRequest {
   email: string;
   status: 'disabled' | 'suspended' | 'deleted' | 'active';
+  fullName?: string;
 }
 
-const getEmailContent = (status: string) => {
+const getEmailContent = (status: string, fullName: string) => {
   const statusMessages = {
     disabled: "Your account has been temporarily disabled. This is usually due to suspicious activity or a violation of our terms of service.",
     suspended: "Your account has been suspended due to suspicious activity or a violation of our terms of service.",
@@ -34,7 +35,7 @@ const getEmailContent = (status: string) => {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>SkyGuide - Account Status Update</title>
+        <title>SkyGuide Account Status Update</title>
         <style>
           @media only screen and (max-width: 620px) {
             table.body h1 {
@@ -75,6 +76,7 @@ const getEmailContent = (status: string) => {
                         <tr>
                           <td style="font-family: sans-serif; font-size: 16px; vertical-align: top;">
                             <h1 style="color: #1a365d; font-family: sans-serif; font-weight: 600; line-height: 1.4; margin: 0; margin-bottom: 30px; font-size: 35px; text-align: center;">Account Status Update</h1>
+                            <p style="font-family: sans-serif; font-size: 16px; font-weight: normal; margin: 0; margin-bottom: 15px; color: #4a5568;">Dear ${fullName},</p>
                             <p style="font-family: sans-serif; font-size: 16px; font-weight: normal; margin: 0; margin-bottom: 15px; color: #4a5568;">${statusMessages[status as keyof typeof statusMessages]}</p>
                             <p style="font-family: sans-serif; font-size: 16px; font-weight: normal; margin: 0; margin-bottom: 15px; color: #4a5568;">${statusActions[status as keyof typeof statusActions]}</p>
                             <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-top: 30px; color: #718096;">For security reasons, if you need to contact support, please use a different email address than your account email.</p>
@@ -112,7 +114,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, status }: EmailRequest = await req.json();
+    const { email, status, fullName = "User" }: EmailRequest = await req.json();
     console.log(`Sending account status email to ${email} for status: ${status}`);
 
     const res = await fetch("https://api.resend.com/emails", {
@@ -125,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
         from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
         subject: `SkyGuide Account Status Update - ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-        html: getEmailContent(status),
+        html: getEmailContent(status, fullName),
       }),
     });
 

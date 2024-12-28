@@ -73,15 +73,6 @@ export const useUserManagement = () => {
 
       if (updateError) throw updateError;
 
-      const { error: emailError } = await supabase.functions.invoke(
-        "send-account-status-email",
-        {
-          body: { email, status },
-        }
-      );
-
-      if (emailError) throw emailError;
-
       toast({
         title: "Success",
         description: `User account ${status} successfully`,
@@ -106,6 +97,7 @@ export const useUserManagement = () => {
       });
     } catch (error) {
       console.error("Error in handleDeleteUser:", error);
+      setUserToDelete(null); // Reset the state even if there's an error
     }
   };
 
