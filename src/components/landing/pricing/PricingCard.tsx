@@ -1,38 +1,51 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PricingFeature } from "./PricingFeature";
+import { Check } from "lucide-react";
+
+interface PricingFeatureProps {
+  text: string;
+  textColor?: string;
+}
+
+const PricingFeature = ({ text, textColor = "text-gray-600" }: PricingFeatureProps) => (
+  <li className="flex items-center gap-2">
+    <Check className="h-4 w-4 text-brand-gold" />
+    <span className={`text-sm ${textColor}`}>{text}</span>
+  </li>
+);
 
 interface PricingCardProps {
   title: string;
   price: string;
   interval: string;
   features: string[];
-  badgeText: string;
-  badgeColor: string;
+  badgeText?: string;
+  badgeColor?: string;
   buttonText: string;
   buttonVariant?: "default" | "outline" | "gradient";
+  className?: string;
   textColor?: string;
   savings?: string;
-  className?: string;
+  planId: string;
   onSelect: () => void;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
-export const PricingCard = ({
+export function PricingCard({
   title,
   price,
   interval,
   features,
   badgeText,
-  badgeColor,
+  badgeColor = "bg-brand-navy",
   buttonText,
   buttonVariant = "default",
+  className = "",
   textColor = "text-gray-600",
   savings,
-  className = "",
   onSelect,
   isLoading
-}: PricingCardProps) => {
+}: PricingCardProps) {
   const getButtonClassName = () => {
     switch (buttonVariant) {
       case "outline":
@@ -46,9 +59,11 @@ export const PricingCard = ({
 
   return (
     <Card className={`relative transform hover:scale-105 transition-transform duration-300 hover:shadow-xl ${className}`}>
-      <div className={`absolute -top-4 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-4 py-1 rounded-full text-sm`}>
-        {badgeText}
-      </div>
+      {badgeText && (
+        <div className={`absolute -top-4 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-4 py-1 rounded-full text-sm`}>
+          {badgeText}
+        </div>
+      )}
       <CardHeader className="space-y-2">
         <CardTitle className="text-xl text-brand-navy">{title}</CardTitle>
         <div className="text-4xl font-bold text-brand-navy">
@@ -64,14 +79,13 @@ export const PricingCard = ({
           ))}
         </ul>
         <Button 
-          variant={buttonVariant === "outline" ? "outline" : "default"}
           className={getButtonClassName()}
           onClick={onSelect}
           disabled={isLoading}
         >
-          {buttonText}
+          {isLoading ? "Processing..." : buttonText}
         </Button>
       </CardContent>
     </Card>
   );
-};
+}
