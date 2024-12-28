@@ -11,10 +11,48 @@ export async function requestNotificationPermission(): Promise<boolean> {
   try {
     const permission = await Notification.requestPermission();
     console.log("Notification permission result:", permission);
+    
+    if (permission === "granted") {
+      await registerServiceWorker();
+    }
+    
     return permission === "granted";
   } catch (error) {
     console.error("Error requesting notification permission:", error);
     return false;
+  }
+}
+
+async function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('ServiceWorker registration successful:', registration);
+      
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: 'BLBz6TyNVtami0kD6Qf2giuHcmWjFyaVGEGVUWLhHtMJWGGZ7ZFbzXHC_qYGgwqOzDZKxf0fWw3zvuONuFdqXJs'
+      });
+      
+      console.log('Push notification subscription:', subscription);
+      
+      // Store the subscription in your backend
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            push_subscription: subscription
+          })
+          .eq('id', user.id);
+          
+        if (error) {
+          console.error('Error storing push subscription:', error);
+        }
+      }
+    } catch (error) {
+      console.error('ServiceWorker registration failed:', error);
+    }
   }
 }
 
@@ -30,7 +68,9 @@ export async function sendPushNotification(title: string, options: NotificationO
     // Enhanced options for better mobile support
     const enhancedOptions: NotificationOptions = {
       ...options,
-      silent: false,
+      badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+      icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+      vibrate: [200, 100, 200],
       timestamp: Date.now(),
       actions: [
         {
@@ -38,7 +78,15 @@ export async function sendPushNotification(title: string, options: NotificationO
           title: 'View Details'
         }
       ],
+      data: {
+        ...options.data,
+        url: window.location.origin + '/release-notes'
+      }
     };
+
+    if ('setAppBadge' in navigator) {
+      await navigator.setAppBadge(1);
+    }
 
     const notification = new Notification(title, enhancedOptions);
 
@@ -46,6 +94,9 @@ export async function sendPushNotification(title: string, options: NotificationO
       console.log("Notification clicked:", event);
       event.preventDefault();
       window.focus();
+      if (notification.data?.url) {
+        window.location.href = notification.data.url;
+      }
       notification.close();
     };
 
@@ -92,8 +143,11 @@ export async function setupPushNotifications() {
             tag: notification.id,
             data: {
               notificationId: notification.id,
-              type: notification.type
+              type: notification.type,
+              url: '/release-notes'
             },
+            badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+            icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
             vibrate: [200, 100, 200],
             requireInteraction: true,
           };
@@ -107,4 +161,10 @@ export async function setupPushNotifications() {
   return () => {
     supabase.removeChannel(channel);
   };
+}
+
+export async function clearNotificationBadge() {
+  if ('clearAppBadge' in navigator) {
+    await navigator.clearAppBadge();
+  }
 }
