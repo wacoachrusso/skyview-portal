@@ -58,9 +58,10 @@ export const useNotifications = () => {
         return false;
       }
 
-      // Ensure both type and notification_type are the same valid value
+      // Ensure both type and notification_type are valid enum values
       const validTypes: NotificationType[] = ["system", "update", "release"];
       if (!validTypes.includes(notification.type)) {
+        console.error("Invalid notification type:", notification.type);
         throw new Error("Invalid notification type");
       }
 
@@ -95,27 +96,31 @@ export const useNotifications = () => {
         title: notification.title,
         message: notification.message,
         type: notificationType,
-        notification_type: notificationType,
+        notification_type: notificationType, // Ensure this matches the type
         profile_id: profile.id,
         user_id: profile.id,
       }));
 
       if (notificationsToInsert.length > 0) {
+        console.log("Inserting notifications:", notificationsToInsert);
         const { error: insertError } = await supabase
           .from("notifications")
           .insert(notificationsToInsert);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error inserting notifications:", insertError);
+          throw insertError;
+        }
 
         // Send push notification
         const notificationOptions: NotificationOptions = {
           body: notification.message,
+          icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+          badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           tag: notificationType,
           data: {
             type: notificationType,
           },
-          icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           renotify: true,
           requireInteraction: true,
         };
