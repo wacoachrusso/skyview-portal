@@ -44,9 +44,37 @@ const handler = async (req: Request): Promise<Response> => {
     if (releaseError) throw releaseError
     if (!releaseNote) throw new Error('Release note not found')
 
-    // In testing mode, we'll only send to the verified email
-    const testingEmail = 'wacoachrusso@gmail.com'
-    console.log('Sending test email to:', testingEmail)
+    // Get all users with email notifications enabled
+    const { data: subscribedUsers, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, email_notifications')
+      .eq('email_notifications', true)
+
+    if (profilesError) throw profilesError
+    console.log('Found subscribed users:', subscribedUsers)
+
+    const subscribedUserIds = subscribedUsers.map(user => user.id)
+
+    // Get user emails from auth.users
+    const { data: { users }, error: usersError } = await supabase
+      .auth.admin.listUsers()
+
+    if (usersError) throw usersError
+
+    const emailRecipients = users
+      .filter(user => subscribedUserIds.includes(user.id))
+      .map(user => user.email)
+      .filter((email): email is string => email !== null)
+
+    if (emailRecipients.length === 0) {
+      console.log('No recipients found with email notifications enabled')
+      return new Response(
+        JSON.stringify({ message: 'No recipients found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('Sending email to recipients:', emailRecipients)
 
     // Prepare email content
     const emailHtml = `
@@ -58,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `
 
-    // Send email using Resend with onboarding address until domain is fully verified
+    // Send email using Resend with verified domain
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -66,8 +94,8 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
-        to: [testingEmail],
+        from: 'SkyGuide <notifications@skyguide.app>',
+        to: emailRecipients,
         subject: `New Release: ${releaseNote.title}`,
         html: emailHtml,
       }),
@@ -92,8 +120,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Test email sent successfully',
-        recipient: testingEmail
+        message: 'Emails sent successfully',
+        recipientCount: emailRecipients.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
