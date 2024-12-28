@@ -12,8 +12,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const NotificationManager = () => {
+  const [selectedNotification, setSelectedNotification] = useState<any>(null);
+
   const { data: notifications } = useQuery({
     queryKey: ["admin-notifications"],
     queryFn: async () => {
@@ -77,6 +85,7 @@ export const NotificationManager = () => {
                     size="sm"
                     onClick={() => {
                       console.log("View notification details:", notification);
+                      setSelectedNotification(notification);
                     }}
                   >
                     View Details
@@ -87,6 +96,59 @@ export const NotificationManager = () => {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog
+        open={!!selectedNotification}
+        onOpenChange={(open) => !open && setSelectedNotification(null)}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Notification Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <h4 className="text-sm font-medium mb-1">Title</h4>
+              <p className="text-sm text-muted-foreground">
+                {selectedNotification?.title}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-1">Message</h4>
+              <p className="text-sm text-muted-foreground">
+                {selectedNotification?.message}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-1">Recipient</h4>
+              <p className="text-sm text-muted-foreground">
+                {(selectedNotification?.profiles as any)?.full_name || "N/A"}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-1">Type</h4>
+              <Badge variant="outline">{selectedNotification?.type}</Badge>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-1">Status</h4>
+              <Badge
+                variant={selectedNotification?.is_read ? "secondary" : "default"}
+              >
+                {selectedNotification?.is_read ? "Read" : "Unread"}
+              </Badge>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-1">Sent At</h4>
+              <p className="text-sm text-muted-foreground">
+                {selectedNotification &&
+                  format(
+                    new Date(selectedNotification.created_at),
+                    "MMM d, yyyy HH:mm:ss"
+                  )}
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
