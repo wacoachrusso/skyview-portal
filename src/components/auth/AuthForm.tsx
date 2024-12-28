@@ -59,7 +59,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setPasswordError(null);
 
     try {
-      // Sign up the user with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -94,35 +93,11 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       }
 
       console.log("Signup successful:", data);
-
-      // Send confirmation email using our Edge Function
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
-          body: { 
-            email: formData.email,
-            name: formData.fullName,
-            confirmationUrl: `${window.location.origin}/auth/callback`
-          }
-        });
-
-        if (emailError) {
-          console.error("Error sending confirmation email:", emailError);
-          throw emailError;
-        }
-
-        toast({
-          title: "Success",
-          description: "Please check your email to verify your account.",
-        });
-        navigate('/login');
-      } catch (emailError) {
-        console.error("Failed to send confirmation email:", emailError);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to send confirmation email. Please try again or contact support.",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Please check your email to verify your account.",
+      });
+      navigate('/login');
     } catch (error) {
       console.error("Unexpected error during signup:", error);
       toast({
