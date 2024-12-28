@@ -48,6 +48,16 @@ export const useNotifications = () => {
     try {
       console.log("Sending notification:", notification);
       
+      // Validate profile_id
+      if (!notification.profile_id) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please select a recipient",
+        });
+        return false;
+      }
+
       // Ensure notification type is valid
       if (!["system", "update", "release"].includes(notification.type)) {
         throw new Error("Invalid notification type");
@@ -59,7 +69,7 @@ export const useNotifications = () => {
           .from("profiles")
           .select("id");
         
-        if (!allProfiles) {
+        if (!allProfiles || allProfiles.length === 0) {
           throw new Error("No profiles found");
         }
 

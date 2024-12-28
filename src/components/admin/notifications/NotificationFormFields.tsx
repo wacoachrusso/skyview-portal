@@ -31,7 +31,7 @@ export const NotificationFormFields = ({
       <div className="space-y-2">
         <Label htmlFor="recipient">Recipient</Label>
         <Select
-          value={notification.profile_id}
+          value={notification.profile_id || undefined}
           onValueChange={(value) => onChange("profile_id", value)}
         >
           <SelectTrigger>
