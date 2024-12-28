@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, Bell, FileText } from "lucide-react";
+import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,9 @@ export const SystemStats = () => {
         { count: activeUserCount, data: activeUsers },
         { count: notificationCount, data: notifications },
         { count: releaseNoteCount, data: releaseNotes },
+        { count: newUserCount, data: newUsers },
+        { count: monthlySubCount, data: monthlySubUsers },
+        { count: yearlySubCount, data: yearlySubUsers },
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact" }),
         supabase
@@ -33,6 +36,18 @@ export const SystemStats = () => {
           .gte("last_query_timestamp", thirtyDaysAgo),
         supabase.from("notifications").select("*", { count: "exact" }),
         supabase.from("release_notes").select("*", { count: "exact" }),
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact" })
+          .gte("created_at", thirtyDaysAgo),
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact" })
+          .eq("subscription_plan", "monthly"),
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact" })
+          .eq("subscription_plan", "yearly"),
       ]);
 
       return {
@@ -40,11 +55,17 @@ export const SystemStats = () => {
         activeUserCount,
         notificationCount,
         releaseNoteCount,
+        newUserCount,
+        monthlySubCount,
+        yearlySubCount,
         details: {
           users,
           activeUsers,
           notifications,
           releaseNotes,
+          newUsers,
+          monthlySubUsers,
+          yearlySubUsers,
         },
       };
     },
@@ -88,6 +109,30 @@ export const SystemStats = () => {
           label: note.title,
           info: `Version: ${note.version}`,
           date: format(new Date(note.created_at), "MMM d, yyyy"),
+        })),
+      },
+      newUsers: {
+        title: "New Users (Last 30 Days)",
+        data: stats.details.newUsers?.map((user) => ({
+          label: user.full_name || "Unnamed User",
+          info: `Email: ${user.email || "N/A"} | Type: ${user.user_type || "N/A"}`,
+          date: format(new Date(user.created_at), "MMM d, yyyy"),
+        })),
+      },
+      monthlySubUsers: {
+        title: "Monthly Subscription Users",
+        data: stats.details.monthlySubUsers?.map((user) => ({
+          label: user.full_name || "Unnamed User",
+          info: `Email: ${user.email || "N/A"}`,
+          date: `Joined: ${format(new Date(user.created_at), "MMM d, yyyy")}`,
+        })),
+      },
+      yearlySubUsers: {
+        title: "Yearly Subscription Users",
+        data: stats.details.yearlySubUsers?.map((user) => ({
+          label: user.full_name || "Unnamed User",
+          info: `Email: ${user.email || "N/A"}`,
+          date: `Joined: ${format(new Date(user.created_at), "MMM d, yyyy")}`,
         })),
       },
     };
@@ -167,6 +212,54 @@ export const SystemStats = () => {
             <div className="text-2xl font-bold">
               {stats?.releaseNoteCount || 0}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="cursor-pointer transition-all hover:shadow-md"
+          onClick={() => {
+            setSelectedMetric("newUsers");
+            setIsDialogOpen(true);
+          }}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">New Users (30d)</CardTitle>
+            <UserPlus className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.newUserCount || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="cursor-pointer transition-all hover:shadow-md"
+          onClick={() => {
+            setSelectedMetric("monthlySubUsers");
+            setIsDialogOpen(true);
+          }}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Subscribers</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.monthlySubCount || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="cursor-pointer transition-all hover:shadow-md"
+          onClick={() => {
+            setSelectedMetric("yearlySubUsers");
+            setIsDialogOpen(true);
+          }}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Yearly Subscribers</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.yearlySubCount || 0}</div>
           </CardContent>
         </Card>
       </div>
