@@ -40,19 +40,30 @@ export const AuthFormSubmit = ({
       if (!data.user?.email_confirmed_at) {
         console.log("Email not confirmed");
         
-        // Send verification email using our Edge Function
-        await supabase.functions.invoke('send-signup-confirmation', {
-          body: { 
-            email: formData.email,
-            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
-          }
-        });
+        try {
+          // Send verification email using our Edge Function
+          const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
+            body: { 
+              email: formData.email,
+              confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+            }
+          });
 
-        toast({
-          variant: "destructive",
-          title: "Email not verified",
-          description: "Please check your email and verify your account before signing in.",
-        });
+          if (emailError) throw emailError;
+
+          toast({
+            variant: "destructive",
+            title: "Email not verified",
+            description: "Please check your email and verify your account before signing in. We've sent a new verification email.",
+          });
+        } catch (emailError) {
+          console.error("Error sending verification email:", emailError);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to send verification email. Please try again or contact support.",
+          });
+        }
         return;
       }
 
@@ -98,21 +109,37 @@ export const AuthFormSubmit = ({
 
       if (error) throw error;
 
-      // Send welcome email using our Edge Function
-      await supabase.functions.invoke('send-signup-confirmation', {
-        body: { 
-          email: formData.email,
-          confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+      console.log("Sign up successful, sending confirmation email");
+
+      try {
+        // Send welcome email using our Edge Function
+        const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
+          body: { 
+            email: formData.email,
+            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+          }
+        });
+
+        if (emailError) {
+          console.error("Error sending confirmation email:", emailError);
+          throw new Error("Failed to send confirmation email");
         }
-      });
 
-      console.log("Sign up successful:", data);
-      toast({
-        title: "Success",
-        description: "Please check your email to verify your account.",
-      });
+        console.log("Confirmation email sent successfully");
+        toast({
+          title: "Success",
+          description: "Please check your email to verify your account.",
+        });
 
-      navigate("/login");
+        navigate("/login");
+      } catch (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+        toast({
+          variant: "destructive",
+          title: "Account created",
+          description: "Your account was created but we couldn't send the confirmation email. Please contact support.",
+        });
+      }
     } catch (error) {
       console.error("Sign up error:", error);
       toast({

@@ -13,13 +13,19 @@ interface EmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, confirmationUrl } = await req.json();
+    const { email, confirmationUrl } = await req.json() as EmailRequest;
     console.log("Sending confirmation email to:", email);
+    console.log("Confirmation URL:", confirmationUrl);
+
+    if (!RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is not set");
+    }
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -30,13 +36,13 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
-        subject: "Confirm Your SkyGuide Account",
+        subject: "Welcome to SkyGuide - Confirm Your Email",
         html: `
           <!DOCTYPE html>
           <html>
             <head>
               <meta charset="utf-8">
-              <title>Confirm Your SkyGuide Account</title>
+              <title>Welcome to SkyGuide!</title>
             </head>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="text-align: center; margin-bottom: 30px;">
@@ -45,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <h1 style="color: #1a365d; text-align: center;">Welcome to SkyGuide!</h1>
               
-              <p style="margin-bottom: 20px;">Please confirm your email address to complete your registration and access all features of SkyGuide.</p>
+              <p style="margin-bottom: 20px;">Thank you for signing up! Please confirm your email address to get started with SkyGuide.</p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${confirmationUrl}" 
@@ -67,6 +73,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const data = await res.json();
     console.log("Email API response:", data);
+
+    if (!res.ok) {
+      throw new Error(`Resend API error: ${JSON.stringify(data)}`);
+    }
 
     return new Response(JSON.stringify(data), {
       status: 200,
