@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { checkExistingUser, getUserIpAddress } from "@/utils/authOperations";
+import { handleSignIn } from "@/utils/signInUtils";
+import { handleSignUp } from "@/utils/signUpUtils";
 
 interface AuthFormSubmitProps {
   formData: {
@@ -25,130 +24,6 @@ export const AuthFormSubmit = ({
 }: AuthFormSubmitProps) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSignIn = async () => {
-    console.log("Starting sign in process");
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) throw error;
-
-      if (!data.user?.email_confirmed_at) {
-        console.log("Email not confirmed");
-        
-        try {
-          // Send verification email using our Edge Function
-          const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
-            body: { 
-              email: formData.email,
-              confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
-            }
-          });
-
-          if (emailError) throw emailError;
-
-          toast({
-            variant: "destructive",
-            title: "Email not verified",
-            description: "Please check your email and verify your account before signing in. We've sent a new verification email.",
-          });
-        } catch (emailError) {
-          console.error("Error sending verification email:", emailError);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to send verification email. Please try again or contact support.",
-          });
-        }
-        return;
-      }
-
-      console.log("Sign in successful");
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Sign in error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid email or password",
-      });
-    }
-  };
-
-  const handleSignUp = async () => {
-    const finalSelectedPlan = selectedPlan || "monthly";
-    console.log("Starting signup process with plan:", finalSelectedPlan);
-
-    try {
-      const userExists = await checkExistingUser(formData.email, formData.password);
-      if (userExists) {
-        setLoading(false);
-        return;
-      }
-
-      const ip = await getUserIpAddress();
-
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.full_name,
-            user_type: formData.user_type,
-            airline: formData.airline,
-            subscription_plan: finalSelectedPlan,
-            last_ip_address: ip,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        },
-      });
-
-      if (error) throw error;
-
-      console.log("Sign up successful, sending confirmation email");
-
-      try {
-        // Send welcome email using our Edge Function
-        const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
-          body: { 
-            email: formData.email,
-            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
-          }
-        });
-
-        if (emailError) {
-          console.error("Error sending confirmation email:", emailError);
-          throw new Error("Failed to send confirmation email");
-        }
-
-        console.log("Confirmation email sent successfully");
-        toast({
-          title: "Success",
-          description: "Please check your email to verify your account.",
-        });
-
-        navigate("/login");
-      } catch (emailError) {
-        console.error("Error sending confirmation email:", emailError);
-        toast({
-          variant: "destructive",
-          title: "Account created",
-          description: "Your account was created but we couldn't send the confirmation email. Please contact support.",
-        });
-      }
-    } catch (error) {
-      console.error("Sign up error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create account. Please try again.",
-      });
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,9 +31,15 @@ export const AuthFormSubmit = ({
 
     try {
       if (isSignUp) {
-        await handleSignUp();
+        const success = await handleSignUp(formData, selectedPlan);
+        if (success) {
+          navigate("/login");
+        }
       } else {
-        await handleSignIn();
+        const success = await handleSignIn(formData.email, formData.password);
+        if (success) {
+          navigate("/dashboard");
+        }
       }
     } finally {
       setLoading(false);
