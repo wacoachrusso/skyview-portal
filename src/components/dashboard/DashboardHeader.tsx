@@ -14,9 +14,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
 
   const handleLogoClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-    // Clear the session before navigating
     await supabase.auth.signOut({ scope: 'local' });
-    // Force navigation to home and clear navigation state
     navigate('/', { replace: true });
   };
 
@@ -40,11 +38,12 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           </div>
           
           <div className="flex items-center space-x-4">
+            {/* NotificationBell is now visible on all screen sizes */}
             <NotificationBell />
             
-            <div className="flex items-center space-x-2">
+            <div className="hidden sm:flex items-center space-x-2">
               <User className="h-5 w-5 text-foreground/70" />
-              <span className="text-sm font-medium text-foreground/70 hidden sm:block">
+              <span className="text-sm font-medium text-foreground/70">
                 {userEmail}
               </span>
             </div>
@@ -55,8 +54,8 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
               onClick={onSignOut}
               className="bg-secondary/80 text-secondary-foreground hover:bg-secondary transition-colors duration-200"
             >
-              <LogOut className="h-5 w-5 mr-2" />
-              Sign Out
+              <LogOut className="h-5 w-5 sm:mr-2" />
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
         </div>

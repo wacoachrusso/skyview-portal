@@ -9,9 +9,35 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 
   try {
-    const permission = await Notification.requestPermission();
-    console.log("Notification permission result:", permission);
-    return permission === "granted";
+    // Check if we're on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    
+    if (isIOS) {
+      // Show custom prompt for iOS users
+      const permission = await new Promise<NotificationPermission>((resolve) => {
+        // We need to show a custom alert for iOS users since the native prompt might not work
+        if (confirm(
+          "Enable notifications to stay updated with important releases and updates. \n\n" +
+          "This helps you: \n" +
+          "• Get instant updates about new features \n" +
+          "• Stay informed about critical changes \n" +
+          "• Never miss important announcements \n\n" +
+          "Would you like to enable notifications?"
+        )) {
+          Notification.requestPermission().then(resolve);
+        } else {
+          resolve('denied');
+        }
+      });
+      
+      console.log("iOS notification permission result:", permission);
+      return permission === "granted";
+    } else {
+      // For other platforms, use standard request
+      const permission = await Notification.requestPermission();
+      console.log("Notification permission result:", permission);
+      return permission === "granted";
+    }
   } catch (error) {
     console.error("Error requesting notification permission:", error);
     return false;
