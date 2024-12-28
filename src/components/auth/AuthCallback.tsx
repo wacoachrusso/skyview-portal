@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   const showWelcomeTutorial = (userName: string) => {
     toast({
@@ -20,6 +21,41 @@ export const AuthCallback = () => {
       try {
         console.log('=== Auth Callback Started ===');
         
+        // Check if this is an email confirmation
+        const email = searchParams.get('email');
+        const token_hash = searchParams.get('token_hash');
+        const type = searchParams.get('type');
+        
+        console.log('Callback params:', { email, type });
+
+        if (type === 'email_confirmation' && email && token_hash) {
+          console.log('Processing email confirmation');
+          const { error } = await supabase.auth.verifyOtp({
+            email,
+            token: token_hash,
+            type: 'email_confirmation'
+          });
+
+          if (error) {
+            console.error('Email confirmation error:', error);
+            toast({
+              variant: "destructive",
+              title: "Confirmation Failed",
+              description: "There was an error confirming your email. Please try again."
+            });
+            navigate('/login');
+            return;
+          }
+
+          console.log('Email confirmed successfully');
+          toast({
+            title: "Email Confirmed",
+            description: "Your email has been confirmed successfully. You can now log in.",
+          });
+          navigate('/login');
+          return;
+        }
+
         // Clear any existing session first
         await supabase.auth.signOut({ scope: 'local' });
         console.log('Cleared existing session');
@@ -103,6 +139,7 @@ export const AuthCallback = () => {
           console.log('Profile incomplete, redirecting to complete-profile');
           navigate('/complete-profile', { replace: true });
         }
+
       } catch (error) {
         console.error('Unexpected error:', error);
         toast({
@@ -115,13 +152,13 @@ export const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast]);
+  }, [navigate, toast, searchParams]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-foreground">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current mx-auto"></div>
-        <p className="mt-4">Completing sign in...</p>
+        <p className="mt-4">Processing authentication...</p>
       </div>
     </div>
   );
