@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
-import { toast } from "@/hooks/use-toast";
 
 export const deleteUserFromAuthSystem = async (userId: string) => {
   console.log("Deleting user from auth system:", userId);
@@ -39,13 +38,13 @@ export const handleUserDeletion = async (
     await deleteUserFromAuthSystem(user.id);
     console.log("Successfully deleted user from auth system");
 
-    // Step 2: Update account status
-    await updateAccountStatus(user.id, user.email || "", "deleted");
-    console.log("Successfully updated user account status to deleted");
-
-    // Step 3: Delete conversations
+    // Step 2: Delete conversations
     await deleteUserConversations(user.id);
     console.log("Successfully deleted user conversations");
+
+    // Step 3: Update account status
+    await updateAccountStatus(user.id, user.email || "", "deleted");
+    console.log("Successfully updated user account status to deleted");
 
     // Step 4: Send deletion notification email via Resend
     const { error: emailError } = await supabase.functions.invoke(
@@ -61,17 +60,15 @@ export const handleUserDeletion = async (
 
     if (emailError) {
       console.error("Error sending deletion email:", emailError);
-      throw emailError;
+      // Don't throw here, as the main deletion process is complete
+      // Just log the error and continue
+    } else {
+      console.log("Successfully sent deletion notification email");
     }
 
-    console.log("Successfully sent deletion notification email");
-
-    toast({
-      title: "Success",
-      description: "User account completely deleted from the system",
-    });
-
-    onSuccess?.();
+    if (onSuccess) {
+      onSuccess();
+    }
   } catch (error) {
     console.error("Error in user deletion process:", error);
     throw error;

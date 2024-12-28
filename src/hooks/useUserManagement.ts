@@ -10,6 +10,7 @@ export const useUserManagement = () => {
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<ProfilesRow | null>(null);
   const [userToDelete, setUserToDelete] = useState<ProfilesRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: users, refetch } = useQuery({
     queryKey: ["admin-users"],
@@ -86,10 +87,14 @@ export const useUserManagement = () => {
         title: "Error",
         description: `Failed to ${status} user account`,
       });
+      throw error; // Propagate error for proper handling in deletion flow
     }
   };
 
   const handleDeleteUser = async (user: ProfilesRow) => {
+    if (isDeleting) return; // Prevent multiple deletion attempts
+    
+    setIsDeleting(true);
     try {
       await handleUserDeletion(user, updateAccountStatus, () => {
         setUserToDelete(null);
@@ -102,6 +107,8 @@ export const useUserManagement = () => {
         title: "Error",
         description: "Failed to delete user account",
       });
+    } finally {
+      setIsDeleting(false);
       setUserToDelete(null);
     }
   };
@@ -116,5 +123,6 @@ export const useUserManagement = () => {
     toggleAdminStatus,
     updateAccountStatus,
     handleDeleteUser,
+    isDeleting,
   };
 };

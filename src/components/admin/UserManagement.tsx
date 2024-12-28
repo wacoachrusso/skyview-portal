@@ -9,6 +9,7 @@ export const UserManagement = () => {
     updatingUser,
     selectedUser,
     userToDelete,
+    isDeleting,
     setSelectedUser,
     setUserToDelete,
     toggleAdminStatus,
@@ -36,6 +37,7 @@ export const UserManagement = () => {
         user={userToDelete}
         onConfirm={handleDeleteUser}
         onCancel={() => setUserToDelete(null)}
+        isDeleting={isDeleting}
       />
     </div>
   );
