@@ -4,9 +4,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthFormHeader } from "./AuthFormHeader";
 import { AuthFormFields } from "./AuthFormFields";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthFormSubmit } from "./AuthFormSubmit";
 import { AuthFormFooter } from "./AuthFormFooter";
 
 interface AuthFormProps {
@@ -69,24 +68,34 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     e.preventDefault();
     console.log("Form submitted with data:", formData);
     setLoading(true);
+    setPasswordError(null);
 
     try {
-      const authFormData = {
+      // First, check if the user already exists
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
-        full_name: formData.fullName,
-        user_type: formData.jobTitle,
-        airline: formData.airline,
-      };
+      });
 
+      if (!signInError) {
+        toast({
+          variant: "destructive",
+          title: "Account exists",
+          description: "An account with this email already exists. Please sign in instead.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // If we get here, the user doesn't exist, so proceed with signup
       const { data, error } = await supabase.auth.signUp({
-        email: authFormData.email,
-        password: authFormData.password,
+        email: formData.email,
+        password: formData.password,
         options: {
           data: {
-            full_name: authFormData.full_name,
-            user_type: authFormData.user_type,
-            airline: authFormData.airline,
+            full_name: formData.fullName,
+            user_type: formData.jobTitle,
+            airline: formData.airline,
             subscription_plan: finalSelectedPlan,
           },
         },
