@@ -33,20 +33,21 @@ export const useAdminStats = () => {
         supabase
           .from("profiles")
           .select("*", { count: "exact" })
-          .eq("subscription_plan", "monthly")
-          .not("subscription_plan", "is", null), // Ensure subscription_plan is not null
+          .eq("subscription_plan", "monthly"),
         supabase
           .from("profiles")
           .select("*", { count: "exact" })
-          .eq("subscription_plan", "yearly")
-          .not("subscription_plan", "is", null), // Ensure subscription_plan is not null
+          .eq("subscription_plan", "yearly"),
       ]);
 
       console.log("Stats fetched:", {
+        userCount,
+        activeUserCount,
+        notificationCount,
+        releaseNoteCount,
+        newUserCount,
         monthlySubCount,
         yearlySubCount,
-        monthlySubUsers: monthlySubUsers?.length,
-        yearlySubUsers: yearlySubUsers?.length,
       });
 
       return {
@@ -68,5 +69,7 @@ export const useAdminStats = () => {
         },
       };
     },
+    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 15000, // Consider data stale after 15 seconds
   });
 };

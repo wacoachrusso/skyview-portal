@@ -1,14 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard } from "lucide-react";
 import { MetricCard } from "./stats/MetricCard";
 import { StatsDialog } from "./stats/StatsDialog";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { getDialogContent } from "./stats/getDialogContent";
+import { supabase } from "@/integrations/supabase/client";
 
 export const SystemStats = () => {
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: stats } = useAdminStats();
+  const { data: stats, refetch } = useAdminStats();
+
+  // Set up real-time subscriptions for relevant tables
+  useEffect(() => {
+    console.log("Setting up real-time subscriptions for admin stats...");
+    
+    const channel = supabase
+      .channel('admin-stats-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          console.log("Detected change in profiles table, refetching stats...");
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications'
+        },
+        () => {
+          console.log("Detected change in notifications table, refetching stats...");
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'release_notes'
+        },
+        () => {
+          console.log("Detected change in release_notes table, refetching stats...");
+          refetch();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on component unmount
+    return () => {
+      console.log("Cleaning up real-time subscriptions...");
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   const dialogContent = getDialogContent(stats?.details, selectedMetric);
 
