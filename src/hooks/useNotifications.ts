@@ -58,16 +58,6 @@ export const useNotifications = () => {
         return false;
       }
 
-      // Ensure both type and notification_type are valid enum values
-      const validTypes: NotificationType[] = ["system", "update", "release"];
-      if (!validTypes.includes(notification.type)) {
-        console.error("Invalid notification type:", notification.type);
-        throw new Error("Invalid notification type");
-      }
-
-      // Set both type fields to the same value to maintain consistency
-      const notificationType = notification.type;
-      
       let usersToNotify: any[] = [];
 
       if (notification.profile_id === "all") {
@@ -95,8 +85,8 @@ export const useNotifications = () => {
       const notificationsToInsert = usersToNotify.map(profile => ({
         title: notification.title,
         message: notification.message,
-        type: notificationType,
-        notification_type: notificationType, // Ensure this matches the type
+        type: "system" as NotificationType,
+        notification_type: "system" as NotificationType,
         profile_id: profile.id,
         user_id: profile.id,
       }));
@@ -117,9 +107,9 @@ export const useNotifications = () => {
           body: notification.message,
           icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          tag: notificationType,
+          tag: "system",
           data: {
-            type: notificationType,
+            type: "system",
           },
           renotify: true,
           requireInteraction: true,

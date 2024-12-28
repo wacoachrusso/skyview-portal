@@ -44,7 +44,13 @@ export const NewNotificationDialog = ({
   };
 
   const handleSend = () => {
-    onSend(newNotification);
+    // Ensure both type fields are set to "system"
+    const notification = {
+      ...newNotification,
+      type: "system" as NotificationType,
+      notification_type: "system" as NotificationType,
+    };
+    onSend(notification);
   };
 
   return (
