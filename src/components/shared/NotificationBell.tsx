@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
+import { Bell, BellDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { requestNotificationPermission, setupPushNotifications } from "@/utils/pushNotifications";
+import { useToast } from "@/hooks/use-toast";
 
 export const NotificationBell = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["unreadNotifications"],
     queryFn: async () => {
@@ -25,6 +30,23 @@ export const NotificationBell = () => {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
+  useEffect(() => {
+    const setupNotifications = async () => {
+      try {
+        const permissionGranted = await requestNotificationPermission();
+        if (permissionGranted) {
+          console.log("Setting up push notifications");
+          const cleanup = await setupPushNotifications();
+          return cleanup;
+        }
+      } catch (error) {
+        console.error("Error setting up notifications:", error);
+      }
+    };
+
+    setupNotifications();
+  }, []);
+
   const handleClick = () => {
     console.log("Notification bell clicked, navigating to release notes");
     navigate('/release-notes');
@@ -34,14 +56,18 @@ export const NotificationBell = () => {
     <Button 
       variant="ghost" 
       size="sm" 
-      className="text-white hover:bg-brand-navy hover:text-white relative"
+      className="relative"
       onClick={handleClick}
     >
-      <Bell className="h-5 w-5" />
-      {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-          {unreadCount}
-        </span>
+      {unreadCount > 0 ? (
+        <>
+          <BellDot className="h-5 w-5" />
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {unreadCount}
+          </span>
+        </>
+      ) : (
+        <Bell className="h-5 w-5" />
       )}
     </Button>
   );
