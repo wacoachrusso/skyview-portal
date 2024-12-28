@@ -3,11 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function WelcomeCard() {
   const [userEmail, setUserEmail] = useState("");
   const [plan, setPlan] = useState("");
   const [queriesRemaining, setQueriesRemaining] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUserInfo = async () => {
@@ -30,6 +32,11 @@ export function WelcomeCard() {
 
     loadUserInfo();
   }, []);
+
+  const handleUpgradeClick = () => {
+    console.log("Navigating to pricing section");
+    navigate('/?scrollTo=pricing');
+  };
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -57,12 +64,7 @@ export function WelcomeCard() {
             {queriesRemaining} queries remaining in your free trial. Upgrade for unlimited access.
           </p>
           <Button
-            onClick={() => {
-              const pricingSection = document.getElementById('pricing-section');
-              if (pricingSection) {
-                pricingSection.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
+            onClick={handleUpgradeClick}
             className="bg-white hover:bg-white/90 text-purple-600"
           >
             Upgrade Now
