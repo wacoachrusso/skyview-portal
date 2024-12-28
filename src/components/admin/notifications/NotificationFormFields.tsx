@@ -34,13 +34,17 @@ export const NotificationFormFields = ({
           value={notification.profile_id || undefined}
           onValueChange={(value) => onChange("profile_id", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="bg-background border-input">
             <SelectValue placeholder="Select recipient" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Users</SelectItem>
+          <SelectContent className="bg-background border-2 border-input shadow-lg">
+            <SelectItem value="all" className="hover:bg-accent">All Users</SelectItem>
             {profiles?.map((profile) => (
-              <SelectItem key={profile.id} value={profile.id}>
+              <SelectItem 
+                key={profile.id} 
+                value={profile.id}
+                className="hover:bg-accent"
+              >
                 {profile.full_name || "Unnamed User"} ({profile.email || "No email"})
               </SelectItem>
             ))}
@@ -56,13 +60,13 @@ export const NotificationFormFields = ({
             onChange("notification_type", value)
           }
         >
-          <SelectTrigger>
+          <SelectTrigger className="bg-background border-input">
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="system">System</SelectItem>
-            <SelectItem value="update">Update</SelectItem>
-            <SelectItem value="release">Release</SelectItem>
+          <SelectContent className="bg-background border-2 border-input shadow-lg">
+            <SelectItem value="system" className="hover:bg-accent">System</SelectItem>
+            <SelectItem value="update" className="hover:bg-accent">Update</SelectItem>
+            <SelectItem value="release" className="hover:bg-accent">Release</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -73,6 +77,7 @@ export const NotificationFormFields = ({
           id="title"
           value={notification.title}
           onChange={(e) => onChange("title", e.target.value)}
+          className="bg-background"
         />
       </div>
 
@@ -82,6 +87,7 @@ export const NotificationFormFields = ({
           id="message"
           value={notification.message}
           onChange={(e) => onChange("message", e.target.value)}
+          className="bg-background"
         />
       </div>
     </div>
