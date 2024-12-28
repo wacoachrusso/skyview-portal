@@ -9,24 +9,33 @@ const corsHeaders = {
 
 interface EmailRequest {
   email: string;
+  name: string;
   confirmationUrl: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("Received request to send signup confirmation email");
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, confirmationUrl } = await req.json() as EmailRequest;
-    console.log("Sending confirmation email to:", email);
-    console.log("Confirmation URL:", confirmationUrl);
-
     if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not set");
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("Email service configuration is missing");
     }
 
+    const { email, name, confirmationUrl } = await req.json() as EmailRequest;
+    console.log("Processing confirmation email for:", email);
+
+    if (!email || !confirmationUrl) {
+      console.error("Missing required fields:", { email, confirmationUrl });
+      throw new Error("Missing required fields");
+    }
+
+    console.log("Sending email via Resend API");
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -51,6 +60,8 @@ const handler = async (req: Request): Promise<Response> => {
               
               <h1 style="color: #1a365d; text-align: center;">Welcome to SkyGuide!</h1>
               
+              <p style="margin-bottom: 20px;">Hi ${name || 'there'},</p>
+              
               <p style="margin-bottom: 20px;">Thank you for signing up! Please confirm your email address to get started with SkyGuide.</p>
               
               <div style="text-align: center; margin: 30px 0;">
@@ -72,22 +83,28 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const data = await res.json();
-    console.log("Email API response:", data);
+    console.log("Resend API response:", data);
 
     if (!res.ok) {
-      throw new Error(`Resend API error: ${JSON.stringify(data)}`);
+      console.error("Resend API error:", data);
+      throw new Error(`Failed to send email: ${JSON.stringify(data)}`);
     }
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ success: true, data }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error sending confirmation email:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("Error in send-signup-confirmation function:", error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 };
 

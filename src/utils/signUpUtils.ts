@@ -1,79 +1,89 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { checkExistingUser, getUserIpAddress } from "@/utils/authOperations";
 
 interface SignUpData {
   email: string;
   password: string;
-  full_name?: string;
-  user_type?: string;
-  airline?: string;
+  fullName: string;
+  jobTitle: string;
+  airline: string;
 }
 
-export const handleSignUp = async (formData: SignUpData, selectedPlan: string = "monthly") => {
-  console.log("Starting signup process with plan:", selectedPlan);
+export const handleSignUp = async (formData: SignUpData, selectedPlan: string = "free") => {
+  console.log("Starting signup process with data:", { 
+    email: formData.email, 
+    fullName: formData.fullName,
+    jobTitle: formData.jobTitle,
+    airline: formData.airline,
+    plan: selectedPlan 
+  });
 
   try {
-    const userExists = await checkExistingUser(formData.email, formData.password);
-    if (userExists) {
-      return false;
-    }
-
-    const ip = await getUserIpAddress();
-
-    const { data, error } = await supabase.auth.signUp({
+    // First attempt the signup
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
         data: {
-          full_name: formData.full_name,
-          user_type: formData.user_type,
+          full_name: formData.fullName,
+          user_type: formData.jobTitle,
           airline: formData.airline,
           subscription_plan: selectedPlan,
-          last_ip_address: ip,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`
       },
     });
 
-    if (error) throw error;
+    if (signUpError) {
+      console.error("Signup error:", signUpError);
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: signUpError.message,
+      });
+      return false;
+    }
 
-    console.log("Sign up successful, sending confirmation email");
+    console.log("Signup successful, user data:", signUpData);
 
+    // Then attempt to send confirmation email via Edge Function
     try {
+      console.log("Attempting to send confirmation email via Edge Function");
       const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
         body: { 
           email: formData.email,
+          name: formData.fullName,
           confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
         }
       });
 
       if (emailError) {
-        console.error("Error sending confirmation email:", emailError);
-        throw new Error("Failed to send confirmation email");
+        console.error("Error from send-signup-confirmation function:", emailError);
+        throw emailError;
       }
 
       console.log("Confirmation email sent successfully");
       toast({
-        title: "Success",
+        title: "Account created",
         description: "Please check your email to verify your account.",
       });
       return true;
     } catch (emailError) {
-      console.error("Error sending confirmation email:", emailError);
+      console.error("Failed to send confirmation email:", emailError);
+      // Even if email fails, account was created
       toast({
         variant: "destructive",
-        title: "Account created",
-        description: "Your account was created but we couldn't send the confirmation email. Please contact support.",
+        title: "Partial success",
+        description: "Account created but we couldn't send the confirmation email. Please contact support.",
       });
       return false;
     }
   } catch (error) {
-    console.error("Sign up error:", error);
+    console.error("Unexpected error during signup:", error);
     toast({
       variant: "destructive",
       title: "Error",
-      description: "Failed to create account. Please try again.",
+      description: "An unexpected error occurred. Please try again.",
     });
     return false;
   }
