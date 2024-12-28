@@ -58,7 +58,9 @@ export const useNotifications = () => {
         return false;
       }
 
-      if (!["system", "update", "release"].includes(notification.type)) {
+      // Validate notification type
+      const validTypes: NotificationType[] = ["system", "update", "release"];
+      if (!validTypes.includes(notification.type)) {
         throw new Error("Invalid notification type");
       }
 
@@ -102,17 +104,15 @@ export const useNotifications = () => {
 
         if (insertError) throw insertError;
 
-        // Send push notification with properly typed options
+        // Send push notification
         const notificationOptions: NotificationOptions = {
           body: notification.message,
           tag: notification.type,
           data: {
             type: notification.type,
-            timestamp: new Date().toISOString()
           },
           icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
           badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-          vibrate: [200, 100, 200],
           renotify: true,
           requireInteraction: true,
         };
