@@ -38,6 +38,7 @@ export const UserManagement = () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
+        .neq('account_status', 'deleted')  // Don't fetch deleted users
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -106,6 +107,8 @@ export const UserManagement = () => {
         title: "Success",
         description: `User account ${status} successfully`,
       });
+      
+      // Immediately refetch to update the UI
       refetch();
     } catch (error) {
       console.error(`Error ${status} user account:`, error);
@@ -121,13 +124,13 @@ export const UserManagement = () => {
     try {
       console.log("Deleting user:", user);
 
-      // First update the account status and send email
+      // First update the account status to deleted
       await updateAccountStatus(user.id, user.email || "", "deleted");
 
-      // Then delete the user profile
+      // Then soft delete by updating account_status
       const { error } = await supabase
         .from("profiles")
-        .delete()
+        .update({ account_status: 'deleted' })
         .eq("id", user.id);
 
       if (error) throw error;
@@ -136,6 +139,8 @@ export const UserManagement = () => {
         title: "Success",
         description: "User account deleted successfully",
       });
+
+      // Immediately refetch to update the UI
       refetch();
     } catch (error) {
       console.error("Error deleting user:", error);
