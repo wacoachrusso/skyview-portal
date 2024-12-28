@@ -65,23 +65,29 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     };
   }, [navigate, finalSelectedPlan, toast]);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const authFormData = {
+      email: formData.email,
+      password: formData.password,
+      full_name: formData.fullName,
+      user_type: formData.jobTitle,
+      airline: formData.airline,
+    };
+    
+    return <AuthFormSubmit 
+      formData={authFormData}
+      selectedPlan={finalSelectedPlan}
+      isSignUp={true}
+    />;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
         <AuthFormHeader />
         <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            AuthFormSubmit({
-              e,
-              formData,
-              finalSelectedPlan,
-              setLoading,
-              navigate,
-              toast,
-              setPasswordError
-            });
-          }} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <AuthFormFields 
               formData={formData}
               showPassword={showPassword}
