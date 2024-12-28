@@ -50,7 +50,7 @@ const Login = () => {
           <div className="mt-6 space-y-2 text-center text-gray-400">
             <p>
               Don't have an account?{" "}
-              <Link to="/signup" className="text-brand-gold hover:text-brand-gold/80">
+              <Link to="/#pricing-section" className="text-brand-gold hover:text-brand-gold/80">
                 Sign up
               </Link>
             </p>
