@@ -71,23 +71,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setPasswordError(null);
 
     try {
-      // First, check if the user already exists
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (!signInError) {
-        toast({
-          variant: "destructive",
-          title: "Account exists",
-          description: "An account with this email already exists. Please sign in instead.",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // If we get here, the user doesn't exist, so proceed with signup
+      // Directly attempt signup without checking existing user
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -103,11 +87,27 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
       if (error) {
         console.error("Signup error:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message,
-        });
+        
+        // Handle specific error cases
+        if (error.message.includes("User already registered")) {
+          toast({
+            variant: "destructive",
+            title: "Account exists",
+            description: "An account with this email already exists. Please sign in instead.",
+          });
+        } else if (error.message.includes("Error sending confirmation email")) {
+          toast({
+            variant: "destructive",
+            title: "Email Error",
+            description: "There was an issue sending the confirmation email. Please try again later.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: error.message,
+          });
+        }
         return;
       }
 
