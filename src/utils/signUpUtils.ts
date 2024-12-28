@@ -49,7 +49,7 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
     // Then attempt to send confirmation email via Edge Function
     try {
       console.log("Attempting to send confirmation email via Edge Function");
-      const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
+      const { error: emailError } = await supabase.functions.invoke('send-confirmation-email', {
         body: { 
           email: formData.email,
           name: formData.fullName,
@@ -58,7 +58,7 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
       });
 
       if (emailError) {
-        console.error("Error from send-signup-confirmation function:", emailError);
+        console.error("Error from send-confirmation-email function:", emailError);
         throw emailError;
       }
 
