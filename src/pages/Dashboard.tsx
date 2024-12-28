@@ -11,34 +11,34 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const checkAuth = async () => {
       try {
+        console.log("Checking session in Dashboard");
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("Checking session in Dashboard:", session);
         
+        if (!mounted) return;
+
         if (!session) {
           console.log("No active session, redirecting to login");
           navigate('/login');
           return;
         }
-        
-        // Verify the session is still valid by getting the user
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user) {
-          console.error("Error getting user or no user found:", error);
-          await supabase.auth.signOut();
-          navigate('/login');
-          return;
-        }
 
-        setUserEmail(user.email);
-        
+        // Only proceed if component is still mounted
+        if (mounted) {
+          setUserEmail(session.user.email);
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("Error checking auth:", error);
-        navigate('/login');
+        if (mounted) {
+          navigate('/login');
+        }
       }
     };
 
@@ -48,9 +48,11 @@ const Dashboard = () => {
     // Set up auth state listener
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session?.user?.email);
       
+      if (!mounted) return;
+
       if (event === 'SIGNED_OUT' || !session) {
         navigate('/login');
       } else if (session?.user) {
@@ -58,15 +60,18 @@ const Dashboard = () => {
       }
     });
 
-    // Cleanup subscription
+    // Cleanup function
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) throw error;
+      
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
@@ -81,6 +86,14 @@ const Dashboard = () => {
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
