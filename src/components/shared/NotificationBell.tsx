@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Trash2 } from "lucide-react";
+import { Bell, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,25 +37,37 @@ export const NotificationBell = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent 
+        align="end" 
+        className="w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg"
+      >
         {notifications?.length === 0 ? (
-          <DropdownMenuItem className="text-center">
+          <DropdownMenuItem className="text-center text-gray-500 dark:text-gray-400">
             No notifications
           </DropdownMenuItem>
         ) : (
           notifications?.map((notification) => (
             <DropdownMenuItem
               key={notification.id}
-              className="flex flex-col items-start p-4 space-y-1 cursor-default"
+              className="flex flex-col items-start p-4 space-y-1 cursor-default hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 last:border-0"
             >
               <div className="flex justify-between items-start w-full">
-                <div>
-                  <div className="font-semibold">{notification.title}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {notification.message}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {format(new Date(notification.created_at), "MMM d, yyyy HH:mm")}
+                <div className="flex items-start space-x-3">
+                  {notification.type === 'release' ? (
+                    <FileText className="h-5 w-5 text-blue-500 mt-1" />
+                  ) : (
+                    <Bell className="h-5 w-5 text-gray-500 mt-1" />
+                  )}
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">
+                      {notification.title}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                      {notification.message}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {format(new Date(notification.created_at), "MMM d, yyyy HH:mm")}
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -65,8 +77,9 @@ export const NotificationBell = () => {
                     e.stopPropagation();
                     handleDelete(notification.id);
                   }}
+                  className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </DropdownMenuItem>
