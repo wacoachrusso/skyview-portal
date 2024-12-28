@@ -8,11 +8,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { NotificationFormFields } from "./NotificationFormFields";
 
+type NotificationType = "system" | "update" | "release";
+
+interface NotificationData {
+  title: string;
+  message: string;
+  type: NotificationType;
+  notification_type: NotificationType;
+  profile_id: string;
+}
+
 interface NewNotificationDialogProps {
   profiles: any[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSend: (notification: any) => void;
+  onSend: (notification: NotificationData) => void;
 }
 
 export const NewNotificationDialog = ({
@@ -21,25 +31,36 @@ export const NewNotificationDialog = ({
   onOpenChange,
   onSend,
 }: NewNotificationDialogProps) => {
-  const [newNotification, setNewNotification] = useState({
+  const [newNotification, setNewNotification] = useState<NotificationData>({
     title: "",
     message: "",
     type: "system",
-    notification_type: "system" as "system" | "update" | "release",
+    notification_type: "system",
     profile_id: "",
   });
 
   const handleFieldChange = (field: string, value: any) => {
     setNewNotification((prev) => {
-      const updates: any = { [field]: value };
+      const updates: Partial<NotificationData> = { [field]: value };
       
-      // Sync type and notification_type when notification_type changes
-      if (field === "notification_type") {
-        updates.type = value;
+      // Sync type and notification_type when either changes
+      if (field === "notification_type" || field === "type") {
+        const notificationType = value as NotificationType;
+        updates.type = notificationType;
+        updates.notification_type = notificationType;
       }
       
       return { ...prev, ...updates };
     });
+  };
+
+  const handleSend = () => {
+    // Ensure both type fields are set correctly
+    const notification = {
+      ...newNotification,
+      type: newNotification.notification_type,
+    };
+    onSend(notification);
   };
 
   return (
@@ -58,7 +79,7 @@ export const NewNotificationDialog = ({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={() => onSend(newNotification)}>Send</Button>
+            <Button onClick={handleSend}>Send</Button>
           </div>
         </div>
       </DialogContent>

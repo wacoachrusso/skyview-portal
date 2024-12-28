@@ -8,12 +8,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type NotificationType = "system" | "update" | "release";
+
 interface NotificationFormFieldsProps {
   profiles: any[];
   notification: {
     title: string;
     message: string;
-    notification_type: "system" | "update" | "release";
+    notification_type: NotificationType;
     profile_id: string;
   };
   onChange: (field: string, value: any) => void;
@@ -50,7 +52,7 @@ export const NotificationFormFields = ({
         <Label htmlFor="type">Type</Label>
         <Select
           value={notification.notification_type}
-          onValueChange={(value: "system" | "update" | "release") =>
+          onValueChange={(value: NotificationType) =>
             onChange("notification_type", value)
           }
         >
