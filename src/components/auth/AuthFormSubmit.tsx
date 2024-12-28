@@ -95,6 +95,26 @@ export const AuthFormSubmit = async ({
 
     console.log("Signup successful:", data);
 
+    // Send confirmation email using our Resend edge function
+    try {
+      const confirmationUrl = `${window.location.origin}/login#confirmation`;
+      const emailResponse = await supabase.functions.invoke('send-confirmation-email', {
+        body: {
+          email: formData.email,
+          confirmationUrl: confirmationUrl
+        }
+      });
+
+      if (emailResponse.error) {
+        console.error("Error sending confirmation email:", emailResponse.error);
+        throw emailResponse.error;
+      }
+
+      console.log("Confirmation email sent successfully");
+    } catch (emailError) {
+      console.error("Error invoking confirmation email function:", emailError);
+    }
+
     // Send welcome email
     try {
       const emailResponse = await supabase.functions.invoke('send-welcome-email', {
