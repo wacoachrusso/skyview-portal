@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { addMonths, addYears, format } from "date-fns";
 
 export function WelcomeCard() {
   const [userEmail, setUserEmail] = useState("");
   const [plan, setPlan] = useState("");
   const [queriesRemaining, setQueriesRemaining] = useState(0);
+  const [subscriptionStart, setSubscriptionStart] = useState<Date | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,13 +21,14 @@ export function WelcomeCard() {
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('subscription_plan, query_count')
+          .select('subscription_plan, query_count, last_query_timestamp')
           .eq('id', user.id)
           .single();
           
         if (profile) {
           setPlan(profile.subscription_plan || "free");
           setQueriesRemaining(2 - (profile.query_count || 0));
+          setSubscriptionStart(profile.last_query_timestamp ? new Date(profile.last_query_timestamp) : new Date());
         }
       }
     };
@@ -33,10 +36,21 @@ export function WelcomeCard() {
     loadUserInfo();
   }, []);
 
+  const getSubscriptionExpiry = () => {
+    if (!subscriptionStart || plan === "free") return null;
+    
+    const startDate = new Date(subscriptionStart);
+    return plan === "monthly" 
+      ? addMonths(startDate, 1)
+      : addYears(startDate, 1);
+  };
+
   const handleUpgradeClick = () => {
     console.log("Navigating to pricing section");
     navigate('/?scrollTo=pricing');
   };
+
+  const expiryDate = getSubscriptionExpiry();
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -50,6 +64,11 @@ export function WelcomeCard() {
         <p className="text-white/70 mt-2">
           Plan: <span className="font-medium text-white/90">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
         </p>
+        {expiryDate && (
+          <p className="text-white/70 mt-2">
+            Your subscription will auto-renew on {format(expiryDate, 'MMMM d, yyyy')} unless canceled
+          </p>
+        )}
       </Card>
 
       {plan === "free" && (

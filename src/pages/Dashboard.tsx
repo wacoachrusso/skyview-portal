@@ -46,9 +46,7 @@ const Dashboard = () => {
         <div className="space-y-6">
           <WelcomeCard />
           {isAdmin && (
-            <div className="p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border">
-              <h3 className="text-lg font-semibold mb-4">Admin Controls</h3>
-            </div>
+            <div className="p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border" />
           )}
           <QuickActions />
           <RecentActivity />
