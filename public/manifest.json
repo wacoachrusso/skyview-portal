@@ -20,5 +20,6 @@
       "purpose": "any maskable"
     }
   ],
-  "permissions": ["notifications"]
+  "permissions": ["notifications"],
+  "icons_badge": "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png"
 }

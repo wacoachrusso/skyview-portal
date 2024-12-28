@@ -56,13 +56,13 @@ export const NotificationBell = () => {
     <Button 
       variant="ghost" 
       size="sm" 
-      className="relative"
+      className="relative p-2"
       onClick={handleClick}
     >
       {unreadCount > 0 ? (
         <>
           <BellDot className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
             {unreadCount}
           </span>
         </>
