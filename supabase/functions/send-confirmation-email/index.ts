@@ -14,7 +14,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("Email service configuration error");
+    }
+
     const { email, confirmationUrl } = await req.json();
+
+    if (!email || !confirmationUrl) {
+      console.error("Missing required fields:", { email, confirmationUrl });
+      throw new Error("Missing required fields");
+    }
 
     console.log("Sending confirmation email to:", email);
     console.log("Confirmation URL:", confirmationUrl);
@@ -72,8 +82,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!res.ok) {
       const error = await res.text();
-      console.error("Error sending email:", error);
-      throw new Error(error);
+      console.error("Error response from Resend:", error);
+      throw new Error(`Failed to send email: ${error}`);
     }
 
     const data = await res.json();
