@@ -1,15 +1,6 @@
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface NotificationDescriptionProps {
   showPermissionDialog: boolean;
@@ -24,34 +15,36 @@ export function NotificationDescription({
 }: NotificationDescriptionProps) {
   return (
     <>
-      <Alert className="bg-white/5 border-white/10">
-        <Info className="h-4 w-4 text-white" />
-        <AlertDescription className="text-sm text-gray-300">
-          Get notified about important updates and changes to keep you informed.
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          To receive notifications, you need to allow them in your browser settings.
+          If notifications are blocked, you'll need to unblock them in your browser preferences.
         </AlertDescription>
       </Alert>
 
       <AlertDialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
-        <AlertDialogContent className="bg-[#1E1E2E] border border-white/10">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Enable Notifications</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              To receive important updates, you'll need to allow browser notifications. 
-              Would you like to enable notifications?
+            <AlertDialogTitle>Enable Notifications</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                To stay updated with important announcements and release notes, we need your permission to send notifications.
+              </p>
+              <p>
+                When prompted by your browser:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Click "Allow" to enable notifications</li>
+                <li>You can change this setting anytime in your browser preferences</li>
+                <li>You'll receive notifications for important updates and release notes</li>
+              </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel 
-              className="bg-gray-700 text-white hover:bg-gray-600"
-              onClick={() => setShowPermissionDialog(false)}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={onConfirmPermission}
-            >
-              Enable
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onConfirmPermission}>
+              Enable Notifications
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
