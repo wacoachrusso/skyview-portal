@@ -2,6 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+type NotificationType = "system" | "update" | "release";
+
+interface NotificationData {
+  title: string;
+  message: string;
+  type: NotificationType;
+  notification_type: NotificationType;
+  profile_id: string;
+}
+
 export const useNotifications = () => {
   const { toast } = useToast();
 
@@ -34,21 +44,30 @@ export const useNotifications = () => {
     },
   });
 
-  const sendNotification = async (notification: any) => {
+  const sendNotification = async (notification: NotificationData) => {
     try {
       console.log("Sending notification:", notification);
       
+      // Ensure notification type is valid
+      if (!["system", "update", "release"].includes(notification.type)) {
+        throw new Error("Invalid notification type");
+      }
+
       if (notification.profile_id === "all") {
         // Send to all users
         const { data: allProfiles } = await supabase
           .from("profiles")
           .select("id");
         
-        const notifications = allProfiles!.map(profile => ({
+        if (!allProfiles) {
+          throw new Error("No profiles found");
+        }
+
+        const notifications = allProfiles.map(profile => ({
           title: notification.title,
           message: notification.message,
           type: notification.type,
-          notification_type: notification.notification_type,
+          notification_type: notification.type, // Ensure both fields match
           profile_id: profile.id,
           user_id: profile.id,
         }));
@@ -66,7 +85,7 @@ export const useNotifications = () => {
             title: notification.title,
             message: notification.message,
             type: notification.type,
-            notification_type: notification.notification_type,
+            notification_type: notification.type, // Ensure both fields match
             profile_id: notification.profile_id,
             user_id: notification.profile_id
           }]);
