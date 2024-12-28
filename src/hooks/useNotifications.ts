@@ -45,7 +45,10 @@ export const useNotifications = () => {
           .select("id");
         
         const notifications = allProfiles!.map(profile => ({
-          ...notification,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          notification_type: notification.notification_type,
           profile_id: profile.id,
           user_id: profile.id,
         }));
@@ -60,7 +63,11 @@ export const useNotifications = () => {
         const { error } = await supabase
           .from("notifications")
           .insert([{
-            ...notification,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            notification_type: notification.notification_type,
+            profile_id: notification.profile_id,
             user_id: notification.profile_id
           }]);
 

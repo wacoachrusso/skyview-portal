@@ -33,6 +33,7 @@ export const NewNotificationDialog = ({
     title: "",
     message: "",
     type: "system",
+    notification_type: "system" as "system" | "update" | "release",
     profile_id: "",
   });
 
@@ -68,9 +69,13 @@ export const NewNotificationDialog = ({
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
             <Select
-              value={newNotification.type}
-              onValueChange={(value) =>
-                setNewNotification({ ...newNotification, type: value })
+              value={newNotification.notification_type}
+              onValueChange={(value: "system" | "update" | "release") =>
+                setNewNotification({
+                  ...newNotification,
+                  type: value,
+                  notification_type: value,
+                })
               }
             >
               <SelectTrigger>
@@ -78,8 +83,8 @@ export const NewNotificationDialog = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="system">System</SelectItem>
-                <SelectItem value="alert">Alert</SelectItem>
                 <SelectItem value="update">Update</SelectItem>
+                <SelectItem value="release">Release</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -113,10 +118,7 @@ export const NewNotificationDialog = ({
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button onClick={() => onSend(newNotification)}>Send</Button>
