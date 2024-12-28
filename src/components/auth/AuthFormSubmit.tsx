@@ -39,6 +39,15 @@ export const AuthFormSubmit = ({
 
       if (!data.user?.email_confirmed_at) {
         console.log("Email not confirmed");
+        
+        // Send verification email using our Edge Function
+        await supabase.functions.invoke('send-signup-confirmation', {
+          body: { 
+            email: formData.email,
+            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+          }
+        });
+
         toast({
           variant: "destructive",
           title: "Email not verified",
@@ -83,10 +92,19 @@ export const AuthFormSubmit = ({
             subscription_plan: finalSelectedPlan,
             last_ip_address: ip,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         },
       });
 
       if (error) throw error;
+
+      // Send welcome email using our Edge Function
+      await supabase.functions.invoke('send-signup-confirmation', {
+        body: { 
+          email: formData.email,
+          confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+        }
+      });
 
       console.log("Sign up successful:", data);
       toast({

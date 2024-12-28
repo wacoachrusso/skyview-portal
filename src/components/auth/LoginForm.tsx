@@ -19,6 +19,39 @@ export const LoginForm = () => {
     rememberMe: false
   });
 
+  const handleMagicLinkLogin = async (email: string) => {
+    try {
+      console.log('Starting magic link login process for:', email);
+      
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      // Send custom email using our Edge Function
+      const loginUrl = data?.session?.access_token;
+      await supabase.functions.invoke('send-login-link', {
+        body: { email, loginUrl }
+      });
+
+      toast({
+        title: "Check your email",
+        description: "We've sent you a magic link to sign in.",
+      });
+    } catch (error) {
+      console.error('Magic link error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not send login link. Please try again.",
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -55,6 +88,15 @@ export const LoginForm = () => {
       if (!data.user.email_confirmed_at) {
         console.log('Email not verified');
         await supabase.auth.signOut();
+        
+        // Send verification email using our Edge Function
+        await supabase.functions.invoke('send-signup-confirmation', {
+          body: { 
+            email: formData.email,
+            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+          }
+        });
+
         toast({
           variant: "destructive",
           title: "Email not verified",
@@ -190,6 +232,16 @@ export const LoginForm = () => {
       >
         {loading ? "Logging in..." : "Login"}
       </Button>
+
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={() => handleMagicLinkLogin(formData.email)}
+          className="text-sm text-gray-400 hover:text-white"
+        >
+          Sign in with magic link instead
+        </button>
+      </div>
     </form>
   );
 };
