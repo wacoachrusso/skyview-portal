@@ -9,7 +9,7 @@ export const AuthCallback = () => {
 
   const showWelcomeTutorial = (userName: string) => {
     toast({
-      title: `Welcome back to SkyGuide, ${userName}! 👋`,
+      title: `Welcome to SkyGuide, ${userName}! 👋`,
       description: "We're glad to see you again!",
       duration: 5000,
     });
@@ -50,7 +50,7 @@ export const AuthCallback = () => {
         // Check if profile exists and is complete
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_type, airline, full_name')
+          .select('user_type, airline, full_name, subscription_plan')
           .eq('id', session.user.id)
           .single();
 
@@ -58,6 +58,26 @@ export const AuthCallback = () => {
 
         // Get the user's name for the welcome message
         const userName = profile?.full_name || session.user.user_metadata.full_name || 'there';
+
+        // Send welcome email
+        try {
+          console.log('Sending welcome email...');
+          const { error: welcomeEmailError } = await supabase.functions.invoke('send-welcome-email', {
+            body: { 
+              email: session.user.email,
+              name: userName,
+              plan: profile?.subscription_plan || 'free'
+            }
+          });
+
+          if (welcomeEmailError) {
+            console.error('Error sending welcome email:', welcomeEmailError);
+          } else {
+            console.log('Welcome email sent successfully');
+          }
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+        }
 
         // For Google auth, update profile with Google user data if needed
         if (session.user.app_metadata.provider === 'google' && !profile?.full_name) {
