@@ -19,49 +19,80 @@ const Dashboard = () => {
     const checkAuth = async () => {
       try {
         console.log("Checking session in Dashboard");
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (!mounted) return;
-
-        if (!session) {
-          console.log("No active session, redirecting to login");
-          navigate('/login');
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          if (mounted) {
+            setIsLoading(false);
+            navigate('/login');
+          }
           return;
         }
 
-        // Only proceed if component is still mounted
+        if (!session) {
+          console.log("No active session found");
+          if (mounted) {
+            setIsLoading(false);
+            navigate('/login');
+          }
+          return;
+        }
+
+        // Verify user exists and session is valid
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error("Error getting user or no user found:", userError);
+          if (mounted) {
+            // Clear any invalid session state
+            await supabase.auth.signOut({ scope: 'local' });
+            localStorage.clear();
+            setIsLoading(false);
+            navigate('/login');
+          }
+          return;
+        }
+
+        console.log("Valid session found for user:", user.email);
         if (mounted) {
-          setUserEmail(session.user.email);
+          setUserEmail(user.email);
           setIsLoading(false);
         }
       } catch (error) {
-        console.error("Error checking auth:", error);
+        console.error("Unexpected error in checkAuth:", error);
         if (mounted) {
+          localStorage.clear();
+          setIsLoading(false);
           navigate('/login');
         }
       }
     };
 
-    // Initial check
+    // Initial auth check
     checkAuth();
 
     // Set up auth state listener
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.email);
       
       if (!mounted) return;
 
       if (event === 'SIGNED_OUT' || !session) {
+        console.log("User signed out or session ended");
+        localStorage.clear();
         navigate('/login');
       } else if (session?.user) {
+        console.log("Valid session detected");
         setUserEmail(session.user.email);
       }
     });
 
     // Cleanup function
     return () => {
+      console.log("Dashboard component unmounting");
       mounted = false;
       subscription.unsubscribe();
     };
@@ -69,21 +100,48 @@ const Dashboard = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log("Starting sign out process");
+      setIsLoading(true);
+      
+      // First check if we have a valid session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.log("No active session found, cleaning up");
+        localStorage.clear();
+        navigate('/login');
+        return;
+      }
+
+      // Attempt to sign out
       const { error } = await supabase.auth.signOut({ scope: 'local' });
-      if (error) throw error;
+      if (error) {
+        console.error("Error during sign out:", error);
+        throw error;
+      }
+      
+      console.log("Sign out successful");
+      localStorage.clear();
       
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
       });
+      
       navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
+      // Even if there's an error, clean up and redirect
+      localStorage.clear();
+      navigate('/login');
+      
       toast({
         title: "Error signing out",
         description: "There was a problem signing out. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
