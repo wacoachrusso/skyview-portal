@@ -54,6 +54,7 @@ export const NotificationManager = () => {
         const notifications = allProfiles!.map(profile => ({
           ...notification,
           profile_id: profile.id,
+          user_id: profile.id, // Add user_id since it's required
         }));
         
         const { error } = await supabase
@@ -65,7 +66,10 @@ export const NotificationManager = () => {
         // Send to single user
         const { error } = await supabase
           .from("notifications")
-          .insert([notification]);
+          .insert([{
+            ...notification,
+            user_id: notification.profile_id // Add user_id since it's required
+          }]);
 
         if (error) throw error;
       }
