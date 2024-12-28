@@ -108,19 +108,22 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Use Resend's Broadcast API for bulk sending
+    // Format the emails array for Resend's batch API
+    const emails = emailRecipients.map(recipient => ({
+      from: "SkyGuide Updates <updates@skyguide.site>",
+      to: [recipient],
+      subject: `New Release: ${releaseNote.title}`,
+      html: emailHtml,
+    }));
+
+    // Use Resend's Batch API
     const res = await fetch("https://api.resend.com/emails/batch", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
-      body: JSON.stringify({
-        from: "SkyGuide Updates <updates@skyguide.site>",
-        bcc: emailRecipients, // Use BCC for privacy
-        subject: `New Release: ${releaseNote.title}`,
-        html: emailHtml,
-      }),
+      body: JSON.stringify(emails),
     });
 
     if (!res.ok) {
