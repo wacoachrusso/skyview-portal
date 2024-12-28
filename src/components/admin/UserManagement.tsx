@@ -17,10 +17,13 @@ export const UserManagement = () => {
     handleDeleteUser,
   } = useUserManagement();
 
+  // Filter out deleted users since they're completely removed now
+  const activeUsers = users?.filter(user => user.account_status !== 'deleted') || [];
+
   return (
     <div className="space-y-4">
       <UsersTable
-        users={users}
+        users={activeUsers}
         updatingUser={updatingUser}
         toggleAdminStatus={toggleAdminStatus}
         updateAccountStatus={updateAccountStatus}

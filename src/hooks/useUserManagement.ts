@@ -16,7 +16,6 @@ export const useUserManagement = () => {
     queryKey: ["admin-users"],
     queryFn: async () => {
       console.log("Fetching users data...");
-      // Remove the neq filter to get all users including deleted ones
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -62,7 +61,7 @@ export const useUserManagement = () => {
   const updateAccountStatus = async (
     userId: string,
     email: string,
-    status: "disabled" | "suspended" | "deleted" | "active"
+    status: "disabled" | "suspended" | "active"
   ) => {
     try {
       console.log(`Updating account status to ${status} for user:`, userId);
@@ -87,18 +86,23 @@ export const useUserManagement = () => {
         title: "Error",
         description: `Failed to ${status} user account`,
       });
-      throw error; // Propagate error for proper handling in deletion flow
+      throw error;
     }
   };
 
   const handleDeleteUser = async (user: ProfilesRow) => {
-    if (isDeleting) return; // Prevent multiple deletion attempts
+    if (isDeleting) return;
     
     setIsDeleting(true);
     try {
-      await handleUserDeletion(user, updateAccountStatus, () => {
+      await handleUserDeletion(user, () => {
         setUserToDelete(null);
         refetch();
+      });
+
+      toast({
+        title: "Success",
+        description: "User account deleted successfully",
       });
     } catch (error) {
       console.error("Error in handleDeleteUser:", error);
@@ -118,11 +122,11 @@ export const useUserManagement = () => {
     updatingUser,
     selectedUser,
     userToDelete,
+    isDeleting,
     setSelectedUser,
     setUserToDelete,
     toggleAdminStatus,
     updateAccountStatus,
     handleDeleteUser,
-    isDeleting,
   };
 };

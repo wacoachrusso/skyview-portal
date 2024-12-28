@@ -13,22 +13,45 @@ export const deleteUserFromAuthSystem = async (userId: string) => {
   }
 };
 
-export const deleteUserConversations = async (userId: string) => {
-  console.log("Deleting user conversations:", userId);
-  const { error } = await supabase
+export const deleteUserData = async (userId: string) => {
+  console.log("Deleting all user data:", userId);
+  
+  // Delete conversations and their messages (messages will be cascade deleted)
+  const { error: conversationsError } = await supabase
     .from("conversations")
     .delete()
     .eq("user_id", userId);
 
-  if (error) {
-    console.error("Error deleting user conversations:", error);
-    throw error;
+  if (conversationsError) {
+    console.error("Error deleting user conversations:", conversationsError);
+    throw conversationsError;
+  }
+
+  // Delete notifications
+  const { error: notificationsError } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("user_id", userId);
+
+  if (notificationsError) {
+    console.error("Error deleting user notifications:", notificationsError);
+    throw notificationsError;
+  }
+
+  // Delete profile
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .delete()
+    .eq("id", userId);
+
+  if (profileError) {
+    console.error("Error deleting user profile:", profileError);
+    throw profileError;
   }
 };
 
 export const handleUserDeletion = async (
   user: ProfilesRow,
-  updateAccountStatus: (userId: string, email: string, status: "deleted") => Promise<void>,
   onSuccess?: () => void
 ) => {
   try {
@@ -38,15 +61,11 @@ export const handleUserDeletion = async (
     await deleteUserFromAuthSystem(user.id);
     console.log("Successfully deleted user from auth system");
 
-    // Step 2: Delete conversations
-    await deleteUserConversations(user.id);
-    console.log("Successfully deleted user conversations");
+    // Step 2: Delete all user data
+    await deleteUserData(user.id);
+    console.log("Successfully deleted all user data");
 
-    // Step 3: Update account status
-    await updateAccountStatus(user.id, user.email || "", "deleted");
-    console.log("Successfully updated user account status to deleted");
-
-    // Step 4: Send deletion notification email via Resend
+    // Step 3: Send deletion notification email via Resend
     const { error: emailError } = await supabase.functions.invoke(
       "send-account-status-email",
       {
