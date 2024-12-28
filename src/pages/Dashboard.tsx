@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
@@ -7,7 +8,6 @@ import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 
 const Dashboard = () => {
   const { userEmail, isLoading, handleSignOut } = useAuthManagement();
