@@ -202,12 +202,16 @@ export const UserManagement = () => {
                           <AlertCircle className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent>
+                      <DropdownMenuContent
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg"
+                        align="end"
+                        sideOffset={5}
+                      >
                         <DropdownMenuItem
                           onClick={() =>
                             updateAccountStatus(user.id, user.email || "", "disabled")
                           }
-                          className="text-yellow-600"
+                          className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/10"
                         >
                           <Ban className="h-4 w-4 mr-2" />
                           Disable Account
@@ -216,14 +220,14 @@ export const UserManagement = () => {
                           onClick={() =>
                             updateAccountStatus(user.id, user.email || "", "suspended")
                           }
-                          className="text-orange-600"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/10"
                         >
                           <AlertCircle className="h-4 w-4 mr-2" />
                           Suspend Account
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setUserToDelete(user)}
-                          className="text-red-600"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete Account
