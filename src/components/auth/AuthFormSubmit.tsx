@@ -3,16 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { handleSignIn } from "@/utils/signInUtils";
-import { handleSignUp } from "@/utils/signUpUtils";
+import { handleSignUp, SignUpData } from "@/utils/signUpUtils";
 
 interface AuthFormSubmitProps {
-  formData: {
-    email: string;
-    password: string;
-    full_name?: string;
-    user_type?: string;
-    airline?: string;
-  };
+  formData: SignUpData;
   selectedPlan?: string;
   isSignUp?: boolean;
 }

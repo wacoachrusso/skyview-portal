@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-interface SignUpData {
+export interface SignUpData {
   email: string;
   password: string;
   fullName: string;
