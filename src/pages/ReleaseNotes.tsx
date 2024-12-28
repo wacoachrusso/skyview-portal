@@ -1,12 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { FileText, Calendar, Info, Rocket, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const ReleaseNotes = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const { data: releaseNotes, isLoading } = useQuery({
     queryKey: ["releaseNotes"],
     queryFn: async () => {
@@ -25,6 +30,40 @@ const ReleaseNotes = () => {
       return data;
     },
   });
+
+  const markNotificationsAsRead = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      console.log("Marking notifications as read");
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      if (error) {
+        console.error("Error marking notifications as read:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
+    },
+    onError: (error) => {
+      console.error("Failed to mark notifications as read:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update notification status",
+      });
+    },
+  });
+
+  useEffect(() => {
+    markNotificationsAsRead.mutate();
+  }, []);
 
   if (isLoading) {
     return (

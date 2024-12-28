@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, BellDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 export const NotificationBell = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["unreadNotifications"],
@@ -30,6 +31,36 @@ export const NotificationBell = () => {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
+  const markNotificationsAsRead = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      console.log("Marking notifications as read");
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      if (error) {
+        console.error("Error marking notifications as read:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
+    },
+    onError: (error) => {
+      console.error("Failed to mark notifications as read:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update notification status",
+      });
+    },
+  });
+
   useEffect(() => {
     const setupNotifications = async () => {
       try {
@@ -47,8 +78,9 @@ export const NotificationBell = () => {
     setupNotifications();
   }, []);
 
-  const handleClick = () => {
+  const handleClick = async () => {
     console.log("Notification bell clicked, navigating to release notes");
+    await markNotificationsAsRead.mutateAsync();
     navigate('/release-notes');
   };
 
