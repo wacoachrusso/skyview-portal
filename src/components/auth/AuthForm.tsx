@@ -36,24 +36,12 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       console.log("Auth state changed:", event, session);
       
       if (event === 'SIGNED_IN') {
-        if (!session?.user?.email_confirmed_at) {
-          console.log("Email not confirmed - signing out");
-          await supabase.auth.signOut();
-          toast({
-            title: "Email verification required",
-            description: "Please check your email and confirm your address before signing in.",
-            variant: "destructive"
-          });
-          navigate('/login');
-          return;
-        }
-
-        console.log("User signed in after email confirmation");
+        console.log("User signed in");
         toast({
           title: "Welcome to SkyGuide!",
           description: finalSelectedPlan === 'free' 
-            ? "Your email has been confirmed. You have 2 queries available."
-            : "Your email has been confirmed. Your account is now active.",
+            ? "Your account has been created. You have 2 queries available."
+            : "Your account has been created. Your account is now active.",
         });
         navigate('/chat');
       }
@@ -71,6 +59,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setPasswordError(null);
 
     try {
+      // Sign up the user with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -112,7 +101,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           body: { 
             email: formData.email,
             name: formData.fullName,
-            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+            confirmationUrl: `${window.location.origin}/auth/callback`
           }
         });
 
