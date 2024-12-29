@@ -35,6 +35,9 @@ export const useLoginForm = () => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
         password: formData.password,
+        options: {
+          persistSession: formData.rememberMe
+        }
       });
 
       if (error) {
