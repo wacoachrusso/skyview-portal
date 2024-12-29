@@ -34,8 +34,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending welcome email to:", email);
 
-    // Get the domain from the environment or use a default test domain
-    const fromEmail = "onboarding@resend.dev"; // Using Resend's test domain
+    // Using verified domain
+    const fromEmail = "onboarding@skyguide.site";
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
