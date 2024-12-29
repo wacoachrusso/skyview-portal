@@ -27,6 +27,17 @@ export function PricingSection() {
         return;
       }
 
+      // Get current user profile to check current plan
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('subscription_plan, full_name, email')
+        .eq('id', user.id)
+        .single();
+
+      if (!currentProfile) {
+        throw new Error("User profile not found");
+      }
+
       // Get user's IP address using a public API
       const ipResponse = await fetch('https://api.ipify.org?format=json');
       const { ip } = await ipResponse.json();
@@ -47,6 +58,22 @@ export function PricingSection() {
       if (error) {
         console.error("Error updating profile:", error);
         throw error;
+      }
+
+      // Send email notification about plan change
+      console.log("Sending plan change email notification");
+      const { error: emailError } = await supabase.functions.invoke('send-plan-change-email', {
+        body: {
+          email: currentProfile.email,
+          oldPlan: currentProfile.subscription_plan,
+          newPlan: plan,
+          fullName: currentProfile.full_name
+        },
+      });
+
+      if (emailError) {
+        console.error("Error sending plan change email:", emailError);
+        // Don't throw here, as the plan change was successful
       }
 
       toast({
