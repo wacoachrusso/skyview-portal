@@ -9,6 +9,7 @@ import SignUp from "@/pages/SignUp";
 import Chat from "@/pages/Chat";
 import Dashboard from "@/pages/Dashboard";
 import Settings from "@/pages/Settings";
+import Account from "@/pages/Account";
 import CompleteProfile from "@/pages/CompleteProfile";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ReleaseNotes from "@/pages/ReleaseNotes";
@@ -46,6 +47,7 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/release-notes" element={<ReleaseNotes />} />
