@@ -58,6 +58,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setPasswordError(null);
 
     try {
+      console.log("Starting signup process...");
+      
       const signUpData = {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -77,7 +79,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         password: '[REDACTED]'
       });
 
-      const { error } = await supabase.auth.signUp(signUpData);
+      const { data, error } = await supabase.auth.signUp(signUpData);
 
       if (error) {
         console.error("Signup error:", error);
@@ -98,12 +100,23 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         return;
       }
 
-      console.log("Signup successful");
+      if (!data.user || !data.session) {
+        console.log("Signup successful, email confirmation required");
+        toast({
+          title: "Success",
+          description: "Please check your email to verify your account.",
+        });
+        navigate('/login');
+        return;
+      }
+
+      // If we get here, the user was signed up and confirmed immediately
+      console.log("Signup and confirmation successful");
       toast({
-        title: "Success",
-        description: "Please check your email to verify your account.",
+        title: "Welcome to SkyGuide!",
+        description: "Your account has been created successfully.",
       });
-      navigate('/login');
+      navigate('/chat');
 
     } catch (error: any) {
       console.error("Unexpected error during signup:", error);
