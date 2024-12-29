@@ -60,6 +60,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     try {
       console.log("Starting signup process...");
       
+      // First, sign up the user with Supabase but disable email confirmation
       const signUpData = {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -100,23 +101,31 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         return;
       }
 
-      if (!data.user || !data.session) {
-        console.log("Signup successful, email confirmation required");
+      // Send confirmation email via our Edge Function
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
+          body: { 
+            email: formData.email,
+            name: formData.fullName,
+            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+          }
+        });
+
+        if (emailError) throw emailError;
+
         toast({
           title: "Success",
           description: "Please check your email to verify your account.",
         });
         navigate('/login');
-        return;
+      } catch (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not send confirmation email. Please contact support.",
+        });
       }
-
-      // If we get here, the user was signed up and confirmed immediately
-      console.log("Signup and confirmation successful");
-      toast({
-        title: "Welcome to SkyGuide!",
-        description: "Your account has been created successfully.",
-      });
-      navigate('/chat');
 
     } catch (error: any) {
       console.error("Unexpected error during signup:", error);
