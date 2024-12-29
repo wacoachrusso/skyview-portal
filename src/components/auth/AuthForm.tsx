@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthFormHeader } from "./AuthFormHeader";
@@ -30,10 +30,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   const stateSelectedPlan = location.state?.selectedPlan;
   const finalSelectedPlan = selectedPlan || stateSelectedPlan || 'free';
 
-  useEffect(() => {
-    console.log('Selected plan:', finalSelectedPlan);
-  }, [finalSelectedPlan]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -50,7 +46,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         plan: finalSelectedPlan
       });
 
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
@@ -63,9 +59,9 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         }
       });
 
-      if (signUpError) {
-        console.error("Signup error:", signUpError);
-        if (signUpError.message.includes("User already registered")) {
+      if (error) {
+        console.error("Signup error:", error);
+        if (error.message.includes("User already registered")) {
           toast({
             variant: "destructive",
             title: "Account exists",
@@ -75,12 +71,13 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: signUpError.message,
+            description: error.message,
           });
         }
         return;
       }
 
+      console.log("Signup successful:", data);
       toast({
         title: "Account created",
         description: "Your account has been created successfully. You can now sign in.",
