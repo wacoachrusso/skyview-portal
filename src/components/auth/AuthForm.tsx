@@ -50,7 +50,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         plan: finalSelectedPlan
       });
 
-      // Attempt signup
       const { error: signUpError } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -82,29 +81,12 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         return;
       }
 
-      // If signup successful, send confirmation email
-      try {
-        await supabase.functions.invoke('send-signup-confirmation', {
-          body: { 
-            email: formData.email,
-            name: formData.fullName,
-            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
-          }
-        });
+      toast({
+        title: "Account created",
+        description: "Your account has been created successfully. You can now sign in.",
+      });
+      navigate('/login');
 
-        toast({
-          title: "Success",
-          description: "Please check your email to verify your account.",
-        });
-        navigate('/login');
-      } catch (emailError) {
-        console.error("Error sending confirmation email:", emailError);
-        toast({
-          variant: "destructive",
-          title: "Partial success",
-          description: "Account created but we couldn't send the confirmation email. Please contact support.",
-        });
-      }
     } catch (error) {
       console.error("Unexpected error during signup:", error);
       toast({
