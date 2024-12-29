@@ -93,69 +93,68 @@ const Account = () => {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen text-white">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
-      <div className="absolute inset-0 bg-glow-gradient pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
       <DashboardHeader userEmail={userEmail} onSignOut={() => navigate('/login')} />
       <main className="container mx-auto px-4 py-8 max-w-4xl relative">
         <div className="space-y-6">
-          <Card className="bg-white/90 backdrop-blur-sm">
+          <Card className="bg-white/95 shadow-xl">
             <CardHeader>
-              <CardTitle>Account Information</CardTitle>
+              <CardTitle className="text-brand-navy">Account Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4">
                 <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium">Email:</span>
-                  <span className="col-span-2">{userEmail}</span>
+                  <span className="font-medium text-brand-navy">Email:</span>
+                  <span className="col-span-2 text-gray-700">{userEmail}</span>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium">Full Name:</span>
-                  <span className="col-span-2">{profile?.full_name || 'Not set'}</span>
+                  <span className="font-medium text-brand-navy">Full Name:</span>
+                  <span className="col-span-2 text-gray-700">{profile?.full_name || 'Not set'}</span>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium">User Type:</span>
-                  <span className="col-span-2">{profile?.user_type || 'Not set'}</span>
+                  <span className="font-medium text-brand-navy">User Type:</span>
+                  <span className="col-span-2 text-gray-700">{profile?.user_type || 'Not set'}</span>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium">Airline:</span>
-                  <span className="col-span-2">{profile?.airline || 'Not set'}</span>
+                  <span className="font-medium text-brand-navy">Airline:</span>
+                  <span className="col-span-2 text-gray-700">{profile?.airline || 'Not set'}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-sm">
+          <Card className="bg-white/95 shadow-xl">
             <CardHeader>
-              <CardTitle>Subscription Details</CardTitle>
+              <CardTitle className="text-brand-navy">Subscription Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid gap-4">
                 <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium">Current Plan:</span>
-                  <span className="col-span-2 capitalize">{profile?.subscription_plan || 'Free'}</span>
+                  <span className="font-medium text-brand-navy">Current Plan:</span>
+                  <span className="col-span-2 text-gray-700 capitalize">{profile?.subscription_plan || 'Free'}</span>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium">Queries Used:</span>
-                  <span className="col-span-2">{profile?.query_count || 0}</span>
+                  <span className="font-medium text-brand-navy">Queries Used:</span>
+                  <span className="col-span-2 text-gray-700">{profile?.query_count || 0}</span>
                 </div>
                 {profile?.last_query_timestamp && (
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <span className="font-medium">Last Query:</span>
-                    <span className="col-span-2">
+                    <span className="font-medium text-brand-navy">Last Query:</span>
+                    <span className="col-span-2 text-gray-700">
                       {format(new Date(profile.last_query_timestamp), 'PPpp')}
                     </span>
                   </div>
                 )}
               </div>
 
-              <Separator />
+              <Separator className="bg-gray-200" />
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Plan Management</h3>
+                <h3 className="text-lg font-semibold text-brand-navy">Plan Management</h3>
                 {profile?.subscription_plan === 'free' ? (
                   <Button
                     onClick={() => handlePlanChange('paid')}
