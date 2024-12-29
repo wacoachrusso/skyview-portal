@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn } from "lucide-react";
+import { LogIn, MessageSquare, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { NavigationButtons } from "@/components/shared/NavigationButtons";
 
 export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -88,7 +87,37 @@ export function Navbar() {
               <div className="flex items-center gap-3">
                 <span className="text-sm text-white hidden md:inline">Welcome back, {userEmail}</span>
                 <NotificationBell />
-                <NavigationButtons />
+                <Button 
+                  asChild
+                  variant="secondary"
+                  size="sm"
+                  className="text-white hover:bg-brand-gold hover:text-black"
+                >
+                  <Link to="/chat">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Chat Now
+                  </Link>
+                </Button>
+                <Button 
+                  asChild
+                  variant="secondary"
+                  size="sm"
+                  className="text-white hover:bg-brand-gold hover:text-black"
+                >
+                  <Link to="/account">
+                    <User className="mr-2 h-4 w-4" />
+                    Account
+                  </Link>
+                </Button>
+                <Button 
+                  asChild
+                  size="sm"
+                  className="bg-brand-gold text-black hover:bg-brand-gold/90"
+                >
+                  <Link to="/dashboard">
+                    Dashboard
+                  </Link>
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2 md:gap-3">

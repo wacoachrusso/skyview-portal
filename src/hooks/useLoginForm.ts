@@ -34,7 +34,7 @@ export const useLoginForm = () => {
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
-        password: formData.password
+        password: formData.password,
       });
 
       if (error) {
@@ -80,10 +80,11 @@ export const useLoginForm = () => {
 
       if (formData.rememberMe) {
         console.log('Setting persistent session...');
-        // Set session persistence after successful login
-        await supabase.auth.setSession({
-          refresh_token: data.session.refresh_token,
-          access_token: data.session.access_token
+        await supabase.auth.updateUser({
+          data: { 
+            persistent: true,
+            session_expires_in: 60 * 60 * 24 * 14 // 14 days
+          }
         });
       }
 
