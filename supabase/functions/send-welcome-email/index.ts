@@ -34,8 +34,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending welcome email to:", email);
 
-    // Using verified domain
     const fromEmail = "onboarding@skyguide.site";
+    const firstName = name?.split(' ')[0] || "Aviation Professional";
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -46,47 +46,59 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: fromEmail,
         to: [email],
-        subject: "Welcome to SkyGuide - Your Professional Aviation Assistant",
+        subject: "Welcome to SkyGuide – Your Journey Starts Here!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px; background-color: #1a365d; padding: 20px;">
               <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px; height: auto;"/>
             </div>
             
+            <h1 style="color: #1a365d; text-align: center; font-size: 24px; margin-bottom: 30px;">
+              Unlock a World of Insights at Your Fingertips
+            </h1>
+            
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Dear ${name || "Aviation Professional"},
+              Hi ${firstName},
             </p>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Welcome to SkyGuide! We're excited to have you join our community of aviation professionals. Our platform is specifically designed to support your daily operations and enhance your professional capabilities in the aviation industry.
+              We're thrilled to welcome you to SkyGuide! Your one-stop solution for all your union contract-related needs is now just a tap away.
             </p>
             
             <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
-              <h2 style="color: #1a365d; margin-bottom: 15px;">What You Can Do with SkyGuide</h2>
+              <h2 style="color: #1a365d; margin-bottom: 15px;">Here's what you can look forward to:</h2>
               <ul style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-                <li style="margin-bottom: 10px;">✈️ Access comprehensive aviation resources</li>
-                <li style="margin-bottom: 10px;">📚 Get instant answers to technical questions</li>
-                <li style="margin-bottom: 10px;">🔍 Find relevant aviation regulations and procedures</li>
-                <li style="margin-bottom: 10px;">📱 Available on any device, anywhere</li>
+                <li style="margin-bottom: 10px;">✨ Quick Answers: No more flipping through pages—find what you need instantly.</li>
+                <li style="margin-bottom: 10px;">📝 Streamlined Grievances: Submit and track your issues with ease.</li>
+                <li style="margin-bottom: 10px;">👥 Union Contact Hub: Access reps and resources when you need them most.</li>
               </ul>
             </div>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Our team is dedicated to supporting your aviation career and making your daily operations more efficient. If you have any questions, simply reply to this email - we're here to help!
+              Let's get started! Log in today and explore how SkyGuide can make your work-life simpler, faster, and more organized.
             </p>
             
-            <div style="text-align: center; margin-top: 40px;">
-              <a href="https://skyguide.site/chat" 
-                 style="background-color: #fbbf24; color: #1a365d; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                Start Using SkyGuide
+            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+              Your success in the skies begins here.
+            </p>
+            
+            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+              Warm regards,<br>
+              The SkyGuide Team
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://skyguide.site/login" 
+                 style="background-color: #1a365d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Log In Now
               </a>
             </div>
             
+            <p style="color: #718096; font-style: italic; text-align: center; margin-top: 30px;">
+              P.S. Got questions? Our team is here to help at support@skyguide.site
+            </p>
+            
             <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-              <p style="color: #718096; font-size: 14px;">
-                Safe flights! ✈️<br>
-                The SkyGuide Team
-              </p>
               <p style="color: #a0aec0; font-size: 12px;">
                 © 2024 SkyGuide. All rights reserved.
               </p>
