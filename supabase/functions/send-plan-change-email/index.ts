@@ -19,8 +19,23 @@ const getEmailContent = (oldPlan: string, newPlan: string, fullName: string = "U
   let subject = "";
   let message = "";
 
-  if (oldPlan === "free" && (newPlan === "monthly" || newPlan === "annual")) {
-    subject = "Welcome to SkyGuide Premium!";
+  // Always generate content for plan changes
+  if (oldPlan === "annual" && newPlan === "monthly") {
+    subject = "Plan Change Confirmation - Annual to Monthly";
+    message = `
+      <p>Hello ${fullName},</p>
+      <p>Your subscription has been changed from the annual plan to the monthly plan. You'll continue to have access to all premium features.</p>
+      <p>Your new billing cycle will be monthly at $4.99/month.</p>
+    `;
+  } else if (oldPlan === "monthly" && newPlan === "annual") {
+    subject = "Thanks for Choosing Annual!";
+    message = `
+      <p>Thank you for switching to our annual plan, ${fullName}!</p>
+      <p>You're now saving $10 annually while keeping access to all premium features.</p>
+      <p>Your new billing cycle will be yearly at $49.99/year.</p>
+    `;
+  } else if (oldPlan === "free") {
+    subject = "Welcome to Premium!";
     message = `
       <p>Thank you for upgrading to premium, ${fullName}!</p>
       <p>You now have access to all premium features with your ${newPlan} plan. Here's what you can do now:</p>
@@ -29,18 +44,6 @@ const getEmailContent = (oldPlan: string, newPlan: string, fullName: string = "U
         <li>✓ Priority support</li>
         <li>✓ Advanced features</li>
       </ul>
-    `;
-  } else if (oldPlan === "monthly" && newPlan === "annual") {
-    subject = "Thanks for Choosing Annual!";
-    message = `
-      <p>Thank you for switching to our annual plan, ${fullName}!</p>
-      <p>You're now saving $10 annually while keeping access to all premium features.</p>
-    `;
-  } else if (oldPlan === "annual" && newPlan === "monthly") {
-    subject = "Plan Change Confirmation";
-    message = `
-      <p>Hello ${fullName},</p>
-      <p>Your plan has been updated from annual to monthly. You'll continue to have access to all premium features.</p>
     `;
   }
 
@@ -100,52 +103,52 @@ const getEmailContent = (oldPlan: string, newPlan: string, fullName: string = "U
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("Plan change email handler started");
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { email, oldPlan, newPlan, fullName }: EmailRequest = await req.json();
-    console.log(`Sending plan change email to ${email} for change from ${oldPlan} to ${newPlan}`);
+    console.log(`Processing plan change email: ${oldPlan} -> ${newPlan} for ${email}`);
 
     const { subject, html } = getEmailContent(oldPlan, newPlan, fullName);
 
-    // Only send email if there's a subject (meaning it's a valid plan change scenario)
-    if (subject) {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: "SkyGuide <notifications@skyguide.site>",
-          to: [email],
-          subject,
-          html,
-        }),
-      });
-
-      if (!res.ok) {
-        const error = await res.text();
-        console.error("Error sending email:", error);
-        throw new Error(error);
-      }
-
-      const data = await res.json();
-      console.log("Email sent successfully:", data);
-
-      return new Response(JSON.stringify(data), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } else {
-      console.log("No email sent - invalid plan change scenario");
-      return new Response(JSON.stringify({ message: "No email required for this plan change" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Always attempt to send email for plan changes
+    console.log("Sending email with subject:", subject);
+    
+    if (!RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is not configured");
     }
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "SkyGuide <notifications@skyguide.site>",
+        to: [email],
+        subject,
+        html,
+      }),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      console.error("Error sending email:", error);
+      throw new Error(error);
+    }
+
+    const data = await res.json();
+    console.log("Email sent successfully:", data);
+
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error in send-plan-change-email function:", error);
     return new Response(JSON.stringify({ error: error.message }), {
