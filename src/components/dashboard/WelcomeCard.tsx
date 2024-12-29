@@ -8,6 +8,7 @@ import { addMonths, addYears, format } from "date-fns";
 
 export function WelcomeCard() {
   const [userEmail, setUserEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [plan, setPlan] = useState("");
   const [queriesRemaining, setQueriesRemaining] = useState(0);
   const [subscriptionStart, setSubscriptionStart] = useState<Date | null>(null);
@@ -21,7 +22,7 @@ export function WelcomeCard() {
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('subscription_plan, query_count, last_query_timestamp')
+          .select('subscription_plan, query_count, last_query_timestamp, full_name')
           .eq('id', user.id)
           .single();
           
@@ -29,6 +30,9 @@ export function WelcomeCard() {
           setPlan(profile.subscription_plan || "free");
           setQueriesRemaining(2 - (profile.query_count || 0));
           setSubscriptionStart(profile.last_query_timestamp ? new Date(profile.last_query_timestamp) : new Date());
+          // Extract first name from full name
+          const firstName = profile.full_name?.split(' ')[0] || '';
+          setFirstName(firstName);
         }
       }
     };
@@ -56,7 +60,7 @@ export function WelcomeCard() {
     <div className="grid gap-4 md:grid-cols-2">
       <Card className="p-6 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 backdrop-blur-sm border-0">
         <h2 className="text-2xl font-semibold text-white/90 mb-2">
-          Welcome back
+          Welcome back{firstName ? `, ${firstName}` : ''}
         </h2>
         <p className="text-white/70">
           {userEmail}

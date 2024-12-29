@@ -64,7 +64,7 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="fullName" className="text-gray-200">Full Name</Label>
+        <Label htmlFor="fullName" className="text-gray-200">Full Name <span className="text-red-500">*</span></Label>
         <Input
           id="fullName"
           type="text"
@@ -72,6 +72,7 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
           onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
           className="bg-white/10 border-white/20 text-white"
           required
+          placeholder="Enter your full name"
         />
       </div>
 
