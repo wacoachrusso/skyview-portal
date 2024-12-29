@@ -42,9 +42,14 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     setPasswordError(null);
 
     try {
-      console.log("Starting signup process...");
-      
-      // Sign up the user with Supabase
+      console.log("Starting signup process with data:", {
+        email: formData.email,
+        fullName: formData.fullName,
+        jobTitle: formData.jobTitle,
+        airline: formData.airline,
+        plan: finalSelectedPlan
+      });
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -76,6 +81,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         }
         return;
       }
+
+      console.log("Signup successful, user data:", data);
 
       // Send confirmation email via Edge Function
       try {
