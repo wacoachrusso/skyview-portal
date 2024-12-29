@@ -12,20 +12,20 @@ import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 interface DeleteUserDialogProps {
-  user: ProfilesRow | null;
-  onConfirm: (user: ProfilesRow) => void;
+  user: ProfilesRow;
+  onConfirm: (user: ProfilesRow) => Promise<void>;
   onCancel: () => void;
-  isDeleting?: boolean;
+  isDeleting: boolean;
 }
 
 export const DeleteUserDialog = ({
   user,
   onConfirm,
   onCancel,
-  isDeleting = false,
+  isDeleting,
 }: DeleteUserDialogProps) => {
   return (
-    <AlertDialog open={!!user} onOpenChange={() => !isDeleting && onCancel()}>
+    <AlertDialog open={!!user} onOpenChange={(open) => !open && !isDeleting && onCancel()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -39,7 +39,7 @@ export const DeleteUserDialog = ({
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => user && onConfirm(user)}
+            onClick={() => onConfirm(user)}
             className="bg-red-600 hover:bg-red-700"
             disabled={isDeleting}
           >

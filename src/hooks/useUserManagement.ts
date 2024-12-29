@@ -45,7 +45,7 @@ export const useUserManagement = () => {
         title: "Success",
         description: "User admin status updated successfully",
       });
-      refetch();
+      await refetch();
     } catch (error) {
       console.error("Error updating user admin status:", error);
       toast({
@@ -95,9 +95,10 @@ export const useUserManagement = () => {
     
     setIsDeleting(true);
     try {
-      await handleUserDeletion(user, () => {
+      console.log("Starting user deletion process for:", user);
+      await handleUserDeletion(user, async () => {
         setUserToDelete(null);
-        refetch();
+        await refetch();
       });
 
       toast({

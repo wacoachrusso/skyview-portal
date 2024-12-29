@@ -31,17 +31,21 @@ export const UserManagement = () => {
         setUserToDelete={setUserToDelete}
       />
 
-      <UserDetailsDialog
-        user={selectedUser}
-        onClose={() => setSelectedUser(null)}
-      />
+      {selectedUser && (
+        <UserDetailsDialog
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
 
-      <DeleteUserDialog
-        user={userToDelete}
-        onConfirm={handleDeleteUser}
-        onCancel={() => setUserToDelete(null)}
-        isDeleting={isDeleting}
-      />
+      {userToDelete && (
+        <DeleteUserDialog
+          user={userToDelete}
+          onConfirm={handleDeleteUser}
+          onCancel={() => setUserToDelete(null)}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   );
 };
