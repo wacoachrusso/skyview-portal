@@ -50,8 +50,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         plan: finalSelectedPlan
       });
 
-      // Sign up the user with Supabase
-      const signUpResponse = await supabase.auth.signUp({
+      // First, attempt to sign up the user
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
@@ -64,10 +64,10 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         }
       });
 
-      if (signUpResponse.error) {
-        console.error("Signup error:", signUpResponse.error);
+      if (signUpError) {
+        console.error("Signup error:", signUpError);
         
-        if (signUpResponse.error.message.includes("User already registered")) {
+        if (signUpError.message.includes("User already registered")) {
           toast({
             variant: "destructive",
             title: "Account exists",
@@ -77,46 +77,49 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: signUpResponse.error.message,
+            description: signUpError.message,
           });
         }
         return;
       }
 
-      console.log("Signup successful, user data:", signUpResponse.data);
+      if (!signUpData.user) {
+        throw new Error('No user data returned from signup');
+      }
 
-      // Send confirmation email via Edge Function
-      try {
-        console.log("Sending confirmation email via Edge Function");
-        const confirmationResponse = await supabase.functions.invoke('send-signup-confirmation', {
+      console.log("Signup successful, user data:", signUpData);
+
+      // Only proceed with confirmation email if signup was successful
+      console.log("Sending confirmation email via Edge Function");
+      const { data: confirmationData, error: confirmationError } = await supabase.functions.invoke(
+        'send-signup-confirmation',
+        {
           body: { 
             email: formData.email,
             name: formData.fullName,
             confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
           }
-        });
-
-        if (confirmationResponse.error) {
-          console.error("Error from send-signup-confirmation function:", confirmationResponse.error);
-          throw confirmationResponse.error;
         }
+      );
 
-        console.log("Confirmation email sent successfully");
-        toast({
-          title: "Success",
-          description: "Please check your email to verify your account.",
-        });
-        navigate('/login');
-      } catch (emailError) {
-        console.error("Failed to send confirmation email:", emailError);
+      if (confirmationError) {
+        console.error("Error sending confirmation email:", confirmationError);
         toast({
           variant: "destructive",
           title: "Partial success",
           description: "Account created but we couldn't send the confirmation email. Please contact support.",
         });
+        return;
       }
 
-    } catch (error: any) {
+      console.log("Confirmation email sent successfully");
+      toast({
+        title: "Success",
+        description: "Please check your email to verify your account.",
+      });
+      navigate('/login');
+
+    } catch (error) {
       console.error("Unexpected error during signup:", error);
       toast({
         variant: "destructive",
