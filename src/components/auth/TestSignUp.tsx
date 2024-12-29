@@ -1,59 +1,76 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 export const TestSignUp = () => {
-  const [testEmail, setTestEmail] = useState("testuser@example.com");
-  const [testPassword, setTestPassword] = useState("MyTestPassword123!");
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
   const testSignUp = async () => {
-    console.log("Starting minimal test signup with:", { 
-      email: testEmail, 
-      password: testPassword 
-    });
+    if (loading) return;
     
-    const { data, error } = await supabase.auth.signUp({
-      email: testEmail,
-      password: testPassword
+    setLoading(true);
+    console.log("Starting minimal test signup with:", {
+      email: "testuser@gmail.com",
+      password: "MyTestPassword123!"
     });
 
-    console.log("Data:", data);
-    console.log("Error:", error);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: "testuser@gmail.com",
+        password: "MyTestPassword123!",
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      console.log("Data:", data);
+      console.log("Error:", error);
+
+      if (error) {
+        if (error.message.includes("User already registered")) {
+          toast({
+            title: "Account exists",
+            description: "An account with this email already exists. Please sign in instead.",
+          });
+          navigate('/login');
+          return;
+        }
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Please check your email to verify your account.",
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error("Error in testSignUp:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "An error occurred during signup",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4 bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
-        <div className="space-y-2">
-          <Label htmlFor="testEmail" className="text-gray-200">Test Email</Label>
-          <Input
-            id="testEmail"
-            type="email"
-            value={testEmail}
-            onChange={(e) => setTestEmail(e.target.value)}
-            className="bg-white/10 border-white/20 text-white"
-          />
+      <div className="w-full max-w-md">
+        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
+          <h1 className="text-2xl font-bold text-white text-center mb-6">Test Sign Up</h1>
+          <button
+            onClick={testSignUp}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold h-10 px-4 py-2 rounded-md disabled:opacity-50"
+          >
+            {loading ? "Signing up..." : "Sign Up Test User"}
+          </button>
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="testPassword" className="text-gray-200">Test Password</Label>
-          <Input
-            id="testPassword"
-            type="password"
-            value={testPassword}
-            onChange={(e) => setTestPassword(e.target.value)}
-            className="bg-white/10 border-white/20 text-white"
-          />
-        </div>
-
-        <Button 
-          onClick={testSignUp}
-          className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold"
-        >
-          Test Minimal Signup
-        </Button>
       </div>
     </div>
   );
