@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useAuthManagement } from "@/hooks/useAuthManagement";
 
 const Account = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Account = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { handleSignOut } = useAuthManagement();
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -98,7 +100,7 @@ const Account = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-      <DashboardHeader userEmail={userEmail} onSignOut={() => navigate('/login')} />
+      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
       <main className="container mx-auto px-4 py-8 max-w-4xl relative">
         <div className="space-y-6">
           <Card className="bg-white/95 shadow-xl">
