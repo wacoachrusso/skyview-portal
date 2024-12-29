@@ -78,10 +78,30 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       }
 
       console.log("Signup successful:", data);
-      toast({
-        title: "Account created",
-        description: "Your account has been created successfully. You can now sign in.",
+
+      // Send confirmation email using our custom edge function
+      const { error: emailError } = await supabase.functions.invoke('send-confirmation-email', {
+        body: {
+          email: formData.email,
+          name: formData.fullName,
+          confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
+        }
       });
+
+      if (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+        toast({
+          variant: "destructive",
+          title: "Warning",
+          description: "Account created but we couldn't send the confirmation email. Please contact support.",
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: "Please check your email to verify your account.",
+        });
+      }
+
       navigate('/login');
 
     } catch (error) {

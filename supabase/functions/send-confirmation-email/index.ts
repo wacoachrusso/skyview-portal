@@ -21,7 +21,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Missing RESEND_API_KEY configuration");
     }
 
-    const { email, confirmationUrl } = await req.json();
+    const { email, name, confirmationUrl } = await req.json();
     
     if (!email || !confirmationUrl) {
       console.error("Missing required fields:", { email, confirmationUrl });
