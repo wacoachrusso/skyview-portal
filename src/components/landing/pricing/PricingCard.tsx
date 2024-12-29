@@ -29,6 +29,7 @@ interface PricingCardProps {
   planId: string;
   onSelect: () => void;
   isLoading?: boolean;
+  disabled?: boolean;
 }
 
 export function PricingCard({
@@ -44,9 +45,14 @@ export function PricingCard({
   textColor = "text-gray-600",
   savings,
   onSelect,
-  isLoading
+  isLoading,
+  disabled
 }: PricingCardProps) {
   const getButtonClassName = () => {
+    if (disabled) {
+      return "w-full bg-gray-300 text-gray-600 cursor-not-allowed";
+    }
+    
     switch (buttonVariant) {
       case "outline":
         return "w-full bg-white hover:bg-gray-50 text-brand-navy border-brand-navy hover:border-brand-navy/80";
@@ -58,7 +64,7 @@ export function PricingCard({
   };
 
   return (
-    <Card className={`relative transform hover:scale-105 transition-transform duration-300 hover:shadow-xl ${className}`}>
+    <Card className={`relative transform hover:scale-105 transition-transform duration-300 hover:shadow-xl ${className} ${disabled ? 'opacity-75' : ''}`}>
       {badgeText && (
         <div className={`absolute -top-4 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-4 py-1 rounded-full text-sm`}>
           {badgeText}
@@ -81,7 +87,7 @@ export function PricingCard({
         <Button 
           className={getButtonClassName()}
           onClick={onSelect}
-          disabled={isLoading}
+          disabled={isLoading || disabled}
         >
           {isLoading ? "Processing..." : buttonText}
         </Button>

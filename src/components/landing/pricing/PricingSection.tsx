@@ -8,11 +8,44 @@ export function PricingSection() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [hasUsedFreeTrial, setHasUsedFreeTrial] = useState(false);
 
   // Add scroll to top on page load/refresh
   useEffect(() => {
     window.scrollTo(0, 0);
+    checkFreeTrial();
   }, []);
+
+  const checkFreeTrial = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Check if user has previously used free trial
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_plan, email')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          // Also check if this email was previously used for free trial
+          const { data: previousProfiles } = await supabase
+            .from('profiles')
+            .select('subscription_plan')
+            .eq('email', profile.email)
+            .neq('id', user.id);
+
+          setHasUsedFreeTrial(
+            profile.subscription_plan !== 'free' || 
+            (previousProfiles && previousProfiles.some(p => p.subscription_plan === 'free'))
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error checking free trial status:', error);
+    }
+  };
 
   const handlePlanSelection = async (plan: string) => {
     console.log("Plan selection initiated:", plan);
@@ -36,6 +69,17 @@ export function PricingSection() {
 
       if (!currentProfile) {
         throw new Error("User profile not found");
+      }
+
+      // Prevent downgrade to free plan
+      if (plan === 'free' && currentProfile.subscription_plan !== 'free') {
+        toast({
+          variant: "destructive",
+          title: "Action not allowed",
+          description: "You cannot downgrade to a free plan after using a paid subscription.",
+        });
+        setIsLoading(false);
+        return;
       }
 
       // Get user's IP address using a public API
@@ -73,7 +117,6 @@ export function PricingSection() {
 
       if (emailError) {
         console.error("Error sending plan change email:", emailError);
-        // Don't throw here, as the plan change was successful
       }
 
       toast({
@@ -106,10 +149,11 @@ export function PricingSection() {
       ],
       badgeText: "Try it Free",
       badgeColor: "bg-brand-navy",
-      buttonText: "Start Free Trial",
+      buttonText: hasUsedFreeTrial ? "Not Available" : "Start Free Trial",
       buttonVariant: "outline" as const,
       className: "bg-white border-2 border-gray-100",
-      planId: "free"
+      planId: "free",
+      disabled: hasUsedFreeTrial
     },
     {
       title: "Monthly Plan",
@@ -163,6 +207,7 @@ export function PricingSection() {
               {...plan}
               onSelect={() => handlePlanSelection(plan.planId)}
               isLoading={isLoading}
+              disabled={plan.disabled}
             />
           ))}
         </div>
