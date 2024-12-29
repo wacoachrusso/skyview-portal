@@ -1,11 +1,7 @@
-import { useLocation } from "react-router-dom";
-import { AuthForm } from "@/components/auth/AuthForm";
+import { TestSignUp } from "@/components/auth/TestSignUp";
 
 const SignUp = () => {
-  const location = useLocation();
-  const selectedPlan = location.state?.selectedPlan;
-
-  return <AuthForm selectedPlan={selectedPlan} />;
+  return <TestSignUp />;
 };
 
 export default SignUp;
