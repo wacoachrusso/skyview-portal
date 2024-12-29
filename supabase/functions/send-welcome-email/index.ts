@@ -1,11 +1,10 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface EmailRequest {
@@ -20,14 +19,23 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     console.log("Starting welcome email process");
-    const { email, name } = await req.json();
     
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY is not set");
       throw new Error("Missing RESEND_API_KEY");
     }
 
+    const { email, name } = await req.json();
+    
+    if (!email) {
+      console.error("Missing required fields:", { email });
+      throw new Error("Missing required fields");
+    }
+
     console.log("Sending welcome email to:", email);
+
+    // Get the domain from the environment or use a default test domain
+    const fromEmail = "onboarding@resend.dev"; // Using Resend's test domain
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -36,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SkyGuide <onboarding@resend.dev>",
+        from: fromEmail,
         to: [email],
         subject: "Welcome to SkyGuide - Your Aviation Assistant",
         html: `
@@ -84,10 +92,10 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!res.ok) {
-      const error = await res.text();
+      const error = await res.json();
       console.error("Error sending welcome email:", error);
       return new Response(
-        JSON.stringify({ error: "Failed to send welcome email", details: error }),
+        JSON.stringify({ error: "Failed to send welcome email", details: JSON.stringify(error) }),
         {
           status: res.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
