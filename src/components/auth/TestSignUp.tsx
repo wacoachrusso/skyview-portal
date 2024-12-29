@@ -1,25 +1,53 @@
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const TestSignUp = () => {
+  const [testEmail, setTestEmail] = useState("testuser@example.com");
+  const [testPassword, setTestPassword] = useState("MyTestPassword123!");
+
   const testSignUp = async () => {
     console.log("Starting minimal test signup with:", { 
-      email: "testuser@example.com", 
-      password: "MyTestPassword123!" 
+      email: testEmail, 
+      password: testPassword 
     });
     
-    const { data, user, session, error } = await supabase.auth.signUp({
-      email: "testuser@example.com",
-      password: "MyTestPassword123!"
+    const { data, error } = await supabase.auth.signUp({
+      email: testEmail,
+      password: testPassword
     });
 
-    console.log("User:", user);
+    console.log("Data:", data);
     console.log("Error:", error);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
+      <div className="w-full max-w-md space-y-4 bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
+        <div className="space-y-2">
+          <Label htmlFor="testEmail" className="text-gray-200">Test Email</Label>
+          <Input
+            id="testEmail"
+            type="email"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            className="bg-white/10 border-white/20 text-white"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="testPassword" className="text-gray-200">Test Password</Label>
+          <Input
+            id="testPassword"
+            type="password"
+            value={testPassword}
+            onChange={(e) => setTestPassword(e.target.value)}
+            className="bg-white/10 border-white/20 text-white"
+          />
+        </div>
+
         <Button 
           onClick={testSignUp}
           className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold"
