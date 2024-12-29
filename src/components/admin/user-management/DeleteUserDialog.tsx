@@ -12,10 +12,11 @@ import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 interface DeleteUserDialogProps {
-  user: ProfilesRow;
+  user: ProfilesRow | null;
   onConfirm: (user: ProfilesRow) => Promise<void>;
   onCancel: () => void;
   isDeleting: boolean;
+  isOpen: boolean;
 }
 
 export const DeleteUserDialog = ({
@@ -23,9 +24,12 @@ export const DeleteUserDialog = ({
   onConfirm,
   onCancel,
   isDeleting,
+  isOpen,
 }: DeleteUserDialogProps) => {
+  if (!user) return null;
+
   return (
-    <AlertDialog open={true} onOpenChange={(open) => !open && onCancel()}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && !isDeleting && onCancel()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>

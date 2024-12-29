@@ -11,7 +11,6 @@ const corsHeaders = {
 interface EmailRequest {
   email: string;
   name: string;
-  plan: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -20,11 +19,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, name, plan } = await req.json();
-    console.log("Sending welcome email to:", email);
+    console.log("Starting welcome email process");
+    const { email, name } = await req.json();
+    
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("Missing RESEND_API_KEY");
+    }
 
-    // For development/testing, we'll use a conditional approach
-    const fromEmail = "onboarding@resend.dev"; // Update this with your verified domain once set up
+    console.log("Sending welcome email to:", email);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -33,26 +36,21 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: `SkyGuide <${fromEmail}>`,
+        from: "SkyGuide <onboarding@resend.dev>",
         to: [email],
         subject: "Welcome to SkyGuide - Your Aviation Assistant",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://skyguide.app/lovable-uploads/1b59f0c5-ed32-40b6-8f90-f5f7df5fd474.png" 
-                   alt="SkyGuide Logo" 
-                   style="width: 200px; height: auto;"
-              />
+              <h1 style="color: #1a365d;">Welcome to SkyGuide!</h1>
             </div>
-            
-            <h1 style="color: #1a365d; text-align: center; margin-bottom: 30px;">Welcome to SkyGuide!</h1>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
               Dear ${name || "Aviation Professional"},
             </p>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Welcome aboard! We're thrilled to have you join the SkyGuide community. As a ${plan} member, you now have access to our advanced AI-powered aviation assistant, designed specifically for aviation professionals like you.
+              Welcome aboard! We're thrilled to have you join the SkyGuide community. You now have access to our advanced AI-powered aviation assistant, designed specifically for aviation professionals like you.
             </p>
             
             <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
@@ -88,22 +86,13 @@ const handler = async (req: Request): Promise<Response> => {
     if (!res.ok) {
       const error = await res.text();
       console.error("Error sending welcome email:", error);
-      
-      // Check if it's a domain verification error
-      if (error.includes("verify a domain")) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Email sending temporarily disabled. Please verify your domain at resend.com/domains",
-            details: error
-          }),
-          {
-            status: 200, // Return 200 to prevent retries
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      
-      throw new Error(error);
+      return new Response(
+        JSON.stringify({ error: "Failed to send welcome email", details: error }),
+        {
+          status: res.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     const data = await res.json();
@@ -115,10 +104,13 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error) {
     console.error("Error in send-welcome-email function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Failed to process request", details: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 };
 

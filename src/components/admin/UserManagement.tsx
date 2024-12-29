@@ -38,14 +38,13 @@ export const UserManagement = () => {
         />
       )}
 
-      {userToDelete && (
-        <DeleteUserDialog
-          user={userToDelete}
-          onConfirm={handleDeleteUser}
-          onCancel={() => setUserToDelete(null)}
-          isDeleting={isDeleting}
-        />
-      )}
+      <DeleteUserDialog
+        user={userToDelete}
+        onConfirm={handleDeleteUser}
+        onCancel={() => setUserToDelete(null)}
+        isDeleting={isDeleting}
+        isOpen={!!userToDelete}
+      />
     </div>
   );
 };
