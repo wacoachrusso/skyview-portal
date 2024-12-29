@@ -12,38 +12,49 @@ export const TestSignUp = () => {
     if (loading) return;
     
     setLoading(true);
+    const timestamp = new Date().getTime();
+    const testEmail = `testuser${timestamp}@example.com`;
+    
     console.log("Starting minimal test signup with:", {
-      email: "testuser@gmail.com",
+      email: testEmail,
       password: "MyTestPassword123!"
     });
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: "testuser@gmail.com",
+        email: testEmail,
         password: "MyTestPassword123!",
         options: {
+          data: {
+            full_name: "Test User",
+            user_type: "pilot",
+            airline: "test airline",
+            subscription_plan: "free"
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
-      console.log("Data:", data);
-      console.log("Error:", error);
-
       if (error) {
+        console.error("Signup error:", error);
+        
         if (error.message.includes("User already registered")) {
           toast({
             title: "Account exists",
-            description: "An account with this email already exists. Please sign in instead.",
+            description: "This email is already registered. Please sign in instead.",
           });
           navigate('/login');
           return;
         }
+
         throw error;
       }
 
+      console.log("Signup successful:", data);
+      
       toast({
         title: "Success",
-        description: "Please check your email to verify your account.",
+        description: "Test account created. Please check your email to verify your account.",
       });
       navigate('/login');
     } catch (error) {
