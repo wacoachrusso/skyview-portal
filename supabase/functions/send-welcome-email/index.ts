@@ -50,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px; background-color: #1a365d; padding: 20px;">
-              <img src="https://skyguide.site/og-image.png" alt="SkyGuide Logo" style="width: 200px; height: auto;"/>
+              <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px; height: auto;"/>
             </div>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
