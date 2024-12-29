@@ -50,7 +50,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         plan: finalSelectedPlan
       });
 
-      const { data, error } = await supabase.auth.signUp({
+      // Sign up the user with Supabase
+      const signUpResponse = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
@@ -63,10 +64,10 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         }
       });
 
-      if (error) {
-        console.error("Signup error:", error);
+      if (signUpResponse.error) {
+        console.error("Signup error:", signUpResponse.error);
         
-        if (error.message.includes("User already registered")) {
+        if (signUpResponse.error.message.includes("User already registered")) {
           toast({
             variant: "destructive",
             title: "Account exists",
@@ -76,18 +77,18 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: error.message,
+            description: signUpResponse.error.message,
           });
         }
         return;
       }
 
-      console.log("Signup successful, user data:", data);
+      console.log("Signup successful, user data:", signUpResponse.data);
 
       // Send confirmation email via Edge Function
       try {
         console.log("Sending confirmation email via Edge Function");
-        const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
+        const confirmationResponse = await supabase.functions.invoke('send-signup-confirmation', {
           body: { 
             email: formData.email,
             name: formData.fullName,
@@ -95,9 +96,9 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           }
         });
 
-        if (emailError) {
-          console.error("Error from send-signup-confirmation function:", emailError);
-          throw emailError;
+        if (confirmationResponse.error) {
+          console.error("Error from send-signup-confirmation function:", confirmationResponse.error);
+          throw confirmationResponse.error;
         }
 
         console.log("Confirmation email sent successfully");
