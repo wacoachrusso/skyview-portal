@@ -1,7 +1,7 @@
-import { TestSignUp } from "@/components/auth/TestSignUp";
+import { AuthForm } from "@/components/auth/AuthForm";
 
 const SignUp = () => {
-  return <TestSignUp />;
+  return <AuthForm />;
 };
 
 export default SignUp;
