@@ -36,7 +36,9 @@ export const useLoginForm = () => {
         email: formData.email.trim(),
         password: formData.password,
         options: {
-          persistSession: formData.rememberMe
+          session: {
+            persistSession: formData.rememberMe
+          }
         }
       });
 
