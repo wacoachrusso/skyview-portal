@@ -85,13 +85,13 @@ export function Navbar() {
           <div className="flex items-center gap-2 md:gap-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground hidden md:inline">Welcome back, {userEmail}</span>
+                <span className="text-sm text-white hidden md:inline">Welcome back, {userEmail}</span>
                 <NotificationBell />
                 <Button 
                   asChild
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
-                  className="text-foreground hover:bg-accent"
+                  className="text-white hover:bg-brand-gold hover:text-black"
                 >
                   <Link to="/chat">
                     <MessageSquare className="mr-2 h-4 w-4" />
@@ -100,9 +100,9 @@ export function Navbar() {
                 </Button>
                 <Button 
                   asChild
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
-                  className="text-foreground hover:bg-accent"
+                  className="text-white hover:bg-brand-gold hover:text-black"
                 >
                   <Link to="/account">
                     <User className="mr-2 h-4 w-4" />
@@ -112,7 +112,7 @@ export function Navbar() {
                 <Button 
                   asChild
                   size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-brand-gold text-black hover:bg-brand-gold/90"
                 >
                   <Link to="/dashboard">
                     Dashboard
@@ -123,9 +123,9 @@ export function Navbar() {
               <div className="flex items-center gap-2 md:gap-3">
                 <Button 
                   asChild 
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
-                  className="text-foreground hover:bg-accent"
+                  className="text-white hover:bg-brand-gold hover:text-black"
                 >
                   <Link to="/login">
                     <LogIn className="mr-2 h-4 w-4" />
@@ -135,7 +135,7 @@ export function Navbar() {
                 <Button 
                   onClick={scrollToPricing}
                   size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-brand-gold text-black hover:bg-brand-gold/90"
                 >
                   Sign Up
                 </Button>
