@@ -38,7 +38,7 @@ export const UserManagement = () => {
         />
       )}
 
-      {userToDelete && !isDeleting && (
+      {userToDelete && (
         <DeleteUserDialog
           user={userToDelete}
           onConfirm={handleDeleteUser}
