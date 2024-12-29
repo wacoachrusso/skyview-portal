@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { ChatSettings } from "../ChatSettings";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,14 +19,25 @@ interface SidebarHeaderProps {
 }
 
 export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
+  const navigate = useNavigate();
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/', { state: { fromChat: true } });
+  };
+
   return (
     <div className="p-3 sm:p-4 flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#1E1E2E] to-[#2A2F3C]">
-      <div className="flex items-center gap-2">
+      <a 
+        href="/"
+        onClick={handleLogoClick}
+        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+      >
         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
           <span className="text-white font-semibold text-sm sm:text-base">S</span>
         </div>
         <span className="text-white font-semibold text-sm sm:text-base">SkyGuide</span>
-      </div>
+      </a>
       <div className="flex items-center gap-2">
         <AlertDialog>
           <AlertDialogTrigger asChild>

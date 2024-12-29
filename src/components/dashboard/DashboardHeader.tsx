@@ -14,7 +14,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Navigate to home with state to prevent auto-redirect
     navigate('/', { state: { fromDashboard: true } });
   };
 
@@ -23,17 +22,19 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
-              alt="SkyGuide Logo" 
-              className="h-8 w-auto"
-            />
             <a 
               href="/"
               onClick={handleLogoClick}
-              className="text-xl font-semibold text-foreground/90 hover:text-foreground transition-colors"
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
-              SkyGuide
+              <img 
+                src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+                alt="SkyGuide Logo" 
+                className="h-8 w-auto"
+              />
+              <span className="text-xl font-semibold text-foreground/90">
+                SkyGuide
+              </span>
             </a>
           </div>
           
