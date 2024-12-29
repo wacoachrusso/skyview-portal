@@ -32,23 +32,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
   useEffect(() => {
     console.log('Selected plan:', finalSelectedPlan);
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        console.log("User signed in");
-        toast({
-          title: "Welcome to SkyGuide!",
-          description: finalSelectedPlan === 'free' 
-            ? "Your account has been created. You have 2 queries available."
-            : "Your account has been created. Your account is now active.",
-        });
-        navigate('/chat');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, finalSelectedPlan, toast]);
+  }, [finalSelectedPlan]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +44,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
     try {
       console.log("Starting signup process...");
       
-      // First, sign up the user with Supabase but disable email confirmation
-      const signUpData = {
+      // Sign up the user with Supabase
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
@@ -70,17 +54,9 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             user_type: formData.jobTitle.toLowerCase(),
             airline: formData.airline.toLowerCase(),
             subscription_plan: finalSelectedPlan,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         }
-      };
-
-      console.log("Attempting signup with data:", {
-        ...signUpData,
-        password: '[REDACTED]'
       });
-
-      const { data, error } = await supabase.auth.signUp(signUpData);
 
       if (error) {
         console.error("Signup error:", error);
@@ -101,8 +77,9 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         return;
       }
 
-      // Send confirmation email via our Edge Function
+      // Send confirmation email via Edge Function
       try {
+        console.log("Sending confirmation email via Edge Function");
         const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
           body: { 
             email: formData.email,
@@ -111,19 +88,23 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           }
         });
 
-        if (emailError) throw emailError;
+        if (emailError) {
+          console.error("Error from send-signup-confirmation function:", emailError);
+          throw emailError;
+        }
 
+        console.log("Confirmation email sent successfully");
         toast({
           title: "Success",
           description: "Please check your email to verify your account.",
         });
         navigate('/login');
       } catch (emailError) {
-        console.error("Error sending confirmation email:", emailError);
+        console.error("Failed to send confirmation email:", emailError);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Could not send confirmation email. Please contact support.",
+          title: "Partial success",
+          description: "Account created but we couldn't send the confirmation email. Please contact support.",
         });
       }
 
