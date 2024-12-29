@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, MessageSquare } from "lucide-react";
+import { LogIn, MessageSquare, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -96,6 +96,17 @@ export function Navbar() {
                   <Link to="/chat">
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Chat Now
+                  </Link>
+                </Button>
+                <Button 
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="text-foreground hover:bg-accent"
+                >
+                  <Link to="/account">
+                    <User className="mr-2 h-4 w-4" />
+                    Account
                   </Link>
                 </Button>
                 <Button 
