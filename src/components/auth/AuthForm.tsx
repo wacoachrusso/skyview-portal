@@ -6,6 +6,7 @@ import { AuthFormFields } from "./AuthFormFields";
 import { AuthFormFooter } from "./AuthFormFooter";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { sendWelcomeEmail } from "@/utils/email";
 
 interface AuthFormProps {
   selectedPlan?: string;
@@ -55,7 +56,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             user_type: formData.jobTitle.toLowerCase(),
             airline: formData.airline.toLowerCase(),
             subscription_plan: finalSelectedPlan,
-          }
+          },
+          emailRedirectTo: undefined // Disable Supabase email confirmation
         }
       });
 
@@ -79,26 +81,23 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
       console.log("Signup successful:", data);
 
-      // Send confirmation email using our custom edge function
-      const { error: emailError } = await supabase.functions.invoke('send-confirmation-email', {
-        body: {
-          email: formData.email,
-          name: formData.fullName,
-          confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
-        }
+      // Send welcome email using Resend
+      const { error: emailError } = await sendWelcomeEmail({
+        email: formData.email,
+        name: formData.fullName,
       });
 
       if (emailError) {
-        console.error("Error sending confirmation email:", emailError);
+        console.error("Error sending welcome email:", emailError);
         toast({
           variant: "destructive",
           title: "Warning",
-          description: "Account created but we couldn't send the confirmation email. Please contact support.",
+          description: "Account created but we couldn't send the welcome email. Please contact support.",
         });
       } else {
         toast({
           title: "Account created",
-          description: "Please check your email to verify your account.",
+          description: "Please check your email for next steps.",
         });
       }
 
