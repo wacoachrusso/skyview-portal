@@ -47,6 +47,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         plan: finalSelectedPlan
       });
 
+      // Destructure the response immediately to avoid multiple reads
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -63,6 +64,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
       if (error) {
         console.error("Signup error:", error);
+        
+        // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
             variant: "destructive",
