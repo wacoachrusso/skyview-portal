@@ -86,7 +86,6 @@ export const useUserManagement = () => {
         title: "Error",
         description: `Failed to ${status} user account`,
       });
-      throw error;
     }
   };
 
@@ -97,7 +96,6 @@ export const useUserManagement = () => {
     try {
       console.log("Starting user deletion process for:", user);
       await handleUserDeletion(user, async () => {
-        setUserToDelete(null);
         await refetch();
       });
 

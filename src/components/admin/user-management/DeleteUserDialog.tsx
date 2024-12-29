@@ -25,7 +25,7 @@ export const DeleteUserDialog = ({
   isDeleting,
 }: DeleteUserDialogProps) => {
   return (
-    <AlertDialog open={!!user} onOpenChange={(open) => !open && !isDeleting && onCancel()}>
+    <AlertDialog open={true} onOpenChange={(open) => !open && !isDeleting && onCancel()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
