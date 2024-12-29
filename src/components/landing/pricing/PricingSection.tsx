@@ -1,141 +1,14 @@
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { usePlanSelection } from "./usePlanSelection";
 import { PricingCard } from "./PricingCard";
 
 export function PricingSection() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasUsedFreeTrial, setHasUsedFreeTrial] = useState(false);
+  const { handlePlanSelection, isLoading } = usePlanSelection();
 
   // Add scroll to top on page load/refresh
   useEffect(() => {
     window.scrollTo(0, 0);
-    checkFreeTrial();
   }, []);
-
-  const checkFreeTrial = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Check if user has previously used free trial
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('subscription_plan, email')
-          .eq('id', user.id)
-          .single();
-
-        if (profile) {
-          // Also check if this email was previously used for free trial
-          const { data: previousProfiles } = await supabase
-            .from('profiles')
-            .select('subscription_plan')
-            .eq('email', profile.email)
-            .neq('id', user.id);
-
-          setHasUsedFreeTrial(
-            profile.subscription_plan !== 'free' || 
-            (previousProfiles && previousProfiles.some(p => p.subscription_plan === 'free'))
-          );
-        }
-      }
-    } catch (error) {
-      console.error('Error checking free trial status:', error);
-    }
-  };
-
-  const handlePlanSelection = async (plan: string) => {
-    console.log("Plan selection initiated:", plan);
-    setIsLoading(true);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.log("No user found, redirecting to signup with plan:", plan);
-        navigate('/signup', { state: { selectedPlan: plan } });
-        return;
-      }
-
-      // Get current user profile to check current plan
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('subscription_plan, full_name, email')
-        .eq('id', user.id)
-        .single();
-
-      if (!currentProfile) {
-        throw new Error("User profile not found");
-      }
-
-      // Prevent downgrade to free plan
-      if (plan === 'free' && currentProfile.subscription_plan !== 'free') {
-        toast({
-          variant: "destructive",
-          title: "Action not allowed",
-          description: "You cannot downgrade to a free plan after using a paid subscription.",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Get user's IP address using a public API
-      const ipResponse = await fetch('https://api.ipify.org?format=json');
-      const { ip } = await ipResponse.json();
-
-      const updates = {
-        subscription_plan: plan,
-        last_ip_address: ip,
-        query_count: 0,
-        last_query_timestamp: new Date().toISOString()
-      };
-
-      console.log("Updating user profile with plan:", plan);
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
-
-      if (error) {
-        console.error("Error updating profile:", error);
-        throw error;
-      }
-
-      // Send email notification about plan change
-      console.log("Sending plan change email notification");
-      const { error: emailError } = await supabase.functions.invoke('send-plan-change-email', {
-        body: {
-          email: currentProfile.email,
-          oldPlan: currentProfile.subscription_plan,
-          newPlan: plan,
-          fullName: currentProfile.full_name
-        },
-      });
-
-      if (emailError) {
-        console.error("Error sending plan change email:", emailError);
-      }
-
-      toast({
-        title: "Plan Selected",
-        description: `You've selected the ${plan} plan.`,
-      });
-
-      navigate('/chat');
-    } catch (error) {
-      console.error('Error selecting plan:', error);
-      toast({
-        title: "Error",
-        description: "Failed to select plan. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const pricingPlans = [
     {
@@ -149,11 +22,10 @@ export function PricingSection() {
       ],
       badgeText: "Try it Free",
       badgeColor: "bg-brand-navy",
-      buttonText: hasUsedFreeTrial ? "Not Available" : "Start Free Trial",
+      buttonText: "Start Free Trial",
       buttonVariant: "outline" as const,
       className: "bg-white border-2 border-gray-100",
-      planId: "free",
-      disabled: hasUsedFreeTrial
+      planId: "free"
     },
     {
       title: "Monthly Plan",
@@ -207,7 +79,6 @@ export function PricingSection() {
               {...plan}
               onSelect={() => handlePlanSelection(plan.planId)}
               isLoading={isLoading}
-              disabled={plan.disabled}
             />
           ))}
         </div>
