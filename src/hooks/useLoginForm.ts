@@ -32,7 +32,6 @@ export const useLoginForm = () => {
       await supabase.auth.signOut({ scope: 'local' });
       console.log('Cleared existing session');
 
-      // Attempt new sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
         password: formData.password,
@@ -40,11 +39,20 @@ export const useLoginForm = () => {
 
       if (error) {
         console.error('Login error:', error);
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: "Incorrect email or password. Please try again."
-        });
+        
+        if (error.message === 'Invalid login credentials') {
+          toast({
+            variant: "destructive",
+            title: "Login failed",
+            description: "Incorrect email or password. Please try again."
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Login failed",
+            description: error.message
+          });
+        }
         return;
       }
 
@@ -69,32 +77,23 @@ export const useLoginForm = () => {
       }
 
       console.log('Sign in successful:', data.user?.id);
-      console.log('Session established:', data.session.access_token);
 
       if (formData.rememberMe) {
         console.log('Setting persistent session...');
-        const { error: persistError } = await supabase.auth.updateUser({
+        await supabase.auth.updateUser({
           data: { 
             persistent: true,
             session_expires_in: 60 * 60 * 24 * 14 // 14 days
           }
         });
-
-        if (persistError) {
-          console.error('Error setting persistent session:', persistError);
-        }
       }
 
       // Check if profile is complete
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('user_type, airline, subscription_plan')
         .eq('id', data.user.id)
         .single();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-      }
 
       toast({
         title: "Welcome back!",
