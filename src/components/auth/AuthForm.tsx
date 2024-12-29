@@ -57,7 +57,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             airline: formData.airline.toLowerCase(),
             subscription_plan: finalSelectedPlan,
           },
-          emailRedirectTo: undefined
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
@@ -70,13 +70,25 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             title: "Account exists",
             description: "An account with this email already exists. Please sign in instead.",
           });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: error.message,
-          });
+          navigate('/login');
+          return;
         }
+
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+        return;
+      }
+
+      if (!data.user) {
+        console.error("No user data returned from signup");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create account. Please try again.",
+        });
         return;
       }
 
