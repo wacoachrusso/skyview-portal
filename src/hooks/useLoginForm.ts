@@ -81,7 +81,7 @@ export const useLoginForm = () => {
       if (formData.rememberMe) {
         console.log('Setting persistent session...');
         // Set session persistence after successful login
-        await supabase.auth.updateSession({
+        await supabase.auth.setSession({
           refresh_token: data.session.refresh_token,
           access_token: data.session.access_token
         });
