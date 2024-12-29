@@ -1,9 +1,4 @@
-interface EmailTemplate {
-  subject: string;
-  preheader: string;
-  mainContent: string;
-  callToAction: string;
-}
+import { EmailTemplate } from "./types.ts";
 
 const formatPlanName = (plan: string): string => {
   switch (plan) {

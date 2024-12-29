@@ -1,4 +1,4 @@
-import { EmailTemplate } from './types';
+import { EmailTemplate } from './types.ts';
 
 export const buildEmailHtml = (template: EmailTemplate, fullName: string = "User"): string => {
   console.log(`Building email HTML for user: ${fullName}`);
