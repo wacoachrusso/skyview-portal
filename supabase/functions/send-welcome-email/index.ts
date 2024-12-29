@@ -23,6 +23,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, name, plan } = await req.json();
     console.log("Sending welcome email to:", email);
 
+    // For development/testing, we'll use a conditional approach
+    const fromEmail = "onboarding@resend.dev"; // Update this with your verified domain once set up
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -30,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SkyGuide <onboarding@resend.dev>",
+        from: `SkyGuide <${fromEmail}>`,
         to: [email],
         subject: "Welcome to SkyGuide - Your Aviation Assistant",
         html: `
@@ -85,6 +88,21 @@ const handler = async (req: Request): Promise<Response> => {
     if (!res.ok) {
       const error = await res.text();
       console.error("Error sending welcome email:", error);
+      
+      // Check if it's a domain verification error
+      if (error.includes("verify a domain")) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Email sending temporarily disabled. Please verify your domain at resend.com/domains",
+            details: error
+          }),
+          {
+            status: 200, // Return 200 to prevent retries
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
       throw new Error(error);
     }
 
