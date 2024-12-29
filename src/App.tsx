@@ -10,7 +10,7 @@ import Chat from "@/pages/Chat";
 import Dashboard from "@/pages/Dashboard";
 import Settings from "@/pages/Settings";
 import CompleteProfile from "@/pages/CompleteProfile";
-import AdminDashboard from "@/pages/AdminDashboard";
+// import AdminDashboard from "@/pages/AdminDashboard";
 import ReleaseNotes from "@/pages/ReleaseNotes";
 
 // Create a client
@@ -47,7 +47,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            {/* Temporarily disabled admin route */}
+            {/* <Route path="/admin" element={<AdminDashboard />} /> */}
             <Route path="/release-notes" element={<ReleaseNotes />} />
           </Routes>
           <Toaster />

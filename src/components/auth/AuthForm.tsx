@@ -47,7 +47,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         plan: finalSelectedPlan
       });
 
-      // Destructure the response immediately to avoid multiple reads
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
@@ -58,14 +57,13 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
             airline: formData.airline.toLowerCase(),
             subscription_plan: finalSelectedPlan,
           },
-          emailRedirectTo: undefined // Disable Supabase email confirmation
+          emailRedirectTo: undefined
         }
       });
 
       if (error) {
         console.error("Signup error:", error);
         
-        // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
             variant: "destructive",
@@ -84,7 +82,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
       console.log("Signup successful:", data);
 
-      // Send welcome email using Resend
       const { error: emailError } = await sendWelcomeEmail({
         email: formData.email,
         name: formData.fullName,
