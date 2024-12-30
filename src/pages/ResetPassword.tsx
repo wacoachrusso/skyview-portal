@@ -4,28 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordResetForm } from "@/components/auth/password-reset/PasswordResetForm";
 
-export const ResetPassword = () => {
+const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if we have a valid session and are in password reset mode
   useEffect(() => {
     const checkSession = async () => {
-      const isPasswordResetMode = localStorage.getItem('password_reset_mode') === 'true';
-      
-      if (!isPasswordResetMode) {
-        console.log('Not in password reset mode');
-        navigate('/login', { replace: true });
-        return;
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         console.log('No valid session for password reset');
-        localStorage.removeItem('password_reset_mode');
-        navigate('/login', { replace: true });
+        navigate('/login');
         return;
       }
     };
@@ -60,27 +50,18 @@ export const ResetPassword = () => {
 
       if (error) throw error;
 
-      // Clear the password reset mode flag
+      // Clear any password reset related flags
       localStorage.removeItem('password_reset_mode');
       
-      // Ensure user is signed out
+      // Sign out the user
       await supabase.auth.signOut();
-
-      // Send confirmation email
-      const { error: emailError } = await supabase.functions.invoke('send-password-reset-confirmation', {
-        body: { email: (await supabase.auth.getUser()).data.user?.email }
-      });
-
-      if (emailError) {
-        console.error('Error sending confirmation email:', emailError);
-      }
 
       toast({
         title: "Password updated",
-        description: "Your password has been successfully reset. Please check your email for confirmation."
+        description: "Your password has been successfully reset. Please log in with your new password."
       });
 
-      // Use replace to prevent back navigation
+      // Redirect to login page
       navigate('/login', { replace: true });
     } catch (error) {
       console.error('Error resetting password:', error);
