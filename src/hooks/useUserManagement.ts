@@ -68,16 +68,20 @@ export const useUserManagement = () => {
       setUpdatingUser(userId);
 
       // First update the profile status
-      const { error: updateError, data: updateData } = await supabase
+      const { data: updateData, error: updateError } = await supabase
         .from("profiles")
         .update({ account_status: status })
         .eq("id", userId)
         .select()
         .maybeSingle();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Error updating profile status:", updateError);
+        throw updateError;
+      }
 
       if (!updateData) {
+        console.error("User profile not found");
         throw new Error("User profile not found");
       }
 
@@ -110,7 +114,6 @@ export const useUserManagement = () => {
         });
       }
       
-      // Immediately refetch to update the UI
       await refetch();
     } catch (error) {
       console.error(`Error ${status} user account:`, error);
