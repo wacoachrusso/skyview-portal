@@ -29,7 +29,7 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] to-[#1e293b] flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-hero-gradient flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         <div className="bg-[#1A1F2C]/95 backdrop-blur-lg border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
           <div className="mb-8 flex flex-col items-center">
