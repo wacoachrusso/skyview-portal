@@ -60,32 +60,34 @@ export function ReferralSection() {
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-lg py-16">
+    <div className="bg-gradient-to-br from-brand-navy to-brand-slate py-16">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Refer a Friend, Get Rewarded
-          </h2>
-          <p className="text-gray-300 mb-8">
-            Invite your colleagues and both get a free month of premium access when they sign up!
-          </p>
-          <form onSubmit={handleReferral} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <Input
-              type="email"
-              placeholder="Enter your friend's email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-grow bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-              required
-            />
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="bg-brand-gold hover:bg-brand-gold/90 text-black"
-            >
-              {isSubmitting ? "Sending..." : "Send Invite"}
-            </Button>
-          </form>
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Share SkyGuide & Get Rewarded
+            </h2>
+            <p className="text-gray-200 mb-8">
+              Invite your colleagues and both get a free month of premium access when they sign up!
+            </p>
+            <form onSubmit={handleReferral} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <Input
+                type="email"
+                placeholder="Enter your friend's email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-grow bg-white/20 border-white/30 text-white placeholder:text-gray-300"
+                required
+              />
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold"
+              >
+                {isSubmitting ? "Sending..." : "Send Invite"}
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

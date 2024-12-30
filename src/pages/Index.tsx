@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { PricingSection } from "@/components/landing/PricingSection";
+import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { CallToAction } from "@/components/landing/CallToAction";
-import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 
@@ -22,8 +22,6 @@ const Index = () => {
         console.log('Checking auth state on Index page');
         const { data: { session } } = await supabase.auth.getSession();
         
-        // Only redirect to dashboard if there's no scrollTo parameter
-        // and not coming from dashboard or logout
         if (session && 
             !scrollTo && 
             !location.state?.fromDashboard && 
@@ -42,12 +40,12 @@ const Index = () => {
             console.log('Profile incomplete, redirecting to complete-profile');
             navigate('/complete-profile');
           }
-        } else if (scrollTo === 'pricing') {
-          console.log('Scrolling to pricing section');
+        } else if (scrollTo === 'pricing' || scrollTo === 'referral') {
+          console.log(`Scrolling to ${scrollTo} section`);
           setTimeout(() => {
-            const pricingSection = document.getElementById('pricing-section');
-            if (pricingSection) {
-              pricingSection.scrollIntoView({ behavior: 'smooth' });
+            const section = document.getElementById(`${scrollTo}-section`);
+            if (section) {
+              section.scrollIntoView({ behavior: 'smooth' });
             }
           }, 100);
         }
@@ -66,8 +64,8 @@ const Index = () => {
         <Hero />
         <Features />
         <PricingSection />
-        <Testimonials />
         <ReferralSection />
+        <Testimonials />
         <CallToAction />
       </main>
       <Footer />

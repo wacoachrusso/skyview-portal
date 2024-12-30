@@ -73,6 +73,17 @@ const handler = async (req: Request): Promise<Response> => {
                 <li style="margin-bottom: 10px;">👥 Union Contact Hub: Access reps and resources when you need them most.</li>
               </ul>
             </div>
+
+            <div style="background-color: #D4AF37; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
+              <h2 style="color: #1a365d; margin-bottom: 15px;">Refer & Earn Free Premium Access! 🎁</h2>
+              <p style="color: #1a365d; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                Share SkyGuide with your colleagues and both get a free month of premium access when they sign up!
+              </p>
+              <a href="https://skyguide.site/?scrollTo=referral" 
+                 style="background-color: #1a365d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                Send Invites Now
+              </a>
+            </div>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
               Let's get started! Log in today and explore how SkyGuide can make your work-life simpler, faster, and more organized.
