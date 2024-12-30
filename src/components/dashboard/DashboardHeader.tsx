@@ -1,7 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, MessageSquare } from "lucide-react";
+import { Menu, LogOut, User, MessageSquare } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardHeaderProps {
   userEmail: string | null;
@@ -38,7 +44,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             </a>
           </div>
           
-          {/* Navigation Buttons - Desktop/Tablet */}
+          {/* Navigation Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
             <Button 
               asChild
@@ -64,54 +70,73 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             </Button>
           </div>
           
-          {/* Right Section with Notifications and User Info */}
-          <div className="flex items-center">
-            {/* Mobile Navigation Menu */}
-            <div className="flex md:hidden items-center space-x-2">
-              <Button 
-                asChild
-                variant="ghost"
-                size="sm"
-                className="text-foreground/70 hover:text-foreground"
-              >
-                <Link to="/chat">
-                  <MessageSquare className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button 
-                asChild
-                variant="ghost"
-                size="sm"
-                className="text-foreground/70 hover:text-foreground"
-              >
-                <Link to="/account">
-                  <User className="h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
+          {/* Mobile Navigation */}
+          <div className="flex md:hidden items-center space-x-3">
+            {/* Chat Button - Always visible on mobile */}
+            <Button 
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-foreground/70 hover:text-foreground"
+            >
+              <Link to="/chat">
+                <MessageSquare className="h-5 w-5" />
+              </Link>
+            </Button>
 
-            <div className="flex items-center space-x-3 ml-2">
-              <NotificationBell />
-              
-              {/* User Email - Hidden on Mobile */}
-              <div className="hidden lg:flex items-center space-x-2">
-                <User className="h-5 w-5 text-foreground/70" />
-                <span className="text-sm font-medium text-foreground/70">
-                  {userEmail}
-                </span>
-              </div>
-              
-              {/* Sign Out Button */}
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={onSignOut}
-                className="bg-secondary/80 text-secondary-foreground hover:bg-secondary transition-colors duration-200"
+            {/* Notification Bell */}
+            <NotificationBell />
+            
+            {/* Hamburger Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-foreground/70 hover:text-foreground"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-56 bg-background/95 backdrop-blur-sm border border-border"
               >
-                <LogOut className="h-5 w-5 sm:mr-2" />
-                <span className="hidden sm:inline">Sign Out</span>
-              </Button>
+                <DropdownMenuItem asChild>
+                  <Link to="/account" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Account
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-destructive focus:text-destructive"
+                  onClick={onSignOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Desktop Right Section */}
+          <div className="hidden md:flex items-center space-x-3">
+            <NotificationBell />
+            <div className="hidden lg:flex items-center space-x-2">
+              <User className="h-5 w-5 text-foreground/70" />
+              <span className="text-sm font-medium text-foreground/70">
+                {userEmail}
+              </span>
             </div>
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={onSignOut}
+              className="bg-secondary/80 text-secondary-foreground hover:bg-secondary transition-colors duration-200"
+            >
+              <LogOut className="h-5 w-5 sm:mr-2" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
           </div>
         </div>
       </div>

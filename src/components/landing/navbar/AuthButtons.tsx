@@ -7,9 +7,10 @@ interface AuthButtonsProps {
   isLoading: boolean;
   isLoggedIn: boolean;
   scrollToPricing: () => void;
+  isMobile?: boolean;
 }
 
-export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing }: AuthButtonsProps) {
+export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }: AuthButtonsProps) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
@@ -21,67 +22,38 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing }: AuthButt
 
   if (isLoggedIn) {
     return (
-      <div className="flex items-center gap-4 sm:gap-6">
-        <div className="flex items-center">
-          <div className="mr-4 sm:mr-6">
-            <NotificationBell />
-          </div>
-          
-          {/* Mobile View */}
-          <div className="flex sm:hidden items-center gap-4">
-            <Button 
-              asChild
-              variant="ghost"
-              size="icon"
-              className="text-foreground/70 hover:text-foreground"
-            >
-              <Link to="/chat">
-                <MessageSquare className="h-5 w-5" />
-              </Link>
-            </Button>
-            <Button 
-              asChild
-              variant="ghost"
-              size="icon"
-              className="text-foreground/70 hover:text-foreground"
-            >
-              <Link to="/account">
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-          
-          {/* Tablet/Desktop View */}
-          <div className="hidden sm:flex items-center gap-6">
-            <Button 
-              asChild
-              variant="secondary"
-              size="sm"
-              className="text-white hover:bg-brand-gold hover:text-black"
-            >
-              <Link to="/chat">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Chat Now
-              </Link>
-            </Button>
-            <Button 
-              asChild
-              variant="secondary"
-              size="sm"
-              className="text-white hover:bg-brand-gold hover:text-black"
-            >
-              <Link to="/account">
-                <User className="mr-2 h-4 w-4" />
-                Account
-              </Link>
-            </Button>
-          </div>
-        </div>
+      <div className={`flex items-center ${isMobile ? 'flex-col w-full gap-2' : 'gap-4 sm:gap-6'}`}>
+        {/* Chat Button - Always visible */}
+        <Button 
+          asChild
+          variant={isMobile ? "default" : "secondary"}
+          size="sm"
+          className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
+        >
+          <Link to="/chat">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Chat Now
+          </Link>
+        </Button>
+
+        {!isMobile && <NotificationBell />}
+
+        <Button 
+          asChild
+          variant={isMobile ? "default" : "secondary"}
+          size="sm"
+          className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
+        >
+          <Link to="/account">
+            <User className="mr-2 h-4 w-4" />
+            Account
+          </Link>
+        </Button>
         
         <Button 
           asChild
           size="sm"
-          className="bg-brand-gold text-black hover:bg-brand-gold/90 text-sm px-3 py-1"
+          className={`${isMobile ? 'w-full justify-start' : ''} bg-brand-gold text-black hover:bg-brand-gold/90`}
         >
           <Link to="/dashboard">
             Dashboard
@@ -92,25 +64,24 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing }: AuthButt
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
       <Button 
         asChild 
         variant="secondary"
         size="sm"
-        className="text-white hover:bg-brand-gold hover:text-black"
+        className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
       >
         <Link to="/login">
           <LogIn className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Login</span>
+          Login
         </Link>
       </Button>
       <Button 
         onClick={scrollToPricing}
         size="sm"
-        className="bg-brand-gold text-black hover:bg-brand-gold/90 text-sm px-3 py-1"
+        className={`${isMobile ? 'w-full justify-start' : ''} bg-brand-gold text-black hover:bg-brand-gold/90`}
       >
-        <span className="hidden sm:inline">Sign Up</span>
-        <span className="sm:hidden">Join</span>
+        Sign Up
       </Button>
     </div>
   );

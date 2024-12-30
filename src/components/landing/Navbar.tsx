@@ -3,10 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Logo } from "./navbar/Logo";
 import { AuthButtons } from "./navbar/AuthButtons";
+import { Menu } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,11 +69,13 @@ export function Navbar() {
     if (pricingSection) {
       pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
+    setIsMobileMenuOpen(false);
   };
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigate('/', { state: { fromNavbar: true } });
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -74,11 +83,45 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-14 md:h-16">
           <Logo handleLogoClick={handleLogoClick} />
-          <AuthButtons 
-            isLoading={isLoading} 
-            isLoggedIn={isLoggedIn} 
-            scrollToPricing={scrollToPricing}
-          />
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <AuthButtons 
+              isLoading={isLoading} 
+              isLoggedIn={isLoggedIn} 
+              scrollToPricing={scrollToPricing}
+            />
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden flex items-center">
+            <DropdownMenu 
+              open={isMobileMenuOpen} 
+              onOpenChange={setIsMobileMenuOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-2 text-foreground/70 hover:text-foreground"
+                  aria-label="Toggle menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end"
+                className="w-56 bg-background/95 backdrop-blur-sm border border-border mt-2"
+              >
+                <div className="p-2">
+                  <AuthButtons 
+                    isLoading={isLoading} 
+                    isLoggedIn={isLoggedIn} 
+                    scrollToPricing={scrollToPricing}
+                    isMobile={true}
+                  />
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </nav>
