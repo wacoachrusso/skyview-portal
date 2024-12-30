@@ -73,9 +73,13 @@ export const useUserManagement = () => {
         .update({ account_status: status })
         .eq("id", userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (updateError) throw updateError;
+
+      if (!updateData) {
+        throw new Error("User profile not found");
+      }
 
       console.log("Profile status updated:", updateData);
 
