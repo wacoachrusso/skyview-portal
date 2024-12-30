@@ -33,6 +33,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cookie_consents: {
+        Row: {
+          created_at: string
+          id: string
+          preferences: Database["public"]["Enums"]["cookie_preference"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preferences?: Database["public"]["Enums"]["cookie_preference"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preferences?: Database["public"]["Enums"]["cookie_preference"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -374,6 +398,12 @@ export type Database = {
       }
     }
     Enums: {
+      cookie_preference:
+        | "essential"
+        | "analytics"
+        | "marketing"
+        | "all"
+        | "none"
       notification_type: "update" | "release" | "system"
     }
     CompositeTypes: {
