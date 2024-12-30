@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { useLoginForm } from "@/hooks/useLoginForm";
-import { sendMagicLink } from "@/utils/authUtils";
 
 export const LoginForm = () => {
   const {
@@ -91,16 +90,6 @@ export const LoginForm = () => {
       >
         {loading ? "Logging in..." : "Login"}
       </Button>
-
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={() => sendMagicLink(formData.email)}
-          className="text-xs sm:text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          Sign in with magic link instead
-        </button>
-      </div>
     </form>
   );
 };
