@@ -25,15 +25,22 @@ export function ReferralSection() {
         return;
       }
 
-      const { error } = await supabase
+      // First, generate the referral code
+      const { data: referralCode, error: codeError } = await supabase
+        .rpc('generate_referral_code');
+
+      if (codeError) throw codeError;
+
+      // Then, create the referral with the generated code
+      const { error: insertError } = await supabase
         .from('referrals')
         .insert({
           referrer_id: user.id,
           referee_email: email,
-          referral_code: await supabase.rpc('generate_referral_code'),
+          referral_code: referralCode,
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       toast({
         title: "Referral sent!",
