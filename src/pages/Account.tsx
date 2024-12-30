@@ -7,7 +7,6 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AccountHeader } from "@/components/account/AccountHeader";
 import { AccountInfo } from "@/components/account/AccountInfo";
 import { SubscriptionInfo } from "@/components/account/SubscriptionInfo";
-import { TwoFactorAuth } from "@/components/account/TwoFactorAuth";
 
 const Account = () => {
   const navigate = useNavigate();
@@ -17,37 +16,37 @@ const Account = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { handleSignOut } = useAuthManagement();
 
-  const loadProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      setUserEmail(user.email);
-
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      setProfile(profileData);
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load profile information.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        setUserEmail(user.email);
+
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        setProfile(profileData);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load profile information.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     loadProfile();
   }, [navigate]);
 
@@ -76,7 +75,14 @@ const Account = () => {
         description: "Your subscription has been cancelled successfully.",
       });
 
-      await loadProfile();
+      // Refresh profile data
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      setProfile(profileData);
     } catch (error) {
       console.error('Error cancelling subscription:', error);
       toast({
@@ -103,7 +109,6 @@ const Account = () => {
             onPlanChange={handlePlanChange}
             onCancelSubscription={handleCancelSubscription}
           />
-          <TwoFactorAuth profile={profile} onUpdate={loadProfile} />
         </div>
       </main>
     </div>
