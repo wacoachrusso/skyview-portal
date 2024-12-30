@@ -16,6 +16,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ResetPassword from "@/pages/ResetPassword";
 import About from "@/pages/About";
+import ForgotPassword from "@/pages/ForgotPassword";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -46,6 +47,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/about" element={<About />} />
           </Routes>
         </Router>

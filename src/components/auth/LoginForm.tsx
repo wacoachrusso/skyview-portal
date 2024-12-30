@@ -5,9 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { useLoginForm } from "@/hooks/useLoginForm";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const LoginForm = () => {
   const {
@@ -18,49 +17,7 @@ export const LoginForm = () => {
     setFormData,
     handleSubmit
   } = useLoginForm();
-
-  const [resetLoading, setResetLoading] = useState(false);
-  const { toast } = useToast();
-
-  const handleForgotPassword = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!formData.email.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Email required",
-        description: "Please enter your email address to reset your password."
-      });
-      return;
-    }
-
-    setResetLoading(true);
-    try {
-      console.log('Starting password reset process for:', formData.email);
-      
-      const { error: emailError } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
-          email: formData.email.trim(),
-          resetUrl: `${window.location.origin}/auth/callback?type=recovery`
-        }
-      });
-
-      if (emailError) throw emailError;
-
-      toast({
-        title: "Check your email",
-        description: "We've sent you a password reset link."
-      });
-    } catch (error) {
-      console.error('Password reset error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not send password reset email. Please try again."
-      });
-    } finally {
-      setResetLoading(false);
-    }
-  };
+  const navigate = useNavigate();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -135,10 +92,9 @@ export const LoginForm = () => {
             type="button"
             variant="link"
             className="text-brand-gold hover:text-brand-gold/80 text-sm px-0"
-            onClick={handleForgotPassword}
-            disabled={resetLoading}
+            onClick={() => navigate('/forgot-password')}
           >
-            {resetLoading ? "Sending reset link..." : "Forgot password?"}
+            Forgot password?
           </Button>
         </div>
 
