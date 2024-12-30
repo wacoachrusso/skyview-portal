@@ -20,10 +20,12 @@ export function Navbar() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
-          setIsLoggedIn(!!session);
           if (session?.user) {
             console.log('User is logged in:', session.user.email);
+            setIsLoggedIn(true);
             setUserEmail(session.user.email || "");
+          } else {
+            setIsLoggedIn(false);
           }
           setIsLoading(false);
         }
@@ -79,7 +81,6 @@ export function Navbar() {
     if (isLoggedIn) {
       return (
         <div className="flex items-center gap-3">
-          <span className="text-sm text-white hidden md:inline">Welcome back, {userEmail}</span>
           <NotificationBell />
           <Button 
             asChild
