@@ -82,3 +82,39 @@ export const handleEmailVerification = async (email: string) => {
     });
   }
 };
+
+export const handlePasswordReset = async (email: string) => {
+  try {
+    if (!email || !email.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter your email address.",
+      });
+      return;
+    }
+
+    console.log('Starting password reset process for:', email);
+
+    const { error } = await supabase.functions.invoke('send-password-reset', {
+      body: { 
+        email: email.trim(),
+        resetUrl: `${window.location.origin}/auth/callback`
+      }
+    });
+
+    if (error) throw error;
+
+    toast({
+      title: "Check your email",
+      description: "We've sent you instructions to reset your password.",
+    });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Could not send password reset email. Please try again.",
+    });
+  }
+};
