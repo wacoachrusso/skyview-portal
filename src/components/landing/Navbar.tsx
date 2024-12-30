@@ -79,13 +79,13 @@ export function Navbar() {
   };
 
   return (
-    <nav className="bg-background border-b border-border sticky top-0 z-50">
+    <nav className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-14 md:h-16">
+        <div className="flex justify-between items-center h-16">
           <Logo handleLogoClick={handleLogoClick} />
           
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center space-x-4">
             <AuthButtons 
               isLoading={isLoading} 
               isLoggedIn={isLoggedIn} 
@@ -94,13 +94,14 @@ export function Navbar() {
           </div>
 
           {/* Mobile Navigation */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-2">
             {isLoggedIn && (
               <AuthButtons 
                 isLoading={isLoading} 
                 isLoggedIn={isLoggedIn} 
                 scrollToPricing={scrollToPricing}
                 isMobile={true}
+                showChatOnly={true}
               />
             )}
             <DropdownMenu 
@@ -109,7 +110,7 @@ export function Navbar() {
             >
               <DropdownMenuTrigger asChild>
                 <button
-                  className="p-2 text-foreground/70 hover:text-foreground"
+                  className="p-2 text-foreground hover:bg-accent rounded-md transition-colors"
                   aria-label="Toggle menu"
                 >
                   <Menu className="h-5 w-5" />
@@ -125,6 +126,7 @@ export function Navbar() {
                     isLoggedIn={isLoggedIn} 
                     scrollToPricing={scrollToPricing}
                     isMobile={true}
+                    showChatOnly={false}
                   />
                 </div>
               </DropdownMenuContent>

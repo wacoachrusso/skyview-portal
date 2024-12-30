@@ -8,9 +8,10 @@ interface AuthButtonsProps {
   isLoggedIn: boolean;
   scrollToPricing: () => void;
   isMobile?: boolean;
+  showChatOnly?: boolean;
 }
 
-export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }: AuthButtonsProps) {
+export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, showChatOnly }: AuthButtonsProps) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
@@ -21,26 +22,29 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
   }
 
   if (isLoggedIn) {
-    return (
-      <div className={`flex items-center ${isMobile ? 'flex-col w-full gap-2' : 'gap-4'}`}>
-        {/* Chat Button - Always visible */}
+    // If showChatOnly is true, only show the chat button
+    if (showChatOnly) {
+      return (
         <Button 
           asChild
-          variant={isMobile ? "ghost" : "secondary"}
+          variant="ghost"
           size="sm"
-          className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
+          className="text-foreground hover:bg-accent"
         >
           <Link to="/chat">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Chat Now
+            <MessageSquare className="h-5 w-5" />
           </Link>
         </Button>
+      );
+    }
 
+    return (
+      <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
         <Button 
           asChild
           variant={isMobile ? "ghost" : "secondary"}
           size="sm"
-          className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
+          className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-accent`}
         >
           <Link to="/account">
             <User className="mr-2 h-4 w-4" />
@@ -48,11 +52,13 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
           </Link>
         </Button>
         
+        {!isMobile && <NotificationBell />}
+        
         <Button 
           asChild
           size="sm"
           variant={isMobile ? "ghost" : "default"}
-          className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-brand-gold hover:text-black`}
+          className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-accent`}
         >
           <Link to="/dashboard">
             Dashboard
@@ -68,7 +74,7 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
         asChild 
         variant={isMobile ? "ghost" : "secondary"}
         size="sm"
-        className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
+        className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-accent`}
       >
         <Link to="/login">
           <LogIn className="mr-2 h-4 w-4" />
@@ -79,7 +85,7 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
         onClick={scrollToPricing}
         size="sm"
         variant={isMobile ? "ghost" : "default"}
-        className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-brand-gold hover:text-black`}
+        className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-accent`}
       >
         Sign Up
       </Button>
