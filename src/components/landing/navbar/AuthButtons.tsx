@@ -21,14 +21,14 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing }: AuthButt
 
   if (isLoggedIn) {
     return (
-      <div className="flex items-center gap-2 sm:gap-3">
-        <div className="flex items-center ml-auto">
-          <div className="ml-2 sm:ml-0">
+      <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center">
+          <div className="mr-4 sm:mr-6">
             <NotificationBell />
           </div>
           
           {/* Mobile View */}
-          <div className="flex sm:hidden items-center gap-2">
+          <div className="flex sm:hidden items-center gap-4">
             <Button 
               asChild
               variant="ghost"
@@ -52,7 +52,7 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing }: AuthButt
           </div>
           
           {/* Tablet/Desktop View */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-6">
             <Button 
               asChild
               variant="secondary"
@@ -92,7 +92,7 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing }: AuthButt
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex items-center gap-4">
       <Button 
         asChild 
         variant="secondary"
