@@ -49,7 +49,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/account" element={<Account />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
             <Route path="/release-notes" element={<ReleaseNotes />} />
             {/* Catch-all route should be last */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
