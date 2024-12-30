@@ -73,7 +73,7 @@ export function ContactDirectory() {
           filteredReps.map((rep) => (
             <Card key={rep.id} className="bg-card hover:bg-accent/50 transition-colors">
               <CardHeader>
-                <h3 className="text-lg font-semibold text-foreground">{rep.full_name}</h3>
+                <h3 className="text-lg font-semibold text-white">{rep.full_name}</h3>
                 <p className="text-sm text-muted-foreground">{rep.role}</p>
               </CardHeader>
               <CardContent className="space-y-4">
