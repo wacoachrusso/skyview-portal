@@ -113,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <h1 style="color: #1a365d; text-align: center; margin-bottom: 20px;">Reset Your Password</h1>
                 
-                <p style="margin-bottom: 20px;">We received a request to reset your SkyGuide account password at ${nycTime} EST. Click the button below to choose a new password:</p>
+                <p style="margin-bottom: 20px;">We received a request to reset your SkyGuide™ account password at ${nycTime} EST. Click the button below to choose a new password:</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${data.properties.action_link}" class="button">
@@ -126,9 +126,9 @@ const handler = async (req: Request): Promise<Response> => {
               
               <!-- Footer -->
               <div class="footer">
-                <p style="margin-bottom: 10px;">SkyGuide - Your Aviation Assistant</p>
+                <p style="margin-bottom: 10px;">SkyGuide™ - Your Aviation Assistant</p>
                 <p style="margin-bottom: 10px;">Built by aviation professionals, for aviation professionals.</p>
-                <p style="margin-bottom: 10px;">This reset link will expire in 24 hours for security reasons.</p>
+                <p style="margin-bottom: 10px;">© 2024 SkyGuide. All rights reserved.</p>
                 <div style="margin-top: 20px;">
                   <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
                   <a href="https://skyguide.site/terms" style="color: #666; text-decoration: none; margin: 0 10px;">Terms of Service</a>

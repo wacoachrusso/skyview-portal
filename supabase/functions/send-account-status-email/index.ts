@@ -92,7 +92,10 @@ const getEmailContent = (status: string, fullName: string) => {
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; width: 100%;">
                     <tr>
                       <td class="content-block" style="font-family: sans-serif; vertical-align: top; padding-bottom: 10px; padding-top: 10px; color: #9ca3af; font-size: 12px; text-align: center;">
-                        <span>© 2024 SkyGuide. All rights reserved.</span>
+                        <span>SkyGuide™ - Your Aviation Assistant</span><br>
+                        <span>© 2024 SkyGuide. All rights reserved.</span><br>
+                        <a href="https://skyguide.site/privacy-policy" style="color: #9ca3af; text-decoration: underline;">Privacy Policy</a> • 
+                        <a href="https://skyguide.site/terms" style="color: #9ca3af; text-decoration: underline;">Terms of Service</a>
                       </td>
                     </tr>
                   </table>

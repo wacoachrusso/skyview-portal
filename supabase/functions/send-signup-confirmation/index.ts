@@ -58,9 +58,9 @@ const handler = async (req: Request): Promise<Response> => {
                 <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
               </div>
               
-              <h1 style="color: #1a365d; text-align: center;">Welcome to SkyGuide!</h1>
+              <h1 style="color: #1a365d; text-align: center;">Welcome to SkyGuide™!</h1>
               
-              <p style="margin-bottom: 20px;">Thank you for signing up! Please confirm your email address to get started with SkyGuide.</p>
+              <p style="margin-bottom: 20px;">Thank you for signing up! Please confirm your email address to get started with SkyGuide™.</p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${confirmationUrl}" 
@@ -69,10 +69,15 @@ const handler = async (req: Request): Promise<Response> => {
                 </a>
               </div>
               
-              <p style="color: #666; font-size: 14px;">If you didn't create a SkyGuide account, you can safely ignore this email.</p>
+              <p style="color: #666; font-size: 14px;">If you didn't create a SkyGuide™ account, you can safely ignore this email.</p>
               
               <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
-                <p>SkyGuide - Your Aviation Assistant</p>
+                <p>SkyGuide™ - Your Aviation Assistant</p>
+                <p>© 2024 SkyGuide. All rights reserved.</p>
+                <p>
+                  <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: underline;">Privacy Policy</a> • 
+                  <a href="https://skyguide.site/terms" style="color: #666; text-decoration: underline;">Terms of Service</a>
+                </p>
               </div>
             </body>
           </html>

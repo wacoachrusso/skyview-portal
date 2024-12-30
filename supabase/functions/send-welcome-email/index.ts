@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             
             <h1 style="color: #1a365d; text-align: center; font-size: 24px; margin-bottom: 30px;">
-              Unlock a World of Insights at Your Fingertips
+              Welcome to SkyGuide™ - Unlock a World of Insights at Your Fingertips
             </h1>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
@@ -62,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
             </p>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              We're thrilled to welcome you to SkyGuide! Your one-stop solution for all your union contract-related needs is now just a tap away.
+              We're thrilled to welcome you to SkyGuide™! Your one-stop solution for all your union contract-related needs is now just a tap away.
             </p>
             
             <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background-color: #D4AF37; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
               <h2 style="color: #1a365d; margin-bottom: 15px;">Refer & Earn Free Premium Access! 🎁</h2>
               <p style="color: #1a365d; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-                Share SkyGuide with your colleagues and both get a free month of premium access when they sign up!
+                Share SkyGuide™ with your colleagues and both get a free month of premium access when they sign up!
               </p>
               <a href="https://skyguide.site/?scrollTo=referral" 
                  style="background-color: #1a365d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
@@ -86,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Let's get started! Log in today and explore how SkyGuide can make your work-life simpler, faster, and more organized.
+              Let's get started! Log in today and explore how SkyGuide™ can make your work-life simpler, faster, and more organized.
             </p>
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
               Warm regards,<br>
-              The SkyGuide Team
+              The SkyGuide™ Team
             </p>
             
             <div style="text-align: center; margin: 30px 0;">
@@ -105,13 +105,15 @@ const handler = async (req: Request): Promise<Response> => {
               </a>
             </div>
             
-            <p style="color: #718096; font-style: italic; text-align: center; margin-top: 30px;">
-              P.S. Got questions? Our team is here to help at support@skyguide.site
-            </p>
-            
             <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+              <p style="color: #718096; font-style: italic;">
+                P.S. Got questions? Our team is here to help at support@skyguide.site
+              </p>
               <p style="color: #a0aec0; font-size: 12px;">
-                © 2024 SkyGuide. All rights reserved.
+                SkyGuide™ - Your Aviation Assistant<br>
+                © 2024 SkyGuide. All rights reserved.<br>
+                <a href="https://skyguide.site/privacy-policy" style="color: #a0aec0; text-decoration: underline;">Privacy Policy</a> • 
+                <a href="https://skyguide.site/terms" style="color: #a0aec0; text-decoration: underline;">Terms of Service</a>
               </p>
             </div>
           </div>
