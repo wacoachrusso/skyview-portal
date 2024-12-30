@@ -12,6 +12,7 @@ const ResetPassword = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Checking session for password reset:', session);
       
       if (!session) {
         console.log('No valid session for password reset');
@@ -44,17 +45,21 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting to update password...');
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating password:', error);
+        throw error;
+      }
 
-      // Clear any password reset related flags
-      localStorage.removeItem('password_reset_mode');
+      console.log('Password updated successfully');
       
       // Sign out the user
       await supabase.auth.signOut();
+      console.log('User signed out after password reset');
 
       toast({
         title: "Password updated",

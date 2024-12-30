@@ -12,7 +12,7 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
   const { toast } = useToast();
 
   const processPasswordReset = async () => {
-    console.log('Processing password reset');
+    console.log('Processing password reset with tokens:', { accessToken, refreshToken });
     
     if (!accessToken || !refreshToken) {
       console.error('Missing tokens for password reset');
@@ -30,7 +30,7 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
       await supabase.auth.signOut();
       console.log('Cleared existing session');
 
-      // Set a temporary session just for password reset
+      // Set the session with the recovery tokens
       const { error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken
@@ -47,11 +47,7 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
         return false;
       }
 
-      // Set a flag in localStorage to indicate we're in password reset mode
-      localStorage.setItem('password_reset_mode', 'true');
-      
-      // Redirect to reset password page
-      window.location.replace('https://www.skyguide.site/reset-password');
+      console.log('Successfully set recovery session');
       return true;
     } catch (error) {
       console.error('Error in processPasswordReset:', error);
