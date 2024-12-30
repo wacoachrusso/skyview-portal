@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
-        subject: `${inviterName ? `${inviterName} invited you to` : "You're invited to"} join SkyGuide + 1 Month Free Premium!`,
+        subject: `${inviterName ? `${inviterName} thinks you'll love` : "Discover"} SkyGuide - Your AI Contract Assistant + 1 Month Free!`,
         html: `
           <!DOCTYPE html>
           <html>
@@ -53,58 +53,75 @@ const handler = async (req: Request): Promise<Response> => {
                 <!-- Header -->
                 <div style="background: linear-gradient(135deg, #1a365d 0%, #334155 100%); padding: 40px 20px; text-align: center;">
                   <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 180px; margin-bottom: 20px;">
-                  <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">Special Invitation + Free Premium Access!</h1>
+                  <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">Transform How You Navigate Your Contract</h1>
                 </div>
                 
                 <!-- Main Content -->
                 <div style="padding: 40px 30px;">
                   <p style="color: #334155; font-size: 16px; margin-bottom: 25px;">
-                    ${inviterName ? `<strong>${inviterName}</strong> thinks you'll love` : "You've been invited to join"} SkyGuide, 
-                    your comprehensive aviation assistant platform. As a special welcome gift, you'll get:
+                    ${inviterName ? `<strong>${inviterName}</strong> thinks you'll love` : "You've been invited to try"} SkyGuide, 
+                    your AI-powered contract assistant that's revolutionizing how aviation professionals understand and manage their contracts.
                   </p>
                   
-                  <!-- Benefits Box -->
                   <div style="background-color: #f8fafc; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
+                    <h2 style="color: #1a365d; font-size: 20px; margin-top: 0; margin-bottom: 20px;">Why Aviation Professionals Love SkyGuide:</h2>
+                    
                     <div style="display: flex; align-items: center; margin-bottom: 15px;">
                       <span style="background-color: #D4AF37; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-weight: bold;">✓</span>
-                      <span style="color: #1a365d; font-weight: 500;">1 Month FREE Premium Access</span>
+                      <span style="color: #1a365d; font-weight: 500;">Get instant, accurate answers about your contract rights</span>
                     </div>
                     <div style="display: flex; align-items: center; margin-bottom: 15px;">
                       <span style="background-color: #D4AF37; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-weight: bold;">✓</span>
-                      <span style="color: #1a365d; font-weight: 500;">Instant Access to All Premium Features</span>
+                      <span style="color: #1a365d; font-weight: 500;">Save hours researching contract clauses and rules</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                      <span style="background-color: #D4AF37; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-weight: bold;">✓</span>
+                      <span style="color: #1a365d; font-weight: 500;">Make informed decisions about your schedule and rights</span>
                     </div>
                     <div style="display: flex; align-items: center;">
                       <span style="background-color: #D4AF37; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-weight: bold;">✓</span>
-                      <span style="color: #1a365d; font-weight: 500;">Your Own Referral Benefits</span>
+                      <span style="color: #1a365d; font-weight: 500;">Available 24/7, just like your schedule</span>
                     </div>
+                  </div>
+                  
+                  <!-- Special Offer -->
+                  <div style="background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; text-align: center;">
+                    <h2 style="color: #1a365d; margin: 0 0 15px; font-size: 24px;">Special Welcome Offer</h2>
+                    <p style="color: #1a365d; font-size: 18px; margin: 0 0 20px;">
+                      Get <strong>1 Month FREE</strong> Premium Access<br>
+                      <span style="font-size: 16px;">Limited time offer - Start using SkyGuide today!</span>
+                    </p>
                   </div>
                   
                   <!-- CTA Button -->
                   <div style="text-align: center; margin: 35px 0;">
                     <a href="${inviteUrl}" 
-                       style="display: inline-block; background-color: #D4AF37; color: #1a365d; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.3s ease;">
+                       style="display: inline-block; background-color: #1a365d; color: white; padding: 16px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 18px; transition: background-color 0.3s ease;">
                       Claim Your Free Month
                     </a>
                   </div>
                   
-                  <!-- Testimonial/Social Proof -->
+                  <!-- Testimonials -->
                   <div style="background: linear-gradient(135deg, #1a365d 0%, #334155 100%); border-radius: 8px; padding: 25px; color: white; margin: 30px 0;">
-                    <p style="font-style: italic; margin: 0; font-size: 15px;">
-                      "SkyGuide has revolutionized how I access and understand my union contract. It's an indispensable tool for any aviation professional."
-                    </p>
-                    <p style="margin: 10px 0 0; font-weight: 500; font-size: 14px;">
-                      - John D., Senior Pilot
-                    </p>
+                    <h3 style="margin: 0 0 15px; font-size: 20px;">What Our Users Say:</h3>
+                    <div style="border-left: 3px solid #D4AF37; padding-left: 20px; margin-bottom: 15px;">
+                      <p style="font-style: italic; margin: 0 0 10px; font-size: 16px;">
+                        "SkyGuide has completely transformed how I understand my contract. It's like having a contract expert in your pocket, available whenever you need it. The time and stress it saves is invaluable."
+                      </p>
+                      <p style="margin: 0; font-weight: 500; font-size: 14px;">
+                        - Captain Michael R., 12 years experience
+                      </p>
+                    </div>
                   </div>
                 </div>
                 
                 <!-- Footer -->
                 <div style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
                   <p style="color: #64748b; font-size: 14px; margin: 0;">
-                    This invitation expires in 24 hours. Don't miss out on your free premium access!
+                    This exclusive invitation expires in 24 hours.<br>Don't miss out on your free premium access!
                   </p>
                   <div style="margin-top: 20px; color: #94a3b8; font-size: 12px;">
-                    <p style="margin: 5px 0;">SkyGuide - Your Aviation Assistant</p>
+                    <p style="margin: 5px 0;">SkyGuide - Your AI Contract Assistant</p>
                     <p style="margin: 5px 0;">© 2024 SkyGuide. All rights reserved.</p>
                   </div>
                 </div>
