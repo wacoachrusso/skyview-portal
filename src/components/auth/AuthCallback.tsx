@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEmailConfirmation } from "@/hooks/useEmailConfirmation";
 import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { redirectToProduction } from "@/utils/redirectUtils";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { handleEmailConfirmation } = useEmailConfirmation();
   const { handleSession } = useSessionHandler();
   const { toast } = useToast();
@@ -50,7 +51,7 @@ export const AuthCallback = () => {
               title: "Invalid reset link",
               description: "The password reset link is invalid or has expired."
             });
-            redirectToProduction();
+            navigate('/login');
             return;
           }
 
@@ -67,12 +68,13 @@ export const AuthCallback = () => {
               title: "Reset link expired",
               description: "Please request a new password reset link."
             });
-            redirectToProduction();
+            navigate('/login');
             return;
           }
 
           // Redirect to password reset page
-          window.location.href = '/reset-password';
+          console.log('Redirecting to reset password page');
+          navigate('/reset-password');
           return;
         }
 
@@ -86,12 +88,12 @@ export const AuthCallback = () => {
           title: "Authentication Error",
           description: "An unexpected error occurred. Please try again."
         });
-        redirectToProduction();
+        navigate('/login');
       }
     };
 
     processCallback();
-  }, [searchParams, handleEmailConfirmation, handleSession, toast]);
+  }, [searchParams, handleEmailConfirmation, handleSession, toast, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

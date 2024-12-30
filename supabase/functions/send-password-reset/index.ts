@@ -57,6 +57,17 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Reset link generated successfully");
     console.log("Sending email via Resend...");
 
+    // Get current time in NYC timezone
+    const nycTime = new Date().toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true,
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
     // Send email via Resend
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -82,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <h1 style="color: #1a365d; text-align: center;">Reset Your Password</h1>
               
-              <p style="margin-bottom: 20px;">We received a request to reset your SkyGuide account password. Click the button below to choose a new password:</p>
+              <p style="margin-bottom: 20px;">We received a request to reset your SkyGuide account password at ${nycTime} EST. Click the button below to choose a new password:</p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${data.properties.action_link}" 
