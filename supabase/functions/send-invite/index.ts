@@ -20,8 +20,16 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { email, inviteUrl, inviterName } = await req.json();
-    console.log("Sending invite email to:", email);
+    console.log("Received request to send invite email to:", email);
+    console.log("Invite URL:", inviteUrl);
+    console.log("Inviter Name:", inviterName);
 
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("RESEND_API_KEY is not configured");
+    }
+
+    console.log("Sending email via Resend API");
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -108,7 +116,12 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const data = await res.json();
-    console.log("Email API response:", data);
+    console.log("Resend API response:", data);
+
+    if (!res.ok) {
+      console.error("Error from Resend API:", data);
+      throw new Error(data.message || "Failed to send email");
+    }
 
     return new Response(JSON.stringify(data), {
       status: 200,

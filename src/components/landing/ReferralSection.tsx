@@ -12,7 +12,7 @@ export function ReferralSection() {
   const handleReferral = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    console.log("Submitting referral for email:", email);
+    console.log("Starting referral process for email:", email);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -25,13 +25,27 @@ export function ReferralSection() {
         return;
       }
 
+      // Get user's profile to include their name in the invitation
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      console.log("Referrer profile:", profile);
+
       // First, generate the referral code
       const { data: referralCode, error: codeError } = await supabase
         .rpc('generate_referral_code');
 
-      if (codeError) throw codeError;
+      if (codeError) {
+        console.error("Error generating referral code:", codeError);
+        throw codeError;
+      }
 
-      // Then, create the referral with the generated code
+      console.log("Generated referral code:", referralCode);
+
+      // Create the referral record
       const { error: insertError } = await supabase
         .from('referrals')
         .insert({
@@ -40,15 +54,37 @@ export function ReferralSection() {
           referral_code: referralCode,
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error creating referral record:", insertError);
+        throw insertError;
+      }
 
+      // Construct the invite URL
+      const inviteUrl = `${window.location.origin}/signup?ref=${referralCode}`;
+      console.log("Generated invite URL:", inviteUrl);
+
+      // Send the invitation email
+      const { error: emailError } = await supabase.functions.invoke('send-invite', {
+        body: {
+          email: email,
+          inviteUrl: inviteUrl,
+          inviterName: profile?.full_name || undefined
+        },
+      });
+
+      if (emailError) {
+        console.error("Error sending invite email:", emailError);
+        throw emailError;
+      }
+
+      console.log("Referral process completed successfully");
       toast({
         title: "Referral sent!",
         description: "Your friend will receive an invitation email shortly.",
       });
       setEmail("");
     } catch (error) {
-      console.error("Error creating referral:", error);
+      console.error("Error in referral process:", error);
       toast({
         title: "Error",
         description: "Failed to send referral. Please try again.",
