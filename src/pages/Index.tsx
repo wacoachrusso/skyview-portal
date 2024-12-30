@@ -1,76 +1,42 @@
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Hero } from "@/components/landing/Hero";
+import { CallToAction } from "@/components/landing/CallToAction";
 import { Features } from "@/components/landing/Features";
+import { Footer } from "@/components/landing/Footer";
+import { Hero } from "@/components/landing/Hero";
+import { Navbar } from "@/components/landing/Navbar";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
-import { CallToAction } from "@/components/landing/CallToAction";
-import { Navbar } from "@/components/landing/Navbar";
-import { Footer } from "@/components/landing/Footer";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
-const Index = () => {
-  const navigate = useNavigate();
+export default function Index() {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const scrollTo = searchParams.get('scrollTo');
 
   useEffect(() => {
-    const checkAuthAndRedirect = async () => {
-      try {
-        console.log('Checking auth state on Index page');
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session && 
-            !scrollTo && 
-            !location.state?.fromDashboard && 
-            !location.state?.fromLogout) {
-          console.log('User is authenticated, checking profile');
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type, airline')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile?.user_type && profile?.airline) {
-            console.log('Profile complete, redirecting to dashboard');
-            navigate('/dashboard');
-          } else {
-            console.log('Profile incomplete, redirecting to complete-profile');
-            navigate('/complete-profile');
-          }
-        } else if (scrollTo === 'pricing' || scrollTo === 'referral') {
-          console.log(`Scrolling to ${scrollTo} section`);
-          setTimeout(() => {
-            const section = document.getElementById(`${scrollTo}-section`);
-            if (section) {
-              section.scrollIntoView({ behavior: 'smooth' });
-            }
-          }, 100);
-        }
-      } catch (error) {
-        console.error('Error checking auth state:', error);
+    console.log('Index page mounted');
+    // Check for pricing section scroll
+    const searchParams = new URLSearchParams(location.search);
+    const scrollTo = searchParams.get('scrollTo');
+    if (scrollTo === 'pricing') {
+      const pricingSection = document.getElementById('pricing');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
       }
-    };
-
-    checkAuthAndRedirect();
-  }, [navigate, location.state, scrollTo]);
+    }
+  }, [location]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Navbar />
       <main>
         <Hero />
         <Features />
+        <Testimonials />
         <PricingSection />
         <ReferralSection />
-        <Testimonials />
         <CallToAction />
       </main>
       <Footer />
     </div>
   );
-};
-
-export default Index;
+}
