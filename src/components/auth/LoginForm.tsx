@@ -116,18 +116,29 @@ export const LoginForm = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="rememberMe"
-          checked={formData.rememberMe}
-          onCheckedChange={(checked) => 
-            setFormData({ ...formData, rememberMe: checked as boolean })
-          }
-          className="border-white/20 h-4 w-4"
-        />
-        <Label htmlFor="rememberMe" className="text-sm text-gray-200 cursor-pointer">
-          Stay logged in
-        </Label>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="rememberMe"
+            checked={formData.rememberMe}
+            onCheckedChange={(checked) => 
+              setFormData({ ...formData, rememberMe: checked as boolean })
+            }
+            className="border-white/20 h-4 w-4"
+          />
+          <Label htmlFor="rememberMe" className="text-sm text-gray-200 cursor-pointer">
+            Stay logged in
+          </Label>
+        </div>
+        <Button
+          type="button"
+          variant="link"
+          className="text-brand-gold hover:text-brand-gold/80 text-sm"
+          onClick={handleForgotPassword}
+          disabled={resetLoading}
+        >
+          {resetLoading ? "Sending reset link..." : "Forgot password?"}
+        </Button>
       </div>
 
       <Button 
@@ -137,18 +148,6 @@ export const LoginForm = () => {
       >
         {loading ? "Logging in..." : "Login"}
       </Button>
-
-      <div className="mt-4 text-center">
-        <Button
-          type="button"
-          variant="link"
-          className="text-brand-gold hover:text-brand-gold/80 text-sm"
-          onClick={handleForgotPassword}
-          disabled={resetLoading}
-        >
-          {resetLoading ? "Sending reset link..." : "Forgot your password?"}
-        </Button>
-      </div>
     </form>
   );
 };
