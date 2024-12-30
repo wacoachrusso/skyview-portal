@@ -61,19 +61,23 @@ export const useUserManagement = () => {
   const updateAccountStatus = async (
     userId: string,
     email: string,
-    status: "disabled" | "suspended" | "active"
+    status: "disabled" | "suspended" | "deleted" | "active"
   ) => {
     try {
       console.log(`Updating account status to ${status} for user:`, userId);
       setUpdatingUser(userId);
 
       // First update the profile status
-      const { error: updateError } = await supabase
+      const { error: updateError, data: updateData } = await supabase
         .from("profiles")
         .update({ account_status: status })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select()
+        .single();
 
       if (updateError) throw updateError;
+
+      console.log("Profile status updated:", updateData);
 
       // Send email notification
       const { error: emailError } = await supabase.functions.invoke(
@@ -89,19 +93,20 @@ export const useUserManagement = () => {
 
       if (emailError) {
         console.error("Error sending status update email:", emailError);
-        // Don't throw here, as the status update was successful
         toast({
           variant: "destructive",
           title: "Warning",
           description: "Account status updated but failed to send notification email",
         });
       } else {
+        console.log("Status update email sent successfully");
         toast({
           title: "Success",
           description: `User account ${status} successfully and notification sent`,
         });
       }
       
+      // Immediately refetch to update the UI
       await refetch();
     } catch (error) {
       console.error(`Error ${status} user account:`, error);
