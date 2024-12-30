@@ -148,6 +148,15 @@ export const LoginForm = () => {
       >
         {loading ? "Logging in..." : "Login"}
       </Button>
+
+      <div className="mt-6 text-center text-sm sm:text-base text-gray-400">
+        <p>
+          Don't have an account?{" "}
+          <Link to="/#pricing-section" className="text-brand-gold hover:text-brand-gold/80 transition-colors">
+            Sign up
+          </Link>
+        </p>
+      </div>
     </form>
   );
 };
