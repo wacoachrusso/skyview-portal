@@ -2,19 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordResetForm } from "@/components/auth/password-reset/PasswordResetForm";
 
 export const ResetPassword = () => {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handlePasswordReset = async (newPassword: string, confirmPassword: string) => {
     if (newPassword !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -36,18 +31,15 @@ export const ResetPassword = () => {
     setLoading(true);
 
     try {
-      // Get current user's email
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error("No user email found");
 
-      // Update password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) throw error;
 
-      // Send login link via edge function
       const { error: emailError } = await supabase.functions.invoke('send-login-link', {
         body: { 
           email: user.email,
@@ -62,7 +54,6 @@ export const ResetPassword = () => {
         description: "Your password has been successfully reset. We've sent you a login link via email."
       });
 
-      // Sign out to clear the recovery session
       await supabase.auth.signOut();
       navigate('/login');
     } catch (error) {
@@ -85,47 +76,10 @@ export const ResetPassword = () => {
           <p className="text-muted-foreground mt-2">Please enter your new password below</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium mb-1">
-                New Password
-              </label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter your new password"
-                required
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-                Confirm Password
-              </label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your new password"
-                required
-                className="w-full"
-              />
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? "Resetting..." : "Reset Password"}
-          </Button>
-        </form>
+        <PasswordResetForm 
+          onSubmit={handlePasswordReset}
+          loading={loading}
+        />
       </div>
     </div>
   );
