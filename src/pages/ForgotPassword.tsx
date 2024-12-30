@@ -29,7 +29,7 @@ const ForgotPassword = () => {
       const { error: emailError } = await supabase.functions.invoke('send-password-reset', {
         body: { 
           email: email.trim(),
-          resetUrl: `${window.location.origin}/auth/callback?type=recovery`
+          resetUrl: `${window.location.origin}/reset-password`
         }
       });
 

@@ -44,7 +44,7 @@ serve(async (req) => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: resetUrl,
+        redirectTo: `${resetUrl}`,
       }
     });
 
@@ -75,7 +75,7 @@ serve(async (req) => {
           <body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f4;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
               <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #1a365d;">
-                <img src="https://skyguide.site/logo.png" alt="SkyGuide Logo" style="max-width: 150px; margin-bottom: 20px;">
+                <img src="https://skyguide.site/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" alt="SkyGuide Logo" style="max-width: 150px; margin-bottom: 20px;">
                 <h1 style="color: #1a365d; margin: 0;">Reset Your Password</h1>
               </div>
               
