@@ -10,6 +10,8 @@ interface LoginFormData {
   rememberMe: boolean;
 }
 
+const MAX_LOGIN_ATTEMPTS = 3;
+
 export const useLoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -28,6 +30,22 @@ export const useLoginForm = () => {
     try {
       console.log('Starting login process...');
       
+      // First check if the account is locked
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('login_attempts, account_status')
+        .eq('email', formData.email.trim())
+        .single();
+
+      if (profile?.account_status === 'locked') {
+        toast({
+          variant: "destructive",
+          title: "Account locked",
+          description: "Your account has been locked due to too many failed login attempts. Please reset your password."
+        });
+        return;
+      }
+
       // First clear any existing session
       await supabase.auth.signOut({ scope: 'local' });
       console.log('Cleared existing session');
@@ -40,11 +58,29 @@ export const useLoginForm = () => {
       if (error) {
         console.error('Login error:', error);
         
+        // Increment login attempts
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            login_attempts: (profile?.login_attempts || 0) + 1,
+            account_status: (profile?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active'
+          })
+          .eq('email', formData.email.trim());
+
+        if ((profile?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS) {
+          toast({
+            variant: "destructive",
+            title: "Account locked",
+            description: "Your account has been locked due to too many failed login attempts. Please reset your password."
+          });
+          return;
+        }
+
         if (error.message === 'Invalid login credentials') {
           toast({
             variant: "destructive",
             title: "Login failed",
-            description: "Incorrect email or password. Please try again."
+            description: `Incorrect email or password. ${MAX_LOGIN_ATTEMPTS - (profile?.login_attempts || 0) - 1} attempts remaining.`
           });
         } else {
           toast({
@@ -77,6 +113,15 @@ export const useLoginForm = () => {
       }
 
       console.log('Sign in successful:', data.user?.id);
+
+      // Reset login attempts on successful login
+      const { error: resetError } = await supabase
+        .from('profiles')
+        .update({ 
+          login_attempts: 0,
+          account_status: 'active'
+        })
+        .eq('email', formData.email.trim());
 
       if (formData.rememberMe) {
         console.log('Setting persistent session...');
