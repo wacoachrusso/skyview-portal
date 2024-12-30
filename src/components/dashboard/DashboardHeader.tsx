@@ -47,6 +47,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           {/* Navigation Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-6">
             <div className="flex items-center space-x-2">
+              <NotificationBell />
               <Button 
                 asChild
                 variant="secondary"
@@ -58,7 +59,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                   <span>Chat Now</span>
                 </Link>
               </Button>
-              <NotificationBell />
             </div>
             <Button 
               asChild
@@ -86,6 +86,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           <div className="flex md:hidden items-center space-x-3">
             {/* Chat Button and Notification Bell - Always visible on mobile */}
             <div className="flex items-center space-x-2">
+              <NotificationBell />
               <Button 
                 asChild
                 variant="ghost"
@@ -96,7 +97,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                   <MessageSquare className="h-5 w-5" />
                 </Link>
               </Button>
-              <NotificationBell />
             </div>
             
             {/* Hamburger Menu */}
