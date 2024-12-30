@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Mail, Phone, MapPin, Users } from "lucide-react";
 
 interface Representative {
   id: string;
@@ -58,47 +60,57 @@ export function ContactDirectory() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Input
         placeholder={t('searchPlaceholder')}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="max-w-md"
+        className="max-w-md mx-auto"
       />
       
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-background/50 backdrop-blur-sm">
-              <th className="p-3 text-left font-medium">{t('name')}</th>
-              <th className="p-3 text-left font-medium">{t('role')}</th>
-              <th className="p-3 text-left font-medium">{t('phone')}</th>
-              <th className="p-3 text-left font-medium">{t('email')}</th>
-              <th className="p-3 text-left font-medium">{t('region')}</th>
-              <th className="p-3 text-left font-medium">{t('committee')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredReps.length > 0 ? (
-              filteredReps.map((rep) => (
-                <tr key={rep.id} className="border-t border-border/50 hover:bg-background/50">
-                  <td className="p-3">{rep.full_name}</td>
-                  <td className="p-3">{rep.role}</td>
-                  <td className="p-3">{rep.phone || '-'}</td>
-                  <td className="p-3">{rep.email || '-'}</td>
-                  <td className="p-3">{rep.region || '-'}</td>
-                  <td className="p-3">{rep.committee || '-'}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="p-3 text-center text-muted-foreground">
-                  {t('noResults')}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredReps.length > 0 ? (
+          filteredReps.map((rep) => (
+            <Card key={rep.id} className="bg-card hover:bg-accent/50 transition-colors">
+              <CardHeader>
+                <h3 className="text-lg font-semibold text-foreground">{rep.full_name}</h3>
+                <p className="text-sm text-muted-foreground">{rep.role}</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {rep.phone && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{rep.phone}</span>
+                  </div>
+                )}
+                {rep.email && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${rep.email}`} className="hover:underline">
+                      {rep.email}
+                    </a>
+                  </div>
+                )}
+                {rep.region && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{rep.region}</span>
+                  </div>
+                )}
+                {rep.committee && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span>{rep.committee}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center text-muted-foreground">
+            {t('noResults')}
+          </div>
+        )}
       </div>
     </div>
   );
