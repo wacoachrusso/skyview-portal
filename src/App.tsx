@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -51,6 +51,8 @@ function App() {
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/release-notes" element={<ReleaseNotes />} />
+            {/* Add a catch-all route that redirects to login */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
           <Toaster />
         </Router>
