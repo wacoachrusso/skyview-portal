@@ -13,7 +13,6 @@ interface RequestBody {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -30,14 +29,13 @@ serve(async (req) => {
       }
     );
 
-    const { email, resetUrl } = await req.json() as RequestBody;
+    const { email } = await req.json() as RequestBody;
 
     if (!email) {
       throw new Error("Email is required");
     }
 
     console.log("Processing password reset for email:", email);
-    console.log("Reset URL:", resetUrl);
 
     // Generate password reset link using the admin API
     const { data, error: resetError } = await supabaseClient.auth.admin.generateLink({
@@ -100,10 +98,6 @@ serve(async (req) => {
                 <p style="margin-bottom: 10px;">SkyGuide™ - Your Aviation Assistant</p>
                 <p style="margin-bottom: 10px;">Built by aviation professionals, for aviation professionals.</p>
                 <p style="margin-bottom: 10px;">© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
-                <div style="margin-top: 20px;">
-                  <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
-                  <a href="https://skyguide.site/terms" style="color: #666; text-decoration: none; margin: 0 10px;">Terms of Service</a>
-                </div>
               </div>
             </div>
           </body>

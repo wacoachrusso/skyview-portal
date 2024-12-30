@@ -51,7 +51,7 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
       localStorage.setItem('password_reset_mode', 'true');
       
       console.log('Redirecting to reset password page');
-      navigate('/reset-password');
+      navigate('/reset-password', { replace: true });
       return true;
     } catch (error) {
       console.error('Error in processPasswordReset:', error);
