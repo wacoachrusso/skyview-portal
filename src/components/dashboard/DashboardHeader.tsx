@@ -45,7 +45,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           </div>
           
           {/* Navigation Buttons - Desktop */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-6">
             <Button 
               asChild
               variant="secondary"
@@ -69,12 +69,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
               </Link>
             </Button>
             <NotificationBell />
-            <div className="hidden lg:flex items-center space-x-2">
-              <User className="h-5 w-5 text-foreground/70" />
-              <span className="text-sm font-medium text-foreground/70">
-                {userEmail}
-              </span>
-            </div>
             <Button 
               variant="secondary" 
               size="sm"
