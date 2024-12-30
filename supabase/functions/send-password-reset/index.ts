@@ -21,13 +21,21 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Check if RESEND_API_KEY is set
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("Email service configuration is missing");
+    }
+
     const { email, resetUrl } = await req.json() as EmailRequest;
     console.log("Processing password reset for:", email);
+    console.log("Reset URL base:", resetUrl);
 
     // Initialize Supabase client with service role key
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // Generate password reset token
+    console.log("Generating reset link...");
     const { data, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email,
@@ -42,8 +50,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!data.properties?.action_link) {
+      console.error("No reset link generated in response");
       throw new Error("No reset link generated");
     }
+
+    console.log("Reset link generated successfully");
+    console.log("Sending email via Resend...");
 
     // Send email via Resend
     const res = await fetch("https://api.resend.com/emails", {
@@ -91,14 +103,19 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailData = await res.json();
-    console.log("Email sent response:", emailData);
+    console.log("Resend API response:", emailData);
+
+    if (!res.ok) {
+      console.error("Resend API error:", emailData);
+      throw new Error(`Email sending failed: ${emailData.message || 'Unknown error'}`);
+    }
 
     return new Response(JSON.stringify(emailData), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    console.error("Error in password reset process:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
