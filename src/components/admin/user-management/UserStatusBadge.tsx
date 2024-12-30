@@ -22,8 +22,8 @@ export const UserStatusBadge = ({ status }: UserStatusBadgeProps) => {
     <span
       className={cn(
         "px-2 py-1 rounded-full text-sm font-medium",
-        status === "disabled" && "bg-gray-200 text-gray-700",
-        status === "suspended" && "bg-yellow-200 text-yellow-700",
+        status === "disabled" && "bg-yellow-200 text-yellow-700",
+        status === "suspended" && "bg-orange-200 text-orange-700",
         status === "deleted" && "bg-red-200 text-red-700",
         status === "active" && "bg-green-200 text-green-700"
       )}

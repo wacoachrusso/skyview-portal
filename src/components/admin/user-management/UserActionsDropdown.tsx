@@ -1,4 +1,4 @@
-import { AlertCircle, Ban, CheckCircle, Trash2 } from "lucide-react";
+import { AlertCircle, Ban, CheckCircle, Undo2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +28,8 @@ export const UserActionsDropdown = ({
             onClick={() => updateAccountStatus(user.id, user.email || "", "active")}
             className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/10"
           >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            {user.account_status === "disabled" ? "Enable Account" : "Unsuspend Account"}
+            <Undo2 className="h-4 w-4 mr-2" />
+            {user.account_status === "disabled" ? "Re-enable Account" : "Unsuspend Account"}
           </DropdownMenuItem>
         );
       default:
@@ -72,7 +72,7 @@ export const UserActionsDropdown = ({
             onClick={() => setUserToDelete(user)}
             className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <AlertCircle className="h-4 w-4 mr-2" />
             Delete Account
           </DropdownMenuItem>
         )}
