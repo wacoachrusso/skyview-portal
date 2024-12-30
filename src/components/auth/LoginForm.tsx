@@ -80,7 +80,7 @@ export const LoginForm = () => {
           className="border-white/20 h-4 w-4"
         />
         <Label htmlFor="rememberMe" className="text-sm text-gray-200 cursor-pointer">
-          Stay logged in for 2 weeks
+          Stay logged in
         </Label>
       </div>
 
