@@ -1,25 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
-export const handlePasswordReset = async (email: string) => {
+export const handleEmailVerification = async (email: string) => {
+  console.log('Sending email verification for:', email);
   try {
-    console.log('Starting password reset process for:', email);
-    
-    const { error } = await supabase.functions.invoke('send-password-reset', {
+    const { error } = await supabase.functions.invoke('send-signup-confirmation', {
       body: { 
-        email: email.trim(),
-        resetUrl: `${window.location.origin}/reset-password` // Direct to reset password page
+        email,
+        confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(email)}`
       }
     });
 
     if (error) throw error;
     
+    console.log('Email verification sent successfully');
     return { success: true };
   } catch (error) {
-    console.error('Password reset error:', error);
+    console.error('Error sending verification email:', error);
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An error occurred during password reset'
+      error: error instanceof Error ? error.message : 'Failed to send verification email'
     };
   }
 }

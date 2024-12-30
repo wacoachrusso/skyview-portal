@@ -102,7 +102,15 @@ export const useLoginForm = () => {
         console.log('Email not verified');
         await supabase.auth.signOut();
         
-        await handleEmailVerification(formData.email);
+        const verificationResult = await handleEmailVerification(formData.email);
+        if (!verificationResult.success) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: verificationResult.error || "Failed to send verification email"
+          });
+          return;
+        }
 
         toast({
           variant: "destructive",
