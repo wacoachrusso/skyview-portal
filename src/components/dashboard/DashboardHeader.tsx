@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, MessageSquare } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { LanguageSelector } from "@/components/shared/LanguageSelector";
 
 interface DashboardHeaderProps {
   userEmail: string | null;
@@ -91,6 +92,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             </div>
 
             <div className="flex items-center space-x-3 ml-2">
+              <LanguageSelector />
               <NotificationBell />
               
               {/* User Email - Hidden on Mobile */}
