@@ -1,19 +1,19 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Index } from "@/pages/Index";
-import { Login } from "@/pages/Login";
-import { SignUp } from "@/pages/SignUp";
-import { Dashboard } from "@/pages/Dashboard";
-import { Chat } from "@/pages/Chat";
-import { Settings } from "@/pages/Settings";
-import { Account } from "@/pages/Account";
-import { CompleteProfile } from "@/pages/CompleteProfile";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import SignUp from "@/pages/SignUp";
+import Dashboard from "@/pages/Dashboard";
+import Chat from "@/pages/Chat";
+import Settings from "@/pages/Settings";
+import Account from "@/pages/Account";
+import CompleteProfile from "@/pages/CompleteProfile";
 import { AuthCallback } from "@/components/auth/AuthCallback";
-import { ReleaseNotes } from "@/pages/ReleaseNotes";
-import { AdminDashboard } from "@/pages/AdminDashboard";
-import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
-import { ResetPassword } from "@/pages/ResetPassword";
+import ReleaseNotes from "@/pages/ReleaseNotes";
+import AdminDashboard from "@/pages/AdminDashboard";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import ResetPassword from "@/pages/ResetPassword";
 
 function App() {
   return (
