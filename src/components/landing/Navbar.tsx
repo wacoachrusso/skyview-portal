@@ -12,19 +12,26 @@ export function Navbar() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
+
     const checkAuth = async () => {
       try {
         console.log('Checking auth state in Navbar');
         const { data: { session } } = await supabase.auth.getSession();
-        setIsLoggedIn(!!session);
-        if (session?.user) {
-          console.log('User is logged in:', session.user.email);
-          setUserEmail(session.user.email || "");
+        
+        if (mounted) {
+          setIsLoggedIn(!!session);
+          if (session?.user) {
+            console.log('User is logged in:', session.user.email);
+            setUserEmail(session.user.email || "");
+          }
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Error checking auth state:', error);
-      } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -32,13 +39,19 @@ export function Navbar() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
-      setIsLoggedIn(event === 'SIGNED_IN');
-      if (session?.user) {
-        setUserEmail(session.user.email || "");
+      if (mounted) {
+        setIsLoggedIn(event === 'SIGNED_IN');
+        if (session?.user) {
+          setUserEmail(session.user.email || "");
+        }
+        setIsLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const scrollToPricing = () => {
@@ -53,18 +66,79 @@ export function Navbar() {
     navigate('/', { state: { fromNavbar: true } });
   };
 
-  if (isLoading) {
-    return (
-      <nav className="bg-background border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-14 md:h-16">
-            <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>
-            <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>
-          </div>
+  const renderAuthButtons = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="h-9 w-24 bg-gray-700 animate-pulse rounded"></div>
+          <div className="h-9 w-24 bg-gray-700 animate-pulse rounded"></div>
         </div>
-      </nav>
+      );
+    }
+
+    if (isLoggedIn) {
+      return (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-white hidden md:inline">Welcome back, {userEmail}</span>
+          <NotificationBell />
+          <Button 
+            asChild
+            variant="secondary"
+            size="sm"
+            className="text-white hover:bg-brand-gold hover:text-black"
+          >
+            <Link to="/chat">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Chat Now
+            </Link>
+          </Button>
+          <Button 
+            asChild
+            variant="secondary"
+            size="sm"
+            className="text-white hover:bg-brand-gold hover:text-black"
+          >
+            <Link to="/account">
+              <User className="mr-2 h-4 w-4" />
+              Account
+            </Link>
+          </Button>
+          <Button 
+            asChild
+            size="sm"
+            className="bg-brand-gold text-black hover:bg-brand-gold/90"
+          >
+            <Link to="/dashboard">
+              Dashboard
+            </Link>
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2 md:gap-3">
+        <Button 
+          asChild 
+          variant="secondary"
+          size="sm"
+          className="text-white hover:bg-brand-gold hover:text-black"
+        >
+          <Link to="/login">
+            <LogIn className="mr-2 h-4 w-4" />
+            Login
+          </Link>
+        </Button>
+        <Button 
+          onClick={scrollToPricing}
+          size="sm"
+          className="bg-brand-gold text-black hover:bg-brand-gold/90"
+        >
+          Sign Up
+        </Button>
+      </div>
     );
-  }
+  };
 
   return (
     <nav className="bg-background border-b border-border sticky top-0 z-50">
@@ -82,66 +156,7 @@ export function Navbar() {
             />
             <span className="text-foreground text-base md:text-lg font-bold">SkyGuide</span>
           </a>
-          <div className="flex items-center gap-2 md:gap-3">
-            {isLoggedIn ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-white hidden md:inline">Welcome back, {userEmail}</span>
-                <NotificationBell />
-                <Button 
-                  asChild
-                  variant="secondary"
-                  size="sm"
-                  className="text-white hover:bg-brand-gold hover:text-black"
-                >
-                  <Link to="/chat">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Chat Now
-                  </Link>
-                </Button>
-                <Button 
-                  asChild
-                  variant="secondary"
-                  size="sm"
-                  className="text-white hover:bg-brand-gold hover:text-black"
-                >
-                  <Link to="/account">
-                    <User className="mr-2 h-4 w-4" />
-                    Account
-                  </Link>
-                </Button>
-                <Button 
-                  asChild
-                  size="sm"
-                  className="bg-brand-gold text-black hover:bg-brand-gold/90"
-                >
-                  <Link to="/dashboard">
-                    Dashboard
-                  </Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 md:gap-3">
-                <Button 
-                  asChild 
-                  variant="secondary"
-                  size="sm"
-                  className="text-white hover:bg-brand-gold hover:text-black"
-                >
-                  <Link to="/login">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                  </Link>
-                </Button>
-                <Button 
-                  onClick={scrollToPricing}
-                  size="sm"
-                  className="bg-brand-gold text-black hover:bg-brand-gold/90"
-                >
-                  Sign Up
-                </Button>
-              </div>
-            )}
-          </div>
+          {renderAuthButtons()}
         </div>
       </div>
     </nav>
