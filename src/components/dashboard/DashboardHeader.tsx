@@ -1,8 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, MessageSquare } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardHeaderProps {
   userEmail: string | null;
@@ -21,6 +20,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
     <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Logo Section */}
           <div className="flex items-center space-x-3">
             <a 
               href="/"
@@ -38,16 +38,59 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             </a>
           </div>
           
+          {/* Navigation Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Button 
+              asChild
+              variant="secondary"
+              size="sm"
+              className="text-white hover:bg-brand-gold hover:text-black"
+            >
+              <Link to="/chat">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                <span>Chat Now</span>
+              </Link>
+            </Button>
+            <Button 
+              asChild
+              variant="secondary"
+              size="sm"
+              className="text-white hover:bg-brand-gold hover:text-black"
+            >
+              <Link to="/account">
+                <User className="mr-2 h-4 w-4" />
+                <span>Account</span>
+              </Link>
+            </Button>
+          </div>
+          
+          {/* Right Section with Notifications and User Info */}
           <div className="flex items-center space-x-4">
             <NotificationBell />
             
-            <div className="hidden sm:flex items-center space-x-2">
+            {/* User Email - Hidden on Mobile */}
+            <div className="hidden lg:flex items-center space-x-2">
               <User className="h-5 w-5 text-foreground/70" />
               <span className="text-sm font-medium text-foreground/70">
                 {userEmail}
               </span>
             </div>
             
+            {/* Mobile Navigation Menu */}
+            <div className="md:hidden">
+              <Button 
+                asChild
+                variant="secondary"
+                size="sm"
+                className="text-white hover:bg-brand-gold hover:text-black"
+              >
+                <Link to="/chat">
+                  <MessageSquare className="h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+            
+            {/* Sign Out Button */}
             <Button 
               variant="secondary" 
               size="sm"
