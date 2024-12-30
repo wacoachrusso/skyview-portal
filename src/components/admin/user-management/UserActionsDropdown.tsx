@@ -22,15 +22,6 @@ export const UserActionsDropdown = ({
   const getAccountActions = (user: ProfilesRow) => {
     switch (user.account_status) {
       case "disabled":
-        return (
-          <DropdownMenuItem
-            onClick={() => updateAccountStatus(user.id, user.email || "", "active")}
-            className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/10"
-          >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Enable Account
-          </DropdownMenuItem>
-        );
       case "suspended":
         return (
           <DropdownMenuItem
@@ -38,7 +29,7 @@ export const UserActionsDropdown = ({
             className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/10"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Unsuspend Account
+            {user.account_status === "disabled" ? "Enable Account" : "Unsuspend Account"}
           </DropdownMenuItem>
         );
       default:

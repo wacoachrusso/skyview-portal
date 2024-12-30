@@ -65,7 +65,9 @@ export const useUserManagement = () => {
   ) => {
     try {
       console.log(`Updating account status to ${status} for user:`, userId);
+      setUpdatingUser(userId);
 
+      // First update the profile status
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ account_status: status })
@@ -73,10 +75,32 @@ export const useUserManagement = () => {
 
       if (updateError) throw updateError;
 
-      toast({
-        title: "Success",
-        description: `User account ${status} successfully`,
-      });
+      // Send email notification
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-account-status-email",
+        {
+          body: { 
+            email, 
+            status,
+            fullName: users?.find(u => u.id === userId)?.full_name || "User"
+          },
+        }
+      );
+
+      if (emailError) {
+        console.error("Error sending status update email:", emailError);
+        // Don't throw here, as the status update was successful
+        toast({
+          variant: "destructive",
+          title: "Warning",
+          description: "Account status updated but failed to send notification email",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `User account ${status} successfully and notification sent`,
+        });
+      }
       
       await refetch();
     } catch (error) {
@@ -86,6 +110,8 @@ export const useUserManagement = () => {
         title: "Error",
         description: `Failed to ${status} user account`,
       });
+    } finally {
+      setUpdatingUser(null);
     }
   };
 
