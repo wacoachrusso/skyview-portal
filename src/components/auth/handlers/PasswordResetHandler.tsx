@@ -50,8 +50,8 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
       // Set a flag in localStorage to indicate we're in password reset mode
       localStorage.setItem('password_reset_mode', 'true');
       
-      // Redirect to reset password page with replace to prevent back navigation
-      window.location.href = 'https://www.skyguide.site/reset-password';
+      // Redirect to reset password page
+      window.location.replace('https://www.skyguide.site/reset-password');
       return true;
     } catch (error) {
       console.error('Error in processPasswordReset:', error);

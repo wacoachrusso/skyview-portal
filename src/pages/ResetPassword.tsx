@@ -24,7 +24,9 @@ export const ResetPassword = () => {
       
       if (!session) {
         console.log('No valid session for password reset');
+        localStorage.removeItem('password_reset_mode');
         navigate('/login', { replace: true });
+        return;
       }
     };
     checkSession();
