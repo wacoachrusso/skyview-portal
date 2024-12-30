@@ -21,7 +21,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Check if RESEND_API_KEY is set
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY is not set");
       throw new Error("Email service configuration is missing");
@@ -29,7 +28,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { email, resetUrl } = await req.json() as EmailRequest;
     console.log("Processing password reset for:", email);
-    console.log("Reset URL base:", resetUrl);
 
     // Initialize Supabase client with service role key
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
@@ -40,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
       type: 'recovery',
       email,
       options: {
-        redirectTo: resetUrl,
+        redirectTo: `${resetUrl}/reset-password`, // Add /reset-password to the redirect URL
       }
     });
 
@@ -68,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
       year: 'numeric'
     });
 
-    // Send email via Resend
+    // Send email via Resend with consistent branding
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -85,27 +83,56 @@ const handler = async (req: Request): Promise<Response> => {
             <head>
               <meta charset="utf-8">
               <title>Reset Your Password</title>
+              <style>
+                .button {
+                  background-color: #fbbf24;
+                  color: #1a365d;
+                  padding: 12px 24px;
+                  text-decoration: none;
+                  border-radius: 5px;
+                  font-weight: bold;
+                  display: inline-block;
+                }
+                .footer {
+                  margin-top: 40px;
+                  padding-top: 20px;
+                  border-top: 1px solid #eee;
+                  text-align: center;
+                  color: #666;
+                  font-size: 12px;
+                }
+              </style>
             </head>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <!-- Header with Logo -->
               <div style="text-align: center; margin-bottom: 30px;">
                 <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
               </div>
               
-              <h1 style="color: #1a365d; text-align: center;">Reset Your Password</h1>
-              
-              <p style="margin-bottom: 20px;">We received a request to reset your SkyGuide account password at ${nycTime} EST. Click the button below to choose a new password:</p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${data.properties.action_link}" 
-                   style="background-color: #fbbf24; color: #1a365d; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                  Reset Password
-                </a>
+              <!-- Main Content -->
+              <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h1 style="color: #1a365d; text-align: center; margin-bottom: 20px;">Reset Your Password</h1>
+                
+                <p style="margin-bottom: 20px;">We received a request to reset your SkyGuide account password at ${nycTime} EST. Click the button below to choose a new password:</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${data.properties.action_link}" class="button">
+                    Reset Password
+                  </a>
+                </div>
+                
+                <p style="color: #666; font-size: 14px;">If you didn't request this change, you can safely ignore this email.</p>
               </div>
               
-              <p style="color: #666; font-size: 14px;">If you didn't request this change, you can safely ignore this email.</p>
-              
-              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
-                <p>SkyGuide - Your Aviation Assistant</p>
+              <!-- Footer -->
+              <div class="footer">
+                <p style="margin-bottom: 10px;">SkyGuide - Your Aviation Assistant</p>
+                <p style="margin-bottom: 10px;">Built by aviation professionals, for aviation professionals.</p>
+                <p style="margin-bottom: 10px;">This reset link will expire in 24 hours for security reasons.</p>
+                <div style="margin-top: 20px;">
+                  <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
+                  <a href="https://skyguide.site/terms" style="color: #666; text-decoration: none; margin: 0 10px;">Terms of Service</a>
+                </div>
               </div>
             </body>
           </html>
