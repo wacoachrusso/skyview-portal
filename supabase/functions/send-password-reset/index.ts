@@ -9,7 +9,6 @@ const corsHeaders = {
 
 interface RequestBody {
   email: string;
-  resetUrl: string;
 }
 
 serve(async (req) => {
@@ -37,12 +36,12 @@ serve(async (req) => {
 
     console.log("Processing password reset for email:", email);
 
-    // Generate password reset link using the admin API
+    // Generate password reset link with direct redirect to reset password page
     const { data, error: resetError } = await supabaseClient.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: 'https://www.skyguide.site/reset-password',
+        redirectTo: 'https://www.skyguide.site/reset-password'
       }
     });
 
