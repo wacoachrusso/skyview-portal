@@ -31,13 +31,13 @@ export const useLoginForm = () => {
       console.log('Starting login process...');
       
       // First check if the account is locked
-      const { data: profile } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('login_attempts, account_status')
         .eq('email', formData.email.trim())
         .single();
 
-      if (profile?.account_status === 'locked') {
+      if (profileData?.account_status === 'locked') {
         toast({
           variant: "destructive",
           title: "Account locked",
@@ -62,12 +62,12 @@ export const useLoginForm = () => {
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
-            login_attempts: (profile?.login_attempts || 0) + 1,
-            account_status: (profile?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active'
+            login_attempts: (profileData?.login_attempts || 0) + 1,
+            account_status: (profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active'
           })
           .eq('email', formData.email.trim());
 
-        if ((profile?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS) {
+        if ((profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS) {
           toast({
             variant: "destructive",
             title: "Account locked",
@@ -80,7 +80,7 @@ export const useLoginForm = () => {
           toast({
             variant: "destructive",
             title: "Login failed",
-            description: `Incorrect email or password. ${MAX_LOGIN_ATTEMPTS - (profile?.login_attempts || 0) - 1} attempts remaining.`
+            description: `Incorrect email or password. ${MAX_LOGIN_ATTEMPTS - (profileData?.login_attempts || 0) - 1} attempts remaining.`
           });
         } else {
           toast({
@@ -134,7 +134,7 @@ export const useLoginForm = () => {
       }
 
       // Check if profile is complete
-      const { data: profile } = await supabase
+      const { data: userProfile } = await supabase
         .from('profiles')
         .select('user_type, airline, subscription_plan')
         .eq('id', data.user.id)
@@ -145,7 +145,7 @@ export const useLoginForm = () => {
         description: "You have successfully logged in."
       });
 
-      if (profile?.user_type && profile?.airline) {
+      if (userProfile?.user_type && userProfile?.airline) {
         console.log('Profile complete, redirecting to dashboard');
         navigate('/dashboard');
       } else {

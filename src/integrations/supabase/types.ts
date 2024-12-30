@@ -140,6 +140,7 @@ export type Database = {
           is_admin: boolean | null
           last_ip_address: string | null
           last_query_timestamp: string | null
+          login_attempts: number | null
           push_notifications: boolean | null
           push_subscription: Json | null
           query_count: number | null
@@ -159,6 +160,7 @@ export type Database = {
           is_admin?: boolean | null
           last_ip_address?: string | null
           last_query_timestamp?: string | null
+          login_attempts?: number | null
           push_notifications?: boolean | null
           push_subscription?: Json | null
           query_count?: number | null
@@ -178,6 +180,7 @@ export type Database = {
           is_admin?: boolean | null
           last_ip_address?: string | null
           last_query_timestamp?: string | null
+          login_attempts?: number | null
           push_notifications?: boolean | null
           push_subscription?: Json | null
           query_count?: number | null
