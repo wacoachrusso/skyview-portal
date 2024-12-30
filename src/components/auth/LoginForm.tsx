@@ -7,6 +7,7 @@ import { useLoginForm } from "@/hooks/useLoginForm";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 export const LoginForm = () => {
   const {
