@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
+import { QuickStartGuide } from "@/components/dashboard/QuickStartGuide";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
@@ -29,7 +30,6 @@ const Dashboard = () => {
     }
   };
 
-  // Check admin status on component mount
   useEffect(() => {
     checkAdminStatus();
   }, []);
@@ -49,6 +49,7 @@ const Dashboard = () => {
             <div className="p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border" />
           )}
           <QuickActions />
+          <QuickStartGuide />
           <RecentActivity />
         </div>
       </main>
