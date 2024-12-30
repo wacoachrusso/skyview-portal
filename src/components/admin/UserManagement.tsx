@@ -17,7 +17,7 @@ export const UserManagement = () => {
     handleDeleteUser,
   } = useUserManagement();
 
-  // Filter out deleted users since they're completely removed now
+  // Filter out deleted users completely
   const activeUsers = users?.filter(user => user.account_status !== 'deleted') || [];
 
   return (

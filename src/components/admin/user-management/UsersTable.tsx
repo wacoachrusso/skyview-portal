@@ -48,10 +48,7 @@ export const UsersTable = ({
         </TableHeader>
         <TableBody>
           {users?.map((user) => (
-            <TableRow 
-              key={user.id}
-              className={user.account_status === "deleted" ? "bg-gray-50 dark:bg-gray-800/50" : ""}
-            >
+            <TableRow key={user.id}>
               <TableCell>{user.full_name || "N/A"}</TableCell>
               <TableCell>{user.email || "N/A"}</TableCell>
               <TableCell>{user.user_type || "N/A"}</TableCell>
@@ -65,7 +62,7 @@ export const UsersTable = ({
               <TableCell>
                 <Switch
                   checked={user.is_admin || false}
-                  disabled={updatingUser === user.id || user.account_status === "deleted"}
+                  disabled={updatingUser === user.id}
                   onCheckedChange={() =>
                     toggleAdminStatus(user.id, user.is_admin || false)
                   }
@@ -80,13 +77,11 @@ export const UsersTable = ({
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  {user.account_status !== "deleted" && (
-                    <UserActionsDropdown
-                      user={user}
-                      updateAccountStatus={updateAccountStatus}
-                      setUserToDelete={setUserToDelete}
-                    />
-                  )}
+                  <UserActionsDropdown
+                    user={user}
+                    updateAccountStatus={updateAccountStatus}
+                    setUserToDelete={setUserToDelete}
+                  />
                 </div>
               </TableCell>
             </TableRow>
