@@ -21,7 +21,7 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
         title: "Invalid reset link",
         description: "The password reset link is invalid or has expired."
       });
-      navigate('/login');
+      navigate('/login', { replace: true });
       return false;
     }
 
@@ -43,15 +43,15 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
           title: "Reset link expired",
           description: "Please request a new password reset link."
         });
-        navigate('/login');
+        navigate('/login', { replace: true });
         return false;
       }
 
       // Set a flag in localStorage to indicate we're in password reset mode
       localStorage.setItem('password_reset_mode', 'true');
       
-      console.log('Redirecting to reset password page');
-      navigate('/reset-password', { replace: true });
+      // Redirect to reset password page with replace to prevent back navigation
+      window.location.href = 'https://www.skyguide.site/reset-password';
       return true;
     } catch (error) {
       console.error('Error in processPasswordReset:', error);
@@ -60,7 +60,7 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
         title: "Error",
         description: "An error occurred during password reset. Please try again."
       });
-      navigate('/login');
+      navigate('/login', { replace: true });
       return false;
     }
   };
