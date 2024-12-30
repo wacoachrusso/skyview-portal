@@ -68,6 +68,22 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 <span>Account</span>
               </Link>
             </Button>
+            <NotificationBell />
+            <div className="hidden lg:flex items-center space-x-2">
+              <User className="h-5 w-5 text-foreground/70" />
+              <span className="text-sm font-medium text-foreground/70">
+                {userEmail}
+              </span>
+            </div>
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={onSignOut}
+              className="bg-secondary/80 text-secondary-foreground hover:bg-secondary"
+            >
+              <LogOut className="h-5 w-5 sm:mr-2" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
           </div>
           
           {/* Mobile Navigation */}
@@ -84,7 +100,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
               </Link>
             </Button>
 
-            {/* Notification Bell */}
             <NotificationBell />
             
             {/* Hamburger Menu */}
@@ -117,26 +132,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-
-          {/* Desktop Right Section */}
-          <div className="hidden md:flex items-center space-x-3">
-            <NotificationBell />
-            <div className="hidden lg:flex items-center space-x-2">
-              <User className="h-5 w-5 text-foreground/70" />
-              <span className="text-sm font-medium text-foreground/70">
-                {userEmail}
-              </span>
-            </div>
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={onSignOut}
-              className="bg-secondary/80 text-secondary-foreground hover:bg-secondary transition-colors duration-200"
-            >
-              <LogOut className="h-5 w-5 sm:mr-2" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
           </div>
         </div>
       </div>

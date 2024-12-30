@@ -95,6 +95,14 @@ export function Navbar() {
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center">
+            {isLoggedIn && (
+              <AuthButtons 
+                isLoading={isLoading} 
+                isLoggedIn={isLoggedIn} 
+                scrollToPricing={scrollToPricing}
+                isMobile={true}
+              />
+            )}
             <DropdownMenu 
               open={isMobileMenuOpen} 
               onOpenChange={setIsMobileMenuOpen}

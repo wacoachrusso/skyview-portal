@@ -22,11 +22,11 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
 
   if (isLoggedIn) {
     return (
-      <div className={`flex items-center ${isMobile ? 'flex-col w-full gap-2' : 'gap-4 sm:gap-6'}`}>
+      <div className={`flex items-center ${isMobile ? 'flex-col w-full gap-2' : 'gap-4'}`}>
         {/* Chat Button - Always visible */}
         <Button 
           asChild
-          variant={isMobile ? "default" : "secondary"}
+          variant={isMobile ? "ghost" : "secondary"}
           size="sm"
           className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
         >
@@ -36,11 +36,9 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
           </Link>
         </Button>
 
-        {!isMobile && <NotificationBell />}
-
         <Button 
           asChild
-          variant={isMobile ? "default" : "secondary"}
+          variant={isMobile ? "ghost" : "secondary"}
           size="sm"
           className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
         >
@@ -53,7 +51,8 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
         <Button 
           asChild
           size="sm"
-          className={`${isMobile ? 'w-full justify-start' : ''} bg-brand-gold text-black hover:bg-brand-gold/90`}
+          variant={isMobile ? "ghost" : "default"}
+          className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-brand-gold hover:text-black`}
         >
           <Link to="/dashboard">
             Dashboard
@@ -67,7 +66,7 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
     <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
       <Button 
         asChild 
-        variant="secondary"
+        variant={isMobile ? "ghost" : "secondary"}
         size="sm"
         className={`${isMobile ? 'w-full justify-start' : ''} text-white hover:bg-brand-gold hover:text-black`}
       >
@@ -79,7 +78,8 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile }
       <Button 
         onClick={scrollToPricing}
         size="sm"
-        className={`${isMobile ? 'w-full justify-start' : ''} bg-brand-gold text-black hover:bg-brand-gold/90`}
+        variant={isMobile ? "ghost" : "default"}
+        className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-brand-gold hover:text-black`}
       >
         Sign Up
       </Button>
