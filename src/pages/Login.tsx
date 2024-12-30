@@ -29,33 +29,33 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
+    <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-6 sm:p-8 shadow-xl">
           <div className="mb-6 flex justify-center">
             <img 
               src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
               alt="SkyGuide Logo" 
-              className="h-12 w-auto"
+              className="h-10 sm:h-12 w-auto"
             />
           </div>
 
-          <h1 className="text-2xl font-bold text-white text-center mb-2">Welcome Back</h1>
-          <p className="text-gray-400 text-center mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">Welcome Back</h1>
+          <p className="text-sm sm:text-base text-gray-400 text-center mb-6">
             Enter your credentials to continue
           </p>
 
           <LoginForm />
 
-          <div className="mt-6 space-y-2 text-center text-gray-400">
+          <div className="mt-6 space-y-2 text-center text-sm sm:text-base text-gray-400">
             <p>
               Don't have an account?{" "}
-              <Link to="/#pricing-section" className="text-brand-gold hover:text-brand-gold/80">
+              <Link to="/#pricing-section" className="text-brand-gold hover:text-brand-gold/80 transition-colors">
                 Sign up
               </Link>
             </p>
             <p>
-              <Link to="/forgot-password" className="text-brand-gold hover:text-brand-gold/80">
+              <Link to="/forgot-password" className="text-brand-gold hover:text-brand-gold/80 transition-colors">
                 Forgot password?
               </Link>
             </p>
