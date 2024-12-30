@@ -99,7 +99,7 @@ export const handlePasswordReset = async (email: string) => {
     const { error } = await supabase.functions.invoke('send-password-reset', {
       body: { 
         email: email.trim(),
-        resetUrl: `${window.location.origin}/auth/callback`
+        resetUrl: `${window.location.origin}/reset-password` // Updated to point directly to reset-password page
       }
     });
 

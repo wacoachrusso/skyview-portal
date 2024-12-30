@@ -38,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
       type: 'recovery',
       email,
       options: {
-        redirectTo: `${resetUrl}/reset-password`, // Add /reset-password to the redirect URL
+        redirectTo: resetUrl, // The resetUrl will already include /reset-password
       }
     });
 
@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div class="footer">
                 <p style="margin-bottom: 10px;">SkyGuide™ - Your Aviation Assistant</p>
                 <p style="margin-bottom: 10px;">Built by aviation professionals, for aviation professionals.</p>
-                <p style="margin-bottom: 10px;">© 2024 SkyGuide. All rights reserved.</p>
+                <p style="margin-bottom: 10px;">© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
                 <div style="margin-top: 20px;">
                   <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
                   <a href="https://skyguide.site/terms" style="color: #666; text-decoration: none; margin: 0 10px;">Terms of Service</a>
