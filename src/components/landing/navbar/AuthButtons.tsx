@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { LogIn, MessageSquare, User } from "lucide-react";
+import { LogIn, LogOut, MessageSquare, User } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthButtonsProps {
   isLoading: boolean;
@@ -12,6 +15,34 @@ interface AuthButtonsProps {
 }
 
 export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, showChatOnly }: AuthButtonsProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      console.log("Starting logout process from navbar...");
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) throw error;
+      
+      console.log("Logout successful, clearing local storage...");
+      localStorage.clear();
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+      
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast({
+        title: "Error logging out",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
@@ -64,6 +95,18 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
             Dashboard
           </Link>
         </Button>
+
+        {isMobile && (
+          <Button 
+            onClick={handleLogout}
+            size="sm"
+            variant="ghost"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+        )}
       </div>
     );
   }
