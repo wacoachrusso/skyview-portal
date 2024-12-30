@@ -38,7 +38,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             </a>
           </div>
           
-          {/* Navigation Buttons */}
+          {/* Navigation Buttons - Desktop/Tablet */}
           <div className="hidden md:flex items-center space-x-4">
             <Button 
               asChild
@@ -65,41 +65,53 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           </div>
           
           {/* Right Section with Notifications and User Info */}
-          <div className="flex items-center space-x-4">
-            <NotificationBell />
-            
-            {/* User Email - Hidden on Mobile */}
-            <div className="hidden lg:flex items-center space-x-2">
-              <User className="h-5 w-5 text-foreground/70" />
-              <span className="text-sm font-medium text-foreground/70">
-                {userEmail}
-              </span>
-            </div>
-            
+          <div className="flex items-center">
             {/* Mobile Navigation Menu */}
-            <div className="md:hidden">
+            <div className="flex md:hidden items-center space-x-2">
               <Button 
                 asChild
-                variant="secondary"
+                variant="ghost"
                 size="sm"
-                className="text-white hover:bg-brand-gold hover:text-black"
+                className="text-foreground/70 hover:text-foreground"
               >
                 <Link to="/chat">
                   <MessageSquare className="h-5 w-5" />
                 </Link>
               </Button>
+              <Button 
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-foreground/70 hover:text-foreground"
+              >
+                <Link to="/account">
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
             </div>
-            
-            {/* Sign Out Button */}
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={onSignOut}
-              className="bg-secondary/80 text-secondary-foreground hover:bg-secondary transition-colors duration-200"
-            >
-              <LogOut className="h-5 w-5 sm:mr-2" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
+
+            <div className="flex items-center space-x-3 ml-2">
+              <NotificationBell />
+              
+              {/* User Email - Hidden on Mobile */}
+              <div className="hidden lg:flex items-center space-x-2">
+                <User className="h-5 w-5 text-foreground/70" />
+                <span className="text-sm font-medium text-foreground/70">
+                  {userEmail}
+                </span>
+              </div>
+              
+              {/* Sign Out Button */}
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={onSignOut}
+                className="bg-secondary/80 text-secondary-foreground hover:bg-secondary transition-colors duration-200"
+              >
+                <LogOut className="h-5 w-5 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
