@@ -16,7 +16,7 @@ export function Logo({ handleLogoClick }: LogoProps) {
         alt="SkyGuide Logo" 
         className="h-6 w-auto md:h-8"
       />
-      <span className="text-foreground text-base md:text-lg font-bold">SkyGuide</span>
+      <span className="text-foreground text-xl md:text-2xl font-bold">SkyGuide</span>
     </Link>
   );
 }
