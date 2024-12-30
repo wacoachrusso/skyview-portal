@@ -39,15 +39,7 @@ serve(async (req) => {
     console.log("Processing password reset for email:", email);
     console.log("Reset URL:", resetUrl);
 
-    // First, check if the user exists
-    const { data: user, error: userError } = await supabaseClient.auth.admin.getUserByEmail(email);
-    
-    if (userError || !user) {
-      console.error("User not found:", userError);
-      throw new Error("User not found");
-    }
-
-    // Generate password reset link
+    // Generate password reset link using the admin API
     const { data, error: resetError } = await supabaseClient.auth.admin.generateLink({
       type: 'recovery',
       email: email,
@@ -59,6 +51,10 @@ serve(async (req) => {
     if (resetError) {
       console.error("Error generating reset link:", resetError);
       throw resetError;
+    }
+
+    if (!data.properties?.action_link) {
+      throw new Error("No reset link generated");
     }
 
     // Send custom email using Resend
@@ -88,7 +84,7 @@ serve(async (req) => {
                 <p>We received a request to reset your password for your SkyGuide account. Click the button below to reset your password:</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="${data.properties?.action_link}" 
+                  <a href="${data.properties.action_link}" 
                      style="display: inline-block; padding: 12px 24px; background-color: #1a365d; color: #ffffff; text-decoration: none; border-radius: 4px;">
                     Reset Password
                   </a>
