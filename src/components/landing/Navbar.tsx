@@ -25,6 +25,7 @@ export function Navbar() {
             setIsLoggedIn(true);
             setUserEmail(session.user.email || "");
           } else {
+            console.log('No active session found');
             setIsLoggedIn(false);
           }
           setIsLoading(false);
@@ -42,9 +43,14 @@ export function Navbar() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
       if (mounted) {
-        setIsLoggedIn(event === 'SIGNED_IN');
-        if (session?.user) {
+        if (event === 'SIGNED_IN' && session) {
+          console.log('User signed in:', session.user.email);
+          setIsLoggedIn(true);
           setUserEmail(session.user.email || "");
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+          setIsLoggedIn(false);
+          setUserEmail("");
         }
         setIsLoading(false);
       }
