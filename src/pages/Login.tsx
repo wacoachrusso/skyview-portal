@@ -37,7 +37,7 @@ const Login = () => {
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email: 'admin@skyguide.site',
-        password: 'Admin123!'
+        password: 'Douche#236642'
       });
 
       if (error) throw error;
