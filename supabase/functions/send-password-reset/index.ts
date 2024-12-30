@@ -44,7 +44,7 @@ serve(async (req) => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: `${resetUrl}`,
+        redirectTo: 'https://www.skyguide.site/reset-password',
       }
     });
 
