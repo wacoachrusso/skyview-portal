@@ -7,10 +7,13 @@ import { ContactDirectory } from "@/components/contact/ContactDirectory";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
+import "@/i18n/config";
 
 const Dashboard = () => {
   const { userEmail, isLoading, handleSignOut } = useAuthManagement();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { t } = useTranslation();
 
   // Check if user is admin
   const checkAdminStatus = async () => {
@@ -30,7 +33,6 @@ const Dashboard = () => {
     }
   };
 
-  // Check admin status on component mount
   useEffect(() => {
     checkAdminStatus();
   }, []);
@@ -51,7 +53,7 @@ const Dashboard = () => {
           )}
           <QuickActions />
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Contact Directory</h2>
+            <h2 className="text-2xl font-semibold">{t('contactDirectory')}</h2>
             <ContactDirectory />
           </div>
           <RecentActivity />

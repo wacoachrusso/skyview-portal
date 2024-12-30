@@ -13,6 +13,7 @@ import Account from "@/pages/Account";
 import CompleteProfile from "@/pages/CompleteProfile";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ReleaseNotes from "@/pages/ReleaseNotes";
+import "@/i18n/config";
 
 // Create a client
 const queryClient = new QueryClient({
