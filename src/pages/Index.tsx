@@ -17,8 +17,8 @@ export default function Index() {
     // Check for pricing section scroll
     const searchParams = new URLSearchParams(location.search);
     const scrollTo = searchParams.get('scrollTo');
-    if (scrollTo === 'pricing') {
-      const pricingSection = document.getElementById('pricing');
+    if (scrollTo === 'pricing-section') {
+      const pricingSection = document.getElementById('pricing-section');
       if (pricingSection) {
         pricingSection.scrollIntoView({ behavior: 'smooth' });
       }

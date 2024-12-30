@@ -51,7 +51,8 @@ const Account = () => {
   }, [navigate]);
 
   const handlePlanChange = (newPlan: string) => {
-    navigate('/?scrollTo=pricing');
+    // Navigate to home page with pricing section
+    navigate('/?scrollTo=pricing-section');
   };
 
   const handleCancelSubscription = async () => {
