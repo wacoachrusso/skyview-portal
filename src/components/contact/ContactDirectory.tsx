@@ -40,14 +40,15 @@ export const ContactDirectory = () => {
       return data as Representative[];
     },
     retry: 1,
-    onError: (error) => {
-      console.error('Query error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load representatives. Please try again later.",
-        variant: "destructive",
-      });
-    },
+    meta: {
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to load representatives. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    }
   });
 
   const filteredReps = representatives?.filter(rep =>
