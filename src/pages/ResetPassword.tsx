@@ -57,9 +57,18 @@ export const ResetPassword = () => {
       // Ensure user is signed out
       await supabase.auth.signOut();
 
+      // Send confirmation email
+      const { error: emailError } = await supabase.functions.invoke('send-password-reset-confirmation', {
+        body: { email: (await supabase.auth.getUser()).data.user?.email }
+      });
+
+      if (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+      }
+
       toast({
         title: "Password updated",
-        description: "Your password has been successfully reset. Please log in with your new password."
+        description: "Your password has been successfully reset. Please check your email for confirmation."
       });
 
       navigate('/login');

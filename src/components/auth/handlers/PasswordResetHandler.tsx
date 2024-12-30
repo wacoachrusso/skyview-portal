@@ -26,7 +26,7 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
     }
 
     try {
-      // First ensure we're starting fresh
+      // First ensure we're starting fresh by signing out
       await supabase.auth.signOut();
       console.log('Cleared existing session');
 
