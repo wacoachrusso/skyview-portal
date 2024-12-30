@@ -46,17 +46,20 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           
           {/* Navigation Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-6">
-            <Button 
-              asChild
-              variant="secondary"
-              size="sm"
-              className="text-white hover:bg-brand-gold hover:text-black"
-            >
-              <Link to="/chat">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                <span>Chat Now</span>
-              </Link>
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button 
+                asChild
+                variant="secondary"
+                size="sm"
+                className="text-white hover:bg-brand-gold hover:text-black"
+              >
+                <Link to="/chat">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>Chat Now</span>
+                </Link>
+              </Button>
+              <NotificationBell />
+            </div>
             <Button 
               asChild
               variant="secondary"
@@ -68,7 +71,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 <span>Account</span>
               </Link>
             </Button>
-            <NotificationBell />
             <Button 
               variant="secondary" 
               size="sm"
@@ -82,19 +84,20 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
           
           {/* Mobile Navigation */}
           <div className="flex md:hidden items-center space-x-3">
-            {/* Chat Button - Always visible on mobile */}
-            <Button 
-              asChild
-              variant="ghost"
-              size="sm"
-              className="text-foreground/70 hover:text-foreground"
-            >
-              <Link to="/chat">
-                <MessageSquare className="h-5 w-5" />
-              </Link>
-            </Button>
-
-            <NotificationBell />
+            {/* Chat Button and Notification Bell - Always visible on mobile */}
+            <div className="flex items-center space-x-2">
+              <Button 
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-foreground/70 hover:text-foreground"
+              >
+                <Link to="/chat">
+                  <MessageSquare className="h-5 w-5" />
+                </Link>
+              </Button>
+              <NotificationBell />
+            </div>
             
             {/* Hamburger Menu */}
             <DropdownMenu>
