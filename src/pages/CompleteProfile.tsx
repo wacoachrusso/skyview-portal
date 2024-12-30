@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const jobTitles = ["Pilot", "Flight Attendant"];
 const airlines = [
@@ -18,7 +19,8 @@ const airlines = [
 const CompleteProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     jobTitle: "",
     airline: "",
@@ -26,30 +28,49 @@ const CompleteProfile = () => {
 
   useEffect(() => {
     const checkProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Session check:", session);
+        
+        if (!session) {
+          console.log("No session found, redirecting to login");
+          navigate('/login');
+          return;
+        }
+
+        // Check if profile is already complete
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('user_type, airline')
+          .eq('id', session.user.id)
+          .single();
+
+        console.log("Profile check:", profile, error);
+
+        if (profile?.user_type && profile?.airline) {
+          console.log("Profile already complete, redirecting to dashboard");
+          navigate('/dashboard');
+          return;
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error checking profile:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong. Please try again.",
+        });
         navigate('/login');
-        return;
-      }
-
-      // Check if profile is already complete
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_type, airline')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profile?.user_type && profile?.airline) {
-        navigate('/dashboard');
       }
     };
 
     checkProfile();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -81,9 +102,13 @@ const CompleteProfile = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
@@ -98,7 +123,7 @@ const CompleteProfile = () => {
           <p className="text-gray-300">Please provide a few more details to get started</p>
         </div>
 
-        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
+        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <Label htmlFor="jobTitle" className="text-gray-200">Select Job Title</Label>
@@ -109,12 +134,12 @@ const CompleteProfile = () => {
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
                   <SelectValue placeholder="Select Job Title" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/20 text-white">
+                <SelectContent className="bg-gray-900 border-white/20">
                   {jobTitles.map((title) => (
                     <SelectItem
                       key={title}
                       value={title.toLowerCase()}
-                      className="hover:bg-white/10"
+                      className="text-white hover:bg-white/10"
                     >
                       {title}
                     </SelectItem>
@@ -132,12 +157,12 @@ const CompleteProfile = () => {
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
                   <SelectValue placeholder="Select Airline" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/20 text-white">
+                <SelectContent className="bg-gray-900 border-white/20">
                   {airlines.map((airline) => (
                     <SelectItem
                       key={airline}
                       value={airline.toLowerCase()}
-                      className="hover:bg-white/10"
+                      className="text-white hover:bg-white/10"
                     >
                       {airline}
                     </SelectItem>
@@ -148,10 +173,10 @@ const CompleteProfile = () => {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold"
-              disabled={loading || !formData.jobTitle || !formData.airline}
+              className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold"
+              disabled={submitting || !formData.jobTitle || !formData.airline}
             >
-              {loading ? "Saving..." : "Complete Profile"}
+              {submitting ? "Saving..." : "Complete Profile"}
             </Button>
           </form>
         </div>
