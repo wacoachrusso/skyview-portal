@@ -11,9 +11,17 @@ export default defineConfig({
     },
   },
   server: {
-    historyApiFallback: true,
+    port: 8080,
+    proxy: {
+      // Redirect all requests to index.html
+      "/*": {
+        target: "/index.html",
+        changeOrigin: true,
+        rewrite: () => "/index.html"
+      }
+    }
   },
   preview: {
-    historyApiFallback: true,
-  },
+    port: 8080
+  }
 });
