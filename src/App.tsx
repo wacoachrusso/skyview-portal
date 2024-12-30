@@ -13,6 +13,8 @@ import Account from "@/pages/Account";
 import CompleteProfile from "@/pages/CompleteProfile";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ReleaseNotes from "@/pages/ReleaseNotes";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -51,7 +53,9 @@ function App() {
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/release-notes" element={<ReleaseNotes />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
+          <ConsentBanner />
           <Toaster />
         </Router>
       </ThemeProvider>

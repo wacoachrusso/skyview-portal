@@ -144,6 +144,8 @@ export type Database = {
           push_subscription: Json | null
           query_count: number | null
           subscription_plan: string | null
+          two_factor_backup_codes: string[] | null
+          two_factor_enabled: boolean | null
           user_type: string | null
         }
         Insert: {
@@ -161,6 +163,8 @@ export type Database = {
           push_subscription?: Json | null
           query_count?: number | null
           subscription_plan?: string | null
+          two_factor_backup_codes?: string[] | null
+          two_factor_enabled?: boolean | null
           user_type?: string | null
         }
         Update: {
@@ -178,6 +182,8 @@ export type Database = {
           push_subscription?: Json | null
           query_count?: number | null
           subscription_plan?: string | null
+          two_factor_backup_codes?: string[] | null
+          two_factor_enabled?: boolean | null
           user_type?: string | null
         }
         Relationships: []

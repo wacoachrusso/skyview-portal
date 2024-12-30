@@ -15,7 +15,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li><a href="#" className="text-sm hover:text-white transition-colors">About Us</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">Contact</a></li>
-              <li><a href="#" className="text-sm hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="/privacy-policy" className="text-sm hover:text-white transition-colors">Privacy Policy</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">Terms of Service</a></li>
             </ul>
           </div>
