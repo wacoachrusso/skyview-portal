@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
-        subject: `${inviterName ? `${inviterName} thinks you'll love` : "Discover"} SkyGuide - Your AI Contract Assistant + 1 Month Free!`,
+        subject: `${inviterName ? `${inviterName} thinks you'll love` : "Discover"} SkyGuide - Your Contract Assistant + 1 Month Free!`,
         html: `
           <!DOCTYPE html>
           <html>
@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <div style="padding: 40px 30px;">
                   <p style="color: #334155; font-size: 16px; margin-bottom: 25px;">
                     ${inviterName ? `<strong>${inviterName}</strong> thinks you'll love` : "You've been invited to try"} SkyGuide, 
-                    your AI-powered contract assistant that's revolutionizing how aviation professionals understand and manage their contracts.
+                    your professional contract assistant that's revolutionizing how aviation professionals understand and manage their contracts.
                   </p>
                   
                   <div style="background-color: #f8fafc; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
@@ -121,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
                     This exclusive invitation expires in 24 hours.<br>Don't miss out on your free premium access!
                   </p>
                   <div style="margin-top: 20px; color: #94a3b8; font-size: 12px;">
-                    <p style="margin: 5px 0;">SkyGuide - Your AI Contract Assistant</p>
+                    <p style="margin: 5px 0;">SkyGuide - Your Contract Assistant</p>
                     <p style="margin: 5px 0;">© 2024 SkyGuide. All rights reserved.</p>
                   </div>
                 </div>
