@@ -7,6 +7,7 @@ import {
   ReleaseNoteChangesTable,
   ReleaseNotesTable,
 } from "./tables.types";
+import { UnionRepresentativesTable } from "./union-representatives.types";
 
 export interface Database {
   public: {
@@ -17,6 +18,7 @@ export interface Database {
       profiles: ProfilesTable;
       release_note_changes: ReleaseNoteChangesTable;
       release_notes: ReleaseNotesTable;
+      union_representatives: UnionRepresentativesTable;
     };
     Views: {
       [_ in never]: never;

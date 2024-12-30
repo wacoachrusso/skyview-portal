@@ -253,6 +253,39 @@ export type Database = {
         }
         Relationships: []
       }
+      union_representatives: {
+        Row: {
+          committee: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          region: string | null
+          role: string
+        }
+        Insert: {
+          committee?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          region?: string | null
+          role: string
+        }
+        Update: {
+          committee?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          region?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
       vapid_keys: {
         Row: {
           created_at: string
