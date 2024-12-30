@@ -36,15 +36,30 @@ export const ResetPassword = () => {
     setLoading(true);
 
     try {
+      // Get current user's email
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error("No user email found");
+
+      // Update password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) throw error;
 
+      // Send login link via edge function
+      const { error: emailError } = await supabase.functions.invoke('send-login-link', {
+        body: { 
+          email: user.email,
+          loginUrl: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (emailError) throw emailError;
+
       toast({
         title: "Password updated",
-        description: "Your password has been successfully reset."
+        description: "Your password has been successfully reset. We've sent you a login link via email."
       });
 
       // Sign out to clear the recovery session
