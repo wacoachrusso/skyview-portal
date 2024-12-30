@@ -9,12 +9,14 @@ export const ResetPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if we have a valid session for password reset
+  // Check if we have a valid session and are in password reset mode
   useEffect(() => {
     const checkSession = async () => {
+      const isPasswordResetMode = localStorage.getItem('password_reset_mode') === 'true';
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No valid session for password reset');
+      
+      if (!session || !isPasswordResetMode) {
+        console.log('Invalid session or not in password reset mode');
         navigate('/login');
       }
     };
@@ -49,13 +51,17 @@ export const ResetPassword = () => {
 
       if (error) throw error;
 
+      // Clear the password reset mode flag
+      localStorage.removeItem('password_reset_mode');
+      
+      // Ensure user is signed out
+      await supabase.auth.signOut();
+
       toast({
         title: "Password updated",
         description: "Your password has been successfully reset. Please log in with your new password."
       });
 
-      // Sign out and clear the session after successful password reset
-      await supabase.auth.signOut();
       navigate('/login');
     } catch (error) {
       console.error('Error resetting password:', error);

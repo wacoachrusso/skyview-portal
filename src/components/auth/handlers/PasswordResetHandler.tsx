@@ -25,30 +25,44 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
       return false;
     }
 
-    // First clear any existing session
-    await supabase.auth.signOut();
-    console.log('Cleared existing session');
+    try {
+      // First ensure we're starting fresh
+      await supabase.auth.signOut();
+      console.log('Cleared existing session');
 
-    // Set a temporary session just for password reset
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken
-    });
+      // Set a temporary session just for password reset
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
 
-    if (sessionError) {
-      console.error('Error setting recovery session:', sessionError);
+      if (sessionError) {
+        console.error('Error setting recovery session:', sessionError);
+        toast({
+          variant: "destructive",
+          title: "Reset link expired",
+          description: "Please request a new password reset link."
+        });
+        navigate('/login');
+        return false;
+      }
+
+      // Set a flag in localStorage to indicate we're in password reset mode
+      localStorage.setItem('password_reset_mode', 'true');
+      
+      console.log('Redirecting to reset password page');
+      navigate('/reset-password');
+      return true;
+    } catch (error) {
+      console.error('Error in processPasswordReset:', error);
       toast({
         variant: "destructive",
-        title: "Reset link expired",
-        description: "Please request a new password reset link."
+        title: "Error",
+        description: "An error occurred during password reset. Please try again."
       });
       navigate('/login');
       return false;
     }
-
-    console.log('Redirecting to reset password page');
-    navigate('/reset-password');
-    return true;
   };
 
   return { processPasswordReset };
