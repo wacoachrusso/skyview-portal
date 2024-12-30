@@ -32,9 +32,12 @@ const Login = () => {
 
   const handleSecretClick = async () => {
     try {
+      // First clear any existing session
+      await supabase.auth.signOut();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: 'admin@skyguide.site',
-        password: 'SkyGuideAdmin2024!'
+        password: 'Admin123!'
       });
 
       if (error) throw error;
