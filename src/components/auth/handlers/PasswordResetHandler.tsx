@@ -25,6 +25,11 @@ export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordRese
       return false;
     }
 
+    // First clear any existing session
+    await supabase.auth.signOut();
+    console.log('Cleared existing session');
+
+    // Set a temporary session just for password reset
     const { error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken

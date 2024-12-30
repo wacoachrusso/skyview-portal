@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,18 @@ export const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check if we have a valid session for password reset
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('No valid session for password reset');
+        navigate('/login');
+      }
+    };
+    checkSession();
+  }, [navigate]);
 
   const handlePasswordReset = async (newPassword: string, confirmPassword: string) => {
     if (newPassword !== confirmPassword) {
@@ -31,29 +43,18 @@ export const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error("No user email found");
-
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) throw error;
 
-      const { error: emailError } = await supabase.functions.invoke('send-login-link', {
-        body: { 
-          email: user.email,
-          loginUrl: `${window.location.origin}/auth/callback`
-        }
-      });
-
-      if (emailError) throw emailError;
-
       toast({
         title: "Password updated",
-        description: "Your password has been successfully reset. We've sent you a login link via email."
+        description: "Your password has been successfully reset. Please log in with your new password."
       });
 
+      // Sign out and clear the session after successful password reset
       await supabase.auth.signOut();
       navigate('/login');
     } catch (error) {
