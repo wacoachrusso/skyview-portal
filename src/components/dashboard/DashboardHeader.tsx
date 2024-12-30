@@ -1,14 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, MessageSquare, Menu } from "lucide-react";
+import { LogOut, User, MessageSquare } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { LanguageSelector } from "@/components/shared/LanguageSelector";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface DashboardHeaderProps {
   userEmail: string | null;
@@ -45,7 +38,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
             </a>
           </div>
           
-          {/* Desktop Navigation */}
+          {/* Navigation Buttons - Desktop/Tablet */}
           <div className="hidden md:flex items-center space-x-4">
             <Button 
               asChild
@@ -69,15 +62,46 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 <span>Account</span>
               </Link>
             </Button>
-            <div className="flex items-center space-x-3">
-              <LanguageSelector />
+          </div>
+          
+          {/* Right Section with Notifications and User Info */}
+          <div className="flex items-center">
+            {/* Mobile Navigation Menu */}
+            <div className="flex md:hidden items-center space-x-2">
+              <Button 
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-foreground/70 hover:text-foreground"
+              >
+                <Link to="/chat">
+                  <MessageSquare className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button 
+                asChild
+                variant="ghost"
+                size="sm"
+                className="text-foreground/70 hover:text-foreground"
+              >
+                <Link to="/account">
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="flex items-center space-x-3 ml-2">
               <NotificationBell />
+              
+              {/* User Email - Hidden on Mobile */}
               <div className="hidden lg:flex items-center space-x-2">
                 <User className="h-5 w-5 text-foreground/70" />
                 <span className="text-sm font-medium text-foreground/70">
                   {userEmail}
                 </span>
               </div>
+              
+              {/* Sign Out Button */}
               <Button 
                 variant="secondary" 
                 size="sm"
@@ -87,43 +111,6 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 <LogOut className="h-5 w-5 sm:mr-2" />
                 <span className="hidden sm:inline">Sign Out</span>
               </Button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          <div className="md:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-foreground/70">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
-                <DropdownMenuItem asChild>
-                  <Link to="/chat" className="flex items-center">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Chat Now
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/account" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Account
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center text-sm text-foreground/70">
-                  <User className="mr-2 h-4 w-4" />
-                  {userEmail}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSignOut} className="flex items-center">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <div className="flex items-center space-x-2 ml-2">
-              <LanguageSelector />
-              <NotificationBell />
             </div>
           </div>
         </div>

@@ -3,8 +3,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-import { I18nextProvider } from "react-i18next";
-import i18n from "@/i18n/config";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
@@ -38,28 +36,26 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <I18nextProvider i18n={i18n}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-          <Router>
-            <ScrollToTop />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/complete-profile" element={<CompleteProfile />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/release-notes" element={<ReleaseNotes />} />
-            </Routes>
-            <Toaster />
-          </Router>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </I18nextProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <Router>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/release-notes" element={<ReleaseNotes />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

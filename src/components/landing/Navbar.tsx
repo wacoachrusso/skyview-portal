@@ -3,21 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Logo } from "./navbar/Logo";
 import { AuthButtons } from "./navbar/AuthButtons";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     let mounted = true;
@@ -84,31 +74,11 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-14 md:h-16">
           <Logo handleLogoClick={handleLogoClick} />
-          
-          {isMobile ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-foreground/70">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
-                <AuthButtons 
-                  isLoading={isLoading}
-                  isLoggedIn={isLoggedIn}
-                  scrollToPricing={scrollToPricing}
-                  isMobile={true}
-                />
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <AuthButtons 
-              isLoading={isLoading}
-              isLoggedIn={isLoggedIn}
-              scrollToPricing={scrollToPricing}
-              isMobile={false}
-            />
-          )}
+          <AuthButtons 
+            isLoading={isLoading} 
+            isLoggedIn={isLoggedIn} 
+            scrollToPricing={scrollToPricing}
+          />
         </div>
       </div>
     </nav>
