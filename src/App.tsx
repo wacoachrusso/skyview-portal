@@ -51,8 +51,8 @@ function App() {
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/release-notes" element={<ReleaseNotes />} />
-            {/* Add a catch-all route that redirects to login */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* Catch-all route should be last */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
           <Toaster />
         </Router>
