@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
-
+  const { toast } = useToast();
+  
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -28,6 +30,31 @@ const Login = () => {
     checkUser();
   }, [navigate]);
 
+  const handleSecretClick = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'admin@skyguide.site',
+        password: 'SkyGuideAdmin2024!'
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin access granted",
+        description: "Welcome to the admin dashboard"
+      });
+
+      navigate('/admin');
+    } catch (error) {
+      console.error('Admin login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Access denied",
+        description: "Invalid admin credentials"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -36,7 +63,8 @@ const Login = () => {
             <img 
               src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
               alt="SkyGuide Logo" 
-              className="h-12 w-auto"
+              className="h-12 w-auto cursor-pointer"
+              onClick={handleSecretClick}
             />
           </div>
 
