@@ -96,17 +96,15 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
           </Link>
         </Button>
 
-        {isMobile && (
-          <Button 
-            onClick={handleLogout}
-            size="sm"
-            variant="ghost"
-            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        )}
+        <Button 
+          onClick={handleLogout}
+          size="sm"
+          variant={isMobile ? "ghost" : "destructive"}
+          className={`${isMobile ? 'w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10' : ''}`}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </div>
     );
   }
