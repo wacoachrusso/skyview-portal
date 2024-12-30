@@ -17,8 +17,13 @@ export const UserManagement = () => {
     handleDeleteUser,
   } = useUserManagement();
 
-  // Filter out deleted users completely
+  // Filter out deleted users completely and ensure we're working with the latest data
   const activeUsers = users?.filter(user => user.account_status !== 'deleted') || [];
+
+  console.log('Current users with statuses:', activeUsers.map(u => ({
+    email: u.email,
+    status: u.account_status
+  })));
 
   return (
     <div className="space-y-4">

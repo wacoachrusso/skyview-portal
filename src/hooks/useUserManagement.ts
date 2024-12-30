@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 import { handleUserDeletion } from "@/utils/userDeletion";
 
@@ -67,33 +67,12 @@ export const useUserManagement = () => {
       console.log(`Updating account status to ${status} for user:`, userId);
       setUpdatingUser(userId);
 
-      // First verify the profile exists
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select()
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw profileError;
-      }
-
-      if (!profile) {
-        console.error("Profile not found for user:", userId);
-        throw new Error("User profile not found");
-      }
-
-      // Then update the profile status
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ account_status: status })
         .eq("id", userId);
 
-      if (updateError) {
-        console.error("Error updating profile status:", updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       // Send email notification
       const { error: emailError } = await supabase.functions.invoke(
@@ -102,7 +81,7 @@ export const useUserManagement = () => {
           body: { 
             email, 
             status,
-            fullName: profile.full_name || "User"
+            fullName: users?.find(u => u.id === userId)?.full_name || "User"
           },
         }
       );
