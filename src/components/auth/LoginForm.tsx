@@ -36,12 +36,6 @@ export const LoginForm = () => {
     try {
       console.log('Starting password reset process for:', formData.email);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(formData.email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery`
-      });
-
-      if (error) throw error;
-
       // Send custom email using our Edge Function
       const { error: emailError } = await supabase.functions.invoke('send-password-reset', {
         body: { 

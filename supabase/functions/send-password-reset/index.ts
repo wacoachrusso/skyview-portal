@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,9 +21,31 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, resetUrl } = await req.json();
-    console.log("Sending password reset email to:", email);
+    const { email, resetUrl } = await req.json() as EmailRequest;
+    console.log("Processing password reset for:", email);
 
+    // Initialize Supabase client with service role key
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
+    // Generate password reset token
+    const { data, error: resetError } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: {
+        redirectTo: resetUrl,
+      }
+    });
+
+    if (resetError) {
+      console.error("Error generating reset link:", resetError);
+      throw resetError;
+    }
+
+    if (!data.properties?.action_link) {
+      throw new Error("No reset link generated");
+    }
+
+    // Send email via Resend
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -48,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="margin-bottom: 20px;">We received a request to reset your SkyGuide account password. Click the button below to choose a new password:</p>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetUrl}" 
+                <a href="${data.properties.action_link}" 
                    style="background-color: #fbbf24; color: #1a365d; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
                   Reset Password
                 </a>
@@ -65,10 +90,10 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
-    const data = await res.json();
-    console.log("Email API response:", data);
+    const emailData = await res.json();
+    console.log("Email sent response:", emailData);
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(emailData), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
