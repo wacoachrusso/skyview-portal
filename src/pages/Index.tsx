@@ -3,7 +3,6 @@ import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { Navbar } from "@/components/landing/Navbar";
-import { PricingSection } from "@/components/landing/PricingSection";
 import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { useEffect } from "react";
@@ -14,15 +13,6 @@ export default function Index() {
 
   useEffect(() => {
     console.log('Index page mounted');
-    // Check for pricing section scroll
-    const searchParams = new URLSearchParams(location.search);
-    const scrollTo = searchParams.get('scrollTo');
-    if (scrollTo === 'pricing-section') {
-      const pricingSection = document.getElementById('pricing-section');
-      if (pricingSection) {
-        pricingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
   }, [location]);
 
   return (
@@ -32,7 +22,6 @@ export default function Index() {
         <Hero />
         <Features />
         <Testimonials />
-        <PricingSection />
         <ReferralSection />
         <CallToAction />
       </main>
