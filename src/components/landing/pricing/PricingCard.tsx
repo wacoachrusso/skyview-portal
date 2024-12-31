@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Star } from "lucide-react";
 
 interface PricingFeatureProps {
   text: string;
@@ -66,7 +66,8 @@ export function PricingCard({
   return (
     <Card className={`relative transform hover:scale-105 transition-transform duration-300 ${className} ${disabled ? 'opacity-75' : ''}`}>
       {badgeText && (
-        <div className={`absolute -top-2.5 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-3 py-1 rounded-full text-xs font-medium`}>
+        <div className={`absolute -top-2.5 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1`}>
+          {title === "Monthly Plan" && <Star className="w-3 h-3" />}
           {badgeText}
         </div>
       )}

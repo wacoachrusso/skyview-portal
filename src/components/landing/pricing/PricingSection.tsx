@@ -19,11 +19,11 @@ export function PricingSection() {
         "Basic Features",
         "No Credit Card Required"
       ],
-      badgeText: "Try it Free",
-      badgeColor: "bg-brand-navy",
+      badgeText: "Start Free",
+      badgeColor: "bg-brand-gold/90",
       buttonText: "Start Free Trial",
       buttonVariant: "outline" as const,
-      className: "bg-white border border-brand-navy/20 shadow-sm hover:border-brand-navy/30",
+      className: "bg-[#F1F1F1] border border-brand-navy/10 shadow-sm hover:border-brand-navy/20",
       planId: "free"
     },
     {
