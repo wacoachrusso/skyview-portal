@@ -37,12 +37,13 @@ export function ContractUpload() {
 
       if (uploadError) throw uploadError;
 
-      // Record the upload in the database
+      // Record the upload in the database with user_id
       const { error: dbError } = await supabase
         .from('contract_uploads')
         .insert({
           file_name: file.name,
           file_path: fileName,
+          user_id: userId  // Add this line to include the user_id
         });
 
       if (dbError) throw dbError;
