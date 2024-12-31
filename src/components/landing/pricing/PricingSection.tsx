@@ -4,11 +4,11 @@ import { Card } from "@/components/ui/card";
 
 const plans = [
   {
-    name: "Basic",
+    name: "Free Trial",
     price: "Free",
     description: "Perfect for trying out SkyGuide",
     features: [
-      "5 contract queries per month",
+      "2 contract queries",
       "Basic contract interpretation",
       "24/7 AI assistance",
       "Mobile app access"
@@ -17,8 +17,8 @@ const plans = [
     gradient: "bg-gradient-to-br from-slate-800 to-slate-900"
   },
   {
-    name: "Professional",
-    price: "$19",
+    name: "Monthly",
+    price: "$4.99",
     period: "/month",
     description: "Most popular for active flight crew",
     features: [
@@ -34,19 +34,19 @@ const plans = [
     isPopular: true
   },
   {
-    name: "Team",
-    price: "$49",
-    period: "/month",
-    description: "Perfect for union representatives",
+    name: "Annual",
+    price: "$49.88",
+    period: "/year",
+    description: "Best value - Save $10 annually",
     features: [
-      "Everything in Professional",
-      "Team collaboration tools",
-      "Admin dashboard",
-      "Analytics and reporting",
-      "API access",
-      "Custom training"
+      "Everything in Monthly plan",
+      "Save $10 per year",
+      "Premium support",
+      "Early access to new features",
+      "Advanced analytics",
+      "Priority updates"
     ],
-    buttonText: "Contact Sales",
+    buttonText: "Best Value",
     gradient: "bg-gradient-to-br from-brand-gold/20 to-brand-gold/10"
   }
 ];
