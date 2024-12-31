@@ -21,8 +21,8 @@ export function Hero() {
               Your Professional Contract Assistant
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
-              Navigate Your Contract <br className="hidden md:block" />
-              With Confidence
+              End Contract Confusion— <br className="hidden md:block" />
+              Get Instant Answers Now
             </h1>
             <p className="text-base md:text-lg text-gray-200 mb-6 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
               Get instant, accurate answers to your contract questions. Our expert system helps you understand your rights and make informed decisions about your schedule.
