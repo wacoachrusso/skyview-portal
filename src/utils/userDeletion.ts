@@ -64,13 +64,13 @@ export const handleUserDeletion = async (
   try {
     console.log("Starting complete user deletion process for:", user);
 
-    // Step 1: Delete all user data first
-    await deleteUserData(user.id);
-    console.log("Successfully deleted all user data");
-
-    // Step 2: Delete from auth system
+    // Step 1: Delete from auth system first (this is important!)
     await deleteUserFromAuthSystem(user.id);
     console.log("Successfully deleted user from auth system");
+
+    // Step 2: Delete all user data
+    await deleteUserData(user.id);
+    console.log("Successfully deleted all user data");
 
     // Step 3: Send deletion notification email via Resend
     const { error: emailError } = await supabase.functions.invoke(
