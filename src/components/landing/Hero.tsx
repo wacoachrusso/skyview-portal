@@ -60,7 +60,7 @@ export function Hero() {
           <div className="w-full lg:w-1/2 flex items-center justify-center -mt-4 sm:mt-0 animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-lg">
               <div className="absolute inset-0 bg-glow-gradient opacity-75" />
-              <div className="relative">
+              <div className="relative animate-float">
                 <img 
                   src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
                   alt="SkyGuide Interface" 

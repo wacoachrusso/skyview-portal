@@ -27,6 +27,18 @@
   }
 }
 
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
@@ -39,4 +51,8 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
