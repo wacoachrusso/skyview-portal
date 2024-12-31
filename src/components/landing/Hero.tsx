@@ -25,7 +25,7 @@ export function Hero() {
               Get Instant Answers Now
             </h1>
             <p className="text-base md:text-lg text-gray-200 mb-6 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
-              Get instant, accurate answers to your contract questions. Our expert system helps you understand your rights and make informed decisions about your schedule.
+              Get instant, accurate answers to your contract questions with SkyGuide. Our advanced system helps you navigate complex contract details, ensuring you understand your rights and make informed decisions with ease.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
               <Button 
