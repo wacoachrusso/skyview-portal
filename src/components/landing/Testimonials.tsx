@@ -18,19 +18,22 @@ export function Testimonials() {
               quote: "SkyGuide has transformed how I manage my schedule and interpret contract rules. It's like having a personal contract expert available 24/7.",
               author: "Capt. Emily Rodriguez",
               role: "Senior Captain, United Airlines",
-              years: "15 years of experience"
+              years: "15 years of experience",
+              image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=100&h=100"
             },
             {
               quote: "As a flight attendant, having instant access to contract interpretations and duty rules has been invaluable. This tool has helped me understand my rights better.",
               author: "Sarah Chen",
               role: "Senior Flight Attendant, Delta Airlines",
-              years: "8 years of service"
+              years: "8 years of service",
+              image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=100&h=100"
             },
             {
               quote: "The accuracy and quick responses have helped me make informed decisions about my schedule and work-life balance. It's an essential tool for any pilot.",
               author: "First Officer James Mitchell",
               role: "First Officer, American Airlines",
-              years: "12 years in aviation"
+              years: "12 years in aviation",
+              image: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=100&h=100"
             }
           ].map((testimonial, index) => (
             <Card key={index} className="card-hover relative bg-card-gradient border-gray-700 group">
@@ -41,11 +44,20 @@ export function Testimonials() {
                     <Star key={i} className="w-5 h-5 fill-brand-gold text-brand-gold" />
                   ))}
                 </div>
+                <div className="flex items-center mb-6">
+                  <img 
+                    src={testimonial.image} 
+                    alt={testimonial.author}
+                    className="w-12 h-12 rounded-full mr-4 border-2 border-brand-gold/30"
+                  />
+                  <div>
+                    <p className="font-semibold text-white text-lg">{testimonial.author}</p>
+                    <p className="text-sm text-gray-400">{testimonial.role}</p>
+                  </div>
+                </div>
                 <p className="text-gray-300 mb-6 italic text-lg leading-relaxed">"{testimonial.quote}"</p>
                 <div className="border-t border-gray-700 pt-4">
-                  <p className="font-semibold text-white text-lg">{testimonial.author}</p>
-                  <p className="text-sm text-gray-400 mt-1">{testimonial.role}</p>
-                  <p className="text-sm text-brand-gold font-medium mt-1">{testimonial.years}</p>
+                  <p className="text-sm text-brand-gold font-medium">{testimonial.years}</p>
                 </div>
               </CardContent>
             </Card>

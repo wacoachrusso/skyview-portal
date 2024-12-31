@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function PricingSection() {
   const navigate = useNavigate();
@@ -67,10 +67,10 @@ export function PricingSection() {
           Choose the plan that best fits your needs. All plans include access to our core features.
         </p>
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Free Trial */}
-          <Card className="relative bg-white border-2 border-gray-100 transform hover:scale-105 transition-transform duration-300 hover:shadow-xl">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-navy text-white px-4 py-1 rounded-full text-sm">
-              Try it Free
+          {/* Free Trial Card - Now with more prominence */}
+          <Card className="relative bg-gradient-to-br from-brand-navy/5 to-brand-slate/5 border-2 border-brand-gold transform hover:scale-105 transition-transform duration-300 hover:shadow-xl">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-gold text-black px-6 py-2 rounded-full text-sm font-semibold">
+              Start Free
             </div>
             <CardHeader className="space-y-2">
               <CardTitle className="text-xl text-brand-navy">Free Trial</CardTitle>
@@ -96,10 +96,10 @@ export function PricingSection() {
             </CardContent>
           </Card>
 
-          {/* Monthly Plan */}
+          {/* Monthly Plan Card - Now with recommended badge */}
           <Card className="relative bg-gradient-to-br from-brand-navy to-brand-slate transform hover:scale-105 transition-transform duration-300 hover:shadow-xl border-0">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-gold text-white px-4 py-1 rounded-full text-sm">
-              Most Popular
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-gold text-black px-6 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+              <Star className="w-4 h-4 fill-current" /> Most Popular
             </div>
             <CardHeader className="space-y-2">
               <CardTitle className="text-xl text-white">Monthly Plan</CardTitle>
@@ -124,9 +124,9 @@ export function PricingSection() {
             </CardContent>
           </Card>
 
-          {/* Annual Plan */}
+          {/* Annual Plan Card */}
           <Card className="relative bg-white border-2 border-brand-gold transform hover:scale-105 transition-transform duration-300 hover:shadow-xl">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-1 rounded-full text-sm">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
               Best Value
             </div>
             <CardHeader className="space-y-2">
