@@ -16,37 +16,44 @@ export const deleteUserFromAuthSystem = async (userId: string) => {
 export const deleteUserData = async (userId: string) => {
   console.log("Deleting all user data:", userId);
   
-  // Delete conversations and their messages (messages will be cascade deleted)
-  const { error: conversationsError } = await supabase
-    .from("conversations")
-    .delete()
-    .eq("user_id", userId);
+  try {
+    // Delete conversations and their messages (messages will be cascade deleted)
+    const { error: conversationsError } = await supabase
+      .from("conversations")
+      .delete()
+      .eq("user_id", userId);
 
-  if (conversationsError) {
-    console.error("Error deleting user conversations:", conversationsError);
-    throw conversationsError;
-  }
+    if (conversationsError) {
+      console.error("Error deleting user conversations:", conversationsError);
+      throw conversationsError;
+    }
 
-  // Delete notifications
-  const { error: notificationsError } = await supabase
-    .from("notifications")
-    .delete()
-    .eq("user_id", userId);
+    // Delete notifications
+    const { error: notificationsError } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", userId);
 
-  if (notificationsError) {
-    console.error("Error deleting user notifications:", notificationsError);
-    throw notificationsError;
-  }
+    if (notificationsError) {
+      console.error("Error deleting user notifications:", notificationsError);
+      throw notificationsError;
+    }
 
-  // Delete profile
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .delete()
-    .eq("id", userId);
+    // Delete profile
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
 
-  if (profileError) {
-    console.error("Error deleting user profile:", profileError);
-    throw profileError;
+    if (profileError) {
+      console.error("Error deleting user profile:", profileError);
+      throw profileError;
+    }
+
+    console.log("Successfully deleted all user data");
+  } catch (error) {
+    console.error("Error in deleteUserData:", error);
+    throw error;
   }
 };
 
@@ -57,13 +64,13 @@ export const handleUserDeletion = async (
   try {
     console.log("Starting complete user deletion process for:", user);
 
-    // Step 1: Delete from auth system
-    await deleteUserFromAuthSystem(user.id);
-    console.log("Successfully deleted user from auth system");
-
-    // Step 2: Delete all user data
+    // Step 1: Delete all user data first
     await deleteUserData(user.id);
     console.log("Successfully deleted all user data");
+
+    // Step 2: Delete from auth system
+    await deleteUserFromAuthSystem(user.id);
+    console.log("Successfully deleted user from auth system");
 
     // Step 3: Send deletion notification email via Resend
     const { error: emailError } = await supabase.functions.invoke(
