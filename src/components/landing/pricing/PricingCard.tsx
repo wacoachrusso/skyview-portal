@@ -26,14 +26,14 @@ export function PricingCard({
 }: PricingCardProps) {
   const getCardClasses = () => {
     const baseClasses = "relative rounded-xl p-8 pt-12 mt-6 transition-all duration-300 min-h-[520px] flex flex-col";
-    
+
     switch (variant) {
       case "featured":
-        return `${baseClasses} bg-gradient-to-b from-brand-navy to-brand-slate border-2 border-brand-gold/20 shadow-lg shadow-brand-gold/5`;
+        return `${baseClasses} bg-gradient-to-b from-brand-gold to-brand-navy border-2 border-brand-gold/20 shadow-lg shadow-brand-gold/5`;
       case "premium":
-        return `${baseClasses} bg-gradient-to-b from-brand-slate to-secondary border border-white/10`;
+        return `${baseClasses} bg-gradient-to-b from-brand-navy to-brand-slate border border-brand-gold/10`;
       default:
-        return `${baseClasses} bg-gradient-to-b from-secondary to-brand-slate border border-white/10`;
+        return `${baseClasses} bg-gradient-to-b from-brand-slate to-brand-navy border border-brand-gold/10`;
     }
   };
 
@@ -44,16 +44,16 @@ export function PricingCard({
           <Star className="w-4 h-4" /> Most Popular
         </div>
       )}
-      
+
       <div className="space-y-6 flex-1">
         <div>
-          <h3 className="text-2xl font-bold text-white mb-3">{title}</h3>
+          <h3 className="text-2xl font-bold text-brand-gold mb-3">{title}</h3>
           <div className="flex items-baseline gap-1 mb-4">
-            <span className="text-3xl font-bold text-white">$</span>
-            <span className="text-5xl font-bold text-white">{price}</span>
-            <span className="text-lg text-gray-300">/{interval}</span>
+            <span className="text-3xl font-bold text-brand-gold">$</span>
+            <span className="text-5xl font-bold text-brand-gold">{price}</span>
+            <span className="text-lg text-brand-gold/70">/{interval}</span>
           </div>
-          <p className="text-base text-gray-300 leading-relaxed">{description}</p>
+          <p className="text-base text-brand-gold/70 leading-relaxed">{description}</p>
         </div>
 
         <div className="space-y-4 mt-6">
@@ -62,7 +62,7 @@ export function PricingCard({
               <div className="mt-1 flex-shrink-0">
                 <Check className="h-5 w-5 text-brand-gold" />
               </div>
-              <span className="text-base text-gray-300">{feature}</span>
+              <span className="text-base text-brand-gold/70">{feature}</span>
             </div>
           ))}
         </div>
@@ -74,7 +74,7 @@ export function PricingCard({
             className={`w-full py-6 text-base font-semibold ${
               variant === "featured"
                 ? "bg-brand-gold hover:bg-brand-gold/90 text-brand-navy"
-                : "bg-white/10 hover:bg-white/20 text-white"
+                : "bg-brand-navy hover:bg-brand-navy/90 text-brand-gold"
             }`}
           >
             {buttonText}
