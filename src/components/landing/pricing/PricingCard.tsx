@@ -67,45 +67,47 @@ export function PricingCard({
         </div>
       )}
 
-      <div className="space-y-6 flex-1">
-        <div>
-          <h3 className={`text-2xl font-bold mb-3 ${
-            variant === "featured" 
-              ? "bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400" 
-              : variant === "premium"
-                ? "bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400"
-                : "text-slate-200"
-          } ${variant !== "default" ? "bg-clip-text text-transparent" : ""}`}>
-            {title}
-          </h3>
-          <div className="flex items-baseline gap-1 mb-4">
-            <span className="text-3xl font-bold text-white">$</span>
-            <span className="text-5xl font-bold text-white">{price}</span>
-            <span className="text-lg text-slate-400">/{interval}</span>
-          </div>
-          <p className="text-base text-slate-400 leading-relaxed">{description}</p>
-        </div>
-
-        <div className="space-y-4 mt-8">
-          {features.map((feature, index) => (
-            <div key={index} className="flex items-start gap-3 group">
-              <div className="mt-1 flex-shrink-0">
-                <Check className={`h-5 w-5 ${
-                  variant === "featured" 
-                    ? "text-purple-400" 
-                    : variant === "premium"
-                      ? "text-orange-400"
-                      : "text-slate-400"
-                }`} />
-              </div>
-              <span className="text-base text-slate-300 group-hover:text-white transition-colors">
-                {feature}
-              </span>
+      <div className="flex flex-col flex-1 justify-between">
+        <div className="space-y-6">
+          <div>
+            <h3 className={`text-2xl font-bold mb-3 ${
+              variant === "featured" 
+                ? "bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400" 
+                : variant === "premium"
+                  ? "bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400"
+                  : "text-slate-200"
+            } ${variant !== "default" ? "bg-clip-text text-transparent" : ""}`}>
+              {title}
+            </h3>
+            <div className="flex items-baseline gap-1 mb-4">
+              <span className="text-3xl font-bold text-white">$</span>
+              <span className="text-5xl font-bold text-white">{price}</span>
+              <span className="text-lg text-slate-400">/{interval}</span>
             </div>
-          ))}
+            <p className="text-base text-slate-400 leading-relaxed">{description}</p>
+          </div>
+
+          <div className="space-y-4">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-center gap-3 group min-h-[2rem]">
+                <div className="flex-shrink-0">
+                  <Check className={`h-5 w-5 ${
+                    variant === "featured" 
+                      ? "text-purple-400" 
+                      : variant === "premium"
+                        ? "text-orange-400"
+                        : "text-slate-400"
+                  }`} />
+                </div>
+                <span className="text-base text-slate-300 group-hover:text-white transition-colors">
+                  {feature}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="pt-8 mt-auto">
+        <div className="pt-8">
           <Button
             onClick={onSelect}
             disabled={isLoading}
