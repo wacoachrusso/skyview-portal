@@ -28,7 +28,11 @@ export const QuickActions = () => {
       return;
     }
 
-    const fileName = `${userProfile.airline.toLowerCase()}_${userProfile.user_type.toLowerCase()}.pdf`;
+    // Sanitize the filename by removing spaces and converting to lowercase
+    const sanitizedAirline = userProfile.airline.toLowerCase().replace(/\s+/g, '');
+    const sanitizedJobType = userProfile.user_type.toLowerCase().replace(/\s+/g, '');
+    const fileName = `${sanitizedAirline}_${sanitizedJobType}.pdf`;
+    
     console.log("Attempting to fetch contract:", fileName);
 
     try {
@@ -38,9 +42,20 @@ export const QuickActions = () => {
 
       if (error) {
         console.error('Error fetching contract:', error);
+        
+        // More specific error message for file not found
+        if (error.message.includes('Object not found')) {
+          toast({
+            title: "Contract Not Found",
+            description: `No contract found for ${userProfile.airline} ${userProfile.user_type}. Please contact support.`,
+            variant: "destructive"
+          });
+          return;
+        }
+
         toast({
           title: "Contract Unavailable",
-          description: "The contract document is not available. Please contact support.",
+          description: "Unable to access the contract. Please try again later.",
           variant: "destructive"
         });
         return;
