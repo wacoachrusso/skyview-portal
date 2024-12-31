@@ -8,7 +8,7 @@ export function WelcomeMessage() {
           className="w-12 h-12 sm:w-16 sm:h-16 mx-auto"
         />
         <div className="space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Welcome to SkyGuide Chat</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Welcome to Ask SkyGuide</h2>
           <p className="text-base sm:text-lg text-gray-300 max-w-md mx-auto">
             Ask me anything about your contract and I'll help you understand it better.
           </p>

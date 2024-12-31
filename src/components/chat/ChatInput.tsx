@@ -68,7 +68,7 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
             setMessage(e.target.value);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Message SkyGuide..."
+          placeholder="Ask SkyGuide..."
           className="min-h-[40px] sm:min-h-[50px] text-sm sm:text-base resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
           disabled={isLoading}
         />

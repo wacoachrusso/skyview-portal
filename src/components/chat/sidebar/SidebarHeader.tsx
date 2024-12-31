@@ -36,7 +36,7 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
           <span className="text-white font-semibold text-sm sm:text-base">S</span>
         </div>
-        <span className="text-white font-semibold text-sm sm:text-base">SkyGuide</span>
+        <span className="text-white font-semibold text-sm sm:text-base">Ask SkyGuide</span>
       </a>
       <div className="flex items-center gap-2">
         <AlertDialog>

@@ -13,7 +13,7 @@ export const QuickActions = () => {
         <Link to="/chat" className="block">
           <ActionCard
             icon={MessageSquare}
-            title="Chat"
+            title="Ask SkyGuide"
             description="Start a conversation"
           />
         </Link>
