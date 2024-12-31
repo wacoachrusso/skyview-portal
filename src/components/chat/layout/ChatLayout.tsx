@@ -23,22 +23,22 @@ export function ChatLayout({
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {!isMobile && (
-        <div className="w-64 sm:w-80 flex-shrink-0">
+        <div className="w-64 sm:w-80 flex-shrink-0 border-r border-border">
           <ChatSidebar 
             onSelectConversation={onSelectConversation}
             currentConversationId={currentConversationId}
           />
         </div>
       )}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#2A2F3C]">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background">
         {isMobile && (
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
             <SheetTrigger asChild>
-              <button className="p-2 hover:bg-white/10 rounded-lg absolute top-2 left-2 z-10">
-                <Menu className="h-6 w-6 text-white" />
+              <button className="p-2 hover:bg-accent/50 rounded-lg absolute top-2 left-2 z-10">
+                <Menu className="h-5 w-5 text-muted-foreground" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-[280px] bg-[#1A1F2C] border-r border-white/10">
+            <SheetContent side="left" className="p-0 w-[280px] bg-background border-r border-border">
               <ChatSidebar 
                 onSelectConversation={onSelectConversation}
                 currentConversationId={currentConversationId}
