@@ -16,20 +16,23 @@ export const PasswordResetForm = ({ onSubmit, loading }: PasswordResetFormProps)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
 
-  const validatePassword = (password: string): { isValid: boolean; message: string } => {
-    if (password.length < 6) {
-      return { isValid: false, message: "Password must be at least 6 characters long" };
-    }
-    if (!/[A-Z]/.test(password)) {
-      return { isValid: false, message: "Password must contain at least one uppercase letter" };
-    }
-    if (!/[a-z]/.test(password)) {
-      return { isValid: false, message: "Password must contain at least one lowercase letter" };
-    }
-    if (!/[0-9]/.test(password)) {
-      return { isValid: false, message: "Password must contain at least one number" };
-    }
-    return { isValid: true, message: "" };
+  const validatePassword = (password: string): { isValid: boolean; requirements: { met: boolean; text: string }[] } => {
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};:'"|,.<>?/`~]/.test(password);
+    const isLongEnough = password.length >= 8;
+
+    return {
+      isValid: hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && isLongEnough,
+      requirements: [
+        { met: hasLowerCase, text: "Include at least one lowercase letter (a-z)" },
+        { met: hasUpperCase, text: "Include at least one uppercase letter (A-Z)" },
+        { met: hasNumber, text: "Include at least one number (0-9)" },
+        { met: hasSpecialChar, text: "Include at least one special character (!@#$%^&*)" },
+        { met: isLongEnough, text: "Be at least 8 characters long" }
+      ]
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,10 +41,15 @@ export const PasswordResetForm = ({ onSubmit, loading }: PasswordResetFormProps)
     // Validate new password
     const validation = validatePassword(newPassword);
     if (!validation.isValid) {
+      const unmetRequirements = validation.requirements
+        .filter(req => !req.met)
+        .map(req => req.text)
+        .join(", ");
+      
       toast({
         variant: "destructive",
         title: "Invalid Password",
-        description: validation.message
+        description: `Password requirements not met: ${unmetRequirements}`
       });
       return;
     }
@@ -59,6 +67,8 @@ export const PasswordResetForm = ({ onSubmit, loading }: PasswordResetFormProps)
     await onSubmit(newPassword, confirmPassword);
   };
 
+  const passwordValidation = validatePassword(newPassword);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -74,7 +84,7 @@ export const PasswordResetForm = ({ onSubmit, loading }: PasswordResetFormProps)
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter your new password"
               required
-              className="w-full pr-10"
+              className={`w-full pr-10 ${!passwordValidation.isValid && newPassword ? 'border-red-500' : ''}`}
             />
             <button
               type="button"
@@ -88,9 +98,22 @@ export const PasswordResetForm = ({ onSubmit, loading }: PasswordResetFormProps)
               )}
             </button>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Password must be at least 6 characters long and contain uppercase, lowercase, and numbers
-          </p>
+          <div className="text-sm text-muted-foreground mt-2">
+            Password requirements:
+            <div className="mt-1 space-y-1">
+              {passwordValidation.requirements.map((req, index) => (
+                <div 
+                  key={index} 
+                  className={`flex items-center space-x-2 ${req.met ? 'text-green-500' : 'text-muted-foreground'}`}
+                >
+                  <span className="text-xs">
+                    {req.met ? '✓' : '○'}
+                  </span>
+                  <span>{req.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div>
@@ -105,7 +128,9 @@ export const PasswordResetForm = ({ onSubmit, loading }: PasswordResetFormProps)
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your new password"
               required
-              className="w-full pr-10"
+              className={`w-full pr-10 ${
+                confirmPassword && newPassword !== confirmPassword ? 'border-red-500' : ''
+              }`}
             />
             <button
               type="button"
