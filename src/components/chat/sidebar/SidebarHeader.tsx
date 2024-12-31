@@ -21,8 +21,25 @@ interface SidebarHeaderProps {
 export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
   const navigate = useNavigate();
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/', { state: { fromChat: true } });
+  };
+
   return (
-    <div className="p-3 sm:p-4 flex items-center justify-end border-b border-white/10 bg-gradient-to-r from-[#1E1E2E] to-[#2A2F3C]">
+    <div className="p-3 sm:p-4 flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#1E1E2E] to-[#2A2F3C]">
+      <a 
+        href="/"
+        onClick={handleLogoClick}
+        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+      >
+        <img 
+          src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+          alt="SkyGuide Logo" 
+          className="h-7 w-auto sm:h-8"
+        />
+        <span className="text-white font-semibold text-sm sm:text-base">Ask SkyGuide</span>
+      </a>
       <div className="flex items-center gap-2">
         <AlertDialog>
           <AlertDialogTrigger asChild>
