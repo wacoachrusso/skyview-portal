@@ -30,28 +30,29 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
+                className="bg-brand-gold hover:bg-brand-gold/90 text-primary font-semibold w-full sm:w-auto px-8 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-brand-gold/20"
                 onClick={scrollToPricing}
               >
-                Start Free Trial
+                Start Free Trial Today
               </Button>
               <Button 
                 size="lg"
-                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-6 shadow-lg"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-8 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl"
                 onClick={scrollToPricing}
               >
-                Sign Up Now
+                Get Instant Contract Answers
               </Button>
               <Button
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg"
+                className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg transform transition-all duration-200 hover:scale-105"
               >
                 <a 
                   href="https://youtube.com" 
                   target="_blank" 
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center"
                 >
                   <Play className="mr-2 h-4 w-4" />
                   Watch Demo
