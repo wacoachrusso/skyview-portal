@@ -71,6 +71,8 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
 
     return (
       <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
+        {!isMobile && <NotificationBell />}
+        
         <Button 
           asChild
           variant={isMobile ? "ghost" : "secondary"}
@@ -82,8 +84,6 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
             Account
           </Link>
         </Button>
-        
-        {!isMobile && <NotificationBell />}
         
         <Button 
           asChild
