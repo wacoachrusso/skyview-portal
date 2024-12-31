@@ -41,6 +41,9 @@ export function ChatContent({
       </div>
       <div className="mt-auto border-t border-white/10 bg-[#1A1F2C]">
         <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+        <p className="text-xs text-gray-400 text-center py-2 px-4">
+          SkyGuide can make mistakes. Check important info.
+        </p>
       </div>
     </div>
   );
