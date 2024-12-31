@@ -3,7 +3,7 @@ import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { Navbar } from "@/components/landing/Navbar";
-import { PricingSection } from "@/components/landing/PricingSection";
+import { PricingSection } from "@/components/landing/pricing/PricingSection";
 import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { useEffect, useState } from "react";
