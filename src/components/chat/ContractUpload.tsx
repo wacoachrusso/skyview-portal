@@ -1,28 +1,70 @@
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useContractHandler } from "@/hooks/useContractHandler";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ContractUpload() {
   const { toast } = useToast();
-  const { userProfile } = useUserProfile();
-  const { handleContractClick } = useContractHandler();
+
+  const handleViewContract = async () => {
+    try {
+      // Get current user's profile
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Not logged in",
+          description: "Please log in to view your contract",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('airline, user_type')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile?.airline || !profile?.user_type) {
+        toast({
+          title: "Profile incomplete",
+          description: "Please complete your profile with airline and position information",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Construct the file path based on airline and user type
+      const fileName = `${profile.airline.toLowerCase()}_${profile.user_type.toLowerCase()}.pdf`;
+      
+      // Get the file URL from storage
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('contracts')
+        .getPublicUrl(fileName);
+
+      // Open in new tab
+      window.open(publicUrl, '_blank');
+
+    } catch (error) {
+      console.error('Error viewing contract:', error);
+      toast({
+        title: "Error",
+        description: "Could not retrieve your contract. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="w-full bg-gradient-to-r from-[#1A1F2C] to-[#2A2F3C] border-b border-white/10 p-2 sm:p-3">
-      <div className="max-w-screen-xl mx-auto flex justify-center items-center">
-        <Button
-          variant="outline"
-          size="sm"
-          className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
-          onClick={handleContractClick}
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">View Contract</span>
-          <span className="sm:hidden">Contract</span>
-        </Button>
-      </div>
-    </div>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleViewContract}
+      className="bg-white/5 hover:bg-white/10 text-white border-white/10"
+    >
+      <FileText className="h-4 w-4 mr-2" />
+      View Contract
+    </Button>
   );
 }

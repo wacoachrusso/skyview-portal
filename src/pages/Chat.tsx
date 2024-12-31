@@ -38,10 +38,25 @@ const Chat = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <ContractUpload />
-      </div>
-      <div className="absolute top-4 right-4 z-50">
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 bg-[#1A1F2C] border-b border-white/10">
+        <div className="flex items-center gap-4">
+          <a 
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/', { state: { fromChat: true } });
+            }}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <img 
+              src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+              alt="SkyGuide Logo" 
+              className="h-8 w-auto"
+            />
+            <span className="text-white font-semibold text-base">Ask SkyGuide</span>
+          </a>
+          <ContractUpload />
+        </div>
         <Button 
           variant="ghost" 
           className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
@@ -50,8 +65,8 @@ const Chat = () => {
           <Home className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">Dashboard</span>
         </Button>
-      </div>
-      <div className="pt-16"> {/* Add padding to account for fixed ContractUpload */}
+      </header>
+      <div className="pt-14"> {/* Adjusted padding to account for fixed header */}
         <ChatLayout 
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
