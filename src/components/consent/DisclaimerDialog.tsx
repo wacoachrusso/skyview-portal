@@ -21,7 +21,7 @@ export const DisclaimerDialog = () => {
   useEffect(() => {
     const checkConsent = async () => {
       try {
-        const { data: session } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) return;
 
         console.log('Checking disclaimer consent for user:', session.user.id);
