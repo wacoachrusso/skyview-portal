@@ -6,6 +6,7 @@ import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/hooks/useChat";
 import { ChatContent } from "@/components/chat/ChatContent";
+import { ContractUpload } from "@/components/chat/ContractUpload";
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ const Chat = () => {
 
   return (
     <div className="relative min-h-screen">
+      <ContractUpload />
       <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="ghost" 
