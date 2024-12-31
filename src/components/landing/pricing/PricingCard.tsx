@@ -9,7 +9,7 @@ interface PricingFeatureProps {
 
 const PricingFeature = ({ text, textColor = "text-gray-600" }: PricingFeatureProps) => (
   <li className="flex items-center gap-2">
-    <Check className="h-4 w-4 text-brand-gold" />
+    <Check className="h-4 w-4 text-green-500" />
     <span className={`text-sm ${textColor}`}>{text}</span>
   </li>
 );
@@ -55,7 +55,7 @@ export function PricingCard({
     
     switch (buttonVariant) {
       case "outline":
-        return "w-full bg-white hover:bg-gray-50 text-brand-navy border-brand-navy hover:border-brand-navy/80";
+        return "w-full bg-white hover:bg-gray-50 text-green-600 border-green-500 hover:border-green-600";
       case "gradient":
         return "w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold";
       default:
@@ -66,12 +66,12 @@ export function PricingCard({
   return (
     <Card className={`relative transform hover:scale-105 transition-transform duration-300 ${className} ${disabled ? 'opacity-75' : ''}`}>
       {badgeText && (
-        <div className={`absolute -top-2.5 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1`}>
-          {title === "Monthly Plan" && <Star className="w-3 h-3" />}
+        <div className={`absolute -top-2 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-1.5 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-0.5 whitespace-nowrap`}>
+          {title === "Monthly Plan" && <Star className="w-2.5 h-2.5" />}
           {badgeText}
         </div>
       )}
-      <CardHeader className="space-y-2">
+      <CardHeader className="space-y-2 pt-6">
         <CardTitle className="text-xl text-brand-navy">{title}</CardTitle>
         <div className="text-4xl font-bold text-brand-navy">
           {price}
