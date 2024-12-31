@@ -21,29 +21,37 @@ interface ResendWebhookPayload {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("Webhook handler started");
-  console.log("Forward email address configured:", FORWARD_TO_EMAIL);
+  console.log("========== Webhook Handler Started ==========");
+  console.log("Method:", req.method);
+  console.log("URL:", req.url);
+  console.log("Headers:", JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+  console.log("Forward email configured:", FORWARD_TO_EMAIL);
+  console.log("Has webhook secret:", !!RESEND_WEBHOOK_SECRET);
+  console.log("Has API key:", !!RESEND_API_KEY);
 
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Log environment variables (excluding sensitive parts)
-    console.log("Environment check:", {
-      hasWebhookSecret: !!RESEND_WEBHOOK_SECRET,
-      hasApiKey: !!RESEND_API_KEY,
-      hasForwardEmail: !!FORWARD_TO_EMAIL,
-    });
+    // Log request body
+    const bodyText = await req.text();
+    console.log("Raw request body:", bodyText);
+    
+    // Parse the body
+    const payload: ResendWebhookPayload = JSON.parse(bodyText);
+    console.log("Parsed webhook payload:", JSON.stringify(payload, null, 2));
 
     // Verify webhook signature
     const webhookSecret = req.headers.get("resend-webhook-secret");
-    console.log("Received webhook secret:", webhookSecret ? "Present" : "Missing");
+    console.log("Webhook secret verification:", {
+      received: webhookSecret,
+      matches: webhookSecret === RESEND_WEBHOOK_SECRET
+    });
     
     if (webhookSecret !== RESEND_WEBHOOK_SECRET) {
       console.error("Invalid webhook secret");
-      console.log("Expected:", RESEND_WEBHOOK_SECRET);
-      console.log("Received:", webhookSecret);
       return new Response(
         JSON.stringify({ error: "Invalid webhook secret" }),
         { 
@@ -52,9 +60,6 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-
-    const payload: ResendWebhookPayload = await req.json();
-    console.log("Received webhook payload:", JSON.stringify(payload, null, 2));
 
     if (payload.type === "email.delivered") {
       console.log("Processing email.delivered event");
@@ -104,6 +109,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error) {
     console.error("Error in webhook handler:", error);
+    console.error("Stack trace:", error.stack);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
