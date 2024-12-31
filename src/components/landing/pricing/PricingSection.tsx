@@ -81,29 +81,27 @@ export function PricingSection() {
         return;
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            priceId: plan.priceId,
-            mode: plan.mode,
-          }),
-        }
-      );
-
-      const { url, error } = await response.json();
+      console.log('Making request to create-checkout-session with session:', session.access_token);
       
-      if (error) {
-        throw new Error(error);
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: JSON.stringify({
+          priceId: plan.priceId,
+          mode: plan.mode,
+        }),
+      });
+
+      console.log('Checkout session response:', response);
+
+      if (response.error) {
+        throw new Error(response.error.message);
       }
 
+      const { data: { url } } = response;
+      
       if (url) {
         window.location.href = url;
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Error:', error);
