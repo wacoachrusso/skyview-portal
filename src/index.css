@@ -58,6 +58,7 @@
     height: 100%;
     min-height: -webkit-fill-available;
     scroll-behavior: smooth;
+    font-size: 16px; /* Ensure base font size is at least 16px */
   }
   
   body {
@@ -66,6 +67,8 @@
     min-height: 100vh;
     min-height: -webkit-fill-available;
     -webkit-overflow-scrolling: touch;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
   }
 
   /* Remove browser UI on Android */
@@ -91,7 +94,7 @@
 }
 
 .nav-link {
-  @apply px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors;
+  @apply px-4 py-2 text-base font-medium text-gray-300 hover:text-white transition-colors;
 }
 
 .card-hover {
@@ -121,7 +124,7 @@
 /* Responsive typography */
 @screen sm {
   html {
-    font-size: 16px;
+    font-size: 16px; /* Keep minimum 16px even on small screens */
   }
 }
 
