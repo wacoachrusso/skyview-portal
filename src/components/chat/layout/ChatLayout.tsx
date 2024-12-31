@@ -21,14 +21,16 @@ export function ChatLayout({
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {!isMobile && (
-        <ChatSidebar 
-          onSelectConversation={onSelectConversation}
-          currentConversationId={currentConversationId}
-        />
+        <div className="w-64 sm:w-80 flex-shrink-0">
+          <ChatSidebar 
+            onSelectConversation={onSelectConversation}
+            currentConversationId={currentConversationId}
+          />
+        </div>
       )}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {isMobile && (
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
             <SheetTrigger asChild>
@@ -36,7 +38,7 @@ export function ChatLayout({
                 <Menu className="h-6 w-6 text-white" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-[280px] bg-[#1A1F2C]">
+            <SheetContent side="left" className="p-0 w-[280px] bg-[#1A1F2C] border-r border-white/10">
               <ChatSidebar 
                 onSelectConversation={onSelectConversation}
                 currentConversationId={currentConversationId}

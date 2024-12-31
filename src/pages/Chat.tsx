@@ -37,8 +37,10 @@ const Chat = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
-      <ContractUpload />
+    <div className="relative min-h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <ContractUpload />
+      </div>
       <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="ghost" 
@@ -46,22 +48,24 @@ const Chat = () => {
           onClick={() => navigate('/dashboard')}
         >
           <Home className="h-4 w-4 mr-2" />
-          Dashboard
+          <span className="hidden sm:inline">Dashboard</span>
         </Button>
       </div>
-      <ChatLayout 
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        onSelectConversation={handleSelectConversation}
-        currentConversationId={currentConversationId}
-      >
-        <ChatContent
-          messages={messages}
-          currentUserId={currentUserId}
-          isLoading={isLoading}
-          onSendMessage={sendMessage}
-        />
-      </ChatLayout>
+      <div className="pt-16"> {/* Add padding to account for fixed ContractUpload */}
+        <ChatLayout 
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+          onSelectConversation={handleSelectConversation}
+          currentConversationId={currentConversationId}
+        >
+          <ChatContent
+            messages={messages}
+            currentUserId={currentUserId}
+            isLoading={isLoading}
+            onSendMessage={sendMessage}
+          />
+        </ChatLayout>
+      </div>
     </div>
   );
 };

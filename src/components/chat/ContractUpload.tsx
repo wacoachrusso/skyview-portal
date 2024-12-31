@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ContractUpload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -12,25 +12,27 @@ export function ContractUpload() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Only allow PDF files
+    // Check if file is PDF
     if (file.type !== 'application/pdf') {
       toast({
         title: "Invalid file type",
         description: "Please upload a PDF file",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     setIsUploading(true);
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) throw new Error('Not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+      const userId = user.id;
 
-      const userId = session.user.id;
-      const fileName = `${userId}/${file.name}`;
+      // Create a unique file name
+      const fileName = `${userId}/${Date.now()}-${file.name}`;
 
-      // Upload file to storage
+      // Upload file to Supabase storage
       const { error: uploadError } = await supabase.storage
         .from('contracts')
         .upload(fileName, file);
@@ -43,45 +45,54 @@ export function ContractUpload() {
         .insert({
           file_name: file.name,
           file_path: fileName,
-          user_id: userId  // Add this line to include the user_id
+          user_id: userId
         });
 
       if (dbError) throw dbError;
 
       toast({
-        title: "Contract uploaded",
-        description: "Your contract has been uploaded successfully",
+        title: "Success",
+        description: "Contract uploaded successfully",
       });
+
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your contract. Please try again.",
-        variant: "destructive"
+        description: "There was an error uploading your contract",
+        variant: "destructive",
       });
     } finally {
       setIsUploading(false);
+      // Reset the input
+      event.target.value = '';
     }
   };
 
   return (
-    <div className="absolute top-4 left-4 z-50">
-      <div className="relative">
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={handleFileUpload}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={isUploading}
-        />
-        <Button 
-          variant="ghost" 
-          className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
-          disabled={isUploading}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Contract
-        </Button>
+    <div className="w-full bg-gradient-to-r from-[#1A1F2C] to-[#2A2F3C] border-b border-white/10 p-2 sm:p-3">
+      <div className="max-w-screen-xl mx-auto flex justify-center items-center">
+        <label htmlFor="contract-upload">
+          <input
+            id="contract-upload"
+            type="file"
+            accept=".pdf"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
+            disabled={isUploading}
+            onClick={() => document.getElementById('contract-upload')?.click()}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Upload Contract</span>
+            <span className="sm:hidden">Upload</span>
+            {isUploading && <span className="ml-2">...</span>}
+          </Button>
+        </label>
       </div>
     </div>
   );
