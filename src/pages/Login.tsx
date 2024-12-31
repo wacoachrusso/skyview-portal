@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -48,7 +47,6 @@ const Login = () => {
           <LoginForm />
         </div>
       </div>
-      <DisclaimerDialog />
     </div>
   );
 };
