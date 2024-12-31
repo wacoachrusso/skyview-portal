@@ -4,7 +4,7 @@ import { Check, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function PricingSection() {
   const navigate = useNavigate();
@@ -21,14 +21,13 @@ export function PricingSection() {
         return;
       }
 
-      // Get user's IP address using a public API
       const ipResponse = await fetch('https://api.ipify.org?format=json');
       const { ip } = await ipResponse.json();
 
       const updates = {
         subscription_plan: plan,
         last_ip_address: ip,
-        query_count: 0, // Reset query count when changing plans
+        query_count: 0,
         last_query_timestamp: new Date().toISOString()
       };
 
@@ -58,36 +57,41 @@ export function PricingSection() {
   };
 
   return (
-    <div id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-gray-50 to-white">
+    <div id="pricing-section" className="py-20 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 -z-10" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-100/20 via-transparent to-transparent dark:from-emerald-500/5 -z-10" />
+      
       <div className="container mx-auto">
-        <h2 className="text-3xl font-bold text-center text-brand-navy mb-4">
+        <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
           Simple, Transparent Pricing
         </h2>
-        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+        <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
           Choose the plan that best fits your needs. All plans include access to our core features.
         </p>
+        
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Free Trial Card - Now with more prominence */}
-          <Card className="relative bg-gradient-to-br from-brand-navy/5 to-brand-slate/5 border-2 border-brand-gold transform hover:scale-105 transition-transform duration-300 hover:shadow-xl">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-gold text-black px-6 py-2 rounded-full text-sm font-semibold">
+          {/* Free Trial Card */}
+          <Card className="relative overflow-hidden backdrop-blur-sm bg-white/10 dark:bg-gray-900/40 border border-emerald-100/20 dark:border-emerald-500/20 shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-emerald-500/30">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-lg">
               Start Free
             </div>
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-xl text-brand-navy">Free Trial</CardTitle>
-              <div className="text-4xl font-bold text-brand-navy">
-                $0
-                <span className="text-lg font-normal text-gray-500">/forever</span>
+            <CardHeader className="space-y-2 pt-8">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                Free Trial
+              </CardTitle>
+              <div className="flex items-baseline">
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">$0</span>
+                <span className="text-lg font-normal text-gray-500 dark:text-gray-400">/forever</span>
               </div>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-4 mb-8">
                 <PricingFeature text="2 Contract Queries" />
                 <PricingFeature text="Basic Features" />
                 <PricingFeature text="No Credit Card Required" />
               </ul>
               <Button 
-                variant="outline"
-                className="w-full bg-white hover:bg-gray-50 text-brand-navy border-brand-navy hover:border-brand-navy/80"
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg transform transition-all duration-300 hover:-translate-y-1"
                 onClick={() => handlePlanSelection('free')}
                 disabled={isLoading}
               >
@@ -96,26 +100,28 @@ export function PricingSection() {
             </CardContent>
           </Card>
 
-          {/* Monthly Plan Card - Now with recommended badge */}
-          <Card className="relative bg-gradient-to-br from-brand-navy to-brand-slate transform hover:scale-105 transition-transform duration-300 hover:shadow-xl border-0">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-gold text-black px-6 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
-              <Star className="w-4 h-4 fill-current" /> Most Popular
+          {/* Monthly Plan Card */}
+          <Card className="relative overflow-hidden backdrop-blur-sm bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-600/20 dark:to-teal-600/20 border border-emerald-200/30 dark:border-emerald-400/30 shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-1 rounded-full text-xs font-medium flex items-center gap-1 shadow-lg">
+              <Star className="w-3 h-3 fill-current" /> Most Popular
             </div>
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-xl text-white">Monthly Plan</CardTitle>
-              <div className="text-4xl font-bold text-white">
-                $4.99
-                <span className="text-lg font-normal text-gray-200">/month</span>
+            <CardHeader className="space-y-2 pt-8">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                Monthly Plan
+              </CardTitle>
+              <div className="flex items-baseline">
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">$4.99</span>
+                <span className="text-lg font-normal text-gray-500 dark:text-gray-400">/month</span>
               </div>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3 mb-6">
-                <PricingFeature text="Unlimited Queries" textColor="text-gray-200" />
-                <PricingFeature text="All Features" textColor="text-gray-200" />
-                <PricingFeature text="Priority Support" textColor="text-gray-200" />
+              <ul className="space-y-4 mb-8">
+                <PricingFeature text="Unlimited Queries" />
+                <PricingFeature text="All Features" />
+                <PricingFeature text="Priority Support" />
               </ul>
               <Button 
-                className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold shadow-lg transform transition-all duration-300 hover:-translate-y-1"
                 onClick={() => handlePlanSelection('monthly')}
                 disabled={isLoading}
               >
@@ -125,27 +131,31 @@ export function PricingSection() {
           </Card>
 
           {/* Annual Plan Card */}
-          <Card className="relative bg-white border-2 border-brand-gold transform hover:scale-105 transition-transform duration-300 hover:shadow-xl">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
+          <Card className="relative overflow-hidden backdrop-blur-sm bg-white/10 dark:bg-gray-900/40 border border-emerald-100/20 dark:border-emerald-500/20 shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-emerald-500/30">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium shadow-lg">
               Best Value
             </div>
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-xl text-brand-navy">Annual Plan</CardTitle>
-              <div className="text-4xl font-bold text-brand-navy">
-                $49.99
-                <span className="text-lg font-normal text-gray-500">/year</span>
+            <CardHeader className="space-y-2 pt-8">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                Annual Plan
+              </CardTitle>
+              <div className="flex items-baseline">
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">$49.99</span>
+                <span className="text-lg font-normal text-gray-500 dark:text-gray-400">/year</span>
               </div>
-              <div className="text-sm text-green-600 font-medium">Save $10 annually</div>
+              <div className="text-sm text-emerald-500 font-medium bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full inline-block">
+                Save $10 annually
+              </div>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-4 mb-8">
                 <PricingFeature text="Unlimited Queries" />
                 <PricingFeature text="All Features" />
                 <PricingFeature text="Priority Support" />
                 <PricingFeature text="Annual Savings" />
               </ul>
               <Button 
-                className="w-full bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold"
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg transform transition-all duration-300 hover:-translate-y-1"
                 onClick={() => handlePlanSelection('annual')}
                 disabled={isLoading}
               >
@@ -159,9 +169,9 @@ export function PricingSection() {
   );
 }
 
-const PricingFeature = ({ text, textColor = "text-gray-600" }: { text: string; textColor?: string }) => (
+const PricingFeature = ({ text }: { text: string }) => (
   <li className="flex items-center gap-2">
-    <Check className="h-4 w-4 text-brand-gold" />
-    <span className={`text-sm ${textColor}`}>{text}</span>
+    <Check className="h-4 w-4 text-emerald-500" />
+    <span className="text-sm text-gray-600 dark:text-gray-300">{text}</span>
   </li>
 );

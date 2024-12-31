@@ -22,19 +22,19 @@ export function Hero() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" aria-hidden="true" />
       
       <div className="container mx-auto px-4 relative">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
           <div className="w-full lg:w-1/2 text-center lg:text-left">
             <div className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-base mb-4 animate-fade-up">
               Tailored for flight attendants and pilots across all airlines
             </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
               End Contract Confusion— <br className="hidden md:block" />
               Get Instant Answers Now
             </h1>
-            <p className="text-base md:text-lg text-gray-200 mb-6 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            <p className="text-base md:text-lg text-gray-200 mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
               Get instant, accurate answers to your contract questions with SkyGuide. Our advanced system helps you navigate complex contract details, ensuring you understand your rights and make informed decisions with ease.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
               <Button 
                 size="lg"
                 className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-brand-gold/20 text-base"
@@ -63,7 +63,7 @@ export function Hero() {
               </Button>
             </div>
           </div>
-          <div className="w-full lg:w-1/2 flex items-center justify-center -mt-4 sm:mt-0 animate-fade-up" style={{ animationDelay: "0.4s" }}>
+          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-lg">
               <div className="absolute inset-0 bg-glow-gradient opacity-75" aria-hidden="true" />
               <div className="relative animate-float">
