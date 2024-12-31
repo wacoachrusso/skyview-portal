@@ -25,12 +25,14 @@ export const useLoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
 
     try {
       console.log('Starting login process...');
       
-      // First check if the account is locked
+      // First check if the account exists and get its status
       const { data: profileData } = await supabase
         .from('profiles')
         .select('login_attempts, account_status')
@@ -43,12 +45,9 @@ export const useLoginForm = () => {
           title: "Account locked",
           description: "Your account has been locked due to too many failed login attempts. Please reset your password."
         });
+        setLoading(false);
         return;
       }
-
-      // First clear any existing session
-      await supabase.auth.signOut({ scope: 'local' });
-      console.log('Cleared existing session');
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
@@ -58,25 +57,26 @@ export const useLoginForm = () => {
       if (error) {
         console.error('Login error:', error);
         
-        // Increment login attempts
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            login_attempts: (profileData?.login_attempts || 0) + 1,
-            account_status: (profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active'
-          })
-          .eq('email', formData.email.trim());
-
-        if ((profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS) {
-          toast({
-            variant: "destructive",
-            title: "Account locked",
-            description: "Your account has been locked due to too many failed login attempts. Please reset your password."
-          });
-          return;
-        }
-
+        // Handle specific error cases
         if (error.message === 'Invalid login credentials') {
+          // Increment login attempts
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              login_attempts: (profileData?.login_attempts || 0) + 1,
+              account_status: (profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active'
+            })
+            .eq('email', formData.email.trim());
+
+          if ((profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS) {
+            toast({
+              variant: "destructive",
+              title: "Account locked",
+              description: "Your account has been locked due to too many failed login attempts. Please reset your password."
+            });
+            return;
+          }
+
           toast({
             variant: "destructive",
             title: "Login failed",
@@ -120,8 +120,6 @@ export const useLoginForm = () => {
         return;
       }
 
-      console.log('Sign in successful:', data.user?.id);
-
       // Reset login attempts on successful login
       const { error: resetError } = await supabase
         .from('profiles')
@@ -141,17 +139,17 @@ export const useLoginForm = () => {
         });
       }
 
-      // Check if profile is complete
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('user_type, airline, subscription_plan')
-        .eq('id', data.user.id)
-        .single();
-
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in."
       });
+
+      // Check if profile is complete
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('user_type, airline')
+        .eq('id', data.user.id)
+        .single();
 
       if (userProfile?.user_type && userProfile?.airline) {
         console.log('Profile complete, redirecting to dashboard');
@@ -160,12 +158,13 @@ export const useLoginForm = () => {
         console.log('Profile incomplete, redirecting to complete-profile');
         navigate('/complete-profile');
       }
+
     } catch (error) {
       console.error('Unexpected error during login:', error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "An error occurred. Please try again."
+        description: "An unexpected error occurred. Please try again."
       });
     } finally {
       setLoading(false);
