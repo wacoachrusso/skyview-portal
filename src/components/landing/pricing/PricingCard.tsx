@@ -9,7 +9,7 @@ interface PricingFeatureProps {
 
 const PricingFeature = ({ text, textColor = "text-gray-600" }: PricingFeatureProps) => (
   <li className="flex items-center gap-2">
-    <Check className="h-4 w-4 text-green-500" />
+    <Check className="h-4 w-4 text-emerald-500" />
     <span className={`text-sm ${textColor}`}>{text}</span>
   </li>
 );
@@ -55,38 +55,49 @@ export function PricingCard({
     
     switch (buttonVariant) {
       case "outline":
-        return "w-full bg-white hover:bg-gray-50 text-green-600 border-green-500 hover:border-green-600";
+        return "w-full bg-white hover:bg-gray-50 text-emerald-600 border-emerald-500 hover:border-emerald-600";
       case "gradient":
-        return "w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold";
+        return "w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold";
       default:
-        return "w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold";
+        return "w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold";
     }
   };
 
   return (
-    <Card className={`relative transform hover:scale-105 transition-transform duration-300 ${className} ${disabled ? 'opacity-75' : ''}`}>
+    <Card className={`relative backdrop-blur-sm bg-white/10 border border-gray-200/20 shadow-xl ${className} ${disabled ? 'opacity-75' : ''} 
+      transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-emerald-500/30`}>
       {badgeText && (
-        <div className={`absolute -top-2 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-1.5 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-0.5 whitespace-nowrap`}>
-          {title === "Monthly Plan" && <Star className="w-2.5 h-2.5" />}
+        <div className={`absolute -top-3 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 shadow-lg`}>
+          {title === "Monthly Plan" && <Star className="w-3 h-3" />}
           {badgeText}
         </div>
       )}
-      <CardHeader className="space-y-2 pt-6">
-        <CardTitle className="text-xl text-brand-navy">{title}</CardTitle>
-        <div className="text-4xl font-bold text-brand-navy">
-          {price}
-          <span className="text-lg font-normal text-gray-500">/{interval}</span>
+      <CardHeader className="space-y-2 pt-8">
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+          {title}
+        </CardTitle>
+        <div className="flex items-baseline">
+          <span className="text-4xl font-bold text-gray-900 dark:text-white">{price}</span>
+          <span className="text-lg font-normal text-gray-500 dark:text-gray-400">/{interval}</span>
         </div>
-        {savings && <div className="text-sm text-green-500 font-medium">{savings}</div>}
+        {savings && (
+          <div className="text-sm text-emerald-500 font-medium bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full inline-block">
+            {savings}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
-        <ul className="space-y-3 mb-6">
+        <ul className="space-y-4 mb-8">
           {features.map((feature, index) => (
-            <PricingFeature key={index} text={feature} textColor={textColor} />
+            <PricingFeature 
+              key={index} 
+              text={feature} 
+              textColor={textColor} 
+            />
           ))}
         </ul>
         <Button 
-          className={getButtonClassName()}
+          className={`${getButtonClassName()} shadow-lg transform transition-all duration-300 hover:-translate-y-1`}
           onClick={onSelect}
           disabled={isLoading || disabled}
         >
