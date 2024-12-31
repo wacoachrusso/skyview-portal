@@ -41,11 +41,11 @@ export function PricingCard({
     
     switch (buttonVariant) {
       case "outline":
-        return "w-full bg-white/10 hover:bg-white/20 text-purple-400 border-purple-400/50 hover:border-purple-400";
+        return "w-full bg-white/10 hover:bg-white/20 text-brand-gold border-brand-gold/50 hover:border-brand-gold";
       case "gradient":
-        return "w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold";
+        return "w-full bg-gradient-to-r from-brand-gold to-brand-gold/80 hover:from-brand-gold/90 hover:to-brand-gold/70 text-brand-navy font-semibold";
       default:
-        return "w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold";
+        return "w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold";
     }
   };
 
@@ -54,18 +54,18 @@ export function PricingCard({
       className={`
         relative overflow-visible
         backdrop-blur-sm bg-white/5 dark:bg-gray-900/40
-        border border-purple-100/20 dark:border-purple-500/20
+        border border-brand-gold/20 dark:border-brand-gold/20
         shadow-xl ${className} ${disabled ? 'opacity-75' : ''}
         transform transition-all duration-300 
         hover:scale-105 hover:shadow-2xl 
-        hover:border-purple-500/30 dark:hover:border-purple-400/30
+        hover:border-brand-gold/30 dark:hover:border-brand-gold/30
         group mt-12
       `}
     >
       {badgeText && (
         <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20
-          bg-gradient-to-r from-purple-600 to-violet-600
-          text-white px-4 py-1 rounded-full text-sm font-medium 
+          bg-gradient-to-r from-brand-gold to-brand-gold/80
+          text-brand-navy px-4 py-1 rounded-full text-sm font-medium 
           flex items-center gap-1 shadow-lg whitespace-nowrap"
         >
           {title === "Monthly Plan" && <Star className="w-4 h-4" />}
@@ -73,24 +73,24 @@ export function PricingCard({
         </div>
       )}
       
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50/5 to-violet-50/5 
-        dark:from-purple-900/5 dark:to-violet-900/5 opacity-0 group-hover:opacity-100 
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-navy/5 to-brand-slate/5 
+        opacity-0 group-hover:opacity-100 
         transition-opacity duration-300" 
       />
       
       <CardHeader className="space-y-2 pt-10 relative z-[1]">
-        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-400 
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-brand-gold to-brand-gold/80 
           bg-clip-text text-transparent"
         >
           {title}
         </CardTitle>
         <div className="flex items-baseline">
-          <span className="text-4xl font-bold text-gray-900 dark:text-white">{price}</span>
-          <span className="text-lg font-normal text-gray-500 dark:text-gray-400">/{interval}</span>
+          <span className="text-4xl font-bold text-white">{price}</span>
+          <span className="text-lg font-normal text-gray-400">/{interval}</span>
         </div>
         {savings && (
-          <div className="text-sm text-purple-500 font-medium 
-            bg-purple-50 dark:bg-purple-900/20 
+          <div className="text-sm text-brand-gold font-medium 
+            bg-brand-gold/10 dark:bg-brand-gold/10 
             px-2 py-1 rounded-full inline-block"
           >
             {savings}
@@ -104,7 +104,7 @@ export function PricingCard({
             <PricingFeature 
               key={index} 
               text={feature}
-              textColor="text-gray-600 dark:text-gray-300"
+              textColor="text-gray-300"
             />
           ))}
         </ul>
