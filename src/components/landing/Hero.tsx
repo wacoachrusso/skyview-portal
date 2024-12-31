@@ -11,7 +11,7 @@ export function Hero() {
   };
 
   return (
-    <div className="relative bg-hero-gradient py-16 overflow-hidden">
+    <div className="relative bg-hero-gradient py-8 sm:py-16 overflow-hidden">
       <div className="absolute inset-0 bg-glow-gradient opacity-50" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" />
       <div className="container mx-auto px-4 relative">
@@ -59,7 +59,7 @@ export function Hero() {
               </Button>
             </div>
           </div>
-          <div className="w-full lg:w-1/2 flex items-center justify-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
+          <div className="w-full lg:w-1/2 flex items-center justify-center -mt-4 sm:mt-0 animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-lg">
               <div className="absolute inset-0 bg-glow-gradient opacity-75" />
               <div className="relative">
