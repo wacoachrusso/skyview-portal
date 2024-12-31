@@ -5,7 +5,6 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { ContactDirectory } from "@/components/contact/ContactDirectory";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { Disclaimer } from "@/components/shared/Disclaimer";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -47,7 +46,6 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8 max-w-7xl relative">
         <div className="space-y-8">
           <WelcomeCard />
-          <Disclaimer />
           {isAdmin && (
             <div className="p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border" />
           )}
