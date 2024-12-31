@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, Star } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface PricingCardProps {
   title: string;
@@ -48,25 +48,8 @@ export function PricingCard({
     }
   };
 
-  const getBadgeClasses = () => {
-    switch (variant) {
-      case "featured":
-        return "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500";
-      case "premium":
-        return "bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500";
-      default:
-        return "bg-gradient-to-r from-slate-700 to-slate-900";
-    }
-  };
-
   return (
     <div className={getCardClasses()}>
-      {variant === "featured" && (
-        <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 ${getBadgeClasses()} text-white text-sm font-semibold rounded-full shadow-lg flex items-center gap-1.5`}>
-          <Star className="w-4 h-4 fill-current" /> Most Popular
-        </div>
-      )}
-
       <div className="flex flex-col flex-1 justify-between">
         <div className="space-y-6">
           <div>
