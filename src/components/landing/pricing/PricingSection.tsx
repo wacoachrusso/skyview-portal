@@ -39,12 +39,12 @@ const plans = [
     period: "/year",
     description: "Best value - Save $10 annually",
     features: [
-      "Everything in Monthly plan",
-      "Save $10 per year",
-      "Premium support",
-      "Early access to new features",
-      "Advanced analytics",
-      "Priority updates"
+      "Unlimited contract queries",
+      "Advanced interpretation",
+      "Priority support",
+      "Custom contract uploads",
+      "Offline access",
+      "Premium features"
     ],
     buttonText: "Best Value",
     gradient: "bg-gradient-to-br from-brand-gold/20 to-brand-gold/10"
