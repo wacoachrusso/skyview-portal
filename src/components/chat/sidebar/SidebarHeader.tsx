@@ -33,9 +33,11 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
         onClick={handleLogoClick}
         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
       >
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-          <span className="text-white font-semibold text-sm sm:text-base">S</span>
-        </div>
+        <img 
+          src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+          alt="SkyGuide Logo" 
+          className="h-7 w-auto sm:h-8"
+        />
         <span className="text-white font-semibold text-sm sm:text-base">Ask SkyGuide</span>
       </a>
       <div className="flex items-center gap-2">
