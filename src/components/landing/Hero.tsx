@@ -1,8 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useState } from "react";
 
 export function Hero() {
+  const [showVideo, setShowVideo] = useState(false);
+
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
     if (pricingSection) {
@@ -43,20 +47,13 @@ export function Hero() {
                 Get Instant Contract Answers
               </Button>
               <Button
-                asChild
                 size="lg"
                 variant="outline"
                 className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg transform transition-all duration-200 hover:scale-105"
+                onClick={() => setShowVideo(true)}
               >
-                <a 
-                  href="https://youtube.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center"
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  Watch Demo
-                </a>
+                <Play className="mr-2 h-4 w-4" />
+                Watch Demo
               </Button>
             </div>
           </div>
@@ -74,6 +71,20 @@ export function Hero() {
           </div>
         </div>
       </div>
+
+      <Dialog open={showVideo} onOpenChange={setShowVideo}>
+        <DialogContent className="sm:max-w-[800px] p-0 bg-transparent border-none">
+          <div className="relative pt-[56.25%] w-full overflow-hidden rounded-lg">
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src="https://www.youtube.com/embed/your-video-id?autoplay=1"
+              title="SkyGuide Demo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
