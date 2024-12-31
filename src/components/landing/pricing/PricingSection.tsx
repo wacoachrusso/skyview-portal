@@ -5,7 +5,6 @@ import { PricingCard } from "./PricingCard";
 export function PricingSection() {
   const { handlePlanSelection, isLoading } = usePlanSelection();
 
-  // Add scroll to top on page load/refresh
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -20,11 +19,11 @@ export function PricingSection() {
         "Basic Features",
         "No Credit Card Required"
       ],
-      badgeText: "Try it Free",
-      badgeColor: "bg-brand-navy",
+      badgeText: "Start Free",
+      badgeColor: "bg-gradient-to-r from-brand-navy to-brand-slate",
       buttonText: "Start Free Trial",
       buttonVariant: "outline" as const,
-      className: "bg-white border-2 border-gray-100",
+      className: "bg-gradient-to-b from-white to-gray-50 border-2 border-brand-navy/10 shadow-lg",
       planId: "free"
     },
     {
@@ -37,9 +36,9 @@ export function PricingSection() {
         "Priority Support"
       ],
       badgeText: "Most Popular",
-      badgeColor: "bg-brand-gold",
+      badgeColor: "bg-gradient-to-r from-brand-gold to-amber-500",
       buttonText: "Choose Monthly",
-      className: "bg-gradient-to-br from-brand-navy to-brand-slate border-0",
+      className: "bg-gradient-to-br from-brand-navy to-brand-slate border-0 shadow-xl",
       textColor: "text-gray-200",
       planId: "monthly"
     },
@@ -54,10 +53,10 @@ export function PricingSection() {
         "Annual Savings"
       ],
       badgeText: "Best Value",
-      badgeColor: "bg-green-600",
+      badgeColor: "bg-gradient-to-r from-green-600 to-emerald-500",
       buttonText: "Choose Annual",
       buttonVariant: "gradient" as const,
-      className: "bg-white border-2 border-brand-gold",
+      className: "bg-white border-2 border-brand-gold shadow-lg",
       savings: "Save $10 annually",
       planId: "annual"
     }
