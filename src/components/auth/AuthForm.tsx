@@ -7,6 +7,7 @@ import { AuthFormFooter } from "./AuthFormFooter";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { sendWelcomeEmail } from "@/utils/email";
+import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 
 interface AuthFormProps {
   selectedPlan?: string;
@@ -20,6 +21,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -47,7 +50,8 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         plan: finalSelectedPlan
       });
 
-      const { data, error } = await supabase.auth.signUp({
+      // Store the signup data and show disclaimer
+      setPendingSignupData({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
@@ -60,6 +64,26 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
+      setShowDisclaimer(true);
+
+    } catch (error) {
+      console.error("Unexpected error during signup:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisclaimerAccepted = async () => {
+    if (!pendingSignupData) return;
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signUp(pendingSignupData);
 
       if (error) {
         console.error("Signup error:", error);
@@ -95,7 +119,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       console.log("Signup successful:", data);
 
       const { error: emailError } = await sendWelcomeEmail({
-        email: formData.email,
+        email: pendingSignupData.email,
         name: formData.fullName,
       });
 
@@ -113,11 +137,10 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
         });
       }
 
-      // Navigate directly to dashboard instead of login
       navigate('/dashboard');
 
     } catch (error) {
-      console.error("Unexpected error during signup:", error);
+      console.error("Error during signup after disclaimer acceptance:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -125,7 +148,19 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       });
     } finally {
       setLoading(false);
+      setShowDisclaimer(false);
+      setPendingSignupData(null);
     }
+  };
+
+  const handleDisclaimerRejected = () => {
+    setShowDisclaimer(false);
+    setPendingSignupData(null);
+    toast({
+      variant: "destructive",
+      title: "Signup cancelled",
+      description: "You must accept the disclaimer to create an account.",
+    });
   };
 
   return (
@@ -159,6 +194,14 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           <AuthFormFooter />
         </div>
       </div>
+
+      {showDisclaimer && (
+        <DisclaimerDialog 
+          open={showDisclaimer}
+          onAccept={handleDisclaimerAccepted}
+          onReject={handleDisclaimerRejected}
+        />
+      )}
     </div>
   );
 };
