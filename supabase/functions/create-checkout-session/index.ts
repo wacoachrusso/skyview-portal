@@ -18,6 +18,12 @@ serve(async (req) => {
   )
 
   try {
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey) {
+      console.error('STRIPE_SECRET_KEY is not set in environment variables');
+      throw new Error('Stripe configuration error');
+    }
+
     const authHeader = req.headers.get('Authorization')!
     const token = authHeader.replace('Bearer ', '')
     const { data } = await supabaseClient.auth.getUser(token)
@@ -28,7 +34,8 @@ serve(async (req) => {
       throw new Error('No email found')
     }
 
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    console.log('Creating Stripe instance with provided key');
+    const stripe = new Stripe(stripeKey, {
       apiVersion: '2023-10-16',
     })
 
