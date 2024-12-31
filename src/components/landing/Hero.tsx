@@ -31,10 +31,10 @@ export function Hero() {
               End Contract Confusion— <br className="hidden md:block" />
               Get Instant Answers Now
             </h1>
-            <p className="text-base md:text-lg text-gray-200 mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            <p className="text-base md:text-lg text-gray-200 mb-12 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
               Get instant, accurate answers to your contract questions with SkyGuide. Our advanced system helps you navigate complex contract details, ensuring you understand your rights and make informed decisions with ease.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-up" style={{ animationDelay: "0.3s" }}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-up mb-8 lg:mb-0" style={{ animationDelay: "0.3s" }}>
               <Button 
                 size="lg"
                 className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-brand-gold/20 text-base"
@@ -64,7 +64,7 @@ export function Hero() {
             </div>
           </div>
           <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-            <div className="relative w-full max-w-lg">
+            <div className="relative w-full max-w-md">
               <div className="absolute inset-0 bg-glow-gradient opacity-75" aria-hidden="true" />
               <div className="relative animate-float">
                 <img 

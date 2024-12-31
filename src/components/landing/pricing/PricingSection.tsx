@@ -22,7 +22,7 @@ export function PricingSection() {
       badgeText: "Start Free",
       buttonText: "Start Free Trial",
       buttonVariant: "outline" as const,
-      className: "bg-gradient-to-br from-emerald-50/30 to-teal-50/30 dark:from-emerald-950/30 dark:to-teal-950/30",
+      className: "bg-gradient-to-br from-purple-50/30 to-violet-50/30 dark:from-purple-950/30 dark:to-violet-950/30",
       planId: "free"
     },
     {
@@ -36,7 +36,7 @@ export function PricingSection() {
       ],
       badgeText: "Most Popular",
       buttonText: "Choose Monthly",
-      className: "bg-gradient-to-br from-emerald-100/30 to-teal-100/30 dark:from-emerald-900/30 dark:to-teal-900/30",
+      className: "bg-gradient-to-br from-purple-100/30 to-violet-100/30 dark:from-purple-900/30 dark:to-violet-900/30",
       planId: "monthly"
     },
     {
@@ -52,7 +52,7 @@ export function PricingSection() {
       badgeText: "Best Value",
       buttonText: "Choose Annual",
       buttonVariant: "gradient" as const,
-      className: "bg-gradient-to-br from-emerald-50/30 to-teal-50/30 dark:from-emerald-950/30 dark:to-teal-950/30",
+      className: "bg-gradient-to-br from-purple-50/30 to-violet-50/30 dark:from-purple-950/30 dark:to-violet-950/30",
       savings: "Save $10 annually",
       planId: "annual"
     }
@@ -61,10 +61,10 @@ export function PricingSection() {
   return (
     <div id="pricing-section" className="py-20 px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 -z-10" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-100/20 via-transparent to-transparent dark:from-emerald-500/5 -z-10" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-100/20 via-transparent to-transparent dark:from-purple-500/5 -z-10" />
       
       <div className="container mx-auto">
-        <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
+        <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent mb-4">
           Simple, Transparent Pricing
         </h2>
         <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">

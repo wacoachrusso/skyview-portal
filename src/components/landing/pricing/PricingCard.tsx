@@ -9,7 +9,6 @@ interface PricingCardProps {
   interval: string;
   features: string[];
   badgeText?: string;
-  badgeColor?: string;
   buttonText: string;
   buttonVariant?: "default" | "outline" | "gradient";
   className?: string;
@@ -42,11 +41,11 @@ export function PricingCard({
     
     switch (buttonVariant) {
       case "outline":
-        return "w-full bg-white/80 hover:bg-white/90 text-emerald-600 border-emerald-500 hover:border-emerald-600 dark:bg-white/10 dark:hover:bg-white/20";
+        return "w-full bg-white/80 hover:bg-white/90 text-purple-600 border-purple-500 hover:border-purple-600 dark:bg-white/10 dark:hover:bg-white/20";
       case "gradient":
-        return "w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold";
+        return "w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-semibold";
       default:
-        return "w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold";
+        return "w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold";
     }
   };
 
@@ -55,17 +54,17 @@ export function PricingCard({
       className={`
         relative overflow-hidden
         backdrop-blur-sm bg-white/10 dark:bg-gray-900/40
-        border border-emerald-100/20 dark:border-emerald-500/20
+        border border-purple-100/20 dark:border-purple-500/20
         shadow-xl ${className} ${disabled ? 'opacity-75' : ''}
         transform transition-all duration-300 
         hover:scale-105 hover:shadow-2xl 
-        hover:border-emerald-500/30 dark:hover:border-emerald-400/30
-        group
+        hover:border-purple-500/30 dark:hover:border-purple-400/30
+        group mt-6
       `}
     >
       {badgeText && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 
-          bg-gradient-to-r from-emerald-500 to-teal-500
+          bg-gradient-to-r from-purple-500 to-violet-500
           text-white px-3 py-1 rounded-full text-xs font-medium 
           flex items-center gap-1 shadow-lg z-10"
         >
@@ -74,13 +73,13 @@ export function PricingCard({
         </div>
       )}
       
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/5 to-teal-50/5 
-        dark:from-emerald-900/5 dark:to-teal-900/5 opacity-0 group-hover:opacity-100 
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50/5 to-violet-50/5 
+        dark:from-purple-900/5 dark:to-violet-900/5 opacity-0 group-hover:opacity-100 
         transition-opacity duration-300" 
       />
       
       <CardHeader className="space-y-2 pt-8 relative z-10">
-        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-violet-500 
           bg-clip-text text-transparent"
         >
           {title}
@@ -90,8 +89,8 @@ export function PricingCard({
           <span className="text-lg font-normal text-gray-500 dark:text-gray-400">/{interval}</span>
         </div>
         {savings && (
-          <div className="text-sm text-emerald-500 font-medium 
-            bg-emerald-50 dark:bg-emerald-900/20 
+          <div className="text-sm text-purple-500 font-medium 
+            bg-purple-50 dark:bg-purple-900/20 
             px-2 py-1 rounded-full inline-block"
           >
             {savings}
