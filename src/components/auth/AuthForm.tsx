@@ -109,11 +109,12 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       } else {
         toast({
           title: "Account created",
-          description: "Please check your email for next steps.",
+          description: "Welcome to SkyGuide!",
         });
       }
 
-      navigate('/login');
+      // Navigate directly to dashboard instead of login
+      navigate('/dashboard');
 
     } catch (error) {
       console.error("Unexpected error during signup:", error);
