@@ -1,41 +1,60 @@
-import { useNavigate } from 'react-router-dom';
 import { useEmailConfirmation } from "@/hooks/useEmailConfirmation";
 import { redirectToProduction } from "@/utils/redirectUtils";
 import { useToast } from "@/hooks/use-toast";
-import { URLSearchParams } from 'url';
+import { useNavigate } from "react-router-dom";
 
 interface EmailConfirmationHandlerProps {
-  searchParams: URLSearchParams;
+  email: string | null;
+  tokenHash: string | null;
 }
 
-export const EmailConfirmationHandler = ({ searchParams }: EmailConfirmationHandlerProps) => {
+export const EmailConfirmationHandler = ({ email, tokenHash }: EmailConfirmationHandlerProps) => {
   const navigate = useNavigate();
   const { handleEmailConfirmation } = useEmailConfirmation();
   const { toast } = useToast();
 
   const processEmailConfirmation = async () => {
-    const email = searchParams.get('email');
-    const tokenHash = searchParams.get('token_hash');
-    
     console.log('Processing email confirmation:', { email, tokenHash });
     
     if (!email || !tokenHash) {
-      console.error('Missing email or token_hash for confirmation');
+      console.error('Missing email or token hash');
       toast({
         variant: "destructive",
-        title: "Invalid confirmation link",
+        title: "Invalid Confirmation Link",
         description: "The confirmation link is invalid or has expired."
       });
       navigate('/login');
-      return false;
+      return;
     }
 
-    const confirmed = await handleEmailConfirmation(email, tokenHash);
-    if (confirmed) {
-      redirectToProduction();
-      return true;
+    try {
+      const result = await handleEmailConfirmation(email, tokenHash);
+      
+      if (result.success) {
+        toast({
+          title: "Email Confirmed",
+          description: "Your email has been confirmed successfully."
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Confirmation Failed",
+          description: result.error || "Failed to confirm email. Please try again."
+        });
+      }
+    } catch (error) {
+      console.error('Error confirming email:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again."
+      });
     }
-    return false;
+
+    // Check if we need to redirect to production
+    if (redirectToProduction()) return;
+    
+    navigate('/login');
   };
 
   return { processEmailConfirmation };
