@@ -23,7 +23,7 @@ export function PricingSection() {
       badgeColor: "bg-brand-navy",
       buttonText: "Start Free Trial",
       buttonVariant: "outline" as const,
-      className: "bg-white border border-brand-navy/20 shadow-sm",
+      className: "bg-white border border-brand-navy/20 shadow-sm hover:border-brand-navy/30",
       planId: "free"
     },
     {
