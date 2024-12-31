@@ -10,7 +10,7 @@ interface PricingCardProps {
   buttonText: string;
   onSelect: () => void;
   isLoading?: boolean;
-  variant: "teal" | "yellow" | "dark";
+  variant: "default" | "featured" | "premium";
 }
 
 export function PricingCard({
@@ -24,63 +24,62 @@ export function PricingCard({
   isLoading,
   variant
 }: PricingCardProps) {
-  const getBackgroundColor = () => {
+  const getCardClasses = () => {
+    const baseClasses = "relative rounded-xl p-8 transition-all duration-300";
+    
     switch (variant) {
-      case "teal":
-        return "bg-[#40CDB2]";
-      case "yellow":
-        return "bg-[#FFD60A]";
-      case "dark":
-        return "bg-[#2A3441]";
+      case "featured":
+        return `${baseClasses} bg-gradient-to-b from-brand-navy to-brand-slate border-2 border-brand-gold/20 shadow-lg shadow-brand-gold/5`;
+      case "premium":
+        return `${baseClasses} bg-gradient-to-b from-brand-slate to-secondary border border-white/10`;
+      default:
+        return `${baseClasses} bg-gradient-to-b from-secondary to-brand-slate border border-white/10`;
     }
   };
 
-  const getTextColor = () => {
-    return variant === "dark" ? "text-white" : "text-gray-800";
-  };
-
   return (
-    <div className={`rounded-lg p-8 h-full flex flex-col ${getBackgroundColor()} ${getTextColor()}`}>
-      <div className="mb-8">
-        <div className="text-sm uppercase mb-2">
-          {title}
+    <div className={getCardClasses()}>
+      {variant === "featured" && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-brand-gold text-brand-navy text-sm font-semibold rounded-full">
+          Most Popular
         </div>
-        <div className="flex items-baseline gap-1 mb-4">
-          <span className="text-4xl font-bold">$</span>
-          <span className="text-5xl font-bold">{price}</span>
-          <span className="text-lg">/{interval}</span>
+      )}
+      
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
+          <div className="flex items-baseline gap-1 mb-3">
+            <span className="text-3xl font-bold text-white">$</span>
+            <span className="text-4xl font-bold text-white">{price}</span>
+            <span className="text-lg text-gray-400">/{interval}</span>
+          </div>
+          <p className="text-sm text-gray-400">{description}</p>
         </div>
-        <p className="text-sm opacity-90 mb-6">
-          {description}
-        </p>
-      </div>
 
-      <div className="flex-grow">
-        <ul className="space-y-4 mb-8">
+        <div className="space-y-4">
           {features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-2 text-sm">
-              <Check className="w-5 h-5 mt-0.5 shrink-0" />
-              <span>{feature}</span>
-            </li>
+            <div key={index} className="flex items-start gap-3">
+              <div className="mt-1">
+                <Check className="h-4 w-4 text-brand-gold" />
+              </div>
+              <span className="text-sm text-gray-300">{feature}</span>
+            </div>
           ))}
-        </ul>
-      </div>
+        </div>
 
-      <div className="space-y-4">
-        <Button 
-          onClick={onSelect}
-          disabled={isLoading}
-          className={`w-full py-6 text-base font-medium ${
-            variant === "dark" 
-              ? "bg-white/10 hover:bg-white/20 text-white" 
-              : "bg-[#2A3441] hover:bg-[#1A1F2C] text-white"
-          }`}
-        >
-          {buttonText}
-        </Button>
-        <button className="text-sm underline opacity-80 hover:opacity-100 w-full text-center">
-          Learn more
-        </button>
+        <div className="pt-4">
+          <Button
+            onClick={onSelect}
+            disabled={isLoading}
+            className={`w-full py-6 ${
+              variant === "featured"
+                ? "bg-brand-gold hover:bg-brand-gold/90 text-brand-navy"
+                : "bg-white/10 hover:bg-white/20 text-white"
+            }`}
+          >
+            {buttonText}
+          </Button>
+        </div>
       </div>
     </div>
   );

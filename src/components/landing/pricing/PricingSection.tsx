@@ -16,7 +16,7 @@ export function PricingSection() {
         "No Credit Card Required"
       ],
       buttonText: "Start Free Trial",
-      variant: "teal" as const
+      variant: "default" as const
     },
     {
       title: "Monthly Plan",
@@ -29,7 +29,7 @@ export function PricingSection() {
         "Priority Support"
       ],
       buttonText: "Choose Monthly",
-      variant: "yellow" as const
+      variant: "featured" as const
     },
     {
       title: "Annual Plan",
@@ -43,12 +43,12 @@ export function PricingSection() {
         "Annual Savings"
       ],
       buttonText: "Choose Annual",
-      variant: "dark" as const
+      variant: "premium" as const
     }
   ];
 
   return (
-    <div id="pricing-section" className="py-20 px-4 bg-[#1A1F2C]">
+    <div id="pricing-section" className="py-24 px-4 bg-gradient-to-b from-brand-navy to-brand-slate">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">
@@ -59,7 +59,8 @@ export function PricingSection() {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 relative">
+          <div className="absolute inset-0 bg-glow-gradient opacity-30 pointer-events-none" />
           {pricingPlans.map((plan) => (
             <PricingCard
               key={plan.title}
