@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordResetForm } from "@/components/auth/password-reset/PasswordResetForm";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { LockKeyhole } from "lucide-react";
 
 const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
@@ -98,24 +99,27 @@ const ResetPassword = () => {
 
   if (validatingToken) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
         <div className="text-center space-y-4">
           <LoadingSpinner size="lg" />
-          <p className="text-muted-foreground">Validating reset link...</p>
+          <p className="text-muted-foreground">Validating your reset link...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">
+        <div className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+            <LockKeyhole className="w-8 h-8 text-blue-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">
             Reset Your Password
           </h1>
-          <p className="text-muted-foreground">
-            Please enter your new password below
+          <p className="text-gray-500 max-w-sm mx-auto">
+            Please enter your new password below. Make sure it's secure and something you'll remember.
           </p>
         </div>
 
@@ -123,6 +127,15 @@ const ResetPassword = () => {
           onSubmit={handlePasswordReset}
           loading={loading}
         />
+
+        <div className="text-center">
+          <button
+            onClick={() => navigate('/login')}
+            className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            ← Back to Login
+          </button>
+        </div>
       </div>
     </div>
   );
