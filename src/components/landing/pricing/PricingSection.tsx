@@ -23,7 +23,7 @@ export function PricingSection() {
       badgeColor: "bg-brand-navy",
       buttonText: "Start Free Trial",
       buttonVariant: "outline" as const,
-      className: "bg-white border-2 border-gray-100",
+      className: "bg-white border border-brand-navy/20 shadow-sm",
       planId: "free"
     },
     {
@@ -38,7 +38,7 @@ export function PricingSection() {
       badgeText: "Most Popular",
       badgeColor: "bg-brand-gold",
       buttonText: "Choose Monthly",
-      className: "bg-gradient-to-br from-brand-navy to-brand-slate border-0",
+      className: "bg-brand-navy shadow-lg border-0",
       textColor: "text-gray-200",
       planId: "monthly"
     },
@@ -53,10 +53,10 @@ export function PricingSection() {
         "Annual Savings"
       ],
       badgeText: "Best Value",
-      badgeColor: "bg-green-600",
+      badgeColor: "bg-green-500",
       buttonText: "Choose Annual",
       buttonVariant: "gradient" as const,
-      className: "bg-white border-2 border-brand-gold",
+      className: "bg-white border border-brand-gold/50 shadow-sm",
       savings: "Save $10 annually",
       planId: "annual"
     }

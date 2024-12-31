@@ -57,16 +57,16 @@ export function PricingCard({
       case "outline":
         return "w-full bg-white hover:bg-gray-50 text-brand-navy border-brand-navy hover:border-brand-navy/80";
       case "gradient":
-        return "w-full bg-gradient-to-r from-brand-gold to-brand-gold/90 hover:from-brand-gold/90 hover:to-brand-gold text-brand-navy font-semibold";
+        return "w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold";
       default:
         return "w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold";
     }
   };
 
   return (
-    <Card className={`relative transform hover:scale-105 transition-transform duration-300 hover:shadow-xl ${className} ${disabled ? 'opacity-75' : ''}`}>
+    <Card className={`relative transform hover:scale-105 transition-transform duration-300 ${className} ${disabled ? 'opacity-75' : ''}`}>
       {badgeText && (
-        <div className={`absolute -top-4 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-4 py-1 rounded-full text-sm`}>
+        <div className={`absolute -top-2.5 left-1/2 transform -translate-x-1/2 ${badgeColor} text-white px-3 py-1 rounded-full text-xs font-medium`}>
           {badgeText}
         </div>
       )}
@@ -76,7 +76,7 @@ export function PricingCard({
           {price}
           <span className="text-lg font-normal text-gray-500">/{interval}</span>
         </div>
-        {savings && <div className="text-sm text-green-600 font-medium">{savings}</div>}
+        {savings && <div className="text-sm text-green-500 font-medium">{savings}</div>}
       </CardHeader>
       <CardContent>
         <ul className="space-y-3 mb-6">
