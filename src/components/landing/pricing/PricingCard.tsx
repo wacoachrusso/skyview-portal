@@ -52,18 +52,18 @@ export function PricingCard({
   return (
     <Card 
       className={`
-        relative overflow-visible mt-8
+        relative overflow-visible
         backdrop-blur-sm bg-white/5 dark:bg-gray-900/40
         border border-purple-100/20 dark:border-purple-500/20
         shadow-xl ${className} ${disabled ? 'opacity-75' : ''}
         transform transition-all duration-300 
         hover:scale-105 hover:shadow-2xl 
         hover:border-purple-500/30 dark:hover:border-purple-400/30
-        group
+        group mt-12
       `}
     >
       {badgeText && (
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10
+        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20
           bg-gradient-to-r from-purple-600 to-violet-600
           text-white px-4 py-1 rounded-full text-sm font-medium 
           flex items-center gap-1 shadow-lg whitespace-nowrap"

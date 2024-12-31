@@ -36,7 +36,8 @@ export function PricingSection() {
       ],
       badgeText: "Most Popular",
       buttonText: "Choose Monthly",
-      className: "bg-gradient-to-br from-purple-100/30 to-violet-100/30 dark:from-purple-900/30 dark:to-violet-900/30",
+      buttonVariant: "gradient" as const,
+      className: "bg-gradient-to-br from-purple-100/30 to-violet-100/30 dark:from-purple-900/30 dark:to-violet-900/30 relative z-10",
       planId: "monthly"
     },
     {
@@ -71,7 +72,7 @@ export function PricingSection() {
           Choose the plan that best fits your needs. All plans include access to our core features.
         </p>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
           {pricingPlans.map((plan) => (
             <PricingCard
               key={plan.planId}
