@@ -2,12 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface PasswordResetHandlerProps {
-  accessToken: string | null;
-  refreshToken: string | null;
-}
-
-export const PasswordResetHandler = ({ accessToken, refreshToken }: PasswordResetHandlerProps) => {
+export const usePasswordResetHandler = (accessToken: string | null, refreshToken: string | null) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
