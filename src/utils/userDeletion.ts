@@ -17,6 +17,39 @@ export const deleteUserData = async (userId: string) => {
   console.log("Deleting all user data:", userId);
   
   try {
+    // Delete all referrals
+    const { error: referralsError } = await supabase
+      .from("referrals")
+      .delete()
+      .eq("referrer_id", userId);
+
+    if (referralsError) {
+      console.error("Error deleting user referrals:", referralsError);
+      throw referralsError;
+    }
+
+    // Delete cookie consents
+    const { error: cookieConsentsError } = await supabase
+      .from("cookie_consents")
+      .delete()
+      .eq("user_id", userId);
+
+    if (cookieConsentsError) {
+      console.error("Error deleting cookie consents:", cookieConsentsError);
+      throw cookieConsentsError;
+    }
+
+    // Delete disclaimer consents
+    const { error: disclaimerConsentsError } = await supabase
+      .from("disclaimer_consents")
+      .delete()
+      .eq("user_id", userId);
+
+    if (disclaimerConsentsError) {
+      console.error("Error deleting disclaimer consents:", disclaimerConsentsError);
+      throw disclaimerConsentsError;
+    }
+
     // Delete conversations and their messages (messages will be cascade deleted)
     const { error: conversationsError } = await supabase
       .from("conversations")
