@@ -1,6 +1,6 @@
+import { PricingCard } from "./PricingCard";
 import { useEffect } from "react";
 import { usePlanSelection } from "./usePlanSelection";
-import { PricingCard } from "./PricingCard";
 
 export function PricingSection() {
   const { handlePlanSelection, isLoading } = usePlanSelection();
@@ -21,8 +21,6 @@ export function PricingSection() {
       ],
       badgeText: "Start Free",
       buttonText: "Start Free Trial",
-      buttonVariant: "outline" as const,
-      className: "bg-gradient-to-br from-brand-navy/30 to-brand-slate/30",
       planId: "free"
     },
     {
@@ -36,8 +34,7 @@ export function PricingSection() {
       ],
       badgeText: "Most Popular",
       buttonText: "Choose Monthly",
-      buttonVariant: "gradient" as const,
-      className: "bg-gradient-to-br from-brand-navy/40 to-brand-slate/40 relative z-10",
+      isPopular: true,
       planId: "monthly"
     },
     {
@@ -52,26 +49,24 @@ export function PricingSection() {
       ],
       badgeText: "Best Value",
       buttonText: "Choose Annual",
-      buttonVariant: "gradient" as const,
-      className: "bg-gradient-to-br from-brand-navy/30 to-brand-slate/30",
       savings: "Save $10 annually",
       planId: "annual"
     }
   ];
 
   return (
-    <div id="pricing-section" className="py-20 px-4 relative overflow-hidden bg-brand-navy">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent -z-10" />
+    <div id="pricing-section" className="py-20 px-4 relative overflow-hidden bg-[#1A1F2C]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent -z-10" />
       
       <div className="container mx-auto">
-        <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-brand-gold to-brand-gold/80 bg-clip-text text-transparent mb-4">
+        <h2 className="text-4xl font-bold text-center text-emerald-400 mb-4">
           Simple, Transparent Pricing
         </h2>
-        <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto">
+        <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
           Choose the plan that best fits your needs. All plans include access to our core features.
         </p>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {pricingPlans.map((plan) => (
             <PricingCard
               key={plan.planId}
