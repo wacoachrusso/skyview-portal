@@ -46,8 +46,8 @@ export const QuickActions = () => {
             <CardContent className="p-6 flex items-center space-x-4">
               <FileText className="h-6 w-6 text-white/90" />
               <div>
-                <h3 className="font-medium text-lg text-white/90">Documents</h3>
-                <p className="text-white/70 text-sm">View resources</p>
+                <h3 className="font-medium text-lg text-white/90">Contract</h3>
+                <p className="text-white/70 text-sm">View contract</p>
               </div>
             </CardContent>
           </Card>
