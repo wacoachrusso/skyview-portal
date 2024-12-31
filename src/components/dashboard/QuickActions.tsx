@@ -28,10 +28,10 @@ export const QuickActions = () => {
       return;
     }
 
-    // Sanitize the filename by removing spaces and converting to lowercase
-    const sanitizedAirline = userProfile.airline.toLowerCase().replace(/\s+/g, '');
-    const sanitizedJobType = userProfile.user_type.toLowerCase().replace(/\s+/g, '');
-    const fileName = `${sanitizedAirline}_${sanitizedJobType}.pdf`;
+    // Format the filename to match the exact convention: united_airlines_flight_attendant.pdf
+    const formattedAirline = userProfile.airline.toLowerCase().replace(/\s+/g, '_');
+    const formattedJobType = userProfile.user_type.toLowerCase().replace(/\s+/g, '_');
+    const fileName = `${formattedAirline}_${formattedJobType}.pdf`;
     
     console.log("Attempting to fetch contract:", fileName);
 
