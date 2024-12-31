@@ -72,11 +72,13 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
           className="min-h-[40px] sm:min-h-[50px] text-sm sm:text-base resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
           disabled={isLoading}
         />
-        <MicButton 
-          isListening={isListening}
-          isLoading={isLoading}
-          onToggle={toggleListening}
-        />
+        {!isMobile && (
+          <MicButton 
+            isListening={isListening}
+            isLoading={isLoading}
+            onToggle={toggleListening}
+          />
+        )}
         <SendButton 
           isLoading={isLoading}
           hasMessage={message.trim().length > 0}
