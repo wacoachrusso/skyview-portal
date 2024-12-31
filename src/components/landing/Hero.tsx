@@ -18,7 +18,7 @@ export function Hero() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="w-full lg:w-1/2 text-center lg:text-left">
             <div className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-sm mb-4 animate-fade-up">
-              Your Professional Contract Assistant
+              Tailored for flight attendants and pilots across all airlines
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
               End Contract Confusion— <br className="hidden md:block" />
