@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_WEBHOOK_SECRET = Deno.env.get("RESEND_WEBHOOK_SECRET");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FORWARD_TO_EMAIL = Deno.env.get("FORWARD_TO_EMAIL");
+const FORWARD_TO_EMAIL = "skyguide32@gmail.com"; // Hardcoded for now since env var isn't working
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (payload.type === "email.delivered") {
       console.log("Processing email.delivered event");
-      console.log("Attempting to forward to:", FORWARD_TO_EMAIL);
+      console.log("Forwarding to:", FORWARD_TO_EMAIL);
       
       // Forward the email using Resend
       const forwardResponse = await fetch("https://api.resend.com/emails", {
@@ -74,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
         },
         body: JSON.stringify({
           from: "Forwarded <notifications@skyguide.site>",
-          to: [FORWARD_TO_EMAIL!],
+          to: [FORWARD_TO_EMAIL],
           subject: `Forwarded: ${payload.data.subject}`,
           html: `
             <div style="margin-bottom: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
