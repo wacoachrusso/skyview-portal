@@ -29,6 +29,24 @@ serve(async (req) => {
     const { userId } = await req.json();
     console.log("Attempting to delete user from auth system:", userId);
 
+    // First, get the user's email for checking if they exist
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    if (userError) {
+      console.error("Error getting user data:", userError);
+      throw userError;
+    }
+
+    if (!userData.user) {
+      console.log("User not found in auth system:", userId);
+      return new Response(
+        JSON.stringify({ message: "User not found" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 404,
+        }
+      );
+    }
+
     // Delete user from auth.users (this will cascade to profiles due to FK)
     const { error } = await supabase.auth.admin.deleteUser(userId);
 
@@ -36,6 +54,8 @@ serve(async (req) => {
       console.error("Error deleting user from auth system:", error);
       throw error;
     }
+
+    console.log("Successfully deleted user from auth system:", userId);
 
     return new Response(
       JSON.stringify({ message: "User deleted successfully" }),
