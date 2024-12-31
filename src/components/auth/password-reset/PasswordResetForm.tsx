@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PasswordResetFormProps {
-  onSubmit: (newPassword: string, confirmPassword: string) => Promise<void>;
+  onSubmit: (newPassword: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -64,7 +64,7 @@ export const PasswordResetForm = ({ onSubmit, loading }: PasswordResetFormProps)
       return;
     }
 
-    await onSubmit(newPassword, confirmPassword);
+    await onSubmit(newPassword);
   };
 
   const passwordValidation = validatePassword(newPassword);
