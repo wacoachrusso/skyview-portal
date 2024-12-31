@@ -8,6 +8,7 @@ import {
   ReleaseNotesTable,
 } from "./tables.types";
 import { UnionRepresentativesTable } from "./union-representatives.types";
+import { DisclaimerConsentsTable } from "./disclaimer.types";
 
 export interface Database {
   public: {
@@ -19,6 +20,7 @@ export interface Database {
       release_note_changes: ReleaseNoteChangesTable;
       release_notes: ReleaseNotesTable;
       union_representatives: UnionRepresentativesTable;
+      disclaimer_consents: DisclaimerConsentsTable;
     };
     Views: {
       [_ in never]: never;

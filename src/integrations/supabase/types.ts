@@ -57,6 +57,27 @@ export type Database = {
         }
         Relationships: []
       }
+      disclaimer_consents: {
+        Row: {
+          created_at: string
+          id: string
+          status: Database["public"]["Enums"]["consent_status"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status: Database["public"]["Enums"]["consent_status"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["consent_status"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -398,6 +419,7 @@ export type Database = {
       }
     }
     Enums: {
+      consent_status: "accepted" | "rejected"
       cookie_preference:
         | "essential"
         | "analytics"
