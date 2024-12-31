@@ -28,10 +28,21 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Verify webhook signature if provided
+    // Log environment variables (excluding sensitive parts)
+    console.log("Environment check:", {
+      hasWebhookSecret: !!RESEND_WEBHOOK_SECRET,
+      hasApiKey: !!RESEND_API_KEY,
+      hasForwardEmail: !!FORWARD_TO_EMAIL,
+    });
+
+    // Verify webhook signature
     const webhookSecret = req.headers.get("resend-webhook-secret");
+    console.log("Received webhook secret:", webhookSecret ? "Present" : "Missing");
+    
     if (webhookSecret !== RESEND_WEBHOOK_SECRET) {
       console.error("Invalid webhook secret");
+      console.log("Expected:", RESEND_WEBHOOK_SECRET);
+      console.log("Received:", webhookSecret);
       return new Response(
         JSON.stringify({ error: "Invalid webhook secret" }),
         { 
@@ -42,11 +53,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const payload: ResendWebhookPayload = await req.json();
-    console.log("Received webhook payload:", payload);
+    console.log("Received webhook payload:", JSON.stringify(payload, null, 2));
 
     if (payload.type === "email.delivered") {
+      console.log("Processing email.delivered event");
+      
       // Forward the email using Resend
-      const res = await fetch("https://api.resend.com/emails", {
+      const forwardResponse = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,13 +82,18 @@ const handler = async (req: Request): Promise<Response> => {
         }),
       });
 
-      if (!res.ok) {
-        const error = await res.text();
-        console.error("Error forwarding email:", error);
-        throw new Error(`Failed to forward email: ${error}`);
+      const responseText = await forwardResponse.text();
+      console.log("Forward response status:", forwardResponse.status);
+      console.log("Forward response body:", responseText);
+
+      if (!forwardResponse.ok) {
+        console.error("Error forwarding email:", responseText);
+        throw new Error(`Failed to forward email: ${responseText}`);
       }
 
       console.log("Email forwarded successfully");
+    } else {
+      console.log("Ignoring non-delivery event:", payload.type);
     }
 
     return new Response(JSON.stringify({ success: true }), {
