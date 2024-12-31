@@ -4,9 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordResetForm } from "@/components/auth/password-reset/PasswordResetForm";
 import { usePasswordResetHandler } from "@/components/auth/handlers/PasswordResetHandler";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
+  const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [isValidResetAttempt, setIsValidResetAttempt] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +19,6 @@ const ResetPassword = () => {
   const accessToken = params.get('access_token');
   const refreshToken = params.get('refresh_token');
   
-  // Use the hook properly
   const { processPasswordReset } = usePasswordResetHandler(accessToken, refreshToken);
 
   useEffect(() => {
@@ -30,12 +31,19 @@ const ResetPassword = () => {
       } catch (error) {
         console.error('Error validating reset attempt:', error);
         setIsValidResetAttempt(false);
+        toast({
+          variant: "destructive",
+          title: "Invalid Reset Link",
+          description: "The password reset link is invalid or has expired. Please request a new one."
+        });
         navigate('/login');
+      } finally {
+        setIsValidatingToken(false);
       }
     };
 
     validateResetAttempt();
-  }, [processPasswordReset, navigate]);
+  }, [processPasswordReset, navigate, toast, accessToken, refreshToken]);
 
   const handlePasswordReset = async (newPassword: string, confirmPassword: string) => {
     if (newPassword !== confirmPassword) {
@@ -67,8 +75,8 @@ const ResetPassword = () => {
       console.log('User signed out after password reset');
 
       toast({
-        title: "Password updated",
-        description: "Your password has been successfully reset. Please log in with your new password."
+        title: "Password Reset Successful",
+        description: "Your password has been updated. Please log in with your new password."
       });
 
       // Redirect to login page
@@ -85,6 +93,17 @@ const ResetPassword = () => {
     }
   };
 
+  if (isValidatingToken) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <LoadingSpinner size="lg" />
+          <p className="text-muted-foreground">Validating reset link...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isValidResetAttempt) {
     return null;
   }
@@ -92,15 +111,30 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold">Reset Your Password</h2>
-          <p className="text-muted-foreground mt-2">Please enter your new password below</p>
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-brand-navy">
+            Reset Your Password
+          </h1>
+          <p className="text-muted-foreground">
+            Please enter your new password below
+          </p>
         </div>
 
-        <PasswordResetForm 
-          onSubmit={handlePasswordReset}
-          loading={loading}
-        />
+        <div className="bg-white/95 shadow-xl rounded-lg p-6">
+          <PasswordResetForm 
+            onSubmit={handlePasswordReset}
+            loading={loading}
+          />
+        </div>
+
+        <div className="text-center">
+          <button
+            onClick={() => navigate('/login')}
+            className="text-sm text-muted-foreground hover:text-brand-navy transition-colors"
+          >
+            Back to Login
+          </button>
+        </div>
       </div>
     </div>
   );

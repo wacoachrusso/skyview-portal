@@ -7,7 +7,7 @@ export const usePasswordResetHandler = (accessToken: string | null, refreshToken
   const { toast } = useToast();
 
   const processPasswordReset = async () => {
-    console.log('Processing password reset with tokens:', { accessToken, refreshToken });
+    console.log('Processing password reset with tokens:', { accessToken: !!accessToken, refreshToken: !!refreshToken });
     
     if (!accessToken || !refreshToken) {
       console.error('Missing tokens for password reset');

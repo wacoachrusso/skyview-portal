@@ -40,7 +40,10 @@ export const AuthCallback = () => {
           refresh_token
         );
         const processed = await processPasswordReset();
-        if (processed) return;
+        if (processed) {
+          navigate('/reset-password#access_token=' + access_token + '&refresh_token=' + refresh_token);
+          return;
+        }
       }
 
       if (type === 'email_change') {
