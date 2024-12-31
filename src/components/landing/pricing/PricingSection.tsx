@@ -1,6 +1,8 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const plans = [
   {
@@ -14,7 +16,9 @@ const plans = [
       "Mobile app access"
     ],
     buttonText: "Start Free Trial",
-    gradient: "bg-gradient-to-br from-slate-800 to-slate-900"
+    gradient: "bg-gradient-to-br from-slate-800 to-slate-900",
+    priceId: null,
+    mode: null
   },
   {
     name: "Monthly",
@@ -31,7 +35,9 @@ const plans = [
     ],
     buttonText: "Get Started",
     gradient: "bg-gradient-to-br from-brand-navy via-brand-navy to-brand-slate",
-    isPopular: true
+    isPopular: true,
+    priceId: "YOUR_MONTHLY_PRICE_ID", // You'll add this later
+    mode: "subscription"
   },
   {
     name: "Annual",
@@ -47,14 +53,70 @@ const plans = [
       "Premium features"
     ],
     buttonText: "Best Value",
-    gradient: "bg-gradient-to-br from-brand-gold/20 to-brand-gold/10"
+    gradient: "bg-gradient-to-br from-brand-gold/20 to-brand-gold/10",
+    priceId: "YOUR_ANNUAL_PRICE_ID", // You'll add this later
+    mode: "subscription"
   }
 ];
 
 export function PricingSection() {
+  const { toast } = useToast();
+
+  const handlePlanSelection = async (plan: any) => {
+    try {
+      if (!plan.priceId) {
+        // Handle free trial signup
+        window.location.href = '/signup';
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to subscribe to a plan",
+        });
+        window.location.href = '/login';
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            priceId: plan.priceId,
+            mode: plan.mode,
+          }),
+        }
+      );
+
+      const { url, error } = await response.json();
+      
+      if (error) {
+        throw new Error(error);
+      }
+
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process payment. Please try again.",
+      });
+    }
+  };
+
   return (
     <section id="pricing-section" className="py-20 relative overflow-hidden">
-      {/* Background effects */}
       <div className="absolute inset-0 bg-hero-gradient opacity-50" />
       <div className="absolute inset-0 bg-glow-gradient opacity-30" />
       
@@ -103,6 +165,7 @@ export function PricingSection() {
               </ul>
 
               <Button 
+                onClick={() => handlePlanSelection(plan)}
                 className={`w-full ${
                   plan.isPopular 
                     ? "bg-brand-gold hover:bg-brand-gold/90 text-brand-navy"
