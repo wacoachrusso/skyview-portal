@@ -28,7 +28,6 @@ export function ConversationList({
   onDeleteConversation,
 }: ConversationListProps) {
   const formatTitle = (title: string) => {
-    // Remove the source tag and any other unwanted patterns
     return title
       .replace(/【.*?】/g, '')
       .replace(/\[\d+:\d+†.*?\]/g, '')
@@ -36,14 +35,14 @@ export function ConversationList({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto bg-[#1E1E2E]/50">
       {conversations.map((conversation) => (
         <div
           key={conversation.id}
-          className={`flex items-center gap-2 mb-1 rounded-lg ${
+          className={`flex items-center gap-2 mb-1 mx-2 rounded-lg transition-all duration-200 ${
             currentConversationId === conversation.id
-              ? 'bg-white/10'
-              : 'hover:bg-white/5'
+              ? 'bg-white/15 shadow-lg'
+              : 'hover:bg-white/10'
           }`}
         >
           <Button

@@ -150,7 +150,7 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
   );
 
   return (
-    <div className="w-64 sm:w-80 bg-gradient-to-b from-[#1A1F2C] to-[#2A2F3C] border-r border-white/10 flex flex-col">
+    <div className="w-64 sm:w-80 bg-[#1A1F2C] border-r border-white/10 flex flex-col shadow-xl">
       <SidebarHeader onDeleteAll={deleteAllConversations} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
       <ConversationList
