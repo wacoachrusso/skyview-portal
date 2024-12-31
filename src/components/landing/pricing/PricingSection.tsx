@@ -48,19 +48,19 @@ export function PricingSection() {
   ];
 
   return (
-    <div id="pricing-section" className="py-24 px-4 bg-gradient-to-b from-brand-navy to-brand-slate">
-      <div className="container mx-auto max-w-6xl">
+    <div id="pricing-section" className="py-24 px-4 bg-gradient-to-b from-brand-navy to-brand-slate relative overflow-hidden">
+      <div className="absolute inset-0 bg-glow-gradient opacity-30" />
+      <div className="container mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          <p className="text-gray-300 max-w-2xl mx-auto text-lg">
             Choose the plan that best fits your needs. All plans include access to our core features.
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8 relative">
-          <div className="absolute inset-0 bg-glow-gradient opacity-30 pointer-events-none" />
+        <div className="grid md:grid-cols-3 gap-8">
           {pricingPlans.map((plan) => (
             <PricingCard
               key={plan.title}
