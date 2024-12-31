@@ -11,6 +11,8 @@ export const useContractHandler = () => {
   const handleContractClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     
+    console.log("Contract click handler initiated", { isMobile, userProfile });
+    
     if (!userProfile?.airline || !userProfile?.user_type) {
       toast({
         title: "Profile Incomplete",
@@ -29,7 +31,7 @@ export const useContractHandler = () => {
     try {
       const { data, error } = await supabase.storage
         .from('contracts')
-        .createSignedUrl(fileName, 60);
+        .createSignedUrl(fileName, 300); // Increased to 5 minutes
 
       if (error) {
         console.error('Error fetching contract:', error);
@@ -51,9 +53,15 @@ export const useContractHandler = () => {
         return;
       }
 
-      // For mobile/tablet, open in same tab
+      console.log("Contract URL generated:", { url: data.signedUrl, isMobile });
+
       if (isMobile) {
-        window.location.href = data.signedUrl;
+        // For iOS/mobile devices, try to force download behavior
+        const link = document.createElement('a');
+        link.href = data.signedUrl;
+        link.target = '_self'; // Force same window
+        link.rel = 'noopener noreferrer';
+        link.click();
       } else {
         // For desktop, open in new tab
         window.open(data.signedUrl, '_blank');
