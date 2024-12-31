@@ -1,10 +1,12 @@
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const useContractHandler = () => {
   const { toast } = useToast();
   const { userProfile } = useUserProfile();
+  const isMobile = useIsMobile();
 
   const handleContractClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -49,7 +51,13 @@ export const useContractHandler = () => {
         return;
       }
 
-      window.open(data.signedUrl, '_blank');
+      // For mobile/tablet, open in same tab
+      if (isMobile) {
+        window.location.href = data.signedUrl;
+      } else {
+        // For desktop, open in new tab
+        window.open(data.signedUrl, '_blank');
+      }
     } catch (error) {
       console.error('Error handling contract click:', error);
       toast({
