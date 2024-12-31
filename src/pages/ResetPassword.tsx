@@ -29,9 +29,13 @@ const ResetPassword = () => {
       }
 
       try {
+        // Get the hash from the token
+        const tokenHash = token.split('#')[1] || token;
+        console.log('Verifying token hash:', tokenHash);
+
         // Verify the recovery token
         const { error } = await supabase.auth.verifyOtp({
-          token,
+          token_hash: tokenHash,
           type: 'recovery'
         });
 
