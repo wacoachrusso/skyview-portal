@@ -47,7 +47,8 @@ export const AuthCallback = () => {
       }
 
       if (type === 'email_change') {
-        await EmailConfirmationHandler({ searchParams });
+        const { processEmailConfirmation } = EmailConfirmationHandler({ searchParams });
+        await processEmailConfirmation();
         navigate('/settings');
         return;
       }

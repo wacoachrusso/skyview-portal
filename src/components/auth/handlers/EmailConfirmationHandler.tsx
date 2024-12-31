@@ -2,18 +2,21 @@ import { useNavigate } from 'react-router-dom';
 import { useEmailConfirmation } from "@/hooks/useEmailConfirmation";
 import { redirectToProduction } from "@/utils/redirectUtils";
 import { useToast } from "@/hooks/use-toast";
+import { URLSearchParams } from 'url';
 
 interface EmailConfirmationHandlerProps {
-  email: string | null;
-  tokenHash: string | null;
+  searchParams: URLSearchParams;
 }
 
-export const EmailConfirmationHandler = ({ email, tokenHash }: EmailConfirmationHandlerProps) => {
+export const EmailConfirmationHandler = ({ searchParams }: EmailConfirmationHandlerProps) => {
   const navigate = useNavigate();
   const { handleEmailConfirmation } = useEmailConfirmation();
   const { toast } = useToast();
 
   const processEmailConfirmation = async () => {
+    const email = searchParams.get('email');
+    const tokenHash = searchParams.get('token_hash');
+    
     console.log('Processing email confirmation:', { email, tokenHash });
     
     if (!email || !tokenHash) {
