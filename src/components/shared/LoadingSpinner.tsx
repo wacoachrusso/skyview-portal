@@ -1,7 +1,17 @@
-export const LoadingSpinner = () => {
+interface LoadingSpinnerProps {
+  size?: "sm" | "md" | "lg";
+}
+
+export const LoadingSpinner = ({ size = "md" }: LoadingSpinnerProps) => {
+  const sizeClasses = {
+    sm: "h-4 w-4",
+    md: "h-6 w-6",
+    lg: "h-8 w-8"
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div className="flex justify-center items-center">
+      <div className={`animate-spin rounded-full border-2 border-current border-t-transparent text-foreground/60 ${sizeClasses[size]}`} />
     </div>
   );
 };
