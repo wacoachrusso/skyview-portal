@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { useToast } from "@/hooks/use-toast";
 import { EmailConfirmationHandler } from './handlers/EmailConfirmationHandler';
-import { PasswordResetHandler } from './handlers/PasswordResetHandler';
+import { usePasswordResetHandler } from './handlers/PasswordResetHandler';
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -32,10 +32,10 @@ export const AuthCallback = () => {
         if (type === 'recovery') {
           const access_token = searchParams.get('access_token');
           const refresh_token = searchParams.get('refresh_token');
-          const { processPasswordReset } = PasswordResetHandler({ 
-            accessToken: access_token, 
-            refreshToken: refresh_token 
-          });
+          const { processPasswordReset } = usePasswordResetHandler(
+            access_token, 
+            refresh_token
+          );
           const processed = await processPasswordReset();
           if (processed) return;
         }
