@@ -34,8 +34,11 @@ const ResetPassword = () => {
         const tokenHash = token.split('#')[1] || token;
         console.log('Verifying token hash:', tokenHash);
 
+        // First ensure we're starting fresh
+        await supabase.auth.signOut();
+
         // Verify the recovery token
-        const { error } = await supabase.auth.verifyOtp({
+        const { data, error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'recovery'
         });
@@ -51,6 +54,7 @@ const ResetPassword = () => {
           return;
         }
 
+        console.log('Token verified successfully:', data);
         setValidatingToken(false);
       } catch (error) {
         console.error('Error in validateToken:', error);
@@ -84,7 +88,11 @@ const ResetPassword = () => {
 
       // Sign out to clear any existing session
       await supabase.auth.signOut();
-      navigate('/login');
+      
+      // Show success message and redirect after a short delay
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (error) {
       console.error('Error resetting password:', error);
       toast({
