@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_WEBHOOK_SECRET = Deno.env.get("RESEND_WEBHOOK_SECRET");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FORWARD_TO_EMAIL = "skyguide32@gmail.com"; // Hardcoded for now since env var isn't working
+const FORWARD_TO_EMAIL = "skyguide32@gmail.com"; // Updated to your forwarding email
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
