@@ -1,8 +1,16 @@
 import { PricingCard } from "./PricingCard";
 import { usePlanSelection } from "./usePlanSelection";
+import { useEffect, useState } from "react";
 
 export function PricingSection() {
   const { handlePlanSelection, isLoading } = usePlanSelection();
+  const [key, setKey] = useState(Date.now());
+
+  // Force re-render on mount
+  useEffect(() => {
+    setKey(Date.now());
+    console.log("PricingSection re-rendered with new key:", key);
+  }, []);
 
   const pricingPlans = [
     {
@@ -48,7 +56,7 @@ export function PricingSection() {
   ];
 
   return (
-    <div id="pricing-section" className="py-24 px-4 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 relative overflow-hidden">
+    <div key={key} id="pricing-section" className="py-24 px-4 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-500/5 via-transparent to-transparent opacity-50" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-500/5 via-transparent to-transparent opacity-30" />
       
@@ -65,7 +73,7 @@ export function PricingSection() {
         <div className="grid md:grid-cols-3 gap-8 px-4">
           {pricingPlans.map((plan) => (
             <PricingCard
-              key={plan.title}
+              key={`${plan.title}-${key}`}
               {...plan}
               onSelect={() => handlePlanSelection(plan.title.toLowerCase().split(' ')[0])}
               isLoading={isLoading}
