@@ -2,15 +2,60 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, FileText, Settings, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { supabase } from "@/integrations/supabase/client";
 
 export const QuickActions = () => {
   const { toast } = useToast();
+  const { userProfile } = useUserProfile();
 
   const handleComingSoon = (feature: string) => {
     toast({
       title: "Coming Soon",
       description: `${feature} will be available shortly`
     });
+  };
+
+  const handleContractClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!userProfile?.airline || !userProfile?.user_type) {
+      toast({
+        title: "Profile Incomplete",
+        description: "Please complete your profile with airline and job title information.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const fileName = `${userProfile.airline.toLowerCase()}_${userProfile.user_type.toLowerCase()}.pdf`;
+    console.log("Attempting to fetch contract:", fileName);
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('contracts')
+        .createSignedUrl(fileName, 60); // URL valid for 60 seconds
+
+      if (error) {
+        console.error('Error fetching contract:', error);
+        toast({
+          title: "Contract Unavailable",
+          description: "The contract document is not available. Please contact support.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Open the PDF in a new tab
+      window.open(data.signedUrl, '_blank');
+    } catch (error) {
+      console.error('Error handling contract click:', error);
+      toast({
+        title: "Error",
+        description: "Unable to access the contract. Please try again later.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -41,7 +86,7 @@ export const QuickActions = () => {
           </Card>
         </Link>
 
-        <Link to="/documents" className="block">
+        <a href="#" onClick={handleContractClick} className="block">
           <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 border-0">
             <CardContent className="p-6 flex items-center space-x-4">
               <FileText className="h-6 w-6 text-white/90" />
@@ -51,7 +96,7 @@ export const QuickActions = () => {
               </div>
             </CardContent>
           </Card>
-        </Link>
+        </a>
 
         <Link to="/settings" className="block">
           <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 border-0">
