@@ -22,7 +22,7 @@ export function Hero() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" aria-hidden="true" />
       
       <div className="container mx-auto px-4 relative">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24">
           <div className="w-full lg:w-1/2 text-center lg:text-left">
             <div className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-base mb-4 animate-fade-up">
               Tailored for flight attendants and pilots across all airlines
@@ -63,8 +63,8 @@ export function Hero() {
               </Button>
             </div>
           </div>
-          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-            <div className="relative w-full max-w-md">
+          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8" style={{ animationDelay: "0.4s" }}>
+            <div className="relative w-full max-w-sm">
               <div className="absolute inset-0 bg-glow-gradient opacity-75" aria-hidden="true" />
               <div className="relative animate-float">
                 <img 

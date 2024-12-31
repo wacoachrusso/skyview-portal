@@ -41,34 +41,34 @@ export function PricingCard({
     
     switch (buttonVariant) {
       case "outline":
-        return "w-full bg-white/80 hover:bg-white/90 text-purple-600 border-purple-500 hover:border-purple-600 dark:bg-white/10 dark:hover:bg-white/20";
+        return "w-full bg-white/10 hover:bg-white/20 text-purple-400 border-purple-400/50 hover:border-purple-400";
       case "gradient":
-        return "w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-semibold";
+        return "w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold";
       default:
-        return "w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold";
+        return "w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold";
     }
   };
 
   return (
     <Card 
       className={`
-        relative overflow-hidden
-        backdrop-blur-sm bg-white/10 dark:bg-gray-900/40
+        relative overflow-visible mt-8
+        backdrop-blur-sm bg-white/5 dark:bg-gray-900/40
         border border-purple-100/20 dark:border-purple-500/20
         shadow-xl ${className} ${disabled ? 'opacity-75' : ''}
         transform transition-all duration-300 
         hover:scale-105 hover:shadow-2xl 
         hover:border-purple-500/30 dark:hover:border-purple-400/30
-        group mt-6
+        group
       `}
     >
       {badgeText && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 
-          bg-gradient-to-r from-purple-500 to-violet-500
-          text-white px-3 py-1 rounded-full text-xs font-medium 
-          flex items-center gap-1 shadow-lg z-10"
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10
+          bg-gradient-to-r from-purple-600 to-violet-600
+          text-white px-4 py-1 rounded-full text-sm font-medium 
+          flex items-center gap-1 shadow-lg whitespace-nowrap"
         >
-          {title === "Monthly Plan" && <Star className="w-3 h-3" />}
+          {title === "Monthly Plan" && <Star className="w-4 h-4" />}
           {badgeText}
         </div>
       )}
@@ -78,8 +78,8 @@ export function PricingCard({
         transition-opacity duration-300" 
       />
       
-      <CardHeader className="space-y-2 pt-8 relative z-10">
-        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-violet-500 
+      <CardHeader className="space-y-2 pt-10 relative z-[1]">
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-400 
           bg-clip-text text-transparent"
         >
           {title}
@@ -98,7 +98,7 @@ export function PricingCard({
         )}
       </CardHeader>
       
-      <CardContent className="relative z-10">
+      <CardContent className="relative z-[1]">
         <ul className="space-y-4 mb-8">
           {features.map((feature, index) => (
             <PricingFeature 
@@ -111,7 +111,7 @@ export function PricingCard({
         <Button 
           className={`${getButtonClassName()} 
             shadow-lg transform transition-all duration-300 
-            hover:-translate-y-1 relative z-10`}
+            hover:-translate-y-1 relative z-[1]`}
           onClick={onSelect}
           disabled={isLoading || disabled}
         >
