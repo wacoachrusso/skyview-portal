@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, User, MessageSquare } from "lucide-react";
+import { LogOut, User, MessageSquare } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import {
   DropdownMenu,
@@ -56,7 +56,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
               >
                 <Link to="/chat">
                   <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Chat Now</span>
+                  <span>Ask SkyGuide</span>
                 </Link>
               </Button>
             </div>

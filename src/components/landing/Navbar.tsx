@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Logo } from "./navbar/Logo";
 import { AuthButtons } from "./navbar/AuthButtons";
-import { Menu } from "lucide-react";
+import { Menu, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +85,23 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <Logo handleLogoClick={handleLogoClick} />
+          
+          {/* Center Ask SkyGuide Button - Desktop Only */}
+          {isLoggedIn && (
+            <div className="hidden md:flex justify-center flex-1">
+              <Button
+                asChild
+                variant="secondary"
+                size="sm"
+                className="text-white hover:bg-brand-gold hover:text-black"
+              >
+                <Link to="/chat">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Ask SkyGuide
+                </Link>
+              </Button>
+            </div>
+          )}
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
