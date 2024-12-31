@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, MessageSquare } from "lucide-react";
+import { LogOut, User, MessageSquare, Menu } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import {
   DropdownMenu,
