@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordResetForm } from "@/components/auth/password-reset/PasswordResetForm";
@@ -7,61 +7,68 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
+  const [validatingToken, setValidatingToken] = useState(true);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
 
-  // Get tokens from URL hash
-  const hashParams = new URLSearchParams(location.hash.substring(1));
-  const accessToken = hashParams.get('access_token');
-  const refreshToken = hashParams.get('refresh_token');
+  // Get token from URL query parameter
+  const token = searchParams.get('token');
 
   useEffect(() => {
-    const setupSession = async () => {
-      if (!accessToken || !refreshToken) return;
+    const validateToken = async () => {
+      if (!token) {
+        console.error('No reset token provided');
+        toast({
+          variant: "destructive",
+          title: "Invalid Reset Link",
+          description: "The password reset link is invalid or has expired."
+        });
+        navigate('/login');
+        return;
+      }
 
       try {
-        // Clear any existing session
-        await supabase.auth.signOut();
-        
-        // Set the recovery session
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
+        // Verify the recovery token
+        const { error } = await supabase.auth.verifyOtp({
+          token,
+          type: 'recovery'
         });
 
         if (error) {
-          console.error('Error setting session:', error);
+          console.error('Error verifying reset token:', error);
           toast({
             variant: "destructive",
             title: "Invalid Reset Link",
             description: "The password reset link is invalid or has expired."
           });
           navigate('/login');
+          return;
         }
+
+        setValidatingToken(false);
       } catch (error) {
-        console.error('Error in setupSession:', error);
+        console.error('Error in validateToken:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An error occurred while validating your reset link."
+        });
         navigate('/login');
       }
     };
 
-    setupSession();
-  }, [accessToken, refreshToken, navigate, toast]);
+    validateToken();
+  }, [token, navigate, toast]);
 
   const handlePasswordReset = async (newPassword: string) => {
-    if (!accessToken) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid reset link. Please request a new one."
-      });
-      return;
-    }
+    if (!token) return;
 
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
 
       if (error) throw error;
 
@@ -70,7 +77,7 @@ const ResetPassword = () => {
         description: "Your password has been reset successfully."
       });
 
-      // Sign out and redirect to login
+      // Sign out to clear any existing session
       await supabase.auth.signOut();
       navigate('/login');
     } catch (error) {
@@ -85,21 +92,12 @@ const ResetPassword = () => {
     }
   };
 
-  if (!accessToken || !refreshToken) {
+  if (validatingToken) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-destructive">Invalid Reset Link</h1>
-          <p className="text-muted-foreground">
-            This password reset link is invalid or has expired.
-            Please request a new one from the login page.
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="text-sm text-primary hover:underline"
-          >
-            Back to Login
-          </button>
+          <LoadingSpinner size="lg" />
+          <p className="text-muted-foreground">Validating reset link...</p>
         </div>
       </div>
     );
@@ -117,16 +115,10 @@ const ResetPassword = () => {
           </p>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : (
-          <PasswordResetForm 
-            onSubmit={handlePasswordReset}
-            loading={loading}
-          />
-        )}
+        <PasswordResetForm 
+          onSubmit={handlePasswordReset}
+          loading={loading}
+        />
       </div>
     </div>
   );

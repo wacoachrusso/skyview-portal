@@ -32,10 +32,10 @@ export const AuthCallback = () => {
       }
 
       if (type === 'recovery') {
-        const access_token = searchParams.get('access_token');
-        const refresh_token = searchParams.get('refresh_token');
-        if (access_token && refresh_token) {
-          navigate(`/reset-password#access_token=${access_token}&refresh_token=${refresh_token}`);
+        // For password reset, we'll pass the tokens directly in the URL
+        const token = searchParams.get('token');
+        if (token) {
+          navigate(`/reset-password?token=${token}`);
           return;
         }
       }
