@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Star } from "lucide-react";
 
 interface PricingCardProps {
   title: string;
@@ -25,7 +25,7 @@ export function PricingCard({
   variant
 }: PricingCardProps) {
   const getCardClasses = () => {
-    const baseClasses = "relative rounded-xl p-8 transition-all duration-300 min-h-[520px] flex flex-col";
+    const baseClasses = "relative rounded-xl p-8 pt-12 mt-6 transition-all duration-300 min-h-[520px] flex flex-col";
     
     switch (variant) {
       case "featured":
@@ -40,13 +40,13 @@ export function PricingCard({
   return (
     <div className={getCardClasses()}>
       {variant === "featured" && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-brand-gold text-brand-navy text-sm font-semibold rounded-full shadow-lg">
-          Most Popular
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-brand-gold text-brand-navy text-sm font-semibold rounded-full shadow-lg flex items-center gap-1">
+          <Star className="w-4 h-4" /> Most Popular
         </div>
       )}
       
       <div className="space-y-6 flex-1">
-        <div className="pt-4">
+        <div>
           <h3 className="text-2xl font-bold text-white mb-3">{title}</h3>
           <div className="flex items-baseline gap-1 mb-4">
             <span className="text-3xl font-bold text-white">$</span>
