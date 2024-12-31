@@ -1,95 +1,87 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Check, Star } from "lucide-react";
-import { PricingFeature } from "./PricingFeature";
+import { Check } from "lucide-react";
 
 interface PricingCardProps {
   title: string;
   price: string;
   interval: string;
+  description: string;
   features: string[];
-  badgeText?: string;
   buttonText: string;
-  isPopular?: boolean;
-  savings?: string;
-  planId: string;
   onSelect: () => void;
   isLoading?: boolean;
+  variant: "teal" | "yellow" | "dark";
 }
 
 export function PricingCard({
   title,
   price,
   interval,
+  description,
   features,
-  badgeText,
   buttonText,
-  isPopular,
-  savings,
   onSelect,
-  isLoading
+  isLoading,
+  variant
 }: PricingCardProps) {
+  const getBackgroundColor = () => {
+    switch (variant) {
+      case "teal":
+        return "bg-[#40CDB2]";
+      case "yellow":
+        return "bg-[#FFD60A]";
+      case "dark":
+        return "bg-[#2A3441]";
+    }
+  };
+
+  const getTextColor = () => {
+    return variant === "dark" ? "text-white" : "text-gray-800";
+  };
+
   return (
-    <Card 
-      className={`
-        relative overflow-visible
-        bg-[#2A3441]/50 backdrop-blur-sm
-        border border-emerald-500/20
-        shadow-xl transform transition-all duration-300 
-        hover:scale-105 hover:shadow-2xl hover:border-emerald-400/30
-        group mt-12
-        ${isPopular ? 'bg-emerald-900/20 border-emerald-400/30' : ''}
-      `}
-    >
-      {badgeText && (
-        <div className={`
-          absolute -top-3 left-1/2 transform -translate-x-1/2 z-20
-          ${isPopular ? 'bg-emerald-400' : 'bg-emerald-500'}
-          text-emerald-950 px-4 py-1 rounded-full text-sm font-medium 
-          flex items-center gap-1 shadow-lg whitespace-nowrap
-        `}>
-          {isPopular && <Star className="w-4 h-4" />}
-          {badgeText}
+    <div className={`rounded-lg p-8 h-full flex flex-col ${getBackgroundColor()} ${getTextColor()}`}>
+      <div className="mb-8">
+        <div className="text-sm uppercase mb-2">
+          {title}
         </div>
-      )}
-      
-      <div className="p-6 space-y-6">
-        <div className="space-y-2">
-          <h3 className="text-2xl font-bold text-emerald-400">{title}</h3>
-          <div className="flex items-baseline">
-            <span className="text-4xl font-bold text-white">{price}</span>
-            <span className="text-lg font-normal text-gray-400">/{interval}</span>
-          </div>
-          {savings && (
-            <div className="text-sm text-emerald-400 font-medium 
-              bg-emerald-500/10 px-2 py-1 rounded-full inline-block"
-            >
-              {savings}
-            </div>
-          )}
+        <div className="flex items-baseline gap-1 mb-4">
+          <span className="text-4xl font-bold">$</span>
+          <span className="text-5xl font-bold">{price}</span>
+          <span className="text-lg">/{interval}</span>
         </div>
-        
-        <ul className="space-y-4">
+        <p className="text-sm opacity-90 mb-6">
+          {description}
+        </p>
+      </div>
+
+      <div className="flex-grow">
+        <ul className="space-y-4 mb-8">
           {features.map((feature, index) => (
-            <PricingFeature key={index} text={feature} />
+            <li key={index} className="flex items-start gap-2 text-sm">
+              <Check className="w-5 h-5 mt-0.5 shrink-0" />
+              <span>{feature}</span>
+            </li>
           ))}
         </ul>
+      </div>
 
+      <div className="space-y-4">
         <Button 
-          className={`
-            w-full shadow-lg transform transition-all duration-300 
-            hover:-translate-y-1 relative
-            ${isPopular 
-              ? 'bg-emerald-400 hover:bg-emerald-500 text-emerald-950' 
-              : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-white border border-emerald-500/50'
-            }
-          `}
           onClick={onSelect}
           disabled={isLoading}
+          className={`w-full py-6 text-base font-medium ${
+            variant === "dark" 
+              ? "bg-white/10 hover:bg-white/20 text-white" 
+              : "bg-[#2A3441] hover:bg-[#1A1F2C] text-white"
+          }`}
         >
-          {isLoading ? "Processing..." : buttonText}
+          {buttonText}
         </Button>
+        <button className="text-sm underline opacity-80 hover:opacity-100 w-full text-center">
+          Learn more
+        </button>
       </div>
-    </Card>
+    </div>
   );
 }

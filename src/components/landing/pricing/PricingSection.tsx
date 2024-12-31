@@ -1,77 +1,70 @@
 import { PricingCard } from "./PricingCard";
-import { useEffect } from "react";
 import { usePlanSelection } from "./usePlanSelection";
 
 export function PricingSection() {
   const { handlePlanSelection, isLoading } = usePlanSelection();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   const pricingPlans = [
     {
       title: "Free Trial",
-      price: "$0",
+      price: "0",
       interval: "forever",
+      description: "Start exploring our platform with basic features and limited queries.",
       features: [
         "2 Contract Queries",
         "Basic Features",
         "No Credit Card Required"
       ],
-      badgeText: "Start Free",
       buttonText: "Start Free Trial",
-      planId: "free"
+      variant: "teal" as const
     },
     {
       title: "Monthly Plan",
-      price: "$4.99",
+      price: "4.99",
       interval: "month",
+      description: "Get unlimited access to all features with our most popular plan.",
       features: [
         "Unlimited Queries",
         "All Features",
         "Priority Support"
       ],
-      badgeText: "Most Popular",
       buttonText: "Choose Monthly",
-      isPopular: true,
-      planId: "monthly"
+      variant: "yellow" as const
     },
     {
       title: "Annual Plan",
-      price: "$49.99",
+      price: "49.99",
       interval: "year",
+      description: "Save more with our annual plan while getting all premium features.",
       features: [
         "Unlimited Queries",
         "All Features",
         "Priority Support",
         "Annual Savings"
       ],
-      badgeText: "Best Value",
       buttonText: "Choose Annual",
-      savings: "Save $10 annually",
-      planId: "annual"
+      variant: "dark" as const
     }
   ];
 
   return (
-    <div id="pricing-section" className="py-20 px-4 relative overflow-hidden bg-[#1A1F2C]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent -z-10" />
-      
-      <div className="container mx-auto">
-        <h2 className="text-4xl font-bold text-center text-emerald-400 mb-4">
-          Simple, Transparent Pricing
-        </h2>
-        <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-          Choose the plan that best fits your needs. All plans include access to our core features.
-        </p>
+    <div id="pricing-section" className="py-20 px-4 bg-[#1A1F2C]">
+      <div className="container mx-auto max-w-6xl">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Simple, Transparent Pricing
+          </h2>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Choose the plan that best fits your needs. All plans include access to our core features.
+          </p>
+        </div>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8">
           {pricingPlans.map((plan) => (
             <PricingCard
-              key={plan.planId}
+              key={plan.title}
               {...plan}
-              onSelect={() => handlePlanSelection(plan.planId)}
+              onSelect={() => handlePlanSelection(plan.title.toLowerCase().split(' ')[0])}
               isLoading={isLoading}
             />
           ))}
