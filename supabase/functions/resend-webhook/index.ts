@@ -22,6 +22,7 @@ interface ResendWebhookPayload {
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("Webhook handler started");
+  console.log("Forward email address configured:", FORWARD_TO_EMAIL);
 
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -57,6 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (payload.type === "email.delivered") {
       console.log("Processing email.delivered event");
+      console.log("Attempting to forward to:", FORWARD_TO_EMAIL);
       
       // Forward the email using Resend
       const forwardResponse = await fetch("https://api.resend.com/emails", {
