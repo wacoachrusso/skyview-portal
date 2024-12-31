@@ -14,10 +14,11 @@ export const deleteUserFromAuthSystem = async (userId: string) => {
 };
 
 export const deleteUserData = async (userId: string) => {
-  console.log("Deleting all user data:", userId);
+  console.log("Starting deletion of all user data for:", userId);
   
   try {
     // Delete all referrals
+    console.log("Deleting user referrals...");
     const { error: referralsError } = await supabase
       .from("referrals")
       .delete()
@@ -29,6 +30,7 @@ export const deleteUserData = async (userId: string) => {
     }
 
     // Delete cookie consents
+    console.log("Deleting cookie consents...");
     const { error: cookieConsentsError } = await supabase
       .from("cookie_consents")
       .delete()
@@ -40,6 +42,7 @@ export const deleteUserData = async (userId: string) => {
     }
 
     // Delete disclaimer consents
+    console.log("Deleting disclaimer consents...");
     const { error: disclaimerConsentsError } = await supabase
       .from("disclaimer_consents")
       .delete()
@@ -50,7 +53,32 @@ export const deleteUserData = async (userId: string) => {
       throw disclaimerConsentsError;
     }
 
-    // Delete conversations and their messages (messages will be cascade deleted)
+    // Delete release note changes
+    console.log("Deleting release note changes...");
+    const { error: releaseNoteChangesError } = await supabase
+      .from("release_note_changes")
+      .delete()
+      .eq("user_id", userId);
+
+    if (releaseNoteChangesError) {
+      console.error("Error deleting release note changes:", releaseNoteChangesError);
+      throw releaseNoteChangesError;
+    }
+
+    // Delete messages (this will cascade delete conversations)
+    console.log("Deleting user messages...");
+    const { error: messagesError } = await supabase
+      .from("messages")
+      .delete()
+      .eq("user_id", userId);
+
+    if (messagesError) {
+      console.error("Error deleting user messages:", messagesError);
+      throw messagesError;
+    }
+
+    // Delete conversations
+    console.log("Deleting user conversations...");
     const { error: conversationsError } = await supabase
       .from("conversations")
       .delete()
@@ -62,6 +90,7 @@ export const deleteUserData = async (userId: string) => {
     }
 
     // Delete notifications
+    console.log("Deleting user notifications...");
     const { error: notificationsError } = await supabase
       .from("notifications")
       .delete()
@@ -73,6 +102,7 @@ export const deleteUserData = async (userId: string) => {
     }
 
     // Delete profile
+    console.log("Deleting user profile...");
     const { error: profileError } = await supabase
       .from("profiles")
       .delete()
@@ -97,13 +127,13 @@ export const handleUserDeletion = async (
   try {
     console.log("Starting complete user deletion process for:", user);
 
-    // Step 1: Delete from auth system first (this is important!)
-    await deleteUserFromAuthSystem(user.id);
-    console.log("Successfully deleted user from auth system");
-
-    // Step 2: Delete all user data
+    // Step 1: Delete all user data from related tables
     await deleteUserData(user.id);
     console.log("Successfully deleted all user data");
+
+    // Step 2: Delete from auth system
+    await deleteUserFromAuthSystem(user.id);
+    console.log("Successfully deleted user from auth system");
 
     // Step 3: Send deletion notification email via Resend
     const { error: emailError } = await supabase.functions.invoke(
