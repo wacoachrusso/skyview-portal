@@ -57,6 +57,7 @@
   html {
     height: 100%;
     min-height: -webkit-fill-available;
+    scroll-behavior: smooth;
   }
   
   body {
@@ -95,6 +96,26 @@
 
 .card-hover {
   @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-gold/5;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes slide {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 15s ease infinite;
+}
+
+.animate-slide {
+  animation: slide 60s linear infinite;
 }
 
 /* Responsive typography */

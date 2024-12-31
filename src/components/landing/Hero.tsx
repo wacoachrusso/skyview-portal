@@ -16,8 +16,11 @@ export function Hero() {
 
   return (
     <div className="relative bg-hero-gradient py-8 sm:py-16 overflow-hidden">
-      <div className="absolute inset-0 bg-glow-gradient opacity-50" />
+      {/* Dynamic gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-navy via-brand-navy/90 to-brand-navy/80 animate-gradient" />
+      <div className="absolute inset-0 bg-[url('/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png')] opacity-5 bg-repeat animate-slide" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" />
+      
       <div className="container mx-auto px-4 relative">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="w-full lg:w-1/2 text-center lg:text-left">

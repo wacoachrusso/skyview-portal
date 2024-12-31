@@ -1,4 +1,11 @@
+import { ArrowUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 export function Footer() {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="relative bg-footer-gradient text-gray-400 py-12 px-4">
       <div className="absolute inset-0 bg-glow-gradient opacity-10" />
@@ -40,6 +47,15 @@ export function Footer() {
           © 2024 SkyGuide. All rights reserved.
         </div>
       </div>
+      
+      {/* Back to Top Button */}
+      <Button
+        onClick={scrollToTop}
+        className="fixed bottom-8 right-8 rounded-full w-12 h-12 bg-brand-gold hover:bg-brand-gold/90 text-brand-navy shadow-lg hover:shadow-xl transition-all duration-300 z-50"
+        size="icon"
+      >
+        <ArrowUp className="h-6 w-6" />
+      </Button>
     </footer>
   );
 }
