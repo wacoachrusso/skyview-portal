@@ -12,26 +12,22 @@ export function LogoutButton() {
     try {
       console.log("Starting logout process...");
       
-      // First check if we have a valid session
+      // First check if we still have a valid session
       const { data: { session } } = await supabase.auth.getSession();
       console.log("Current session status:", session ? "Active" : "No session");
-      
-      if (!session) {
-        console.log("No active session found, clearing local state...");
-        localStorage.clear();
-        navigate("/login", { replace: true });
-        return;
-      }
 
-      // Attempt to sign out
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
-      if (error) {
-        console.error("Error during signOut:", error);
-        throw error;
+      if (session) {
+        // Only attempt to sign out if we have a session
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
+        if (error) {
+          console.error("Error during signOut:", error);
+          // Even if there's an error, we should clean up local state
+          navigate("/login", { replace: true });
+          return;
+        }
+      } else {
+        console.log("No active session found, proceeding with cleanup...");
       }
-      
-      console.log("Sign out successful, clearing local storage...");
-      localStorage.clear();
       
       console.log("Redirecting to login page...");
       navigate("/login", { replace: true });
@@ -42,8 +38,7 @@ export function LogoutButton() {
       });
     } catch (error) {
       console.error("Error in logout process:", error);
-      // Even if there's an error, we should clean up and redirect
-      localStorage.clear();
+      // Even if there's an error, we should redirect to login
       navigate("/login", { replace: true });
       
       toast({

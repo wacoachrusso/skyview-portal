@@ -41,7 +41,11 @@ export const useAuthManagement = () => {
         if (userError || !user) {
           console.error("Error getting user or no user found:", userError);
           if (mounted) {
-            await supabase.auth.signOut();
+            // Check if we still have a session before attempting to sign out
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (currentSession) {
+              await supabase.auth.signOut({ scope: 'local' });
+            }
             setIsLoading(false);
             navigate('/login');
           }
@@ -56,7 +60,11 @@ export const useAuthManagement = () => {
       } catch (error) {
         console.error("Unexpected error in checkAuth:", error);
         if (mounted) {
-          await supabase.auth.signOut();
+          // Check if we still have a session before attempting to sign out
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            await supabase.auth.signOut({ scope: 'local' });
+          }
           setIsLoading(false);
           navigate('/login');
         }
@@ -94,7 +102,12 @@ export const useAuthManagement = () => {
       console.log("Starting sign out process");
       setIsLoading(true);
       
-      await supabase.auth.signOut();
+      // Check if we still have a session before attempting to sign out
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+      
       console.log("Sign out successful");
       
       toast({
@@ -105,6 +118,9 @@ export const useAuthManagement = () => {
       navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
+      // Even if there's an error, we should redirect
+      navigate('/login');
+      
       toast({
         title: "Error signing out",
         description: "There was a problem signing out. Please try again.",
