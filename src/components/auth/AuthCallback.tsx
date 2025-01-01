@@ -21,25 +21,6 @@ export const AuthCallback = () => {
         return;
       }
 
-      // Get current session
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      
-      if (currentSession) {
-        console.log('Current session found, signing out from others');
-        // Sign out from all sessions and restore current one
-        await supabase.auth.signOut({ scope: 'global' });
-        await supabase.auth.setSession({
-          access_token: currentSession.access_token,
-          refresh_token: currentSession.refresh_token
-        });
-
-        toast({
-          variant: "destructive",
-          title: "Other Sessions Terminated",
-          description: "You've been signed out from other devices for security."
-        });
-      }
-
       // Check if profile exists and is complete
       const { data: profile } = await supabase
         .from('profiles')

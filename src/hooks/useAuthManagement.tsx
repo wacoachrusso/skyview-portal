@@ -35,14 +35,6 @@ export const useAuthManagement = () => {
           return;
         }
 
-        // Sign out globally and restore current session to ensure single session
-        console.log("Ensuring single session");
-        await supabase.auth.signOut({ scope: 'global' });
-        await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token
-        });
-
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
@@ -102,16 +94,6 @@ export const useAuthManagement = () => {
       console.log("Starting sign out process");
       setIsLoading(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.log("No active session found, cleaning up");
-        localStorage.clear();
-        navigate('/login');
-        return;
-      }
-
-      // Sign out from all sessions
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) {
         console.error("Error during sign out:", error);
