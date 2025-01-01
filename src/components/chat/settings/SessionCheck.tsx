@@ -62,8 +62,7 @@ export function SessionCheck() {
       } else if (event === 'SIGNED_IN') {
         // When a new sign-in occurs, sign out other sessions
         const { error: signOutError } = await supabase.auth.signOut({ 
-          scope: 'others',
-          shouldRefresh: false
+          scope: 'others'
         });
         
         if (signOutError) {

@@ -40,8 +40,7 @@ export function AuthCallback() {
         // Always attempt to sign out other sessions first
         console.log("Signing out other sessions...");
         const { error: signOutError } = await supabase.auth.signOut({ 
-          scope: 'others',
-          shouldRefresh: false // Don't refresh current session
+          scope: 'others'
         });
         
         if (signOutError) {
