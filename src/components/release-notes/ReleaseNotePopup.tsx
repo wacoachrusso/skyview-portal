@@ -28,8 +28,8 @@ export function ReleaseNotePopup() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
-        // Get the last viewed release note timestamp from localStorage
-        const lastViewed = localStorage.getItem('lastViewedReleaseNote');
+        // Get the last viewed release note ID from localStorage
+        const lastViewedId = localStorage.getItem('lastViewedReleaseNoteId');
 
         // Fetch the latest release note
         const { data: notes, error } = await supabase
@@ -45,8 +45,9 @@ export function ReleaseNotePopup() {
         }
 
         if (notes) {
-          // Show popup if there's no last viewed timestamp or if there's a newer release note
-          if (!lastViewed || new Date(notes.release_date) > new Date(lastViewed)) {
+          // Only show popup if this release note hasn't been viewed (different ID)
+          if (!lastViewedId || lastViewedId !== notes.id) {
+            console.log('Showing release note popup for:', notes.title);
             setLatestNote(notes);
             setOpen(true);
           }
@@ -61,8 +62,8 @@ export function ReleaseNotePopup() {
 
   const handleClose = () => {
     if (latestNote) {
-      // Store the timestamp of the viewed release note
-      localStorage.setItem('lastViewedReleaseNote', latestNote.release_date);
+      // Store the ID of the viewed release note
+      localStorage.setItem('lastViewedReleaseNoteId', latestNote.id);
     }
     setOpen(false);
   };
