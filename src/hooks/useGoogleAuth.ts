@@ -8,14 +8,14 @@ export const useGoogleAuth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('=== Google Sign In Process Started ===');
+      console.log('=== Starting Google Sign In Process ===');
       
       // First check if the user already exists in auth
       const { data: { session } } = await supabase.auth.getSession();
       
       // If there's an active session, check the profile
       if (session?.user?.email) {
-        console.log('Checking if user exists in profiles:', session.user.email);
+        console.log('Active session found, checking profile for:', session.user.email);
         
         const { data: existingProfile, error: profileError } = await supabase
           .from('profiles')
@@ -24,7 +24,7 @@ export const useGoogleAuth = () => {
           .single();
 
         if (profileError || !existingProfile) {
-          console.log('User not found in profiles, signing out');
+          console.log('No profile found, signing out');
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
@@ -44,7 +44,7 @@ export const useGoogleAuth = () => {
             access_type: 'offline',
             prompt: 'consent',
           },
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback?provider=google`
         }
       });
 
@@ -57,7 +57,7 @@ export const useGoogleAuth = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        console.log('Checking profile for user:', user.email);
+        console.log('Checking profile after OAuth for:', user.email);
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -77,7 +77,7 @@ export const useGoogleAuth = () => {
         }
 
         if (!user.email_confirmed_at) {
-          console.log('Email not verified for Google user');
+          console.log('Email not verified');
           await supabase.auth.signOut();
           toast({
             variant: "destructive",

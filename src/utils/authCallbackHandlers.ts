@@ -49,7 +49,7 @@ export const handleGoogleSignIn = async ({ navigate, toast, handleSession }: Aut
   navigate('/dashboard');
 };
 
-export const handleEmailSignIn = async ({ navigate, handleSession }: AuthCallbackHandlerProps) => {
+export const handleEmailSignIn = async ({ navigate, toast, handleSession }: AuthCallbackHandlerProps) => {
   console.log('Processing email sign-in callback');
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   
