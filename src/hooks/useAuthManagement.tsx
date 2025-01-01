@@ -35,13 +35,13 @@ export const useAuthManagement = () => {
           return;
         }
 
+        console.log("Session found, checking user");
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
           console.error("Error getting user or no user found:", userError);
           if (mounted) {
             await supabase.auth.signOut();
-            localStorage.clear();
             setIsLoading(false);
             navigate('/login');
           }
@@ -56,7 +56,7 @@ export const useAuthManagement = () => {
       } catch (error) {
         console.error("Unexpected error in checkAuth:", error);
         if (mounted) {
-          localStorage.clear();
+          await supabase.auth.signOut();
           setIsLoading(false);
           navigate('/login');
         }
@@ -74,7 +74,7 @@ export const useAuthManagement = () => {
 
       if (event === 'SIGNED_OUT' || !session) {
         console.log("User signed out or session ended");
-        localStorage.clear();
+        setUserEmail(null);
         navigate('/login');
       } else if (session?.user) {
         console.log("Valid session detected");
@@ -94,14 +94,8 @@ export const useAuthManagement = () => {
       console.log("Starting sign out process");
       setIsLoading(true);
       
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Error during sign out:", error);
-        throw error;
-      }
-      
+      await supabase.auth.signOut();
       console.log("Sign out successful");
-      localStorage.clear();
       
       toast({
         title: "Signed out successfully",
@@ -111,9 +105,6 @@ export const useAuthManagement = () => {
       navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
-      localStorage.clear();
-      navigate('/login');
-      
       toast({
         title: "Error signing out",
         description: "There was a problem signing out. Please try again.",

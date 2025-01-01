@@ -27,7 +27,7 @@ export const AuthCallback = () => {
         return;
       }
 
-      // Check if profile exists and is complete
+      console.log('Session found, checking profile');
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -100,6 +100,7 @@ export const AuthCallback = () => {
         }
       } catch (error) {
         console.error('Error in auth callback:', error);
+        await supabase.auth.signOut();
         toast({
           variant: "destructive",
           title: "Authentication Error",
