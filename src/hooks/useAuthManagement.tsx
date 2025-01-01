@@ -35,25 +35,13 @@ export const useAuthManagement = () => {
           return;
         }
 
-        // Check for other active sessions
-        const { data: { sessions } } = await supabase.auth.getSessions();
-        
-        if (sessions && sessions.length > 1) {
-          console.log("Multiple sessions detected, signing out from others");
-          
-          // Sign out globally and restore current session
-          await supabase.auth.signOut({ scope: 'global' });
-          await supabase.auth.setSession({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token
-          });
-
-          toast({
-            variant: "destructive",
-            title: "Other Sessions Terminated",
-            description: "You've been signed out from other devices for security."
-          });
-        }
+        // Sign out globally and restore current session to ensure single session
+        console.log("Ensuring single session");
+        await supabase.auth.signOut({ scope: 'global' });
+        await supabase.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        });
 
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         

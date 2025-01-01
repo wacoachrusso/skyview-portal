@@ -22,20 +22,15 @@ export const AuthCallback = () => {
       }
 
       // Get current session
-      const { data: currentSession } = await supabase.auth.getSession();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      // Check for other active sessions by getting all sessions
-      const { data: { sessions } } = await supabase.auth.getSessions();
-      
-      if (sessions && sessions.length > 1) {
-        console.log('Multiple sessions detected, cleaning up...');
-        
-        // Sign out from all sessions except current
+      if (currentSession) {
+        console.log('Current session found, signing out from others');
+        // Sign out from all sessions and restore current one
         await supabase.auth.signOut({ scope: 'global' });
-        // Sign back in to current session
         await supabase.auth.setSession({
-          access_token: currentSession.session?.access_token!,
-          refresh_token: currentSession.session?.refresh_token!
+          access_token: currentSession.access_token,
+          refresh_token: currentSession.refresh_token
         });
 
         toast({
