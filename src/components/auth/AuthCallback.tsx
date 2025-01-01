@@ -10,6 +10,7 @@ export function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log("Checking for existing session...");
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
@@ -34,11 +35,39 @@ export function AuthCallback() {
           return;
         }
 
+        // Check for existing sessions for this user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error("Error getting user:", userError);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Could not verify user identity. Please try again."
+          });
+          navigate('/login');
+          return;
+        }
+
+        // Sign out from other sessions
+        const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' });
+        
+        if (signOutError) {
+          console.error("Error signing out other sessions:", signOutError);
+          toast({
+            variant: "destructive",
+            title: "Session Error",
+            description: "Could not manage existing sessions. Please try again."
+          });
+          navigate('/login');
+          return;
+        }
+
         // Check if profile exists and is complete
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', user.id)
           .single();
 
         if (profileError) {
@@ -66,6 +95,10 @@ export function AuthCallback() {
         }
 
         console.log('Profile complete, redirecting to dashboard');
+        toast({
+          title: "Login Successful",
+          description: "Other sessions have been signed out for security."
+        });
         navigate('/dashboard');
 
       } catch (error) {
