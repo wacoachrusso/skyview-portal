@@ -60,9 +60,9 @@ export function SessionCheck() {
         localStorage.clear();
         navigate('/login');
       } else if (event === 'SIGNED_IN') {
-        // When a new sign-in occurs, sign out other sessions
+        // When a new sign-in occurs, sign out all other sessions globally
         const { error: signOutError } = await supabase.auth.signOut({ 
-          scope: 'others'
+          scope: 'global'
         });
         
         if (signOutError) {
@@ -72,6 +72,27 @@ export function SessionCheck() {
             title: "Session Warning",
             description: "Unable to sign out other sessions. You may be signed in on other devices."
           });
+        }
+        
+        // Re-authenticate the current session
+        const { error: reAuthError } = await supabase.auth.signInWithOAuth({
+          provider: session.user.app_metadata.provider || 'email',
+          options: {
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent',
+            }
+          }
+        });
+
+        if (reAuthError) {
+          console.error("Error re-authenticating:", reAuthError);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Please sign in again to continue."
+          });
+          navigate('/login');
         }
       }
     });

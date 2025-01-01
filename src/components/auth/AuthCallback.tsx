@@ -37,29 +37,10 @@ export function AuthCallback() {
           return;
         }
 
-        // Always attempt to sign out other sessions first
-        console.log("Signing out other sessions...");
-        const { error: signOutError } = await supabase.auth.signOut({ 
-          scope: 'others'
-        });
+        // Check for any other active sessions for this user's email
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
         
-        if (signOutError) {
-          console.error("Error signing out other sessions:", signOutError);
-          // If we can't sign out other sessions, prevent this login
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Session Conflict",
-            description: "Another session is already active. Please sign out from other devices first."
-          });
-          navigate('/login');
-          return;
-        }
-
-        // Verify current user after signing out others
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
+        if (userError || !currentUser?.email) {
           console.error("Error getting user:", userError);
           await supabase.auth.signOut();
           toast({
@@ -71,11 +52,52 @@ export function AuthCallback() {
           return;
         }
 
+        // First sign out globally to ensure no other sessions exist
+        console.log("Signing out all other sessions...");
+        const { error: globalSignOutError } = await supabase.auth.signOut({ 
+          scope: 'global'
+        });
+        
+        if (globalSignOutError) {
+          console.error("Error signing out other sessions:", globalSignOutError);
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Session Conflict",
+            description: "Could not manage existing sessions. Please try again."
+          });
+          navigate('/login');
+          return;
+        }
+
+        // Now sign in again to create a fresh session
+        if (session.provider_token) {
+          // For Google Auth
+          const { error: reAuthError } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              queryParams: {
+                access_type: 'offline',
+                prompt: 'consent',
+              }
+            }
+          });
+          if (reAuthError) throw reAuthError;
+        } else {
+          // For email auth, redirect to login
+          navigate('/login');
+          toast({
+            title: "Please Sign In Again",
+            description: "For security reasons, please sign in again to continue."
+          });
+          return;
+        }
+
         // Check if profile exists and is complete
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', currentUser.id)
           .single();
 
         if (profileError) {
