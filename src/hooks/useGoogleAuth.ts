@@ -10,7 +10,7 @@ const checkExistingProfile = async (email: string) => {
     .eq('email', email)
     .single();
 
-  if (error) {
+  if (profileError) {
     console.error('Error checking profile:', profileError);
   }
   
