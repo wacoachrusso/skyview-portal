@@ -1,10 +1,10 @@
 import { NavigateFunction } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Toast } from "@/components/ui/use-toast";
+import { toast as toastFunction } from "@/hooks/use-toast";
 
 interface AuthCallbackHandlerProps {
   navigate: NavigateFunction;
-  toast: Toast;
+  toast: typeof toastFunction;
   handleSession: () => Promise<void>;
 }
 
