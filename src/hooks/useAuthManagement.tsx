@@ -35,31 +35,12 @@ export const useAuthManagement = () => {
           return;
         }
 
-        // Check for multiple sessions
-        const { data: { sessions }, error: sessionsError } = await supabase.auth.getAllSessions();
-        
-        if (sessionsError) {
-          console.error("Error checking sessions:", sessionsError);
-          throw sessionsError;
-        }
-
-        if (sessions && sessions.length > 1) {
-          console.log("Multiple sessions detected, signing out from others");
-          // Keep only the current session
-          for (const otherSession of sessions) {
-            if (otherSession.id !== session.id) {
-              await supabase.auth.admin.signOut(otherSession.id);
-              console.log("Terminated session:", otherSession.id);
-            }
-          }
-        }
-
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
           console.error("Error getting user or no user found:", userError);
           if (mounted) {
-            await supabase.auth.signOut({ scope: 'local' });
+            await supabase.auth.signOut();
             localStorage.clear();
             setIsLoading(false);
             navigate('/login');
@@ -113,17 +94,7 @@ export const useAuthManagement = () => {
       console.log("Starting sign out process");
       setIsLoading(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.log("No active session found, cleaning up");
-        localStorage.clear();
-        navigate('/login');
-        return;
-      }
-
-      // Sign out from all sessions
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error during sign out:", error);
         throw error;
