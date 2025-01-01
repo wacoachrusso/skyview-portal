@@ -35,28 +35,31 @@ export function ReleaseNotePopup() {
         const lastViewedId = localStorage.getItem('lastViewedReleaseNoteId');
         console.log('Last viewed release note ID:', lastViewedId);
 
-        // Fetch the latest release note
+        // Get all release notes ordered by date
         const { data: notes, error } = await supabase
           .from('release_notes')
           .select('*')
-          .order('release_date', { ascending: false })
-          .limit(1)
-          .single();
+          .order('release_date', { ascending: false });
 
         if (error) {
           console.error('Error fetching release notes:', error);
           return;
         }
 
-        if (notes) {
-          console.log('Latest release note:', notes.id);
-          // Only show popup if this release note hasn't been viewed
-          if (!lastViewedId || lastViewedId !== notes.id) {
-            console.log('Showing release note popup for:', notes.title);
-            setLatestNote(notes);
+        if (notes && notes.length > 0) {
+          const latestReleaseNote = notes[0];
+          console.log('Latest release note:', latestReleaseNote.id);
+          
+          // Check if we've already shown this note
+          const hasBeenViewed = lastViewedId === latestReleaseNote.id;
+          console.log('Has this note been viewed?', hasBeenViewed);
+
+          if (!hasBeenViewed) {
+            console.log('Showing release note popup for:', latestReleaseNote.title);
+            setLatestNote(latestReleaseNote);
             setOpen(true);
           } else {
-            console.log('Release note already viewed:', notes.id);
+            console.log('Release note already viewed:', latestReleaseNote.id);
           }
         }
       } catch (error) {
@@ -70,7 +73,7 @@ export function ReleaseNotePopup() {
 
   const handleClose = () => {
     if (latestNote) {
-      // Store the ID of the viewed release note in localStorage only
+      // Store the ID of the viewed release note in localStorage
       localStorage.setItem('lastViewedReleaseNoteId', latestNote.id);
       console.log('Stored viewed release note ID:', latestNote.id);
     }
