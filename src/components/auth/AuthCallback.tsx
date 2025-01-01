@@ -21,29 +21,28 @@ export const AuthCallback = () => {
         return;
       }
 
-      // Get all active sessions for the user
-      const { data: { sessions }, error: sessionsError } = await supabase.auth.getAllSessions();
+      // Get current session
+      const { data: currentSession } = await supabase.auth.getSession();
       
-      if (sessionsError) {
-        console.error('Error fetching sessions:', sessionsError);
-        throw sessionsError;
-      }
-
-      console.log('Active sessions found:', sessions?.length);
-
-      // If there are multiple sessions, terminate all but the current one
+      // Get all sessions for the user
+      const { data: sessions } = await supabase.auth.getSession();
+      
       if (sessions && sessions.length > 1) {
         console.log('Multiple sessions detected, cleaning up...');
-        const currentSession = await supabase.auth.getSession();
-        const currentSessionId = currentSession.data.session?.id;
+        
+        // Sign out from all sessions except current
+        await supabase.auth.signOut({ scope: 'global' });
+        // Sign back in to current session
+        await supabase.auth.setSession({
+          access_token: currentSession.session?.access_token!,
+          refresh_token: currentSession.session?.refresh_token!
+        });
 
-        // Sign out from all other sessions
-        for (const session of sessions) {
-          if (session.id !== currentSessionId) {
-            await supabase.auth.admin.signOut(session.id);
-            console.log('Terminated session:', session.id);
-          }
-        }
+        toast({
+          variant: "destructive",
+          title: "Other Sessions Terminated",
+          description: "You've been signed out from other devices for security."
+        });
       }
 
       // Check if profile exists and is complete
