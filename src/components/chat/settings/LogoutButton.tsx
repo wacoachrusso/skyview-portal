@@ -13,7 +13,8 @@ export function LogoutButton() {
       console.log("Starting logout process...");
       localStorage.clear();
       
-      const { error } = await supabase.auth.signOut();
+      // Sign out from all sessions, not just the current one
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) {
         console.error("Error during signOut:", error);
         throw error;
@@ -24,7 +25,7 @@ export function LogoutButton() {
       
       toast({
         title: "Logged out successfully",
-        description: "You have been logged out of your account",
+        description: "You have been logged out from all devices",
       });
     } catch (error) {
       console.error("Error in logout process:", error);

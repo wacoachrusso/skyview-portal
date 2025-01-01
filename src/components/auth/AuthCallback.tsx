@@ -35,29 +35,32 @@ export function AuthCallback() {
           return;
         }
 
-        // Check for existing sessions for this user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        // First, sign out from all other sessions before proceeding
+        console.log("Signing out other sessions...");
+        const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' });
         
-        if (userError) {
-          console.error("Error getting user:", userError);
+        if (signOutError) {
+          console.error("Error signing out other sessions:", signOutError);
+          // If we can't sign out other sessions, we should prevent this login
+          await supabase.auth.signOut();
           toast({
             variant: "destructive",
-            title: "Authentication Error",
-            description: "Could not verify user identity. Please try again."
+            title: "Session Conflict",
+            description: "Another session is already active. Please sign out from other devices first."
           });
           navigate('/login');
           return;
         }
 
-        // Sign out from other sessions
-        const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' });
+        // Verify current user after signing out others
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        if (signOutError) {
-          console.error("Error signing out other sessions:", signOutError);
+        if (userError || !user) {
+          console.error("Error getting user:", userError);
           toast({
             variant: "destructive",
-            title: "Session Error",
-            description: "Could not manage existing sessions. Please try again."
+            title: "Authentication Error",
+            description: "Could not verify user identity. Please try again."
           });
           navigate('/login');
           return;
@@ -97,12 +100,13 @@ export function AuthCallback() {
         console.log('Profile complete, redirecting to dashboard');
         toast({
           title: "Login Successful",
-          description: "Other sessions have been signed out for security."
+          description: "You've been signed in. Any other active sessions have been signed out for security."
         });
         navigate('/dashboard');
 
       } catch (error) {
         console.error('Unexpected error in callback:', error);
+        await supabase.auth.signOut();
         toast({
           variant: "destructive",
           title: "Error",
