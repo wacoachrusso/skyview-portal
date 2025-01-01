@@ -13,7 +13,7 @@ export function LogoutButton() {
       console.log("Starting logout process...");
       localStorage.clear();
       
-      // Sign out from all sessions, not just the current one
+      // Sign out from all sessions globally
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) {
         console.error("Error during signOut:", error);

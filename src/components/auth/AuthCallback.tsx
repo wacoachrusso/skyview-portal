@@ -10,7 +10,9 @@ export function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log("Checking for existing session...");
+        console.log("Starting auth callback process...");
+        
+        // First check if there's an existing session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
@@ -35,13 +37,16 @@ export function AuthCallback() {
           return;
         }
 
-        // First, sign out from all other sessions before proceeding
+        // Always attempt to sign out other sessions first
         console.log("Signing out other sessions...");
-        const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' });
+        const { error: signOutError } = await supabase.auth.signOut({ 
+          scope: 'others',
+          shouldRefresh: false // Don't refresh current session
+        });
         
         if (signOutError) {
           console.error("Error signing out other sessions:", signOutError);
-          // If we can't sign out other sessions, we should prevent this login
+          // If we can't sign out other sessions, prevent this login
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
@@ -57,6 +62,7 @@ export function AuthCallback() {
         
         if (userError || !user) {
           console.error("Error getting user:", userError);
+          await supabase.auth.signOut();
           toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -75,6 +81,7 @@ export function AuthCallback() {
 
         if (profileError) {
           console.error('Error fetching profile:', profileError);
+          await supabase.auth.signOut();
           toast({
             variant: "destructive",
             title: "Profile Error",
@@ -117,7 +124,7 @@ export function AuthCallback() {
     };
 
     handleCallback();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   return null;
 }

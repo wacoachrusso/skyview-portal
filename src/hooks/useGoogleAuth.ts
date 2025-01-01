@@ -50,6 +50,10 @@ const handleProfileCheck = async (email: string, toast: any): Promise<boolean> =
 
 const initiateGoogleAuth = async () => {
   console.log('Initiating Google OAuth');
+  
+  // First sign out any existing sessions
+  await supabase.auth.signOut({ scope: 'global' });
+  
   return await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -84,19 +88,9 @@ export const useGoogleAuth = () => {
     try {
       console.log('=== Starting Google Sign In Process ===');
       
-      // Check existing session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Sign out any existing sessions before starting new sign in
+      await supabase.auth.signOut({ scope: 'global' });
       
-      // Verify existing profile if session exists
-      if (session?.user?.email) {
-        console.log('Active session found, checking profile');
-        const profileValid = await handleProfileCheck(session.user.email, toast);
-        if (!profileValid) {
-          navigate('/signup');
-          return;
-        }
-      }
-
       // Proceed with Google OAuth
       const { data, error } = await initiateGoogleAuth();
 
