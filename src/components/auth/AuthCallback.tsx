@@ -27,6 +27,21 @@ export const AuthCallback = () => {
       }
 
       if (type === 'signup' || type === 'magiclink') {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          await supabase.auth.signOut();
+          navigate('/login');
+          return;
+        }
+
+        if (!session) {
+          console.error('No session found');
+          navigate('/login');
+          return;
+        }
+
         await handleSession();
         navigate('/dashboard');
         return;
@@ -34,24 +49,25 @@ export const AuthCallback = () => {
 
       // Handle Google sign-in
       if (type === 'google') {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          console.error('No session found after Google sign-in');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session?.user) {
+          console.error('No valid session found after Google sign-in:', sessionError);
           await supabase.auth.signOut();
           navigate('/?scrollTo=pricing-section');
           return;
         }
 
         // Check if user has a profile
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
 
-        if (!profile) {
-          console.log('No profile found for Google user, redirecting to pricing');
-          await supabase.auth.signOut();
+        if (profileError || !profile) {
+          console.log('No profile found for Google user, signing out and redirecting to pricing');
+          await supabase.auth.signOut({ scope: 'global' });
           toast({
             title: "Account Required",
             description: "Please sign up for an account before signing in with Google.",
@@ -89,11 +105,11 @@ export const AuthCallback = () => {
     } catch (error) {
       console.error('Error in auth callback:', error);
       // Make sure to sign out if there's any error
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'global' });
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An error occurred during authentication."
+        description: "An unexpected error occurred during authentication."
       });
       navigate('/?scrollTo=pricing-section');
     }
