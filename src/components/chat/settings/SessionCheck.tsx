@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createNewSession, invalidateOtherSessions, validateSession } from "@/utils/sessionManager";
 
 export function SessionCheck() {
   const navigate = useNavigate();
@@ -19,6 +20,10 @@ export function SessionCheck() {
           navigate('/login');
           return;
         }
+
+        // Create a new session and invalidate others
+        const newSession = await createNewSession(session.user.id);
+        await invalidateOtherSessions(session.user.id, newSession.session_token);
 
         // Verify the session is still valid
         const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -60,21 +65,11 @@ export function SessionCheck() {
         localStorage.clear();
         navigate('/login');
       } else if (event === 'SIGNED_IN' && session?.user) {
-        // When a new sign-in occurs, sign out all other sessions globally
-        const { error: signOutError } = await supabase.auth.signOut({ 
-          scope: 'global'
-        });
+        // When a new sign-in occurs, create a new session and invalidate others
+        const newSession = await createNewSession(session.user.id);
+        await invalidateOtherSessions(session.user.id, newSession.session_token);
         
-        if (signOutError) {
-          console.error("Error signing out other sessions:", signOutError);
-          toast({
-            variant: "destructive",
-            title: "Session Warning",
-            description: "Unable to sign out other sessions. You may be signed in on other devices."
-          });
-        }
-        
-        // Re-authenticate the current session
+        // Re-authenticate if needed
         if (session.user.app_metadata.provider === 'google') {
           const { error: reAuthError } = await supabase.auth.signInWithOAuth({
             provider: 'google',

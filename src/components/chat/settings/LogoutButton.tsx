@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateCurrentSession } from "@/utils/sessionManager";
 
 export function LogoutButton() {
   const navigate = useNavigate();
@@ -11,6 +12,14 @@ export function LogoutButton() {
   const handleLogout = async () => {
     try {
       console.log("Starting logout process...");
+      
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Invalidate the current session in our sessions table
+        await invalidateCurrentSession(session.user.id);
+      }
+      
       localStorage.clear();
       
       // Sign out from all sessions globally

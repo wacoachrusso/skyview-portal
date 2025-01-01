@@ -372,6 +372,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sessions: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          id: string
+          invalidated_at: string | null
+          ip_address: string | null
+          last_activity: string | null
+          session_token: string
+          status: Database["public"]["Enums"]["session_status"] | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          invalidated_at?: string | null
+          ip_address?: string | null
+          last_activity?: string | null
+          session_token: string
+          status?: Database["public"]["Enums"]["session_status"] | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          invalidated_at?: string | null
+          ip_address?: string | null
+          last_activity?: string | null
+          session_token?: string
+          status?: Database["public"]["Enums"]["session_status"] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       union_representatives: {
         Row: {
           committee: string | null
@@ -441,9 +477,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      invalidate_other_sessions: {
+        Args: {
+          p_user_id: string
+          p_current_session_token: string
+        }
+        Returns: undefined
+      }
       is_email_from_deleted_profile: {
         Args: {
           email: string
+        }
+        Returns: boolean
+      }
+      is_session_valid: {
+        Args: {
+          p_session_token: string
         }
         Returns: boolean
       }
@@ -457,6 +506,7 @@ export type Database = {
         | "all"
         | "none"
       notification_type: "update" | "release" | "system"
+      session_status: "active" | "expired" | "invalidated"
     }
     CompositeTypes: {
       [_ in never]: never
