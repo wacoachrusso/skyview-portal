@@ -9,16 +9,11 @@ export function SessionCheck() {
     const checkSession = async () => {
       try {
         console.log("Checking session in SessionCheck component...");
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error("Error checking session:", sessionError);
-          navigate('/login');
-          return;
-        }
-
         if (!session) {
           console.log("No active session found in settings, redirecting to login");
+          localStorage.clear();
           navigate('/login');
           return;
         }
@@ -28,8 +23,6 @@ export function SessionCheck() {
         
         if (userError || !user) {
           console.error("Error getting user or no user found:", userError);
-          // Clean up and redirect
-          await supabase.auth.signOut({ scope: 'local' });
           localStorage.clear();
           navigate('/login');
           return;
@@ -38,18 +31,19 @@ export function SessionCheck() {
         console.log("Valid session found for user:", user.email);
       } catch (error) {
         console.error("Unexpected error in session check:", error);
+        localStorage.clear();
         navigate('/login');
       }
     };
 
     checkSession();
 
-    // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed in SessionCheck:", event, session?.user?.email);
       if (event === 'SIGNED_OUT' || !session) {
+        localStorage.clear();
         navigate('/login');
       }
     });

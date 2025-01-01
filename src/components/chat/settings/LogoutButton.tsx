@@ -11,29 +11,15 @@ export function LogoutButton() {
   const handleLogout = async () => {
     try {
       console.log("Starting logout process...");
+      localStorage.clear();
       
-      // First check if we have a valid session
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Current session status:", session ? "Active" : "No session");
-      
-      if (!session) {
-        console.log("No active session found, clearing local state...");
-        localStorage.clear();
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      // Attempt to sign out
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error during signOut:", error);
         throw error;
       }
       
-      console.log("Sign out successful, clearing local storage...");
-      localStorage.clear();
-      
-      console.log("Redirecting to login page...");
+      console.log("Sign out successful, redirecting to login page...");
       navigate("/login", { replace: true });
       
       toast({
@@ -43,7 +29,6 @@ export function LogoutButton() {
     } catch (error) {
       console.error("Error in logout process:", error);
       // Even if there's an error, we should clean up and redirect
-      localStorage.clear();
       navigate("/login", { replace: true });
       
       toast({
