@@ -3,6 +3,12 @@ import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { useToast } from "@/hooks/use-toast";
 import { EmailConfirmationHandler } from './handlers/EmailConfirmationHandler';
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  handleGoogleSignIn, 
+  handleEmailSignIn, 
+  handlePasswordRecovery,
+  handleEmailChange 
+} from "@/utils/authCallbackHandlers";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -26,92 +32,31 @@ export const AuthCallback = () => {
         return;
       }
 
-      // Handle Google sign-in first since it's most common
-      if (type === 'google') {
-        console.log('Processing Google sign-in callback');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          await supabase.auth.signOut();
+      const handlerProps = { navigate, toast, handleSession };
+
+      switch (type) {
+        case 'google':
+          await handleGoogleSignIn(handlerProps);
+          break;
+
+        case 'signup':
+        case 'magiclink':
+          await handleEmailSignIn(handlerProps);
+          break;
+
+        case 'recovery':
+          const token = searchParams.get('token');
+          handlePasswordRecovery(token, navigate);
+          break;
+
+        case 'email_change':
+          await handleEmailChange(searchParams, navigate, EmailConfirmationHandler);
+          break;
+
+        default:
+          console.error('Unhandled callback type:', type);
           navigate('/login');
-          return;
-        }
-
-        if (!session?.user) {
-          console.error('No valid session found after Google sign-in');
-          navigate('/login');
-          return;
-        }
-
-        // Check if user has a profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError || !profile) {
-          console.log('No profile found for Google user, signing out');
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Account Required",
-            description: "Please sign up for an account before signing in with Google."
-          });
-          navigate('/signup');
-          return;
-        }
-
-        // Profile exists, proceed with login
-        console.log('Google sign-in successful, redirecting to dashboard');
-        await handleSession();
-        navigate('/dashboard');
-        return;
       }
-
-      if (type === 'signup' || type === 'magiclink') {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          await supabase.auth.signOut();
-          navigate('/login');
-          return;
-        }
-
-        if (!session) {
-          console.error('No session found');
-          navigate('/login');
-          return;
-        }
-
-        await handleSession();
-        navigate('/dashboard');
-        return;
-      }
-
-      if (type === 'recovery') {
-        const token = searchParams.get('token');
-        if (token) {
-          navigate(`/reset-password?token=${token}`);
-          return;
-        }
-      }
-
-      if (type === 'email_change') {
-        const { processEmailConfirmation } = EmailConfirmationHandler({ searchParams });
-        const success = await processEmailConfirmation();
-        if (success) {
-          navigate('/settings');
-          return;
-        }
-        navigate('/login');
-        return;
-      }
-
-      console.error('Unhandled callback type:', type);
-      navigate('/login');
     } catch (error) {
       console.error('Error in auth callback:', error);
       await supabase.auth.signOut();
