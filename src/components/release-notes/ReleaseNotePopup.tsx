@@ -31,15 +31,9 @@ export function ReleaseNotePopup() {
           return;
         }
 
-        // Get the last viewed release note ID from sessionStorage instead of localStorage
-        const lastViewedId = sessionStorage.getItem('lastViewedReleaseNoteId');
+        // Get the last viewed release note ID from localStorage
+        const lastViewedId = localStorage.getItem('lastViewedReleaseNoteId');
         console.log('Last viewed release note ID:', lastViewedId);
-
-        // If we've already checked this session, don't show again
-        if (sessionStorage.getItem('releaseNotesChecked')) {
-          console.log('Release notes already checked this session');
-          return;
-        }
 
         // Fetch the latest release note
         const { data: notes, error } = await supabase
@@ -56,7 +50,7 @@ export function ReleaseNotePopup() {
 
         if (notes) {
           console.log('Latest release note:', notes.id);
-          // Only show popup if this release note hasn't been viewed (different ID)
+          // Only show popup if this release note hasn't been viewed
           if (!lastViewedId || lastViewedId !== notes.id) {
             console.log('Showing release note popup for:', notes.title);
             setLatestNote(notes);
@@ -65,9 +59,6 @@ export function ReleaseNotePopup() {
             console.log('Release note already viewed:', notes.id);
           }
         }
-
-        // Mark that we've checked release notes this session
-        sessionStorage.setItem('releaseNotesChecked', 'true');
       } catch (error) {
         console.error('Error in checkReleaseNotes:', error);
       }
@@ -79,9 +70,8 @@ export function ReleaseNotePopup() {
 
   const handleClose = () => {
     if (latestNote) {
-      // Store the ID of the viewed release note in both storages
+      // Store the ID of the viewed release note in localStorage only
       localStorage.setItem('lastViewedReleaseNoteId', latestNote.id);
-      sessionStorage.setItem('lastViewedReleaseNoteId', latestNote.id);
       console.log('Stored viewed release note ID:', latestNote.id);
     }
     setOpen(false);
