@@ -21,6 +21,11 @@ export const useAuthManagement = () => {
           console.error("Session error:", sessionError);
           if (mounted) {
             setIsLoading(false);
+            toast({
+              variant: "destructive",
+              title: "Session Error",
+              description: "There was a problem with your session. Please log in again."
+            });
             navigate('/login');
           }
           return;
@@ -30,6 +35,11 @@ export const useAuthManagement = () => {
           console.log("No active session found");
           if (mounted) {
             setIsLoading(false);
+            toast({
+              variant: "destructive",
+              title: "Session Required",
+              description: "Please log in to access this page."
+            });
             navigate('/login');
           }
           return;
@@ -43,6 +53,11 @@ export const useAuthManagement = () => {
             await supabase.auth.signOut();
             localStorage.clear();
             setIsLoading(false);
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: "Could not verify your identity. Please log in again."
+            });
             navigate('/login');
           }
           return;
@@ -58,6 +73,11 @@ export const useAuthManagement = () => {
         if (mounted) {
           localStorage.clear();
           setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "An unexpected error occurred. Please try again."
+          });
           navigate('/login');
         }
       }
@@ -75,6 +95,10 @@ export const useAuthManagement = () => {
       if (event === 'SIGNED_OUT' || !session) {
         console.log("User signed out or session ended");
         localStorage.clear();
+        toast({
+          title: "Signed Out",
+          description: "You have been signed out successfully."
+        });
         navigate('/login');
       } else if (session?.user) {
         console.log("Valid session detected");
