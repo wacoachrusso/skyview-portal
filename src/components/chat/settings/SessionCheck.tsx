@@ -12,13 +12,7 @@ export function SessionCheck() {
       try {
         console.log("Starting session check...");
         
-        // First clear any existing session to ensure clean state
-        const { error: clearError } = await supabase.auth.signOut({ scope: 'local' });
-        if (clearError) {
-          console.error("Error clearing existing session:", clearError);
-        }
-
-        // Get fresh session
+        // First check if we have a valid session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -35,12 +29,11 @@ export function SessionCheck() {
           return;
         }
 
-        // Verify the session is still valid with a separate check
+        // Verify the user exists and is valid
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
           console.error("Error getting user:", userError);
-          await supabase.auth.signOut({ scope: 'local' });
           localStorage.clear();
           navigate('/login');
           return;
@@ -48,7 +41,6 @@ export function SessionCheck() {
 
         if (!user) {
           console.log("No user found in valid session");
-          await supabase.auth.signOut({ scope: 'local' });
           localStorage.clear();
           navigate('/login');
           return;
@@ -63,7 +55,6 @@ export function SessionCheck() {
 
         if (profileError || !profile) {
           console.error("Error fetching profile:", profileError);
-          await supabase.auth.signOut({ scope: 'local' });
           localStorage.clear();
           toast({
             variant: "destructive",
@@ -76,7 +67,6 @@ export function SessionCheck() {
 
         if (profile.account_status !== 'active') {
           console.log("Account not active:", profile.account_status);
-          await supabase.auth.signOut({ scope: 'local' });
           localStorage.clear();
           toast({
             variant: "destructive",
@@ -90,7 +80,6 @@ export function SessionCheck() {
         console.log("Session check complete - valid session for:", user.email);
       } catch (error) {
         console.error("Unexpected error in session check:", error);
-        await supabase.auth.signOut({ scope: 'local' });
         localStorage.clear();
         navigate('/login');
       }
