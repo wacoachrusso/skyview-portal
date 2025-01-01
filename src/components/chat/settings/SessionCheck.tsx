@@ -59,7 +59,7 @@ export function SessionCheck() {
       if (event === 'SIGNED_OUT' || !session) {
         localStorage.clear();
         navigate('/login');
-      } else if (event === 'SIGNED_IN') {
+      } else if (event === 'SIGNED_IN' && session?.user) {
         // When a new sign-in occurs, sign out all other sessions globally
         const { error: signOutError } = await supabase.auth.signOut({ 
           scope: 'global'
@@ -75,24 +75,26 @@ export function SessionCheck() {
         }
         
         // Re-authenticate the current session
-        const { error: reAuthError } = await supabase.auth.signInWithOAuth({
-          provider: session.user.app_metadata.provider || 'email',
-          options: {
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
+        if (session.user.app_metadata.provider === 'google') {
+          const { error: reAuthError } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              queryParams: {
+                access_type: 'offline',
+                prompt: 'consent',
+              }
             }
-          }
-        });
-
-        if (reAuthError) {
-          console.error("Error re-authenticating:", reAuthError);
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "Please sign in again to continue."
           });
-          navigate('/login');
+
+          if (reAuthError) {
+            console.error("Error re-authenticating:", reAuthError);
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: "Please sign in again to continue."
+            });
+            navigate('/login');
+          }
         }
       }
     });

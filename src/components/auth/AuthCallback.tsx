@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  checkSession,
+  getCurrentUser,
+  signOutGlobally,
+  reAuthenticateSession,
+  checkUserProfile
+} from "@/utils/authCallbackUtils";
 
 export function AuthCallback() {
   const navigate = useNavigate();
@@ -10,81 +16,23 @@ export function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log("Starting auth callback process...");
-        
-        // First check if there's an existing session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // Check session validity
+        const session = await checkSession({ navigate, toast });
+        if (!session) return;
 
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "There was a problem with your session. Please try logging in again."
-          });
-          navigate('/login');
-          return;
-        }
+        // Get current user
+        const user = await getCurrentUser({ navigate, toast });
+        if (!user) return;
 
-        if (!session) {
-          console.log("No active session");
-          toast({
-            variant: "destructive",
-            title: "Session Error",
-            description: "No active session found. Please log in again."
-          });
-          navigate('/login');
-          return;
-        }
+        // Sign out all other sessions
+        const signOutSuccess = await signOutGlobally({ navigate, toast });
+        if (!signOutSuccess) return;
 
-        // Check for any other active sessions for this user's email
-        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !currentUser?.email) {
-          console.error("Error getting user:", userError);
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "Could not verify user identity. Please try again."
-          });
-          navigate('/login');
-          return;
-        }
-
-        // First sign out globally to ensure no other sessions exist
-        console.log("Signing out all other sessions...");
-        const { error: globalSignOutError } = await supabase.auth.signOut({ 
-          scope: 'global'
-        });
-        
-        if (globalSignOutError) {
-          console.error("Error signing out other sessions:", globalSignOutError);
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Session Conflict",
-            description: "Could not manage existing sessions. Please try again."
-          });
-          navigate('/login');
-          return;
-        }
-
-        // Now sign in again to create a fresh session
+        // Re-authenticate if needed
         if (session.provider_token) {
-          // For Google Auth
-          const { error: reAuthError } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              queryParams: {
-                access_type: 'offline',
-                prompt: 'consent',
-              }
-            }
-          });
-          if (reAuthError) throw reAuthError;
+          const reAuthSuccess = await reAuthenticateSession('google', { navigate, toast });
+          if (!reAuthSuccess) return;
         } else {
-          // For email auth, redirect to login
           navigate('/login');
           toast({
             title: "Please Sign In Again",
@@ -93,32 +41,11 @@ export function AuthCallback() {
           return;
         }
 
-        // Check if profile exists and is complete
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
+        // Check user profile
+        const profile = await checkUserProfile(user.id, { navigate, toast });
+        if (!profile) return;
 
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Profile Error",
-            description: "Could not fetch your profile. Please try again."
-          });
-          navigate('/login');
-          return;
-        }
-
-        if (!profile) {
-          console.log('No profile found, redirecting to complete profile');
-          navigate('/complete-profile');
-          return;
-        }
-
-        // Check if profile is complete
+        // Handle profile completion status
         if (!profile.user_type || !profile.airline) {
           console.log('Profile incomplete, redirecting to complete profile');
           navigate('/complete-profile');
