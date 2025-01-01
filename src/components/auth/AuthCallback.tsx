@@ -37,6 +37,7 @@ export const AuthCallback = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
           console.error('No session found after Google sign-in');
+          await supabase.auth.signOut();
           navigate('/?scrollTo=pricing-section');
           return;
         }
@@ -87,12 +88,14 @@ export const AuthCallback = () => {
       navigate('/login');
     } catch (error) {
       console.error('Error in auth callback:', error);
+      // Make sure to sign out if there's any error
+      await supabase.auth.signOut();
       toast({
         variant: "destructive",
         title: "Error",
         description: "An error occurred during authentication."
       });
-      navigate('/login');
+      navigate('/?scrollTo=pricing-section');
     }
   };
 
