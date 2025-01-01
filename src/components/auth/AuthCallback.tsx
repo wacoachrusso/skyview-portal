@@ -51,12 +51,19 @@ export const AuthCallback = () => {
           .eq('id', session.user.id)
           .single();
 
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
+        if (profileError || !profile) {
+          console.log('No profile found for Google user, signing out');
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Account Required",
+            description: "Please sign up for an account before signing in with Google."
+          });
+          navigate('/signup');
+          return;
         }
 
-        // Even if there's no profile, we should still let them in since the auth was successful
-        // The profile will be created by the database trigger
+        // Profile exists, proceed with login
         console.log('Google sign-in successful, redirecting to dashboard');
         await handleSession();
         navigate('/dashboard');
