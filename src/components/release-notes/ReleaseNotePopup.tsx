@@ -26,10 +26,14 @@ export function ReleaseNotePopup() {
       try {
         // Get the current user's session
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+        if (!session) {
+          console.log('No active session, skipping release notes check');
+          return;
+        }
 
         // Get the last viewed release note ID from localStorage
         const lastViewedId = localStorage.getItem('lastViewedReleaseNoteId');
+        console.log('Last viewed release note ID:', lastViewedId);
 
         // Fetch the latest release note
         const { data: notes, error } = await supabase
@@ -45,11 +49,14 @@ export function ReleaseNotePopup() {
         }
 
         if (notes) {
+          console.log('Latest release note:', notes.id);
           // Only show popup if this release note hasn't been viewed (different ID)
           if (!lastViewedId || lastViewedId !== notes.id) {
             console.log('Showing release note popup for:', notes.title);
             setLatestNote(notes);
             setOpen(true);
+          } else {
+            console.log('Release note already viewed:', notes.id);
           }
         }
       } catch (error) {
@@ -57,13 +64,15 @@ export function ReleaseNotePopup() {
       }
     };
 
+    // Only check release notes once when component mounts
     checkReleaseNotes();
-  }, []);
+  }, []); // Empty dependency array ensures this only runs once
 
   const handleClose = () => {
     if (latestNote) {
       // Store the ID of the viewed release note
       localStorage.setItem('lastViewedReleaseNoteId', latestNote.id);
+      console.log('Stored viewed release note ID:', latestNote.id);
     }
     setOpen(false);
   };
