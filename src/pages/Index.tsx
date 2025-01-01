@@ -6,6 +6,7 @@ import { Navbar } from "@/components/landing/Navbar";
 import { PricingSection } from "@/components/landing/pricing/PricingSection";
 import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
+import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -57,6 +58,7 @@ export default function Index() {
         <CallToAction />
       </main>
       <Footer />
+      <ReleaseNotePopup />
 
       <Sheet open={showIOSPrompt} onOpenChange={handleClosePrompt}>
         <SheetContent side="bottom" className="h-[40vh]">
