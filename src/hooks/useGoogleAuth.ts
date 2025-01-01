@@ -10,16 +10,20 @@ export const useGoogleAuth = () => {
     try {
       console.log('=== Google Sign In Process Started ===');
       
-      // First check if the user already exists
+      // First check if the user already exists in auth
       const { data: { session } } = await supabase.auth.getSession();
+      
+      // If there's an active session, check the profile
       if (session?.user?.email) {
-        const { data: existingProfile } = await supabase
+        console.log('Checking if user exists in profiles:', session.user.email);
+        
+        const { data: existingProfile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('email', session.user.email)
           .single();
 
-        if (!existingProfile) {
+        if (profileError || !existingProfile) {
           console.log('User not found in profiles, signing out');
           await supabase.auth.signOut();
           toast({
@@ -32,6 +36,7 @@ export const useGoogleAuth = () => {
         }
       }
 
+      // Proceed with Google OAuth
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -39,6 +44,7 @@ export const useGoogleAuth = () => {
             access_type: 'offline',
             prompt: 'consent',
           },
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
@@ -47,27 +53,49 @@ export const useGoogleAuth = () => {
         throw error;
       }
 
-      // Check if the user exists and has verified their email
+      // After OAuth, check if the user exists and has verified their email
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (user && !user.email_confirmed_at) {
-        console.log('Email not verified for Google user');
-        await supabase.auth.signOut();
-        toast({
-          variant: "destructive",
-          title: "Email verification required",
-          description: "Please verify your email address before signing in."
-        });
-        navigate('/login');
-        return;
-      }
+      if (user) {
+        console.log('Checking profile for user:', user.email);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', user.email)
+          .single();
 
-      console.log('Sign in initiated:', data);
+        if (profileError || !profile) {
+          console.log('No profile found after OAuth, signing out');
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Account not found",
+            description: "Please sign up for an account first before signing in with Google."
+          });
+          navigate('/signup');
+          return;
+        }
+
+        if (!user.email_confirmed_at) {
+          console.log('Email not verified for Google user');
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Email verification required",
+            description: "Please verify your email address before signing in."
+          });
+          navigate('/login');
+          return;
+        }
+
+        console.log('Successful Google sign in with existing profile');
+      }
       
     } catch (error) {
       console.error('=== Google Sign In Error ===');
       console.error('Error details:', error);
       
+      await supabase.auth.signOut();
       toast({
         variant: "destructive",
         title: "Sign in failed",
