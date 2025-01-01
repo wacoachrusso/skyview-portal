@@ -26,6 +26,43 @@ export const AuthCallback = () => {
         return;
       }
 
+      // Handle Google sign-in first since it's most common
+      if (type === 'google') {
+        console.log('Processing Google sign-in callback');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          await supabase.auth.signOut();
+          navigate('/login');
+          return;
+        }
+
+        if (!session?.user) {
+          console.error('No valid session found after Google sign-in');
+          navigate('/login');
+          return;
+        }
+
+        // Check if user has a profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+        }
+
+        // Even if there's no profile, we should still let them in since the auth was successful
+        // The profile will be created by the database trigger
+        console.log('Google sign-in successful, redirecting to dashboard');
+        await handleSession();
+        navigate('/dashboard');
+        return;
+      }
+
       if (type === 'signup' || type === 'magiclink') {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
@@ -43,40 +80,6 @@ export const AuthCallback = () => {
         }
 
         await handleSession();
-        navigate('/dashboard');
-        return;
-      }
-
-      // Handle Google sign-in
-      if (type === 'google') {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session?.user) {
-          console.error('No valid session found after Google sign-in:', sessionError);
-          await supabase.auth.signOut();
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        // Check if user has a profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError || !profile) {
-          console.log('No profile found for Google user, signing out and redirecting to pricing');
-          await supabase.auth.signOut({ scope: 'global' });
-          toast({
-            title: "Account Required",
-            description: "Please sign up for an account before signing in with Google.",
-            variant: "destructive",
-          });
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
         navigate('/dashboard');
         return;
       }
@@ -104,14 +107,13 @@ export const AuthCallback = () => {
       navigate('/login');
     } catch (error) {
       console.error('Error in auth callback:', error);
-      // Make sure to sign out if there's any error
-      await supabase.auth.signOut({ scope: 'global' });
+      await supabase.auth.signOut();
       toast({
         variant: "destructive",
         title: "Error",
         description: "An unexpected error occurred during authentication."
       });
-      navigate('/?scrollTo=pricing-section');
+      navigate('/login');
     }
   };
 
