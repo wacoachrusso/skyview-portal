@@ -14,7 +14,15 @@ export const useAuthManagement = () => {
 
     const checkAuth = async () => {
       try {
-        console.log("Checking session in Dashboard");
+        console.log("Checking session in useAuthManagement");
+        
+        // First clear any existing session to ensure clean state
+        const { error: clearError } = await supabase.auth.signOut({ scope: 'local' });
+        if (clearError) {
+          console.error("Error clearing existing session:", clearError);
+        }
+
+        // Get fresh session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -35,17 +43,21 @@ export const useAuthManagement = () => {
           return;
         }
 
-        console.log("Session found, checking user");
+        // Verify the session is still valid
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        if (userError || !user) {
-          console.error("Error getting user or no user found:", userError);
+        if (userError) {
+          console.error("Error getting user:", userError);
           if (mounted) {
-            // Check if we still have a session before attempting to sign out
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            if (currentSession) {
-              await supabase.auth.signOut({ scope: 'local' });
-            }
+            setIsLoading(false);
+            navigate('/login');
+          }
+          return;
+        }
+
+        if (!user) {
+          console.log("No user found");
+          if (mounted) {
             setIsLoading(false);
             navigate('/login');
           }
@@ -60,11 +72,6 @@ export const useAuthManagement = () => {
       } catch (error) {
         console.error("Unexpected error in checkAuth:", error);
         if (mounted) {
-          // Check if we still have a session before attempting to sign out
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            await supabase.auth.signOut({ scope: 'local' });
-          }
           setIsLoading(false);
           navigate('/login');
         }
@@ -102,14 +109,22 @@ export const useAuthManagement = () => {
       console.log("Starting sign out process");
       setIsLoading(true);
       
-      // Check if we still have a session before attempting to sign out
+      // Check if we have an active session before attempting to sign out
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (session) {
-        await supabase.auth.signOut({ scope: 'local' });
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
+        if (error) {
+          console.error("Error during sign out:", error);
+          // Even if there's an error, we should clean up the local state
+        }
       }
       
-      console.log("Sign out successful");
+      // Clear local state and redirect
+      setUserEmail(null);
+      localStorage.clear();
       
+      console.log("Sign out successful");
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
