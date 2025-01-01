@@ -38,6 +38,8 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
         console.log("No active session found, proceeding with cleanup...");
       }
       
+      // Clear local storage and redirect
+      localStorage.clear();
       navigate('/login', { replace: true });
       
       toast({
