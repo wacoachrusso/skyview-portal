@@ -1,24 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PostgrestError } from "@supabase/supabase-js";
 
-const checkExistingProfile = async (email: string) => {
+interface ProfileCheckResult {
+  profile: any;
+  error: PostgrestError | null;
+}
+
+const checkExistingProfile = async (email: string): Promise<ProfileCheckResult> => {
   console.log('Checking profile for:', email);
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('email', email)
     .single();
-
-  if (profileError) {
-    console.error('Error checking profile:', profileError);
-  }
   
-  console.log('Profile check result:', profile);
   return { profile, error: profileError };
 };
 
-const handleProfileCheck = async (email: string, toast: any) => {
+const handleProfileCheck = async (email: string, toast: any): Promise<boolean> => {
   const { profile, error } = await checkExistingProfile(email);
   
   if (error || !profile) {
@@ -61,7 +62,7 @@ const initiateGoogleAuth = async () => {
   });
 };
 
-const verifyEmailConfirmation = async (user: any, toast: any) => {
+const verifyEmailConfirmation = async (user: any, toast: any): Promise<boolean> => {
   if (!user.email_confirmed_at) {
     console.log('Email not verified');
     await supabase.auth.signOut();
