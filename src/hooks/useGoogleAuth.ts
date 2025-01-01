@@ -10,6 +10,11 @@ const checkExistingProfile = async (email: string) => {
     .eq('email', email)
     .single();
 
+  if (error) {
+    console.error('Error checking profile:', profileError);
+  }
+  
+  console.log('Profile check result:', profile);
   return { profile, error: profileError };
 };
 
@@ -26,6 +31,19 @@ const handleProfileCheck = async (email: string, toast: any) => {
     });
     return false;
   }
+
+  // Check if the profile is active
+  if (profile.account_status !== 'active') {
+    console.log('Account not active:', profile.account_status);
+    await supabase.auth.signOut();
+    toast({
+      variant: "destructive",
+      title: "Account Not Active",
+      description: "Your account is not active. Please contact support."
+    });
+    return false;
+  }
+
   return true;
 };
 

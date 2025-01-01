@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { handleGoogleSignIn, handleEmailSignIn, handlePasswordRecovery, handleEmailChange } from "@/utils/authCallbackHandlers";
 import { EmailConfirmationHandler } from "./handlers/EmailConfirmationHandler";
+import { supabase } from "@/integrations/supabase/client";
 
 export const AuthCallback = () => {
   const navigate = useNavigate();
@@ -10,8 +11,52 @@ export const AuthCallback = () => {
   const { toast } = useToast();
 
   const handleSession = async () => {
-    // Add any additional session handling logic here
-    console.log('Handling session in AuthCallback');
+    try {
+      console.log('Handling session in AuthCallback');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('No user found in session');
+        navigate('/login');
+        return;
+      }
+
+      // Check if profile exists and is complete
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) {
+        console.log('No profile found, redirecting to signup');
+        await supabase.auth.signOut();
+        toast({
+          variant: "destructive",
+          title: "Account Required",
+          description: "Please sign up for an account first."
+        });
+        navigate('/signup');
+        return;
+      }
+
+      if (profile.account_status !== 'active') {
+        console.log('Account not active');
+        await supabase.auth.signOut();
+        toast({
+          variant: "destructive",
+          title: "Account Not Active",
+          description: "Your account is not active. Please contact support."
+        });
+        navigate('/login');
+        return;
+      }
+
+      console.log('Profile found and active, proceeding to dashboard');
+    } catch (error) {
+      console.error('Error in handleSession:', error);
+      navigate('/login');
+    }
   };
 
   useEffect(() => {
