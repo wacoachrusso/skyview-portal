@@ -21,40 +21,24 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
   const handleLogout = async () => {
     try {
       console.log("Starting logout process from navbar...");
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) throw error;
       
-      // Check current session state
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // Only attempt to sign out if we have a session
-        const { error } = await supabase.auth.signOut({ scope: 'local' });
-        if (error) {
-          console.error("Error during signOut:", error);
-          // Even if there's an error, we should redirect
-          navigate("/login", { replace: true });
-          return;
-        }
-      } else {
-        console.log("No active session found, proceeding with cleanup...");
-      }
-      
-      // Clear local storage and redirect
+      console.log("Logout successful, clearing local storage...");
       localStorage.clear();
-      navigate('/login', { replace: true });
       
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account",
       });
-    } catch (error) {
-      console.error("Error in logout process:", error);
-      // Even if there's an error, we should redirect
-      navigate("/login", { replace: true });
       
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error("Error during logout:", error);
       toast({
-        title: "Session ended",
-        description: "Your session has been cleared",
-        variant: "default",
+        title: "Error logging out",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive",
       });
     }
   };

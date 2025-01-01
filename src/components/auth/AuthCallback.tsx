@@ -13,33 +13,44 @@ export const AuthCallback = () => {
   const handleSession = async () => {
     try {
       console.log('Handling session in AuthCallback');
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (sessionError) {
-        console.error('Session error:', sessionError);
+      if (!user) {
+        console.log('No user found in session');
         navigate('/login');
         return;
       }
 
-      if (!session) {
-        console.log('No active session found');
-        navigate('/login');
-        return;
+      // Get current session
+      const { data: currentSession } = await supabase.auth.getSession();
+      
+      // Get all sessions for the user
+      const { data: sessions } = await supabase.auth.getSession();
+      
+      if (sessions && sessions.length > 1) {
+        console.log('Multiple sessions detected, cleaning up...');
+        
+        // Sign out from all sessions except current
+        await supabase.auth.signOut({ scope: 'global' });
+        // Sign back in to current session
+        await supabase.auth.setSession({
+          access_token: currentSession.session?.access_token!,
+          refresh_token: currentSession.session?.refresh_token!
+        });
+
+        toast({
+          variant: "destructive",
+          title: "Other Sessions Terminated",
+          description: "You've been signed out from other devices for security."
+        });
       }
 
-      console.log('Session found, checking profile');
-      const { data: profile, error: profileError } = await supabase
+      // Check if profile exists and is complete
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        await supabase.auth.signOut();
-        navigate('/login');
-        return;
-      }
 
       if (!profile) {
         console.log('No profile found, redirecting to signup');
@@ -66,10 +77,8 @@ export const AuthCallback = () => {
       }
 
       console.log('Profile found and active, proceeding to dashboard');
-      navigate('/dashboard');
     } catch (error) {
       console.error('Error in handleSession:', error);
-      await supabase.auth.signOut();
       navigate('/login');
     }
   };
@@ -100,7 +109,6 @@ export const AuthCallback = () => {
         }
       } catch (error) {
         console.error('Error in auth callback:', error);
-        await supabase.auth.signOut();
         toast({
           variant: "destructive",
           title: "Authentication Error",

@@ -24,55 +24,21 @@ export function Navbar() {
     const checkAuth = async () => {
       try {
         console.log('Checking auth state in Navbar');
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // First clear any existing session to ensure clean state
-        const { error: clearError } = await supabase.auth.signOut({ scope: 'local' });
-        if (clearError) {
-          console.error("Error clearing existing session:", clearError);
-        }
-
-        // Get fresh session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          if (mounted) {
-            setIsLoggedIn(false);
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        if (!session) {
-          console.log('No active session found');
-          if (mounted) {
-            setIsLoggedIn(false);
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        // Verify the session is still valid
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          console.error('Error getting user or no user found:', userError);
-          if (mounted) {
-            setIsLoggedIn(false);
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        console.log('Valid session found for user:', user.email);
         if (mounted) {
-          setIsLoggedIn(true);
+          if (session?.user) {
+            console.log('User is logged in:', session.user.email);
+            setIsLoggedIn(true);
+          } else {
+            console.log('No active session found');
+            setIsLoggedIn(false);
+          }
           setIsLoading(false);
         }
       } catch (error) {
         console.error('Error checking auth state:', error);
         if (mounted) {
-          setIsLoggedIn(false);
           setIsLoading(false);
         }
       }
@@ -95,7 +61,6 @@ export function Navbar() {
     });
 
     return () => {
-      console.log("Navbar cleanup");
       mounted = false;
       subscription.unsubscribe();
     };
