@@ -13,20 +13,33 @@ export const AuthCallback = () => {
   const handleSession = async () => {
     try {
       console.log('Handling session in AuthCallback');
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!user) {
-        console.log('No user found in session');
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        navigate('/login');
+        return;
+      }
+
+      if (!session) {
+        console.log('No active session found');
         navigate('/login');
         return;
       }
 
       // Check if profile exists and is complete
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', session.user.id)
         .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        await supabase.auth.signOut();
+        navigate('/login');
+        return;
+      }
 
       if (!profile) {
         console.log('No profile found, redirecting to signup');
@@ -53,8 +66,10 @@ export const AuthCallback = () => {
       }
 
       console.log('Profile found and active, proceeding to dashboard');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error in handleSession:', error);
+      await supabase.auth.signOut();
       navigate('/login');
     }
   };

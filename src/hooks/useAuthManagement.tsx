@@ -40,7 +40,7 @@ export const useAuthManagement = () => {
         if (userError || !user) {
           console.error("Error getting user or no user found:", userError);
           if (mounted) {
-            await supabase.auth.signOut({ scope: 'local' });
+            await supabase.auth.signOut();
             localStorage.clear();
             setIsLoading(false);
             navigate('/login');
@@ -94,7 +94,7 @@ export const useAuthManagement = () => {
       console.log("Starting sign out process");
       setIsLoading(true);
       
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error during sign out:", error);
         throw error;
