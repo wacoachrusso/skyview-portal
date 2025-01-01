@@ -81,8 +81,8 @@ export const updateSessionActivity = async (sessionToken: string) => {
   }
 };
 
-export const invalidateCurrentSession = async (sessionToken: string) => {
-  console.log('Invalidating current session:', sessionToken);
+export const invalidateCurrentSession = async (userId: string) => {
+  console.log('Invalidating current session:', userId);
   
   try {
     const { error } = await supabase
@@ -91,7 +91,7 @@ export const invalidateCurrentSession = async (sessionToken: string) => {
         status: 'invalidated',
         invalidated_at: new Date().toISOString()
       })
-      .eq('session_token', sessionToken);
+      .eq('user_id', userId);
 
     if (error) throw error;
     console.log('Session invalidated successfully');
