@@ -10,6 +10,28 @@ export const useGoogleAuth = () => {
     try {
       console.log('=== Google Sign In Process Started ===');
       
+      // First check if the user already exists
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', session.user.email)
+          .single();
+
+        if (!existingProfile) {
+          console.log('User not found in profiles, signing out');
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Account not found",
+            description: "Please sign up for an account first before signing in with Google."
+          });
+          navigate('/signup');
+          return;
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
