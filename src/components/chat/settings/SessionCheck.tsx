@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { createNewSession, invalidateOtherSessions, validateSession } from "@/utils/sessionManager";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
 
 export function SessionCheck() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { createNewSession, invalidateOtherSessions } = useSessionManagement();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -97,7 +98,7 @@ export function SessionCheck() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, createNewSession, invalidateOtherSessions]);
 
   return null;
 }
