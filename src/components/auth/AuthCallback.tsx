@@ -2,6 +2,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { useToast } from "@/hooks/use-toast";
 import { EmailConfirmationHandler } from './handlers/EmailConfirmationHandler';
+import { supabase } from "@/integrations/supabase/client";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -31,8 +32,39 @@ export const AuthCallback = () => {
         return;
       }
 
+      // Handle Google sign-in
+      if (type === 'google') {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          console.error('No session found after Google sign-in');
+          navigate('/?scrollTo=pricing-section');
+          return;
+        }
+
+        // Check if user has a profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!profile) {
+          console.log('No profile found for Google user, redirecting to pricing');
+          await supabase.auth.signOut();
+          toast({
+            title: "Account Required",
+            description: "Please sign up for an account before signing in with Google.",
+            variant: "destructive",
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
+        }
+
+        navigate('/dashboard');
+        return;
+      }
+
       if (type === 'recovery') {
-        // For password reset, we'll pass the tokens directly in the URL
         const token = searchParams.get('token');
         if (token) {
           navigate(`/reset-password?token=${token}`);
