@@ -24,8 +24,8 @@ export const AuthCallback = () => {
       // Get current session
       const { data: currentSession } = await supabase.auth.getSession();
       
-      // Get all sessions for the user
-      const { data: sessions } = await supabase.auth.getSession();
+      // Check for other active sessions by getting all sessions
+      const { data: { sessions } } = await supabase.auth.getSessions();
       
       if (sessions && sessions.length > 1) {
         console.log('Multiple sessions detected, cleaning up...');

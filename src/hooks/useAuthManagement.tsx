@@ -35,8 +35,8 @@ export const useAuthManagement = () => {
           return;
         }
 
-        // Check for other sessions
-        const { data: sessions } = await supabase.auth.getSession();
+        // Check for other active sessions
+        const { data: { sessions } } = await supabase.auth.getSessions();
         
         if (sessions && sessions.length > 1) {
           console.log("Multiple sessions detected, signing out from others");
