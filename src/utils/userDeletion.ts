@@ -23,7 +23,7 @@ export const deleteUserData = async (userId: string) => {
   console.log("Starting deletion of all user data for:", userId);
   
   try {
-    // Delete all referrals
+    // Delete all referrals first
     console.log("Deleting user referrals...");
     const { error: referralsError } = await supabase
       .from("referrals")
@@ -95,19 +95,19 @@ export const deleteUserData = async (userId: string) => {
       throw conversationsError;
     }
 
-    // Delete notifications
+    // Delete notifications BEFORE profile (important for foreign key constraint)
     console.log("Deleting user notifications...");
     const { error: notificationsError } = await supabase
       .from("notifications")
       .delete()
-      .eq("user_id", userId);
+      .or(`user_id.eq.${userId},profile_id.eq.${userId}`);
 
     if (notificationsError) {
       console.error("Error deleting user notifications:", notificationsError);
       throw notificationsError;
     }
 
-    // Delete profile
+    // Finally, delete profile after all dependent records are deleted
     console.log("Deleting user profile...");
     const { error: profileError } = await supabase
       .from("profiles")
