@@ -3,7 +3,7 @@ import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 
 export const deleteUserFromAuthSystem = async (userId: string) => {
   console.log("Deleting user from auth system:", userId);
-  const { error } = await supabase.functions.invoke("delete-user-auth", {
+  const { data, error } = await supabase.functions.invoke("delete-user-auth", {
     body: { userId },
   });
 
@@ -11,6 +11,12 @@ export const deleteUserFromAuthSystem = async (userId: string) => {
     console.error("Error deleting user from auth system:", error);
     throw error;
   }
+
+  if (!data) {
+    throw new Error("No response from delete-user-auth function");
+  }
+
+  return data;
 };
 
 export const deleteUserData = async (userId: string) => {
