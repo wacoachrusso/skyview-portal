@@ -1,5 +1,6 @@
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
 
 export function Footer() {
   const scrollToTop = () => {
@@ -23,6 +24,7 @@ export function Footer() {
               <li><a href="/about" className="text-sm hover:text-white transition-colors">About Us</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">Contact</a></li>
               <li><a href="/privacy-policy" className="text-sm hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="/refunds" className="text-sm hover:text-white transition-colors">Refund Policy</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">Terms of Service</a></li>
             </ul>
           </div>
@@ -36,11 +38,20 @@ export function Footer() {
           </div>
           <div>
             <h3 className="font-bold mb-4 text-white">Connect</h3>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-sm hover:text-white transition-colors">Twitter</a></li>
-              <li><a href="#" className="text-sm hover:text-white transition-colors">LinkedIn</a></li>
-              <li><a href="#" className="text-sm hover:text-white transition-colors">Facebook</a></li>
-            </ul>
+            <div className="flex space-x-4">
+              <a href="#" className="hover:text-white transition-colors" aria-label="Twitter">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="LinkedIn">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="Facebook">
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="Instagram">
+                <Instagram className="w-5 h-5" />
+              </a>
+            </div>
           </div>
         </div>
         <div className="mt-12 text-center text-sm">
