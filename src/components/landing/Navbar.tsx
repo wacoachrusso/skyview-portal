@@ -74,9 +74,18 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
-  const handleLogoClick = (e: React.MouseEvent) => {
+  const handleLogoClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate('/', { state: { fromNavbar: true } });
+    
+    // Check current auth state before navigation
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // Force a state update based on current session
+    setIsLoggedIn(!!session);
+    setIsLoading(false);
+    
+    // Navigate and reset mobile menu
+    navigate('/', { replace: true });
     setIsMobileMenuOpen(false);
   };
 
