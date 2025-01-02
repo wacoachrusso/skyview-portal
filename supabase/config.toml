@@ -1,3 +1,4 @@
+# Project Configuration
 project_id = "xnlzqsoujwsffoxhhybk"
 
 [api]
@@ -12,10 +13,6 @@ port = 54322
 enabled = true
 port = 54323
 
+# Function Configuration
 [[functions]]
-name = "send-welcome-email"
-verify_jwt = false
-
-[[functions]]
-name = "delete-user-auth"
 verify_jwt = false
