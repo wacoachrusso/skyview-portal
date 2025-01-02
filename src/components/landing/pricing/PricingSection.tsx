@@ -71,9 +71,7 @@ export function PricingSection() {
       if (!session) {
         console.log('User not logged in, redirecting to signup with plan:', plan.name);
         navigate('/signup', { 
-          state: { 
-            selectedPlan: plan.priceId ? plan.name.toLowerCase() : 'free'
-          }
+          state: { selectedPlan: plan.name.toLowerCase() }
         });
         return;
       }
