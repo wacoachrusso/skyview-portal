@@ -3,6 +3,7 @@ import { useAuthCallback } from "@/hooks/useAuthCallback";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { sendWelcomeEmail } from "@/utils/email";
 
 export function AuthCallback() {
   const { toast } = useToast();
@@ -46,6 +47,12 @@ export function AuthCallback() {
           });
 
           if (error) throw error;
+
+          // Send welcome email after successful signup
+          await sendWelcomeEmail({
+            email: pendingSignup.email,
+            name: pendingSignup.fullName,
+          });
 
           // Clear pending signup data
           localStorage.removeItem('pendingSignup');

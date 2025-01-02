@@ -140,26 +140,18 @@ export const useSignup = () => {
         return;
       }
 
-      console.log("Signup successful:", data);
+      console.log("Free trial signup successful:", data);
 
-      const { error: emailError } = await sendWelcomeEmail({
+      // Send welcome email for free trial users
+      await sendWelcomeEmail({
         email: pendingSignupData.email,
         name: pendingSignupData.options.data.full_name,
       });
 
-      if (emailError) {
-        console.error("Error sending welcome email:", emailError);
-        toast({
-          variant: "destructive",
-          title: "Warning",
-          description: "Account created but we couldn't send the welcome email. Please contact support.",
-        });
-      } else {
-        toast({
-          title: "Account created",
-          description: "Welcome to SkyGuide!",
-        });
-      }
+      toast({
+        title: "Account created",
+        description: "Welcome to SkyGuide!",
+      });
 
       navigate('/dashboard');
 
