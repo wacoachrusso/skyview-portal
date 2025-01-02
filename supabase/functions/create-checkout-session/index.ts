@@ -13,40 +13,14 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    )
-
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
-    }
-
-    // Get user from auth token
-    const token = authHeader.replace('Bearer ', '')
-    console.log('Getting user from token...')
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    const { priceId, mode, email } = await req.json();
     
-    if (userError || !user) {
-      console.error('User error:', userError)
-      throw new Error('User not found')
-    }
-
-    const email = user.email
-    if (!email) {
-      console.error('No email found for user:', user.id)
-      throw new Error('No email found')
-    }
-
-    console.log('User email found:', email)
-
-    // Get request body
-    const { priceId, mode } = await req.json()
     if (!priceId) {
-      throw new Error('No price ID provided')
+      throw new Error('No price ID provided');
+    }
+
+    if (!email) {
+      throw new Error('No email provided');
     }
 
     // Initialize Stripe
@@ -98,8 +72,8 @@ serve(async (req) => {
         },
       ],
       mode: mode || 'subscription',
-      success_url: `${req.headers.get('origin')}/dashboard?payment=success`,
-      cancel_url: `${req.headers.get('origin')}/dashboard?payment=cancelled`,
+      success_url: `${req.headers.get('origin')}/auth/callback?payment=success`,
+      cancel_url: `${req.headers.get('origin')}/auth/callback?payment=cancelled`,
     })
 
     console.log('Checkout session created:', session.id)

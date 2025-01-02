@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { sendWelcomeEmail } from "@/utils/email";
@@ -14,7 +14,6 @@ interface SignupFormData {
 
 export const useSignup = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
@@ -35,7 +34,47 @@ export const useSignup = () => {
         plan: selectedPlan
       });
 
-      // Store the signup data and show disclaimer
+      // For paid plans, first create checkout session
+      if (selectedPlan !== 'free') {
+        const priceId = selectedPlan.toLowerCase() === 'monthly' 
+          ? 'price_1QcfUFA8w17QmjsPe9KXKFpT' 
+          : 'price_1QcfWYA8w17QmjsPZ22koqjj';
+
+        console.log('Creating checkout session for paid plan:', selectedPlan);
+        
+        const response = await supabase.functions.invoke('create-checkout-session', {
+          body: JSON.stringify({
+            priceId,
+            mode: 'subscription',
+            email: formData.email.trim().toLowerCase(),
+          }),
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        const { data: { url } } = response;
+        if (!url) {
+          throw new Error('No checkout URL received');
+        }
+
+        // Store signup data in localStorage for after payment
+        localStorage.setItem('pendingSignup', JSON.stringify({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+          fullName: formData.fullName.trim(),
+          jobTitle: formData.jobTitle.toLowerCase(),
+          airline: formData.airline.toLowerCase(),
+          plan: selectedPlan,
+        }));
+
+        // Redirect to Stripe checkout
+        window.location.href = url;
+        return;
+      }
+
+      // For free plan, show disclaimer
       setPendingSignupData({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
