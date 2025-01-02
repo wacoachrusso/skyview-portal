@@ -4,7 +4,8 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 interface EmailRequest {
@@ -113,19 +114,24 @@ const handler = async (req: Request): Promise<Response> => {
                 SkyGuide™ - Your Aviation Assistant<br>
                 © 2024 SkyGuide. All rights reserved.<br>
                 <a href="https://skyguide.site/privacy-policy" style="color: #a0aec0; text-decoration: underline;">Privacy Policy</a> • 
-                <a href="https://skyguide.site/terms" style="color: #a0aec0; text-decoration: underline;">Terms of Service</a>
+                <a href="https://skyguide.site/terms" style="color: #a0aec0; text-decoration: underline;">Terms of Service</a> •
+                <a href="https://skyguide.site/refunds" style="color: #a0aec0; text-decoration: underline;">Refund Policy</a>
               </p>
             </div>
           </div>
         `,
+        text: `Welcome to SkyGuide™!\n\nHi ${firstName},\n\nWe're thrilled to welcome you to SkyGuide™! Your one-stop solution for all your union contract-related needs is now just a tap away.\n\nVisit https://skyguide.site to get started!`,
+        headers: {
+          "List-Unsubscribe": `<mailto:unsubscribe@skyguide.site?subject=unsubscribe>, <https://skyguide.site/unsubscribe?email=${email}>`,
+        },
       }),
     });
 
     if (!res.ok) {
-      const error = await res.json();
+      const error = await res.text();
       console.error("Error sending welcome email:", error);
       return new Response(
-        JSON.stringify({ error: "Failed to send welcome email", details: JSON.stringify(error) }),
+        JSON.stringify({ error: "Failed to send welcome email", details: error }),
         {
           status: res.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

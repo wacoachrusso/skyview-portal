@@ -4,8 +4,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -18,7 +17,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY is not set");
-      throw new Error("Missing RESEND_API_KEY configuration");
+      throw new Error("Missing RESEND_API_KEY");
     }
 
     const { email, name, confirmationUrl } = await req.json();
@@ -29,7 +28,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Sending confirmation email to:", email);
-    console.log("Confirmation URL:", confirmationUrl);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -62,7 +60,8 @@ const handler = async (req: Request): Promise<Response> => {
               <p>© 2024 SkyGuide. All rights reserved.</p>
               <p>
                 <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: underline;">Privacy Policy</a> • 
-                <a href="https://skyguide.site/terms" style="color: #666; text-decoration: underline;">Terms of Service</a>
+                <a href="https://skyguide.site/terms" style="color: #666; text-decoration: underline;">Terms of Service</a> •
+                <a href="https://skyguide.site/refunds" style="color: #666; text-decoration: underline;">Refund Policy</a>
               </p>
             </div>
           </div>
@@ -73,7 +72,13 @@ const handler = async (req: Request): Promise<Response> => {
     if (!res.ok) {
       const error = await res.text();
       console.error("Error sending confirmation email:", error);
-      throw new Error(error);
+      return new Response(
+        JSON.stringify({ error: "Failed to send confirmation email", details: error }),
+        {
+          status: res.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     const data = await res.json();
@@ -85,10 +90,13 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error) {
     console.error("Error in send-confirmation-email function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Failed to process request", details: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 };
 
