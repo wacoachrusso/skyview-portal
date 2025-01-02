@@ -84,18 +84,21 @@ export type Database = {
       disclaimer_consents: {
         Row: {
           created_at: string
+          has_seen_chat_disclaimer: boolean | null
           id: string
           status: Database["public"]["Enums"]["consent_status"]
           user_id: string | null
         }
         Insert: {
           created_at?: string
+          has_seen_chat_disclaimer?: boolean | null
           id?: string
           status: Database["public"]["Enums"]["consent_status"]
           user_id?: string | null
         }
         Update: {
           created_at?: string
+          has_seen_chat_disclaimer?: boolean | null
           id?: string
           status?: Database["public"]["Enums"]["consent_status"]
           user_id?: string | null

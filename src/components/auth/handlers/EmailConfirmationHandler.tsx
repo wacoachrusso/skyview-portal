@@ -41,8 +41,7 @@ export const EmailConfirmationHandler = () => {
         .from('disclaimer_consents')
         .upsert({
           user_id: userId,
-          status: 'accepted',
-          has_seen_chat_disclaimer: true
+          status: 'accepted'
         });
 
       if (upsertError) throw upsertError;

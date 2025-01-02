@@ -30,7 +30,7 @@ export function ChatContent({
       // Check if user has already seen the disclaimer
       const { data: disclaimer, error } = await supabase
         .from('disclaimer_consents')
-        .select('has_seen_chat_disclaimer')
+        .select('status')
         .eq('user_id', currentUserId)
         .single();
 
@@ -39,8 +39,8 @@ export function ChatContent({
         return;
       }
 
-      // If no record exists or hasn't seen chat disclaimer, show it
-      if (!disclaimer || !disclaimer.has_seen_chat_disclaimer) {
+      // If no record exists or hasn't accepted, show it
+      if (!disclaimer || disclaimer.status !== 'accepted') {
         setShowDisclaimer(true);
       }
     };
@@ -65,8 +65,7 @@ export function ChatContent({
         .from('disclaimer_consents')
         .upsert({
           user_id: currentUserId,
-          status: 'accepted',
-          has_seen_chat_disclaimer: true
+          status: 'accepted'
         });
 
       if (upsertError) throw upsertError;
