@@ -34,8 +34,11 @@ export function AuthCallback() {
         .single();
 
       if (!profile) {
-        // New user, send welcome email
-        await sendWelcomeEmail(user.email);
+        // New user, send welcome email with proper EmailData object
+        await sendWelcomeEmail({
+          email: user.email || '',
+          name: user.user_metadata?.full_name || 'User'
+        });
         navigate("/complete-profile");
       } else {
         // Existing user
