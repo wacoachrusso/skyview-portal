@@ -53,6 +53,15 @@ export function ChatContent({
     checkDisclaimerStatus();
   }, [currentUserId]);
 
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast({
+      title: "Copied to clipboard",
+      description: "Message content has been copied to your clipboard.",
+      duration: 2000,
+    });
+  };
+
   const handleAcceptDisclaimer = async () => {
     if (!currentUserId) return;
 
