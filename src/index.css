@@ -56,25 +56,24 @@
   
   html {
     height: 100%;
+    min-height: 100vh;
     min-height: -webkit-fill-available;
     scroll-behavior: smooth;
-    font-size: 16px; /* Ensure base font size is at least 16px */
+    font-size: 16px;
   }
   
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground min-h-screen;
     font-feature-settings: "rlig" 1, "calt" 1;
     min-height: 100vh;
     min-height: -webkit-fill-available;
     -webkit-overflow-scrolling: touch;
     line-height: 1.5;
     text-rendering: optimizeLegibility;
-  }
-
-  /* Remove browser UI on Android */
-  body {
     margin: 0;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    display: flex;
+    flex-direction: column;
   }
 
   #root {
@@ -82,6 +81,10 @@
     min-height: -webkit-fill-available;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   /* Ensure proper sizing on iOS */
