@@ -1,59 +1,49 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/components/theme-provider";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
-import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
-import Settings from "@/pages/Settings";
 import Account from "@/pages/Account";
-import CompleteProfile from "@/pages/CompleteProfile";
-import { AuthCallback } from "@/components/auth/AuthCallback";
-import ReleaseNotes from "@/pages/ReleaseNotes";
+import Settings from "@/pages/Settings";
+import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
-import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import ResetPassword from "@/pages/ResetPassword";
 import About from "@/pages/About";
+import ReleaseNotes from "@/pages/ReleaseNotes";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Refunds from "@/pages/Refunds";
+import CompleteProfile from "@/pages/CompleteProfile";
 import ForgotPassword from "@/pages/ForgotPassword";
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+import ResetPassword from "@/pages/ResetPassword";
+import AuthCallback from "@/components/auth/AuthCallback";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
+import "./App.css";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/complete-profile" element={<CompleteProfile />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/release-notes" element={<ReleaseNotes />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/about" element={<About />} />
-          </Routes>
-        </Router>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/release-notes" element={<ReleaseNotes />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refunds" element={<Refunds />} />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+        </Routes>
         <Toaster />
-      </ThemeProvider>
-    </QueryClientProvider>
+      </Router>
+    </ThemeProvider>
   );
 }
 
