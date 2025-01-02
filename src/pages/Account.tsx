@@ -7,6 +7,16 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AccountHeader } from "@/components/account/AccountHeader";
 import { AccountInfo } from "@/components/account/AccountInfo";
 import { SubscriptionInfo } from "@/components/account/SubscriptionInfo";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Account = () => {
   const navigate = useNavigate();
@@ -14,6 +24,7 @@ const Account = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const { handleSignOut } = useAuthManagement();
 
   useEffect(() => {
@@ -51,8 +62,20 @@ const Account = () => {
   }, [navigate]);
 
   const handlePlanChange = (newPlan: string) => {
-    // Navigate to home page with pricing section
     navigate('/?scrollTo=pricing-section');
+  };
+
+  const handleInitialCancelClick = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleCancelDialogClose = () => {
+    setShowCancelDialog(false);
+  };
+
+  const handleReadRefundPolicy = () => {
+    setShowCancelDialog(false);
+    navigate('/refunds', { state: { fromCancellation: true } });
   };
 
   const handleCancelSubscription = async () => {
@@ -108,10 +131,32 @@ const Account = () => {
           <SubscriptionInfo 
             profile={profile}
             onPlanChange={handlePlanChange}
-            onCancelSubscription={handleCancelSubscription}
+            onCancelSubscription={handleInitialCancelClick}
           />
         </div>
       </main>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={handleCancelDialogClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Before You Cancel</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please review our refund and cancellation policy before proceeding. This will help you understand the implications of cancelling your subscription.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDialogClose}>
+              Keep Subscription
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReadRefundPolicy}
+              className="bg-brand-gold hover:bg-brand-gold/90 text-black"
+            >
+              Read Refund Policy
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

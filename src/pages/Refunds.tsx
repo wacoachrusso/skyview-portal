@@ -2,9 +2,61 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 const Refunds = () => {
   const { handleSignOut } = useAuthManagement();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const fromCancellation = location.state?.fromCancellation;
+
+  const handleConfirmCancel = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          subscription_plan: 'free',
+          query_count: 0,
+          last_query_timestamp: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Subscription Cancelled",
+        description: "Your subscription has been cancelled successfully.",
+      });
+
+      navigate('/account');
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to cancel subscription. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
@@ -91,8 +143,47 @@ const Refunds = () => {
               </a>
             </p>
           </section>
+
+          {fromCancellation && (
+            <div className="mt-8 flex justify-end space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/account')}
+              >
+                Keep Subscription
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setShowConfirmDialog(true)}
+              >
+                Confirm Cancellation
+              </Button>
+            </div>
+          )}
         </Card>
       </main>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Subscription Cancellation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel your subscription? This action cannot be undone, and you'll lose access to premium features immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>
+              Keep Subscription
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmCancel}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Cancel Subscription
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
