@@ -3,7 +3,6 @@ import { AuthFormHeader } from "./AuthFormHeader";
 import { AuthFormFields } from "./AuthFormFields";
 import { AuthFormFooter } from "./AuthFormFooter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 import { useSignup } from "@/hooks/useSignup";
 import { useSignupForm } from "@/hooks/useSignupForm";
 
@@ -23,10 +22,7 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
   const {
     loading,
-    showDisclaimer,
     handleSignupSubmit,
-    handleDisclaimerAccepted,
-    handleDisclaimerRejected,
   } = useSignup();
 
   const stateSelectedPlan = location.state?.selectedPlan;
@@ -69,14 +65,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
           <AuthFormFooter />
         </div>
       </div>
-
-      {showDisclaimer && (
-        <DisclaimerDialog 
-          open={showDisclaimer}
-          onAccept={handleDisclaimerAccepted}
-          onReject={handleDisclaimerRejected}
-        />
-      )}
     </div>
   );
 };

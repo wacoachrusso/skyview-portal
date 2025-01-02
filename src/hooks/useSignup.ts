@@ -15,10 +15,7 @@ interface SignupFormData {
 export const useSignup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
   const [loading, setLoading] = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
 
   const handleSignupSubmit = async (formData: SignupFormData, selectedPlan: string, priceId?: string) => {
     if (loading) return;
@@ -74,8 +71,8 @@ export const useSignup = () => {
         return;
       }
 
-      // For free plan, show disclaimer
-      setPendingSignupData({
+      // For free plan, proceed with signup
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
@@ -88,26 +85,6 @@ export const useSignup = () => {
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
-      setShowDisclaimer(true);
-
-    } catch (error) {
-      console.error("Unexpected error during signup:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDisclaimerAccepted = async () => {
-    if (!pendingSignupData) return;
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.auth.signUp(pendingSignupData);
 
       if (error) {
         console.error("Signup error:", error);
@@ -144,8 +121,8 @@ export const useSignup = () => {
 
       // Send welcome email for free trial users
       await sendWelcomeEmail({
-        email: pendingSignupData.email,
-        name: pendingSignupData.options.data.full_name,
+        email: formData.email.trim().toLowerCase(),
+        name: formData.fullName.trim(),
       });
 
       toast({
@@ -156,7 +133,7 @@ export const useSignup = () => {
       navigate('/dashboard');
 
     } catch (error) {
-      console.error("Error during signup after disclaimer acceptance:", error);
+      console.error("Error during signup:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -164,26 +141,11 @@ export const useSignup = () => {
       });
     } finally {
       setLoading(false);
-      setShowDisclaimer(false);
-      setPendingSignupData(null);
     }
-  };
-
-  const handleDisclaimerRejected = () => {
-    setShowDisclaimer(false);
-    setPendingSignupData(null);
-    toast({
-      variant: "destructive",
-      title: "Signup cancelled",
-      description: "You must accept the disclaimer to create an account.",
-    });
   };
 
   return {
     loading,
-    showDisclaimer,
     handleSignupSubmit,
-    handleDisclaimerAccepted,
-    handleDisclaimerRejected
   };
 };
