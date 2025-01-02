@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
@@ -19,31 +20,43 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./App.css";
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 1000, // Consider data stale after 5 seconds
+      retry: 1, // Only retry failed requests once
+    },
+  },
+});
+
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/release-notes" element={<ReleaseNotes />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/refunds" element={<Refunds />} />
-          <Route path="/complete-profile" element={<CompleteProfile />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-        </Routes>
-        <Toaster />
-      </Router>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/release-notes" element={<ReleaseNotes />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/refunds" element={<Refunds />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
