@@ -27,6 +27,8 @@ export function ChatContent({
     const checkDisclaimerStatus = async () => {
       if (!currentUserId) return;
 
+      console.log('Checking disclaimer status for user:', currentUserId);
+      
       // Check if user has already seen the disclaimer
       const { data: disclaimer, error } = await supabase
         .from('disclaimer_consents')
@@ -34,32 +36,27 @@ export function ChatContent({
         .eq('user_id', currentUserId)
         .single();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
         console.error('Error checking disclaimer status:', error);
         return;
       }
 
       // If no record exists or hasn't accepted, show it
-      if (!disclaimer || disclaimer.status !== 'accepted') {
+      if (!disclaimer) {
+        console.log('No disclaimer record found, showing disclaimer');
         setShowDisclaimer(true);
+      } else {
+        console.log('Existing disclaimer status:', disclaimer.status);
       }
     };
 
     checkDisclaimerStatus();
   }, [currentUserId]);
 
-  const handleCopyMessage = (content: string) => {
-    navigator.clipboard.writeText(content);
-    toast({
-      title: "Copied to clipboard",
-      description: "Message content has been copied to your clipboard.",
-      duration: 2000,
-    });
-  };
-
   const handleAcceptDisclaimer = async () => {
     if (!currentUserId) return;
 
+    console.log('User accepted disclaimer, updating status');
     try {
       const { error: upsertError } = await supabase
         .from('disclaimer_consents')
@@ -72,7 +69,7 @@ export function ChatContent({
 
       setShowDisclaimer(false);
       toast({
-        title: "Welcome to SkyGuide",
+        title: "Welcome to SkyGuide Chat",
         description: "You can now start chatting with our AI assistant.",
       });
     } catch (error) {
@@ -86,6 +83,7 @@ export function ChatContent({
   };
 
   const handleRejectDisclaimer = () => {
+    console.log('User rejected disclaimer, redirecting to dashboard');
     // Redirect to dashboard if they reject the disclaimer
     window.location.href = '/dashboard';
   };
