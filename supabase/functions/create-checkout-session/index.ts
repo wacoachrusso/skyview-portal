@@ -12,72 +12,97 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-  )
-
   try {
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeKey) {
-      console.error('STRIPE_SECRET_KEY is not set in environment variables');
-      throw new Error('Stripe configuration error');
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    )
+
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
     }
 
-    const authHeader = req.headers.get('Authorization')!
+    // Get user from auth token
     const token = authHeader.replace('Bearer ', '')
-    const { data } = await supabaseClient.auth.getUser(token)
-    const user = data.user
-    const email = user?.email
+    console.log('Getting user from token...')
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    
+    if (userError || !user) {
+      console.error('User error:', userError)
+      throw new Error('User not found')
+    }
 
+    const email = user.email
     if (!email) {
+      console.error('No email found for user:', user.id)
       throw new Error('No email found')
     }
 
-    console.log('Creating Stripe instance with provided key');
+    console.log('User email found:', email)
+
+    // Get request body
+    const { priceId, mode } = await req.json()
+    if (!priceId) {
+      throw new Error('No price ID provided')
+    }
+
+    // Initialize Stripe
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
+    if (!stripeKey) {
+      throw new Error('Stripe key not configured')
+    }
+
     const stripe = new Stripe(stripeKey, {
       apiVersion: '2023-10-16',
     })
 
-    const { priceId, mode } = await req.json()
-
+    // Check if customer exists
+    console.log('Checking for existing customer...')
     const customers = await stripe.customers.list({
       email: email,
       limit: 1
     })
 
-    let customer_id = undefined
+    let customerId = undefined
     if (customers.data.length > 0) {
-      customer_id = customers.data[0].id
+      customerId = customers.data[0].id
+      console.log('Found existing customer:', customerId)
+
+      // Check if already subscribed
       if (mode === 'subscription') {
         const subscriptions = await stripe.subscriptions.list({
-          customer: customers.data[0].id,
+          customer: customerId,
           status: 'active',
           price: priceId,
           limit: 1
         })
 
         if (subscriptions.data.length > 0) {
-          throw new Error("Already subscribed to this plan")
+          throw new Error('Already subscribed to this plan')
         }
       }
     }
 
-    console.log('Creating payment session...')
+    // Create checkout session
+    console.log('Creating checkout session...')
     const session = await stripe.checkout.sessions.create({
-      customer: customer_id,
-      customer_email: customer_id ? undefined : email,
+      customer: customerId,
+      customer_email: customerId ? undefined : email,
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
-      mode: mode,
+      mode: mode || 'subscription',
       success_url: `${req.headers.get('origin')}/dashboard?payment=success`,
       cancel_url: `${req.headers.get('origin')}/dashboard?payment=cancelled`,
     })
 
+    console.log('Checkout session created:', session.id)
     return new Response(
       JSON.stringify({ url: session.url }),
       { 
@@ -86,7 +111,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error creating payment session:', error)
+    console.error('Error in create-checkout-session:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
