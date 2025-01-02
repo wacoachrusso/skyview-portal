@@ -70,7 +70,10 @@ export function PricingSection() {
       if (!session) {
         console.log('User not logged in, redirecting to signup with plan:', plan.name);
         navigate('/signup', { 
-          state: { selectedPlan: plan.name.toLowerCase() }
+          state: { 
+            selectedPlan: plan.name.toLowerCase(),
+            priceId: plan.priceId // Pass the priceId through navigation state
+          }
         });
         return;
       }
@@ -80,7 +83,11 @@ export function PricingSection() {
         return;
       }
 
-      console.log('Making request to create-checkout-session with session:', session.access_token);
+      console.log('Making request to create-checkout-session with:', {
+        session: session.access_token,
+        priceId: plan.priceId,
+        mode: plan.mode
+      });
       
       const response = await supabase.functions.invoke('create-checkout-session', {
         body: JSON.stringify({

@@ -20,7 +20,7 @@ export const useSignup = () => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [pendingSignupData, setPendingSignupData] = useState<any>(null);
 
-  const handleSignupSubmit = async (formData: SignupFormData, selectedPlan: string) => {
+  const handleSignupSubmit = async (formData: SignupFormData, selectedPlan: string, priceId?: string) => {
     if (loading) return;
     
     setLoading(true);
@@ -31,20 +31,17 @@ export const useSignup = () => {
         fullName: formData.fullName,
         jobTitle: formData.jobTitle,
         airline: formData.airline,
-        plan: selectedPlan
+        plan: selectedPlan,
+        priceId: priceId
       });
 
       // For paid plans, first create checkout session
-      if (selectedPlan !== 'free') {
-        const priceId = selectedPlan.toLowerCase() === 'monthly' 
-          ? 'price_1QcfUFA8w17QmjsPe9KXKFpT' 
-          : 'price_1QcfWYA8w17QmjsPZ22koqjj';
-
-        console.log('Creating checkout session for paid plan:', selectedPlan);
+      if (selectedPlan !== 'free' && priceId) {
+        console.log('Creating checkout session for paid plan:', selectedPlan, 'with priceId:', priceId);
         
         const response = await supabase.functions.invoke('create-checkout-session', {
           body: JSON.stringify({
-            priceId,
+            priceId: priceId,
             mode: 'subscription',
             email: formData.email.trim().toLowerCase(),
           }),
