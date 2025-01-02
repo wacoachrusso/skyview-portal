@@ -37,7 +37,10 @@ export const useSignup = () => {
 
       // For paid plans, first create checkout session
       if (selectedPlan !== 'free' && priceId) {
-        console.log('Creating checkout session for paid plan:', selectedPlan, 'with priceId:', priceId);
+        console.log('Creating checkout session for paid plan:', {
+          plan: selectedPlan,
+          priceId: priceId
+        });
         
         const response = await supabase.functions.invoke('create-checkout-session', {
           body: JSON.stringify({

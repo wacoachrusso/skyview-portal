@@ -11,11 +11,17 @@ export const usePricingHandler = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.log('User not logged in, redirecting to signup with plan:', plan.name);
+        console.log('User not logged in, redirecting to signup with plan:', {
+          name: plan.name,
+          priceId: plan.priceId,
+          mode: plan.mode
+        });
+        
         navigate('/signup', { 
           state: { 
             selectedPlan: plan.name.toLowerCase(),
-            priceId: plan.priceId
+            priceId: plan.priceId,
+            mode: plan.mode
           }
         });
         return;
@@ -27,9 +33,9 @@ export const usePricingHandler = () => {
       }
 
       console.log('Making request to create-checkout-session with:', {
-        session: session.access_token,
         priceId: plan.priceId,
-        mode: plan.mode
+        mode: plan.mode,
+        planName: plan.name
       });
       
       const response = await supabase.functions.invoke('create-checkout-session', {

@@ -30,11 +30,12 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   } = useSignup();
 
   const stateSelectedPlan = location.state?.selectedPlan;
+  const statePriceId = location.state?.priceId;
   const finalSelectedPlan = selectedPlan || stateSelectedPlan || 'free';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    handleSignupSubmit(formData, finalSelectedPlan);
+    handleSignupSubmit(formData, finalSelectedPlan, statePriceId);
   };
 
   return (
