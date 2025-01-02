@@ -36,7 +36,7 @@ const plans = [
     buttonText: "Get Started",
     gradient: "bg-gradient-to-br from-brand-navy via-brand-navy to-brand-slate",
     isPopular: true,
-    priceId: "YOUR_MONTHLY_PRICE_ID", // You'll add this later
+    priceId: "price_1QcfUFA8w17QmjsPe9KXKFpT",
     mode: "subscription"
   },
   {
@@ -54,7 +54,7 @@ const plans = [
     ],
     buttonText: "Best Value",
     gradient: "bg-gradient-to-br from-brand-gold/20 to-brand-gold/10",
-    priceId: "YOUR_ANNUAL_PRICE_ID", // You'll add this later
+    priceId: "price_1QcfWYA8w17QmjsPZ22koqjj",
     mode: "subscription"
   }
 ];
