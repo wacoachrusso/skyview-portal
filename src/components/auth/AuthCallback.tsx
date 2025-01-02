@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { sendWelcomeEmail } from "@/utils/email";
 
-export function AuthCallback() {
+const AuthCallback = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -91,4 +91,6 @@ export function AuthCallback() {
   }, [navigate, toast]);
 
   return null;
-}
+};
+
+export default AuthCallback;
