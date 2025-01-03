@@ -30,28 +30,43 @@ const queryClient = new QueryClient({
   },
 });
 
+// Define public routes that don't require authentication
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/signup",
+  "/privacy-policy",
+  "/about",
+  "/auth/callback",
+  "/forgot-password",
+  "/reset-password"
+];
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            
+            {/* Protected routes */}
             <Route path="/chat" element={<Chat />} />
             <Route path="/account" element={<Account />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/about" element={<About />} />
             <Route path="/release-notes" element={<ReleaseNotes />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/refunds" element={<Refunds />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
           <Toaster />
         </Router>
