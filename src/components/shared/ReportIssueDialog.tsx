@@ -35,18 +35,24 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
       console.log("Submitting issue report:", data);
       
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
 
-      const { error } = await supabase.from("notifications").insert({
-        user_id: user.id,
-        profile_id: user.id,
-        title: `Issue Report: ${data.title}`,
-        message: data.description,
-        type: "issue",
-        notification_type: "system"
-      });
+      const { error } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: user.id,
+          profile_id: user.id,
+          title: `Issue Report: ${data.title}`,
+          message: data.description,
+          type: "issue",
+          notification_type: "system"
+        });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: "Report Submitted",
