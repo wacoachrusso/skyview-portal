@@ -31,15 +31,17 @@ export function ReleaseNotePopup() {
           return;
         }
 
-        // Get the last viewed release note ID from localStorage
-        const lastViewedId = localStorage.getItem('lastViewedReleaseNoteId');
-        console.log('Last viewed release note ID:', lastViewedId);
+        // Get all viewed release note IDs from localStorage
+        const viewedNotesString = localStorage.getItem('viewedReleaseNotes');
+        const viewedNotes: string[] = viewedNotesString ? JSON.parse(viewedNotesString) : [];
+        console.log('Previously viewed release notes:', viewedNotes);
 
         // Get all release notes ordered by date
         const { data: notes, error } = await supabase
           .from('release_notes')
           .select('*')
-          .order('release_date', { ascending: false });
+          .order('release_date', { ascending: false })
+          .limit(1);
 
         if (error) {
           console.error('Error fetching release notes:', error);
@@ -51,7 +53,7 @@ export function ReleaseNotePopup() {
           console.log('Latest release note:', latestReleaseNote.id);
           
           // Check if we've already shown this note
-          const hasBeenViewed = lastViewedId === latestReleaseNote.id;
+          const hasBeenViewed = viewedNotes.includes(latestReleaseNote.id);
           console.log('Has this note been viewed?', hasBeenViewed);
 
           if (!hasBeenViewed) {
@@ -73,9 +75,17 @@ export function ReleaseNotePopup() {
 
   const handleClose = () => {
     if (latestNote) {
-      // Store the ID of the viewed release note in localStorage
-      localStorage.setItem('lastViewedReleaseNoteId', latestNote.id);
-      console.log('Stored viewed release note ID:', latestNote.id);
+      // Get existing viewed notes
+      const viewedNotesString = localStorage.getItem('viewedReleaseNotes');
+      const viewedNotes: string[] = viewedNotesString ? JSON.parse(viewedNotesString) : [];
+      
+      // Add the new note ID if it's not already in the array
+      if (!viewedNotes.includes(latestNote.id)) {
+        viewedNotes.push(latestNote.id);
+        // Store the updated array back in localStorage
+        localStorage.setItem('viewedReleaseNotes', JSON.stringify(viewedNotes));
+        console.log('Updated viewed release notes:', viewedNotes);
+      }
     }
     setOpen(false);
   };
