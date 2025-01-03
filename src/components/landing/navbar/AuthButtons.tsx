@@ -21,19 +21,33 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
   const handleLogout = async () => {
     try {
       console.log("Starting logout process from navbar...");
+      
+      // First clear all local storage
       localStorage.clear();
       
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Then sign out from Supabase with global scope to clear all sessions
+      const { error } = await supabase.auth.signOut({ 
+        scope: 'global' 
+      });
       
+      if (error) {
+        console.error("Error during logout:", error);
+        throw error;
+      }
+      
+      console.log("Successfully logged out");
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account",
       });
       
+      // Navigate after successful logout
       navigate('/login', { replace: true });
     } catch (error) {
       console.error("Error during logout:", error);
+      
+      // Even if there's an error, ensure we clear local state and redirect
+      localStorage.clear();
       navigate('/login', { replace: true });
       
       toast({
