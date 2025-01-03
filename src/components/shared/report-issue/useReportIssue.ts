@@ -3,16 +3,17 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReportIssueFormData } from "./types";
 
-export function useReportIssue(onSuccess: () => void) {
+export const useReportIssue = (onClose: () => void) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (data: ReportIssueFormData) => {
+    setIsSubmitting(true);
+    console.log("Submitting issue report:", data);
+
     try {
-      setIsSubmitting(true);
-      console.log("Submitting issue report:", data);
-      
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
         throw new Error("User not authenticated");
       }
@@ -29,22 +30,23 @@ export function useReportIssue(onSuccess: () => void) {
         });
 
       if (error) {
-        console.error("Error submitting issue report:", error);
         throw error;
       }
 
       toast({
-        title: "Report Submitted",
-        description: "Thank you for your feedback. We'll look into this issue.",
+        title: "Success",
+        description: "Your issue has been reported successfully.",
+        duration: 3000,
       });
 
-      onSuccess();
+      onClose();
     } catch (error) {
-      console.error("Error submitting issue report:", error);
+      console.error("Error submitting issue:", error);
       toast({
-        variant: "destructive",
         title: "Error",
-        description: "Failed to submit report. Please try again.",
+        description: "Failed to submit issue. Please try again.",
+        variant: "destructive",
+        duration: 3000,
       });
     } finally {
       setIsSubmitting(false);
@@ -52,7 +54,7 @@ export function useReportIssue(onSuccess: () => void) {
   };
 
   return {
-    isSubmitting,
     handleSubmit,
+    isSubmitting
   };
-}
+};
