@@ -46,11 +46,12 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
           profile_id: user.id,
           title: `Issue Report: ${data.title}`,
           message: data.description,
-          type: "issue",
+          type: "support",  // Changed from "issue" to "support"
           notification_type: "system"
         });
 
       if (error) {
+        console.error("Error submitting issue report:", error);
         throw error;
       }
 
