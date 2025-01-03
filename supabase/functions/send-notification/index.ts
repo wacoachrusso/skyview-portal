@@ -1,62 +1,76 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface NotificationRequest {
+  to: string;
+  subject: string;
+  message: string;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+const handler = async (req: Request): Promise<Response> => {
+  console.log("Processing notification email request");
+  
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
+    const { to, subject, message } = await req.json() as NotificationRequest;
+    console.log(`Sending notification email to ${to}`);
 
-    const { userId, title, message, type = 'system' } = await req.json()
-    console.log('Sending notification:', { userId, title, message, type })
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "SkyGuide Notifications <skyguide32@gmail.com>",
+        to: [to],
+        subject: subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1a1f2c;">${subject}</h2>
+            <div style="margin: 20px 0;">
+              ${message}
+            </div>
+            <p style="color: #666; font-size: 14px;">
+              This is an automated message from SkyGuide. Please do not reply to this email.
+            </p>
+          </div>
+        `,
+      }),
+    });
 
-    const { data, error } = await supabaseClient
-      .from('notifications')
-      .insert([
-        {
-          user_id: userId,
-          title,
-          message,
-          type,
-          is_read: false,
-        }
-      ])
-      .select()
-      .single()
+    if (!res.ok) {
+      const error = await res.text();
+      console.error("Error sending notification email:", error);
+      throw new Error(`Failed to send email: ${error}`);
+    }
 
-    if (error) throw error
+    const data = await res.json();
+    console.log("Notification email sent successfully:", data);
 
-    console.log('Notification created:', data)
-
-    return new Response(
-      JSON.stringify({ success: true, notification: data }),
-      { 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        } 
-      }
-    )
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.error('Error sending notification:', error)
+    console.error("Error in notification email function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        },
-        status: 400
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
-    )
+    );
   }
-})
+};
+
+serve(handler);

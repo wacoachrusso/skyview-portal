@@ -1,42 +1,29 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface EmailRequest {
   email: string;
   name: string;
+  plan: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("Processing welcome email request");
+  
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("Starting welcome email process");
-    
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY is not set");
-      throw new Error("Missing RESEND_API_KEY");
-    }
-
-    const { email, name } = await req.json();
-    
-    if (!email) {
-      console.error("Missing required fields:", { email });
-      throw new Error("Missing required fields");
-    }
-
-    console.log("Sending welcome email to:", email);
-
-    const fromEmail = "onboarding@skyguide.site";
-    const firstName = name?.split(' ')[0] || "Aviation Professional";
+    const { email, name, plan } = await req.json() as EmailRequest;
+    console.log(`Sending welcome email to ${email} for ${name} with plan ${plan}`);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -45,111 +32,42 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: fromEmail,
+        from: "SkyGuide <skyguide32@gmail.com>",
         to: [email],
-        subject: "Welcome to SkyGuide – Your Journey Starts Here!",
+        subject: "Welcome to SkyGuide!",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px; background-color: #1a365d; padding: 20px;">
-              <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px; height: auto;"/>
-            </div>
-            
-            <h1 style="color: #1a365d; text-align: center; font-size: 24px; margin-bottom: 30px;">
-              Welcome to SkyGuide™ - Unlock a World of Insights at Your Fingertips
-            </h1>
-            
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Hi ${firstName},
-            </p>
-            
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              We're thrilled to welcome you to SkyGuide™! Your one-stop solution for all your union contract-related needs is now just a tap away.
-            </p>
-            
-            <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
-              <h2 style="color: #1a365d; margin-bottom: 15px;">Here's what you can look forward to:</h2>
-              <ul style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-                <li style="margin-bottom: 10px;">✨ Quick Answers: No more flipping through pages—find what you need instantly.</li>
-                <li style="margin-bottom: 10px;">📝 Streamlined Grievances: Submit and track your issues with ease.</li>
-                <li style="margin-bottom: 10px;">👥 Union Contact Hub: Access reps and resources when you need them most.</li>
-              </ul>
-            </div>
-
-            <div style="background-color: #D4AF37; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
-              <h2 style="color: #1a365d; margin-bottom: 15px;">Refer & Earn Free Premium Access! 🎁</h2>
-              <p style="color: #1a365d; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-                Share SkyGuide™ with your colleagues and both get a free month of premium access when they sign up!
-              </p>
-              <a href="https://skyguide.site/?scrollTo=referral" 
-                 style="background-color: #1a365d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-                Send Invites Now
-              </a>
-            </div>
-            
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Let's get started! Log in today and explore how SkyGuide™ can make your work-life simpler, faster, and more organized.
-            </p>
-            
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-              Your success in the skies begins here.
-            </p>
-            
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-              Warm regards,<br>
-              The SkyGuide™ Team
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="https://skyguide.site/login" 
-                 style="background-color: #1a365d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                Log In Now
-              </a>
-            </div>
-            
-            <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-              <p style="color: #718096; font-style: italic;">
-                P.S. Got questions? Our team is here to help at support@skyguide.site
-              </p>
-              <p style="color: #a0aec0; font-size: 12px;">
-                SkyGuide™ - Your Aviation Assistant<br>
-                © 2024 SkyGuide. All rights reserved.<br>
-                <a href="https://skyguide.site/privacy-policy" style="color: #a0aec0; text-decoration: underline;">Privacy Policy</a> • 
-                <a href="https://skyguide.site/terms" style="color: #a0aec0; text-decoration: underline;">Terms of Service</a> •
-                <a href="https://skyguide.site/refunds" style="color: #a0aec0; text-decoration: underline;">Refund Policy</a>
-              </p>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #1a1f2c;">Welcome to SkyGuide, ${name}!</h1>
+            <p>Thank you for joining SkyGuide. We're excited to have you on board!</p>
+            <p>You've signed up for our ${plan} plan. Here's what you can expect:</p>
+            <ul>
+              <li>Access to our AI-powered contract analysis</li>
+              <li>24/7 support</li>
+              <li>Regular updates and improvements</li>
+            </ul>
+            <p>If you have any questions, simply reply to this email - we're here to help!</p>
+            <p>Best regards,<br>The SkyGuide Team</p>
           </div>
         `,
-        text: `Welcome to SkyGuide™!\n\nHi ${firstName},\n\nWe're thrilled to welcome you to SkyGuide™! Your one-stop solution for all your union contract-related needs is now just a tap away.\n\nVisit https://skyguide.site to get started!`,
-        headers: {
-          "List-Unsubscribe": `<mailto:unsubscribe@skyguide.site?subject=unsubscribe>, <https://skyguide.site/unsubscribe?email=${email}>`,
-        },
       }),
     });
 
     if (!res.ok) {
       const error = await res.text();
       console.error("Error sending welcome email:", error);
-      return new Response(
-        JSON.stringify({ error: "Failed to send welcome email", details: error }),
-        {
-          status: res.status,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      throw new Error(`Failed to send email: ${error}`);
     }
 
     const data = await res.json();
     console.log("Welcome email sent successfully:", data);
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error in send-welcome-email function:", error);
+    console.error("Error in welcome email function:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to process request", details: error.message }),
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
