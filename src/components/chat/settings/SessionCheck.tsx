@@ -31,29 +31,27 @@ export function SessionCheck() {
         
         if (userError || !user) {
           console.error("Error getting user or no user found:", userError);
-          localStorage.clear();
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Session Error",
-            description: "Your session has expired. Please log in again."
-          });
-          navigate('/login');
+          await handleSessionError();
           return;
         }
 
         console.log("Valid session found for user:", user.email);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Unexpected error in session check:", error);
-        localStorage.clear();
-        await supabase.auth.signOut();
-        toast({
-          variant: "destructive",
-          title: "Session Error",
-          description: "An error occurred with your session. Please log in again."
-        });
-        navigate('/login');
+        await handleSessionError();
       }
+    };
+
+    const handleSessionError = async () => {
+      console.log("Handling session error, cleaning up...");
+      localStorage.clear();
+      await supabase.auth.signOut();
+      toast({
+        variant: "destructive",
+        title: "Session Error",
+        description: "Your session has expired. Please log in again."
+      });
+      navigate('/login');
     };
 
     checkSession();
@@ -62,40 +60,49 @@ export function SessionCheck() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed in SessionCheck:", event, session?.user?.email);
+      
       if (event === 'SIGNED_OUT' || !session) {
+        console.log("User signed out or session ended");
         localStorage.clear();
         navigate('/login');
-      } else if (event === 'SIGNED_IN' && session?.user) {
-        // When a new sign-in occurs, create a new session and invalidate others
-        const newSession = await createNewSession(session.user.id);
-        await invalidateOtherSessions(session.user.id, newSession.session_token);
-        
-        // Re-authenticate if needed
-        if (session.user.app_metadata.provider === 'google') {
-          const { error: reAuthError } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              queryParams: {
-                access_type: 'offline',
-                prompt: 'consent',
+        return;
+      }
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log("New sign-in detected, creating session...");
+        try {
+          // When a new sign-in occurs, create a new session and invalidate others
+          const newSession = await createNewSession(session.user.id);
+          await invalidateOtherSessions(session.user.id, newSession.session_token);
+          
+          // Only attempt re-authentication for Google users
+          if (session.user.app_metadata.provider === 'google') {
+            console.log("Re-authenticating Google user...");
+            const { error: reAuthError } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                queryParams: {
+                  access_type: 'offline',
+                  prompt: 'consent',
+                },
+                redirectTo: `${window.location.origin}/auth/callback`
               }
-            }
-          });
-
-          if (reAuthError) {
-            console.error("Error re-authenticating:", reAuthError);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: "Please sign in again to continue."
             });
-            navigate('/login');
+
+            if (reAuthError) {
+              console.error("Error re-authenticating:", reAuthError);
+              await handleSessionError();
+            }
           }
+        } catch (error) {
+          console.error("Error handling sign-in:", error);
+          await handleSessionError();
         }
       }
     });
 
     return () => {
+      console.log("Cleaning up session check...");
       subscription.unsubscribe();
     };
   }, [navigate, toast, createNewSession, invalidateOtherSessions]);
