@@ -18,7 +18,8 @@ const Chat = () => {
     messages,
     isLoading,
     sendMessage,
-    currentUserId 
+    currentUserId,
+    startNewChat 
   } = useChat();
 
   useEffect(() => {
@@ -51,7 +52,7 @@ const Chat = () => {
           <span className="hidden sm:inline">Dashboard</span>
         </Button>
       </div>
-      <div className="pt-16"> {/* Add padding to account for fixed ContractUpload */}
+      <div className="pt-16">
         <ChatLayout 
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
@@ -63,6 +64,7 @@ const Chat = () => {
             currentUserId={currentUserId}
             isLoading={isLoading}
             onSendMessage={sendMessage}
+            onNewChat={startNewChat}
           />
         </ChatLayout>
       </div>
