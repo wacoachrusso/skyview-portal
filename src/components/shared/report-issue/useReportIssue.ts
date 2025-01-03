@@ -24,7 +24,7 @@ export function useReportIssue(onSuccess: () => void) {
           profile_id: user.id,
           title: `Issue Report: ${data.title}`,
           message: data.description,
-          type: "support",
+          type: "system",  // Changed from "support" to "system" to match allowed values
           notification_type: "system"
         });
 
