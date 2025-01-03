@@ -1,16 +1,10 @@
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, Lock, Database, Bell, Eye, UserCheck, Globe, HelpCircle } from "lucide-react";
+import { Shield, Lock, Database, Bell, Eye, Globe, HelpCircle } from "lucide-react";
 
 const PrivacyPolicy = () => {
-  const { userEmail, handleSignOut } = useAuthManagement();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
-      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-      
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="bg-card rounded-lg shadow-lg p-8 mb-8">
           <div className="text-center mb-8">
