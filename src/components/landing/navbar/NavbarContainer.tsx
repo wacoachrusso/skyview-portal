@@ -28,11 +28,13 @@ export function NavbarContainer() {
             console.log('No active session found');
             setIsLoggedIn(false);
           }
+          // Only set loading to false after we've determined the auth state
           setIsLoading(false);
         }
       } catch (error) {
         console.error('Error checking auth state:', error);
         if (mounted) {
+          setIsLoggedIn(false);
           setIsLoading(false);
         }
       }

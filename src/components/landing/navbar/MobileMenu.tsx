@@ -23,7 +23,7 @@ export function MobileMenu({
 }: MobileMenuProps) {
   return (
     <div className="md:hidden flex items-center gap-2">
-      {isLoggedIn && (
+      {isLoggedIn && !isLoading && (
         <AuthButtons 
           isLoading={isLoading} 
           isLoggedIn={isLoggedIn} 
