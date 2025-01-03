@@ -34,7 +34,6 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
       navigate('/login', { replace: true });
     } catch (error) {
       console.error("Error during logout:", error);
-      // Even if there's an error, ensure we redirect
       navigate('/login', { replace: true });
       
       toast({
@@ -45,17 +44,15 @@ export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, 
     }
   };
 
-  // Show a single loading skeleton for mobile menu
-  if (isLoading && isMobile) {
-    return (
-      <div className="w-full py-2">
-        <div className="h-9 bg-gray-700/20 animate-pulse rounded"></div>
-      </div>
-    );
-  }
-
-  // Show two loading skeletons for desktop menu
-  if (isLoading && !isMobile) {
+  // Show loading skeleton based on device type
+  if (isLoading) {
+    if (isMobile) {
+      return (
+        <div className="w-full py-2">
+          <div className="h-9 bg-gray-700/20 animate-pulse rounded"></div>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center gap-2">
         <div className="h-9 w-20 bg-gray-700/20 animate-pulse rounded"></div>

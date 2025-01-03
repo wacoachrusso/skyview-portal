@@ -18,6 +18,7 @@ export function NavbarContainer() {
     const checkAuth = async () => {
       try {
         console.log('Checking auth state in Navbar');
+        setIsLoading(true); // Ensure loading state is set
         const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
@@ -28,7 +29,6 @@ export function NavbarContainer() {
             console.log('No active session found');
             setIsLoggedIn(false);
           }
-          // Only set loading to false after we've determined the auth state
           setIsLoading(false);
         }
       } catch (error) {
@@ -45,6 +45,7 @@ export function NavbarContainer() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
       if (mounted) {
+        setIsLoading(true); // Set loading when auth state changes
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in:', session.user.email);
           setIsLoggedIn(true);
@@ -88,7 +89,7 @@ export function NavbarContainer() {
         <div className="flex justify-between items-center h-16">
           <Logo handleLogoClick={handleLogoClick} />
           
-          {isLoggedIn && <AskSkyGuideButton />}
+          {isLoggedIn && !isLoading && <AskSkyGuideButton />}
           
           <div className="hidden md:flex items-center space-x-4">
             <AuthButtons 
