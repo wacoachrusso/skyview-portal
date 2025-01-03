@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { TypeAnimation } from 'react-type-animation';
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessageProps {
   message: Message;
@@ -49,7 +50,21 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
       );
     }
     
-    return content;
+    // Use ReactMarkdown for regular text content
+    return (
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <p className="mb-2">{children}</p>,
+          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+          em: ({ children }) => <em className="italic">{children}</em>,
+          ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
+          li: ({ children }) => <li className="pl-2">{children}</li>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    );
   };
 
   return (
@@ -77,7 +92,7 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
               cursor={false}
               repeat={0}
               speed={90}
-              className="whitespace-pre-wrap"
+              className="whitespace-pre-wrap prose prose-invert"
             />
           </div>
         )}
