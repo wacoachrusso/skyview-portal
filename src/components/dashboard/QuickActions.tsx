@@ -3,7 +3,7 @@ import { Search, FileText, Settings, MessageSquare, Bug } from "lucide-react";
 import { ActionCard } from "./ActionCard";
 import { useContractHandler } from "./useContractHandler";
 import { useState } from "react";
-import { ReportIssueDialog } from "../shared/ReportIssueDialog";
+import { ReportIssueDialog } from "../shared/report-issue/ReportIssueDialog";
 
 export const QuickActions = () => {
   const { handleContractClick } = useContractHandler();
