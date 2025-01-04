@@ -9,7 +9,7 @@ export const useAuthStateHandler = () => {
   const { createNewSession } = useSessionManagement();
 
   const handleAuthStateChange = async (event: string, session: any) => {
-    console.log("Auth state changed in SessionCheck:", event, session?.user?.email);
+    console.log("Auth state changed:", event, session?.user?.email);
     
     if (event === 'SIGNED_OUT' || !session) {
       console.log("User signed out or session ended");
@@ -49,6 +49,22 @@ export const useAuthStateHandler = () => {
             });
             navigate('/login');
           }
+        }
+
+        // Notify user if they were logged out from another device
+        const { data: activeSessions } = await supabase
+          .from('sessions')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .eq('status', 'active')
+          .neq('session_token', localStorage.getItem('session_token'));
+
+        if (activeSessions && activeSessions.length > 0) {
+          toast({
+            variant: "default",
+            title: "Active Session Detected",
+            description: "You have been logged out from other devices for security."
+          });
         }
       } catch (error) {
         console.error("Error handling sign-in:", error);

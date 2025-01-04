@@ -51,6 +51,23 @@ export const useLoginForm = () => {
         return;
       }
 
+      // Check for existing active sessions
+      const { data: existingSessions } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('user_id', profileData?.id)
+        .eq('status', 'active');
+
+      if (existingSessions && existingSessions.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "Active Session Detected",
+          description: "There is already an active session. Please log out from other devices first."
+        });
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
         password: formData.password,
