@@ -59,30 +59,35 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
 
   return (
     <form onSubmit={handleSubmit} className="p-2 sm:p-4 bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10">
-      <div className="flex gap-2 items-end max-w-5xl mx-auto">
-        <Textarea
-          value={message}
-          onChange={(e) => {
-            console.log('ChatInput - Message changed:', e.target.value);
-            setMessage(e.target.value);
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask about your union contract..."
-          className="min-h-[40px] sm:min-h-[50px] text-sm sm:text-base resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
-          disabled={isLoading}
-        />
-        {!isMobile && (
-          <MicButton 
-            isListening={isListening}
-            isLoading={isLoading}
-            onToggle={toggleListening}
+      <div className="flex flex-col gap-2 max-w-5xl mx-auto">
+        <div className="flex gap-2 items-end">
+          <Textarea
+            value={message}
+            onChange={(e) => {
+              console.log('ChatInput - Message changed:', e.target.value);
+              setMessage(e.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask SkyGuide"
+            className="min-h-[40px] sm:min-h-[50px] text-sm sm:text-base resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
+            disabled={isLoading}
           />
-        )}
-        <SendButton 
-          isLoading={isLoading}
-          hasMessage={message.trim().length > 0}
-          isMobile={isMobile}
-        />
+          {!isMobile && (
+            <MicButton 
+              isListening={isListening}
+              isLoading={isLoading}
+              onToggle={toggleListening}
+            />
+          )}
+          <SendButton 
+            isLoading={isLoading}
+            hasMessage={message.trim().length > 0}
+            isMobile={isMobile}
+          />
+        </div>
+        <p className="text-xs text-gray-400 text-center">
+          SkyGuide can make mistakes. Check important info.
+        </p>
       </div>
     </form>
   );
