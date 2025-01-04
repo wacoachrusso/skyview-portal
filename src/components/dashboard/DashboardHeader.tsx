@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, MessageSquare, Menu } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -16,6 +16,8 @@ interface DashboardHeaderProps {
 
 export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAccountPage = location.pathname === '/account';
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,17 +62,19 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 </Link>
               </Button>
             </div>
-            <Button 
-              asChild
-              variant="secondary"
-              size="sm"
-              className="text-white hover:bg-brand-gold hover:text-black"
-            >
-              <Link to="/account">
-                <User className="mr-2 h-4 w-4" />
-                <span>Account</span>
-              </Link>
-            </Button>
+            {!isAccountPage && (
+              <Button 
+                asChild
+                variant="secondary"
+                size="sm"
+                className="text-white hover:bg-brand-gold hover:text-black"
+              >
+                <Link to="/account">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Account</span>
+                </Link>
+              </Button>
+            )}
             <Button 
               variant="secondary" 
               size="sm"
@@ -114,12 +118,14 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 align="end" 
                 className="w-56 bg-background/95 backdrop-blur-sm border border-border"
               >
-                <DropdownMenuItem asChild>
-                  <Link to="/account" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Account
-                  </Link>
-                </DropdownMenuItem>
+                {!isAccountPage && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/account" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Account
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem 
                   className="text-destructive focus:text-destructive"
                   onClick={onSignOut}
