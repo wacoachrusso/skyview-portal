@@ -21,7 +21,7 @@ export function ChatLayout({
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-full">
       {!isMobile && (
         <div className="w-64 sm:w-80 flex-shrink-0 border-r border-border">
           <ChatSidebar 
@@ -30,7 +30,7 @@ export function ChatLayout({
           />
         </div>
       )}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background">
+      <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
         {isMobile && (
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
             <SheetTrigger asChild>

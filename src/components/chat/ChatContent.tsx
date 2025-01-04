@@ -26,7 +26,7 @@ export function ChatContent({
   return (
     <div className="flex flex-col h-full">
       <ChatHeader onNewChat={onNewChat || (() => {})} />
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <WelcomeMessage />
         ) : (
@@ -38,7 +38,9 @@ export function ChatContent({
           />
         )}
       </div>
-      <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+      <div className="flex-shrink-0">
+        <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+      </div>
     </div>
   );
 }
