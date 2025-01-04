@@ -46,6 +46,11 @@ export function ConversationList({
     }
   };
 
+  const handleDelete = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    onDeleteConversation(conversationId);
+  };
+
   return (
     <div className="flex flex-col h-full">
       {selectedConversations.length > 0 && (
@@ -98,7 +103,7 @@ export function ConversationList({
                       : "text-gray-400"
                   }`} />
                 </div>
-                <div className="flex flex-col min-w-0">
+                <div className="flex flex-col min-w-0 flex-1">
                   <span className="text-sm font-medium text-white truncate max-w-[180px]">
                     {conversation.title}
                   </span>
@@ -106,6 +111,14 @@ export function ConversationList({
                     {format(new Date(conversation.last_message_at), "MMM d, h:mm a")}
                   </span>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => handleDelete(e, conversation.id)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
             </div>
           ))}
