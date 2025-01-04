@@ -45,7 +45,7 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   return (
     <div className="flex flex-col h-full">
       <div ref={containerRef} className="flex-1 overflow-y-auto">
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-2 p-2 sm:p-4">
           {messages.map((message) => (
             <ChatMessage
               key={message.id}
@@ -55,13 +55,13 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
             />
           ))}
           {isLoading && (
-            <div className="flex w-full justify-start">
-              <div className="flex max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 bg-white/5 text-white">
+            <div className="flex w-full gap-2 p-2 justify-start">
+              <div className="flex max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2 bg-white/5 text-white">
                 <div className="flex items-center gap-2">
-                  <div className="animate-pulse w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                  <div className="animate-pulse w-1.5 h-1.5 bg-blue-500 rounded-full delay-150"></div>
-                  <div className="animate-pulse w-1.5 h-1.5 bg-blue-500 rounded-full delay-300"></div>
-                  <span className="text-xs ml-2">Searching the contract...</span>
+                  <div className="animate-pulse w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                  <div className="animate-pulse w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full delay-150"></div>
+                  <div className="animate-pulse w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full delay-300"></div>
+                  <span className="text-xs sm:text-sm ml-2">Searching the contract...</span>
                 </div>
               </div>
             </div>

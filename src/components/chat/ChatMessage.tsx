@@ -70,16 +70,16 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
   return (
     <div
       className={cn(
-        "flex w-full gap-2 group",
+        "flex w-full gap-2 p-1 sm:p-2 group",
         isCurrentUser ? "justify-end" : "justify-start"
       )}
     >
       <div
         className={cn(
-          "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 relative",
+          "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2 relative",
           isCurrentUser
-            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
-            : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white"
+            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+            : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white shadow-md"
         )}
       >
         {isCurrentUser ? (
