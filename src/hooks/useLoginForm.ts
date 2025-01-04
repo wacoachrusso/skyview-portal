@@ -1,16 +1,15 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { handleEmailVerification } from "@/utils/authUtils";
-import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
-
-interface LoginFormData {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-}
+import { useLoginFormState, LoginFormData } from "./useLoginFormState";
+import { 
+  checkExistingProfile, 
+  checkExistingSessions, 
+  updateLoginAttempts,
+  resetLoginAttempts
+} from "@/services/loginService";
 
 const MAX_LOGIN_ATTEMPTS = 3;
 
@@ -18,13 +17,60 @@ export const useLoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createNewSession } = useSessionManagement();
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-    rememberMe: false
-  });
+  const { 
+    loading, 
+    setLoading, 
+    showPassword, 
+    setShowPassword, 
+    formData, 
+    setFormData 
+  } = useLoginFormState();
+
+  const handleAccountLocked = () => {
+    toast({
+      variant: "destructive",
+      title: "Account locked",
+      description: "Your account has been locked due to too many failed login attempts. Please reset your password."
+    });
+  };
+
+  const handleActiveSessions = () => {
+    toast({
+      variant: "destructive",
+      title: "Active Session Detected",
+      description: "There is already an active session. Please log out from other devices first."
+    });
+  };
+
+  const handleLoginSuccess = async (userId: string) => {
+    await createNewSession(userId);
+    
+    if (formData.rememberMe) {
+      console.log('Setting persistent session...');
+      document.cookie = `refresh_token_expires_at=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/; secure; samesite=strict`;
+    }
+
+    toast({
+      title: "Welcome back!",
+      description: "You have successfully logged in."
+    });
+  };
+
+  const handleProfileRedirect = async (userId: string) => {
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('user_type, airline')
+      .eq('id', userId)
+      .single();
+
+    if (userProfile?.user_type && userProfile?.airline) {
+      console.log('Profile complete, redirecting to dashboard');
+      navigate('/dashboard');
+    } else {
+      console.log('Profile incomplete, redirecting to complete-profile');
+      navigate('/complete-profile');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,38 +81,19 @@ export const useLoginForm = () => {
     try {
       console.log('Starting login process...');
       
-      // First check if the account exists and get its status
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, login_attempts, account_status')
-        .eq('email', formData.email.trim())
-        .single();
+      const profileData = await checkExistingProfile(formData.email);
 
       if (profileData?.account_status === 'locked') {
-        toast({
-          variant: "destructive",
-          title: "Account locked",
-          description: "Your account has been locked due to too many failed login attempts. Please reset your password."
-        });
-        setLoading(false);
+        handleAccountLocked();
         return;
       }
 
-      // Check for existing active sessions
-      const { data: existingSessions } = await supabase
-        .from('sessions')
-        .select('id')
-        .eq('user_id', profileData?.id)
-        .eq('status', 'active');
-
-      if (existingSessions && existingSessions.length > 0) {
-        toast({
-          variant: "destructive",
-          title: "Active Session Detected",
-          description: "There is already an active session. Please log out from other devices first."
-        });
-        setLoading(false);
-        return;
+      if (profileData?.id) {
+        const existingSessions = await checkExistingSessions(profileData.id);
+        if (existingSessions && existingSessions.length > 0) {
+          handleActiveSessions();
+          return;
+        }
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -77,30 +104,21 @@ export const useLoginForm = () => {
       if (error) {
         console.error('Login error:', error);
         
-        // Handle specific error cases
-        if (error.message === 'Invalid login credentials') {
-          // Increment login attempts
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-              login_attempts: (profileData?.login_attempts || 0) + 1,
-              account_status: (profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active'
-            })
-            .eq('email', formData.email.trim());
+        if (error.message === 'Invalid login credentials' && profileData) {
+          const newAttempts = (profileData.login_attempts || 0) + 1;
+          const newStatus = newAttempts >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active';
+          
+          await updateLoginAttempts(formData.email, newAttempts, newStatus);
 
-          if ((profileData?.login_attempts || 0) + 1 >= MAX_LOGIN_ATTEMPTS) {
-            toast({
-              variant: "destructive",
-              title: "Account locked",
-              description: "Your account has been locked due to too many failed login attempts. Please reset your password."
-            });
+          if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+            handleAccountLocked();
             return;
           }
 
           toast({
             variant: "destructive",
             title: "Login failed",
-            description: `Incorrect email or password. ${MAX_LOGIN_ATTEMPTS - (profileData?.login_attempts || 0) - 1} attempts remaining.`
+            description: `Incorrect email or password. ${MAX_LOGIN_ATTEMPTS - newAttempts} attempts remaining.`
           });
         } else {
           toast({
@@ -117,7 +135,6 @@ export const useLoginForm = () => {
         throw new Error('No session created');
       }
 
-      // Check if email is verified
       if (!data.user.email_confirmed_at) {
         console.log('Email not verified');
         await supabase.auth.signOut();
@@ -140,42 +157,9 @@ export const useLoginForm = () => {
         return;
       }
 
-      // Create a new session
-      await createNewSession(data.session.user.id);
-
-      // Reset login attempts on successful login
-      const { error: resetError } = await supabase
-        .from('profiles')
-        .update({ 
-          login_attempts: 0,
-          account_status: 'active'
-        })
-        .eq('email', formData.email.trim());
-
-      if (formData.rememberMe) {
-        console.log('Setting persistent session...');
-        document.cookie = `refresh_token_expires_at=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/; secure; samesite=strict`;
-      }
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in."
-      });
-
-      // Check if profile is complete
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('user_type, airline')
-        .eq('id', data.user.id)
-        .single();
-
-      if (userProfile?.user_type && userProfile?.airline) {
-        console.log('Profile complete, redirecting to dashboard');
-        navigate('/dashboard');
-      } else {
-        console.log('Profile incomplete, redirecting to complete-profile');
-        navigate('/complete-profile');
-      }
+      await handleLoginSuccess(data.session.user.id);
+      await resetLoginAttempts(formData.email);
+      await handleProfileRedirect(data.session.user.id);
 
     } catch (error) {
       console.error('Unexpected error during login:', error);
