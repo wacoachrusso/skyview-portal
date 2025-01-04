@@ -28,9 +28,14 @@ export const useAuthState = () => {
         
         // Sign out other sessions when a new sign in occurs
         if (event === 'SIGNED_IN') {
-          const { error: signOutError } = await supabase.auth.signOut({ 
-            scope: 'others'
-          });
+          console.log('New sign-in detected, invalidating other sessions...');
+          const currentToken = localStorage.getItem('session_token');
+          
+          const { error: signOutError } = await supabase
+            .rpc('invalidate_other_sessions', {
+              p_user_id: session.user.id,
+              p_current_session_token: currentToken || ''
+            });
           
           if (signOutError) {
             console.error("Error signing out other sessions:", signOutError);

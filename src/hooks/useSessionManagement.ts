@@ -74,13 +74,10 @@ export const useSessionManagement = () => {
       
       // First invalidate any existing sessions
       const { error: invalidateError } = await supabase
-        .from('sessions')
-        .update({ 
-          status: 'invalidated',
-          invalidated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId)
-        .eq('status', 'active');
+        .rpc('invalidate_other_sessions', {
+          p_user_id: userId,
+          p_current_session_token: localStorage.getItem('session_token') || ''
+        });
 
       if (invalidateError) {
         console.error('Error invalidating existing sessions:', invalidateError);

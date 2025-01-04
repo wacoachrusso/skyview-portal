@@ -22,10 +22,9 @@ export function SessionCheck() {
     } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
-      console.log("Cleaning up session check...");
       subscription.unsubscribe();
     };
-  }, []);
+  }, [checkCurrentSession, handleAuthStateChange, initializeSession]);
 
   return null;
 }
