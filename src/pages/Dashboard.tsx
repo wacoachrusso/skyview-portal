@@ -7,36 +7,51 @@ import { ContactDirectory } from "@/components/contact/ContactDirectory";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const { userEmail, isLoading, handleSignOut } = useAuthManagement();
+  const { userEmail, isLoading: authLoading, handleSignOut } = useAuthManagement();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Check if user is admin
-  const checkAdminStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+  // Check if user is admin and handle authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        console.log("Checking authentication and admin status...");
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log("No session found, redirecting to login");
+          navigate('/login');
+          return;
+        }
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_admin')
-          .eq('id', user.id)
+          .eq('id', session.user.id)
           .single();
         
         setIsAdmin(profile?.is_admin || false);
+        setIsPageLoading(false);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsPageLoading(false);
       }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-    }
-  };
+    };
 
-  // Check admin status on component mount
-  useEffect(() => {
-    checkAdminStatus();
-  }, []);
+    checkAuth();
+  }, [navigate]);
 
-  if (isLoading) {
-    return <LoadingSpinner />;
+  // Show loading spinner while authentication or page is loading
+  if (authLoading || isPageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   }
 
   return (
