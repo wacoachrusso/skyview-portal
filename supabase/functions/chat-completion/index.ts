@@ -65,7 +65,7 @@ serve(async (req) => {
     const thread = await threadResponse.json();
     console.log('Created thread:', thread.id);
 
-    // Add message to thread
+    // Add message to thread with instruction to include references
     console.log('Adding message to thread...');
     const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
@@ -76,7 +76,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         role: 'user',
-        content
+        content: `${content}\n\nPlease include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]`
       })
     });
 

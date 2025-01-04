@@ -19,29 +19,6 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
     const reference = referenceMatch ? referenceMatch[1].trim() : null;
     const mainContent = content.replace(/\[REF\].*?\[\/REF\]/s, '').trim();
 
-    // Check if content contains a list or table-like structure
-    if (mainContent.includes("1.") || mainContent.includes("•") || mainContent.includes("|")) {
-      const rows = mainContent.split(/\d+\.\s+|\n/).filter(Boolean);
-      
-      return (
-        <div className="space-y-4">
-          <div className="prose prose-invert">
-            {rows.map((item, index) => (
-              <div key={index} className="pl-2">
-                {item.trim()}
-              </div>
-            ))}
-          </div>
-          {reference && (
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <p className="text-sm text-blue-400 font-medium">Reference:</p>
-              <p className="text-sm text-gray-400">{reference}</p>
-            </div>
-          )}
-        </div>
-      );
-    }
-    
     return (
       <div className="space-y-4">
         <ReactMarkdown
@@ -59,7 +36,7 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
         {reference && (
           <div className="mt-4 pt-4 border-t border-white/10">
             <p className="text-sm text-blue-400 font-medium">Reference:</p>
-            <p className="text-sm text-gray-400">{reference}</p>
+            <p className="text-sm text-gray-400 whitespace-pre-wrap">{reference}</p>
           </div>
         )}
       </div>
@@ -91,7 +68,7 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
               cursor={false}
               repeat={0}
               speed={90}
-              className="whitespace-pre-wrap prose prose-invert"
+              className="whitespace-pre-wrap"
             />
           </div>
         )}
