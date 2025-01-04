@@ -1,6 +1,6 @@
 import { Conversation } from "@/types/chat";
 import { format } from "date-fns";
-import { MessageSquare, Trash2 } from "lucide-react";
+import { MessageSquare, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef, useState } from "react";
@@ -107,18 +107,31 @@ export function ConversationList({
                   <span className="text-sm font-medium text-white truncate max-w-[180px]">
                     {conversation.title}
                   </span>
-                  <span className="text-xs text-gray-400">
-                    {format(new Date(conversation.last_message_at), "MMM d, h:mm a")}
-                  </span>
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span>{format(new Date(conversation.last_message_at), "MMM d, h:mm a")}</span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 p-0.5"
+                        onClick={(e) => handleDelete(e, conversation.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 p-0.5"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectConversation(conversation.id);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 text-gray-400 hover:text-white" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => handleDelete(e, conversation.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
               </div>
             </div>
           ))}
