@@ -31,14 +31,15 @@ export const useOfflineConversations = () => {
       });
     } else {
       try {
-        const chatHistory = JSON.parse(localStorage.getItem('chat-history') || '[]');
-        const conversationMessages = chatHistory.filter((msg: any) => msg.conversation_id === conversationId);
+        // Get messages from current-chat-messages if it's the active conversation
+        const currentMessages = localStorage.getItem('current-chat-messages');
         
-        if (conversationMessages.length === 0) {
+        if (!currentMessages) {
           throw new Error('No messages found for this conversation');
         }
         
-        localStorage.setItem(`offline-chat-${conversationId}`, JSON.stringify(conversationMessages));
+        // Store the messages for offline access
+        localStorage.setItem(`offline-chat-${conversationId}`, currentMessages);
         const newOfflineConversations = [...offlineConversations, conversationId];
         setOfflineConversations(newOfflineConversations);
         localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
@@ -47,6 +48,8 @@ export const useOfflineConversations = () => {
           title: "Saved for offline viewing",
           description: "This chat will be available when you're offline",
         });
+
+        console.log('Chat saved for offline viewing:', conversationId);
       } catch (error) {
         console.error('Error saving chat for offline viewing:', error);
         toast({
