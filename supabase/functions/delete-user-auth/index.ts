@@ -34,16 +34,21 @@ serve(async (req) => {
 
     // First verify the user exists
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-    if (userError || !userData.user) {
-      console.error("Error getting user or user not found:", userError);
-      throw new Error(userError?.message || "User not found");
+    if (userError) {
+      console.error("Error getting user:", userError);
+      throw new Error(`Error getting user: ${userError.message}`);
+    }
+    
+    if (!userData.user) {
+      console.error("User not found");
+      throw new Error("User not found");
     }
 
     // Delete the user from auth.users
-    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId, true);
     if (deleteError) {
       console.error("Error deleting user:", deleteError);
-      throw deleteError;
+      throw new Error(`Database error deleting user: ${deleteError.message}`);
     }
 
     console.log("Successfully deleted user:", userId);
@@ -59,7 +64,8 @@ serve(async (req) => {
     console.error("Error in delete-user-auth function:", error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Unknown error occurred" 
+        error: error instanceof Error ? error.message : "Unknown error occurred",
+        details: error instanceof Error ? error.stack : undefined
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
