@@ -1,11 +1,12 @@
 import { Conversation } from "@/types/chat";
 import { format } from "date-fns";
-import { MessageSquare, Trash2, Eye } from "lucide-react";
+import { MessageSquare, Trash2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -21,7 +22,17 @@ export function ConversationList({
   onDeleteConversation,
 }: ConversationListProps) {
   const [selectedConversations, setSelectedConversations] = useState<string[]>([]);
+  const [offlineConversations, setOfflineConversations] = useState<string[]>([]);
+  const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    // Load offline conversations from localStorage on component mount
+    const savedOfflineConversations = localStorage.getItem('offline-conversations');
+    if (savedOfflineConversations) {
+      setOfflineConversations(JSON.parse(savedOfflineConversations));
+    }
+  }, []);
 
   const handleSelect = (conversationId: string, checked: boolean) => {
     setSelectedConversations(prev => 
@@ -49,6 +60,50 @@ export function ConversationList({
   const handleDelete = (e: React.MouseEvent, conversationId: string) => {
     e.stopPropagation();
     onDeleteConversation(conversationId);
+  };
+
+  const toggleOfflineAvailability = async (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    
+    const isCurrentlyOffline = offlineConversations.includes(conversationId);
+    
+    if (isCurrentlyOffline) {
+      // Remove from offline storage
+      const newOfflineConversations = offlineConversations.filter(id => id !== conversationId);
+      setOfflineConversations(newOfflineConversations);
+      localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
+      localStorage.removeItem(`offline-chat-${conversationId}`);
+      
+      toast({
+        title: "Removed from offline storage",
+        description: "This chat will no longer be available offline",
+      });
+    } else {
+      try {
+        // Fetch messages for this conversation
+        const messages = localStorage.getItem(`chat-messages-${conversationId}`);
+        if (!messages) {
+          throw new Error('No messages found for this conversation');
+        }
+        
+        // Store for offline use
+        localStorage.setItem(`offline-chat-${conversationId}`, messages);
+        const newOfflineConversations = [...offlineConversations, conversationId];
+        setOfflineConversations(newOfflineConversations);
+        localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
+        
+        toast({
+          title: "Saved for offline viewing",
+          description: "This chat will be available when you're offline",
+        });
+      } catch (error) {
+        toast({
+          title: "Error saving chat",
+          description: "Unable to save this chat for offline viewing",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
@@ -122,12 +177,13 @@ export function ConversationList({
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 p-0.5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectConversation(conversation.id);
-                        }}
+                        onClick={(e) => toggleOfflineAvailability(e, conversation.id)}
                       >
-                        <Eye className="h-4 w-4 text-gray-400 hover:text-white" />
+                        {offlineConversations.includes(conversation.id) ? (
+                          <EyeOff className="h-4 w-4 text-brand-gold hover:text-brand-gold/80" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-400 hover:text-white" />
+                        )}
                       </Button>
                     </div>
                   </div>

@@ -7,9 +7,10 @@ interface ChatListProps {
   currentUserId: string;
   isLoading?: boolean;
   onCopyMessage: (content: string) => void;
+  conversationId?: string;
 }
 
-export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
+export function ChatList({ messages, currentUserId, isLoading, onCopyMessage, conversationId }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -32,15 +33,16 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   useEffect(() => {
     console.log("Messages state updated:", messages.length, "messages");
     
-    if (messages.length > 0) {
+    if (messages.length > 0 && conversationId) {
       try {
-        localStorage.setItem("chat-messages", JSON.stringify(messages));
-        console.log("Messages saved to localStorage successfully");
+        // Store messages for this specific conversation
+        localStorage.setItem(`chat-messages-${conversationId}`, JSON.stringify(messages));
+        console.log("Messages saved to localStorage for conversation:", conversationId);
       } catch (error) {
         console.error("Error saving messages to localStorage:", error);
       }
     }
-  }, [messages]);
+  }, [messages, conversationId]);
 
   return (
     <div className="flex flex-col h-full">
