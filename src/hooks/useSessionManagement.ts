@@ -13,6 +13,7 @@ export const useSessionManagement = () => {
     
     try {
       const sessionToken = crypto.randomUUID();
+      const refreshToken = crypto.randomUUID();
       const { data: deviceInfo } = await fetch('https://api.ipify.org?format=json')
         .then(res => res.json());
 
@@ -24,6 +25,7 @@ export const useSessionManagement = () => {
         .insert([{
           user_id: userId,
           session_token: sessionToken,
+          refresh_token: refreshToken,
           device_info: deviceInfo,
           ip_address: deviceInfo?.ip,
           status: 'active'
@@ -32,6 +34,11 @@ export const useSessionManagement = () => {
         .single();
 
       if (error) throw error;
+      
+      // Store tokens securely
+      localStorage.setItem('session_token', sessionToken);
+      document.cookie = `refresh_token=${refreshToken}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
+
       console.log('New session created:', session);
       return session;
     } catch (error) {
@@ -78,6 +85,39 @@ export const useSessionManagement = () => {
     }
   };
 
+  const refreshSession = async () => {
+    console.log('Attempting to refresh session');
+    const refreshToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('refresh_token='))
+      ?.split('=')[1];
+
+    if (!refreshToken) {
+      console.log('No refresh token found');
+      return false;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .rpc('refresh_session', {
+          p_refresh_token: refreshToken
+        });
+
+      if (error || !data?.[0]) {
+        console.error('Error refreshing session:', error);
+        return false;
+      }
+
+      const { session_token, expires_at } = data[0];
+      localStorage.setItem('session_token', session_token);
+      console.log('Session refreshed successfully, expires:', expires_at);
+      return true;
+    } catch (error) {
+      console.error('Error in refresh session:', error);
+      return false;
+    }
+  };
+
   const updateSessionActivity = async (sessionToken: string) => {
     console.log('Updating session activity');
     
@@ -120,8 +160,30 @@ export const useSessionManagement = () => {
           return;
         }
 
-        // Create a new session and invalidate others
-        const newSession = await createNewSession(session.user.id);
+        // Get current session token
+        const sessionToken = localStorage.getItem('session_token');
+        if (!sessionToken) {
+          // Try to create a new session
+          await createNewSession(session.user.id);
+        } else {
+          // Validate existing session
+          const isValid = await validateSession(sessionToken);
+          if (!isValid) {
+            // Try to refresh the session
+            const refreshed = await refreshSession();
+            if (!refreshed) {
+              console.log('Session expired and refresh failed');
+              await supabase.auth.signOut();
+              toast({
+                variant: "destructive",
+                title: "Session Expired",
+                description: "Your session has expired. Please log in again."
+              });
+              navigate('/login');
+              return;
+            }
+          }
+        }
 
         // Subscribe to session invalidation events
         const subscription = supabase
@@ -135,8 +197,9 @@ export const useSessionManagement = () => {
               filter: `user_id=eq.${session.user.id}`
             },
             async (payload) => {
+              const currentToken = localStorage.getItem('session_token');
               if (payload.new.status === 'invalidated' && 
-                  payload.new.session_token !== newSession.session_token) {
+                  payload.new.session_token === currentToken) {
                 console.log('Session invalidated by another login');
                 toast({
                   variant: "destructive",
@@ -150,10 +213,34 @@ export const useSessionManagement = () => {
           )
           .subscribe();
 
+        // Set up periodic session validation
+        const validationInterval = setInterval(async () => {
+          const currentToken = localStorage.getItem('session_token');
+          if (currentToken) {
+            const isValid = await validateSession(currentToken);
+            if (!isValid) {
+              const refreshed = await refreshSession();
+              if (!refreshed) {
+                clearInterval(validationInterval);
+                await supabase.auth.signOut();
+                toast({
+                  variant: "destructive",
+                  title: "Session Expired",
+                  description: "Your session has expired. Please log in again."
+                });
+                navigate('/login');
+              }
+            } else {
+              await updateSessionActivity(currentToken);
+            }
+          }
+        }, 5 * 60 * 1000); // Check every 5 minutes
+
         setIsLoading(false);
 
         return () => {
           subscription.unsubscribe();
+          clearInterval(validationInterval);
         };
       } catch (error) {
         console.error("Unexpected error in checkSession:", error);
@@ -174,6 +261,7 @@ export const useSessionManagement = () => {
     isLoading,
     createNewSession,
     validateSession,
+    refreshSession,
     updateSessionActivity,
     invalidateAllUserSessions
   };

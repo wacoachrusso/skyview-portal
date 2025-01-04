@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { handleEmailVerification } from "@/utils/authUtils";
 
 interface LoginFormData {
@@ -15,6 +16,7 @@ const MAX_LOGIN_ATTEMPTS = 3;
 export const useLoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { createNewSession } = useSessionManagement();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<LoginFormData>({
@@ -120,6 +122,9 @@ export const useLoginForm = () => {
         return;
       }
 
+      // Create a new session
+      await createNewSession(data.session.user.id);
+
       // Reset login attempts on successful login
       const { error: resetError } = await supabase
         .from('profiles')
@@ -131,12 +136,7 @@ export const useLoginForm = () => {
 
       if (formData.rememberMe) {
         console.log('Setting persistent session...');
-        await supabase.auth.updateUser({
-          data: { 
-            persistent: true,
-            session_expires_in: 60 * 60 * 24 * 14 // 14 days
-          }
-        });
+        document.cookie = `refresh_token_expires_at=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/; secure; samesite=strict`;
       }
 
       toast({

@@ -379,10 +379,13 @@ export type Database = {
         Row: {
           created_at: string | null
           device_info: Json | null
+          expires_at: string | null
           id: string
           invalidated_at: string | null
           ip_address: string | null
           last_activity: string | null
+          refresh_token: string | null
+          refresh_token_expires_at: string | null
           session_token: string
           status: Database["public"]["Enums"]["session_status"] | null
           user_id: string | null
@@ -390,10 +393,13 @@ export type Database = {
         Insert: {
           created_at?: string | null
           device_info?: Json | null
+          expires_at?: string | null
           id?: string
           invalidated_at?: string | null
           ip_address?: string | null
           last_activity?: string | null
+          refresh_token?: string | null
+          refresh_token_expires_at?: string | null
           session_token: string
           status?: Database["public"]["Enums"]["session_status"] | null
           user_id?: string | null
@@ -401,10 +407,13 @@ export type Database = {
         Update: {
           created_at?: string | null
           device_info?: Json | null
+          expires_at?: string | null
           id?: string
           invalidated_at?: string | null
           ip_address?: string | null
           last_activity?: string | null
+          refresh_token?: string | null
+          refresh_token_expires_at?: string | null
           session_token?: string
           status?: Database["public"]["Enums"]["session_status"] | null
           user_id?: string | null
@@ -498,6 +507,15 @@ export type Database = {
           p_session_token: string
         }
         Returns: boolean
+      }
+      refresh_session: {
+        Args: {
+          p_refresh_token: string
+        }
+        Returns: {
+          session_token: string
+          expires_at: string
+        }[]
       }
     }
     Enums: {
