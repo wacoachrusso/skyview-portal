@@ -3,7 +3,8 @@ import { ChatList } from "./ChatList";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatContentProps {
   messages: Message[];
@@ -20,9 +21,26 @@ export function ChatContent({
   onSendMessage,
   onNewChat 
 }: ChatContentProps) {
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [offlineMessages, setOfflineMessages] = useState<Message[]>([]);
+  const { toast } = useToast();
+
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
   };
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Store messages in localStorage whenever they change
   useEffect(() => {
@@ -41,22 +59,35 @@ export function ChatContent({
     }
   }, [messages]);
 
-  // Load stored messages when component mounts
+  // Load offline messages when offline
   useEffect(() => {
-    try {
-      const storedMessages = localStorage.getItem('current-chat-messages');
-      if (storedMessages) {
-        const parsedMessages = JSON.parse(storedMessages);
-        console.log('Loaded stored messages:', parsedMessages.length, 'messages');
-        // Only set messages if we don't already have messages (prevents overwriting new chat)
-        if (messages.length === 0) {
-          onSendMessage(''); // This will trigger a reload of the conversation
+    if (isOffline) {
+      try {
+        const currentConversationId = localStorage.getItem('current-conversation-id');
+        if (currentConversationId) {
+          const storedMessages = localStorage.getItem(`offline-chat-${currentConversationId}`);
+          if (storedMessages) {
+            const parsedMessages = JSON.parse(storedMessages);
+            console.log('Loaded offline messages:', parsedMessages.length, 'messages');
+            setOfflineMessages(parsedMessages);
+          } else {
+            toast({
+              title: "Chat not available offline",
+              description: "This chat hasn't been saved for offline viewing",
+              variant: "destructive"
+            });
+          }
         }
+      } catch (error) {
+        console.error('Error loading offline messages:', error);
+        toast({
+          title: "Error loading chat",
+          description: "Unable to load offline messages",
+          variant: "destructive"
+        });
       }
-    } catch (error) {
-      console.error('Error loading stored messages:', error);
     }
-  }, []);
+  }, [isOffline, toast]);
 
   return (
     <div className="flex flex-col h-full">
@@ -66,7 +97,7 @@ export function ChatContent({
           <WelcomeMessage />
         ) : (
           <ChatList
-            messages={messages}
+            messages={isOffline ? offlineMessages : messages}
             currentUserId={currentUserId || ''}
             isLoading={isLoading}
             onCopyMessage={handleCopyMessage}
@@ -74,7 +105,11 @@ export function ChatContent({
         )}
       </div>
       <div className="flex-shrink-0">
-        <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+        <ChatInput 
+          onSendMessage={onSendMessage} 
+          isLoading={isLoading} 
+          disabled={isOffline}
+        />
       </div>
     </div>
   );

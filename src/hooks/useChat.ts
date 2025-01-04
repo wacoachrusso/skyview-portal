@@ -1,133 +1,125 @@
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useConversation } from "./useConversation";
-import { useMessageOperations } from "./useMessageOperations";
-import { useUserProfile } from "./useUserProfile";
+import { useEffect, useState } from "react";
 import { Message } from "@/types/chat";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./use-toast";
 
 export function useChat() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { currentUserId, userProfile } = useUserProfile();
-  const { 
-    currentConversationId, 
-    createNewConversation, 
-    ensureConversation,
-    loadConversation, 
-    setCurrentConversationId 
-  } = useConversation();
 
-  const {
-    messages,
-    setMessages,
-    isLoading,
-    setIsLoading,
-    insertUserMessage,
-    insertAIMessage,
-    loadMessages
-  } = useMessageOperations(currentUserId, currentConversationId);
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
 
-  const sendMessage = async (content: string) => {
-    console.log('Sending message:', { content, conversationId: currentConversationId });
-    
-    if (!currentUserId) {
-      console.error('No user ID available');
-      toast({
-        title: "Error",
-        description: "Unable to send message. Please try refreshing the page.",
-        variant: "destructive",
-        duration: 2000
-      });
-      return;
-    }
-    
+  const loadConversation = async (conversationId: string) => {
     setIsLoading(true);
-    
     try {
-      const conversationId = await ensureConversation(currentUserId, content);
-      if (!conversationId) {
-        throw new Error('Failed to create or get conversation');
-      }
-
-      console.log('Inserting user message into conversation:', conversationId);
-      const userMessage = await insertUserMessage(content, conversationId);
-      console.log('User message inserted:', userMessage);
-
-      const { data, error } = await supabase.functions.invoke('chat-completion', {
-        body: { 
-          content,
-          subscriptionPlan: userProfile?.subscription_plan || 'free'
-        }
-      });
+      localStorage.setItem('current-conversation-id', conversationId);
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
-      
-      console.log('Received AI response, inserting message');
-      await insertAIMessage(data.response, conversationId);
-      console.log('AI message inserted successfully');
+
+      setMessages(messages || []);
+      setCurrentConversationId(conversationId);
+      console.log('Loaded conversation:', conversationId, 'with', messages?.length || 0, 'messages');
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendMessage = async (content: string) => {
+    if (!currentUserId) return;
+
+    setIsLoading(true);
+    try {
+      let conversationId = currentConversationId;
+
+      if (!conversationId) {
+        const { data: conversation, error: conversationError } = await supabase
+          .from('conversations')
+          .insert([
+            {
+              user_id: currentUserId,
+              title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+            }
+          ])
+          .select()
+          .single();
+
+        if (conversationError) throw conversationError;
+        conversationId = conversation.id;
+        setCurrentConversationId(conversationId);
+      }
+
+      const { data: message, error: messageError } = await supabase
+        .from('messages')
+        .insert([
+          {
+            content,
+            user_id: currentUserId,
+            conversation_id: conversationId,
+            role: 'user'
+          }
+        ])
+        .select()
+        .single();
+
+      if (messageError) throw messageError;
+
+      setMessages(prev => [...prev, message]);
+
+      // Simulate AI response
+      const aiResponse = {
+        id: crypto.randomUUID(),
+        content: "I am analyzing your contract...",
+        user_id: 'ai',
+        conversation_id: conversationId,
+        created_at: new Date().toISOString(),
+        role: 'assistant'
+      };
+
+      setMessages(prev => [...prev, aiResponse]);
 
     } catch (error) {
-      console.error('Error in chat flow:', error);
+      console.error('Error sending message:', error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
-        duration: 2000
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const startNewChat = async () => {
-    console.log('Starting new chat session...');
+  const startNewChat = () => {
     setMessages([]);
     setCurrentConversationId(null);
+    localStorage.removeItem('current-conversation-id');
+    localStorage.removeItem('current-chat-messages');
   };
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('messages_channel')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages'
-        },
-        (payload) => {
-          console.log('New message received:', payload);
-          const newMessage = payload.new as Message;
-          if (newMessage.conversation_id === currentConversationId) {
-            console.log('Adding message to chat:', newMessage);
-            setMessages(prev => [...prev, newMessage]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentConversationId]);
-
-  // Load messages when conversation changes
-  useEffect(() => {
-    if (currentConversationId) {
-      loadMessages(currentConversationId);
-    }
-  }, [currentConversationId]);
 
   return {
     messages,
-    currentUserId,
     isLoading,
-    sendMessage,
-    createNewConversation,
+    currentUserId,
     currentConversationId,
+    sendMessage,
     loadConversation,
     setCurrentConversationId,
-    userProfile,
-    startNewChat
+    startNewChat,
   };
 }

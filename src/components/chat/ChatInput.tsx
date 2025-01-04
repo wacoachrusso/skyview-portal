@@ -1,94 +1,77 @@
+import { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import { MicButton } from "./MicButton";
 import { SendButton } from "./SendButton";
+import { MicButton } from "./MicButton";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface ChatInputProps {
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string) => Promise<void>;
   isLoading?: boolean;
+  disabled?: boolean;
 }
 
-export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) {
+export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const isMobile = useIsMobile();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { 
     isListening, 
     transcript, 
-    toggleListening, 
+    startListening, 
     stopListening, 
-    setTranscript 
+    hasRecognitionSupport 
   } = useSpeechRecognition();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('ChatInput - Submitting message:', message);
-    
-    if (!message.trim()) {
-      console.log('ChatInput - Empty message, not submitting');
-      return;
+  useEffect(() => {
+    if (transcript) {
+      setMessage(prev => prev + transcript);
     }
-    
-    if (isListening) {
-      stopListening();
-    }
-    
-    console.log('ChatInput - Calling onSendMessage with:', message);
-    await onSendMessage(message);
-    setMessage("");
-    setTranscript("");
-  };
+  }, [transcript]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      console.log('ChatInput - Enter key pressed, message:', message);
-      if (message.trim() && !isLoading) {
-        console.log('ChatInput - Submitting via Enter key');
-        handleSubmit(e);
+  const handleSubmit = async () => {
+    if (message.trim() && !isLoading && !disabled) {
+      await onSendMessage(message.trim());
+      setMessage("");
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
       }
     }
   };
 
-  useEffect(() => {
-    if (transcript) {
-      setMessage(transcript);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
-  }, [transcript]);
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="p-2 sm:p-4 bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10">
-      <div className="flex flex-col gap-2 max-w-5xl mx-auto">
-        <div className="flex gap-2 items-end">
-          <Textarea
-            value={message}
-            onChange={(e) => {
-              console.log('ChatInput - Message changed:', e.target.value);
-              setMessage(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask SkyGuide"
-            className="min-h-[40px] sm:min-h-[50px] text-sm sm:text-base resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
-            disabled={isLoading}
-          />
-          {!isMobile && (
-            <MicButton 
+    <div className="p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t">
+      <div className="relative flex items-center max-w-4xl mx-auto">
+        <Textarea
+          ref={textareaRef}
+          placeholder={disabled ? "Chat not available offline" : "Ask a question about your contract..."}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          className="min-h-[44px] w-full resize-none bg-background px-4 py-2.5 focus:outline-none focus:ring-0 focus:ring-offset-0"
+          disabled={disabled}
+        />
+        <div className="absolute right-0 flex items-center gap-2 pr-2">
+          {hasRecognitionSupport && (
+            <MicButton
               isListening={isListening}
-              isLoading={isLoading}
-              onToggle={toggleListening}
+              onStart={startListening}
+              onStop={stopListening}
+              disabled={isLoading || disabled}
             />
           )}
           <SendButton 
-            isLoading={isLoading}
-            hasMessage={message.trim().length > 0}
-            isMobile={isMobile}
+            onClick={handleSubmit} 
+            disabled={!message.trim() || isLoading || disabled} 
           />
         </div>
-        <p className="text-xs text-gray-400 text-center">
-          SkyGuide can make mistakes. Check important info.
-        </p>
       </div>
-    </form>
+    </div>
   );
 }
