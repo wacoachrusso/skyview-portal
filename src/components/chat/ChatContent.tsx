@@ -32,11 +32,11 @@ export function ChatContent({
         const chatHistory = JSON.parse(localStorage.getItem('chat-history') || '[]');
         const lastMessage = messages[messages.length - 1];
         
-        // Only add to history if it's a new message
-        if (!chatHistory.some((msg: Message) => msg.id === lastMessage.id)) {
+        // Only add to history if it's a new message and has valid ID
+        if (lastMessage?.id && !chatHistory.some((msg: Message) => msg.id === lastMessage.id)) {
           chatHistory.push(lastMessage);
           localStorage.setItem('chat-history', JSON.stringify(chatHistory));
-          console.log('Added new message to chat history');
+          console.log('Added new message to chat history:', lastMessage.id);
         }
       } catch (error) {
         console.error('Error storing messages in chat history:', error);

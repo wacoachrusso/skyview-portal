@@ -41,6 +41,14 @@ export function ConversationList({
   const handleDelete = (e: React.MouseEvent, conversationId: string) => {
     e.stopPropagation();
     onDeleteConversation(conversationId);
+    
+    // Also remove from offline storage if it exists
+    if (offlineConversations.includes(conversationId)) {
+      const newOfflineConversations = offlineConversations.filter(id => id !== conversationId);
+      setOfflineConversations(newOfflineConversations);
+      localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
+      localStorage.removeItem(`offline-chat-${conversationId}`);
+    }
   };
 
   const handleCheckboxChange = (conversationId: string, checked: boolean) => {
@@ -76,14 +84,16 @@ export function ConversationList({
       });
     } else {
       try {
-        // Fetch messages for this conversation
-        const messages = localStorage.getItem(`chat-messages-${conversationId}`);
-        if (!messages) {
+        // Get messages from chat history for this conversation
+        const chatHistory = JSON.parse(localStorage.getItem('chat-history') || '[]');
+        const conversationMessages = chatHistory.filter((msg: any) => msg.conversation_id === conversationId);
+        
+        if (conversationMessages.length === 0) {
           throw new Error('No messages found for this conversation');
         }
         
         // Store for offline use
-        localStorage.setItem(`offline-chat-${conversationId}`, messages);
+        localStorage.setItem(`offline-chat-${conversationId}`, JSON.stringify(conversationMessages));
         const newOfflineConversations = [...offlineConversations, conversationId];
         setOfflineConversations(newOfflineConversations);
         localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
@@ -93,6 +103,7 @@ export function ConversationList({
           description: "This chat will be available when you're offline",
         });
       } catch (error) {
+        console.error('Error saving chat for offline viewing:', error);
         toast({
           title: "Error saving chat",
           description: "Unable to save this chat for offline viewing",
