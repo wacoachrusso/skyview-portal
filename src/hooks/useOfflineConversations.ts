@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useOfflineConversations = () => {
   const [offlineConversations, setOfflineConversations] = useState<string[]>([]);
@@ -31,15 +32,21 @@ export const useOfflineConversations = () => {
       });
     } else {
       try {
-        // Get messages from current-chat-messages if it's the active conversation
-        const currentMessages = localStorage.getItem('current-chat-messages');
+        // Fetch messages directly from the database for the conversation
+        const { data: messages, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
         
-        if (!currentMessages) {
+        if (!messages || messages.length === 0) {
           throw new Error('No messages found for this conversation');
         }
         
         // Store the messages for offline access
-        localStorage.setItem(`offline-chat-${conversationId}`, currentMessages);
+        localStorage.setItem(`offline-chat-${conversationId}`, JSON.stringify(messages));
         const newOfflineConversations = [...offlineConversations, conversationId];
         setOfflineConversations(newOfflineConversations);
         localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
