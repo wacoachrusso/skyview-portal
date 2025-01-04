@@ -36,35 +36,40 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SkyGuide <onboarding@resend.dev>",
+        from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
         subject: "Welcome to SkyGuide - Confirm Your Email",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
-            </div>
-            
-            <h2 style="color: #333;">Welcome to SkyGuide™!</h2>
-            <p>Thank you for signing up. Please click the link below to confirm your email address:</p>
-            <p style="margin: 20px 0;">
-              <a href="${confirmationUrl}" 
-                 style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-                Confirm Email Address
-              </a>
-            </p>
-            <p style="color: #666; font-size: 14px;">If you didn't create this account, you can safely ignore this email.</p>
-            
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
-              <p>SkyGuide™ - Your Aviation Assistant</p>
-              <p>© 2024 SkyGuide. All rights reserved.</p>
-              <p>
-                <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: underline;">Privacy Policy</a> • 
-                <a href="https://skyguide.site/terms" style="color: #666; text-decoration: underline;">Terms of Service</a> •
-                <a href="https://skyguide.site/refunds" style="color: #666; text-decoration: underline;">Refund Policy</a>
-              </p>
-            </div>
-          </div>
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>Welcome to SkyGuide!</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
+              </div>
+              
+              <h1 style="color: #1a365d; text-align: center;">Welcome to SkyGuide™!</h1>
+              
+              <p style="margin-bottom: 20px;">Thank you for signing up! Please confirm your email address to get started with SkyGuide™.</p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${confirmationUrl}" 
+                   style="background-color: #fbbf24; color: #1a365d; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                  Confirm Email Address
+                </a>
+              </div>
+              
+              <p style="color: #666; font-size: 14px;">If you didn't create a SkyGuide™ account, you can safely ignore this email.</p>
+              
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+                <p>SkyGuide™ - Your Aviation Assistant</p>
+                <p>© 2024 SkyGuide. All rights reserved.</p>
+              </div>
+            </body>
+          </html>
         `,
       }),
     });
@@ -72,13 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!res.ok) {
       const error = await res.text();
       console.error("Error sending confirmation email:", error);
-      return new Response(
-        JSON.stringify({ error: "Failed to send confirmation email", details: error }),
-        {
-          status: res.status,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      throw new Error(error);
     }
 
     const data = await res.json();
@@ -89,14 +88,11 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error in send-confirmation-email function:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to process request", details: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    console.error("Error in send-signup-confirmation function:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 };
 

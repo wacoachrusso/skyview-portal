@@ -14,15 +14,17 @@ interface EmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("Processing invite email request");
+  
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, inviteUrl, inviterName } = await req.json();
-    console.log("Received request to send invite email to:", email);
+    const { email, inviteUrl, inviterName } = await req.json() as EmailRequest;
+    console.log(`Sending invite email to ${email} from ${inviterName}`);
     console.log("Invite URL:", inviteUrl);
-    console.log("Inviter Name:", inviterName);
 
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY is not set");
@@ -132,13 +134,14 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
-    const data = await res.json();
-    console.log("Resend API response:", data);
-
     if (!res.ok) {
-      console.error("Error from Resend API:", data);
-      throw new Error(data.message || "Failed to send email");
+      const error = await res.text();
+      console.error("Error from Resend API:", error);
+      throw new Error(`Failed to send email: ${error}`);
     }
+
+    const data = await res.json();
+    console.log("Email sent successfully:", data);
 
     return new Response(JSON.stringify(data), {
       status: 200,

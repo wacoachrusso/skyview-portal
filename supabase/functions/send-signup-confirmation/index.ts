@@ -74,10 +74,6 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
                 <p>SkyGuide™ - Your Aviation Assistant</p>
                 <p>© 2024 SkyGuide. All rights reserved.</p>
-                <p>
-                  <a href="https://skyguide.site/privacy-policy" style="color: #666; text-decoration: underline;">Privacy Policy</a> • 
-                  <a href="https://skyguide.site/terms" style="color: #666; text-decoration: underline;">Terms of Service</a>
-                </p>
               </div>
             </body>
           </html>
