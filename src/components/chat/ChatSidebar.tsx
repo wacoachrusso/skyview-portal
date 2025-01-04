@@ -177,7 +177,7 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
       <SidebarHeader onDeleteAll={deleteAllConversations} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
       {conversations.length >= CHAT_LIMIT_WARNING && (
-        <Alert variant="warning" className="mx-2 my-2">
+        <Alert className="mx-2 my-2 border-yellow-500/50 bg-yellow-500/10 text-yellow-500">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             You have {conversations.length} chats. Consider deleting old ones to keep things organized.
