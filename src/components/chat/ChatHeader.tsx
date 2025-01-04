@@ -30,7 +30,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
           </Button>
         )}
         <div className="flex flex-col items-start">
-          <h1 className="text-lg font-semibold text-foreground leading-none">SkyGuide AI</h1>
+          <h1 className="text-lg font-semibold text-foreground leading-none"></h1>
         </div>
         <Button
           variant="ghost"
