@@ -2,13 +2,20 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionState } from "@/hooks/useSessionState";
 import { useAuthStateHandler } from "@/hooks/useAuthStateHandler";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
 
 export function SessionCheck() {
   const { checkCurrentSession } = useSessionState();
   const { handleAuthStateChange } = useAuthStateHandler();
+  const { initializeSession } = useSessionManagement();
 
   useEffect(() => {
-    checkCurrentSession();
+    const setupAuth = async () => {
+      await checkCurrentSession();
+      await initializeSession();
+    };
+
+    setupAuth();
 
     const {
       data: { subscription },
