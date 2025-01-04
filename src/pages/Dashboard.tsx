@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { ContactDirectory } from "@/components/contact/ContactDirectory";
+import { DashboardLogo } from "@/components/dashboard/DashboardLogo";
+import { DesktopNav } from "@/components/dashboard/DesktopNav";
+import { MobileNav } from "@/components/dashboard/MobileNav";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,66 +10,71 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const { userEmail, isLoading, handleSignOut } = useAuthManagement();
+  const { userEmail, isLoading: authLoading, handleSignOut } = useAuthManagement();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     const checkSession = async () => {
       try {
         console.log("Checking session in Dashboard...");
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session) {
+        if (!session && mounted) {
           console.log("No session found, redirecting to login");
           navigate('/login');
           return;
         }
 
-        // Check if profile exists and subscription is valid
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('subscription_plan, account_status, is_admin')
-          .eq('id', session.user.id)
-          .maybeSingle();
+        if (session && mounted) {
+          // Check if profile exists and subscription is valid
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('subscription_plan, account_status, is_admin')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        if (error) {
-          console.error("Error fetching profile:", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to load user profile. Please try again."
-          });
-          return;
+          if (error) {
+            console.error("Error fetching profile:", error);
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Failed to load user profile. Please try again."
+            });
+            return;
+          }
+
+          if (!profile || profile.account_status === 'deleted') {
+            console.log("No profile found or account deleted");
+            navigate('/login');
+            return;
+          }
+
+          if (mounted) {
+            setIsAdmin(profile.is_admin || false);
+          }
         }
-
-        if (!profile || profile.account_status === 'deleted') {
-          console.log("No profile found or account deleted");
-          navigate('/login');
-          return;
-        }
-
-        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log("No subscription plan found");
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        setIsAdmin(profile.is_admin || false);
-        setIsPageLoading(false);
       } catch (error) {
         console.error("Error in session check:", error);
-        setIsPageLoading(false);
-        navigate('/login');
+        if (mounted) {
+          navigate('/login');
+        }
       }
     };
 
-    checkSession();
-  }, [navigate, toast]);
+    if (!authLoading) {
+      checkSession();
+    }
 
-  if (isLoading || isPageLoading) {
+    return () => {
+      mounted = false;
+    };
+  }, [navigate, toast, authLoading]);
+
+  if (authLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -79,23 +83,35 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
-      <div className="absolute inset-0 bg-glow-gradient pointer-events-none" />
-      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-      <main className="container mx-auto px-4 py-8 max-w-7xl relative">
-        <div className="space-y-8">
-          <WelcomeCard />
-          {isAdmin && (
-            <div className="p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border" />
-          )}
-          <QuickActions />
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Contact Directory</h2>
-            <ContactDirectory />
+    <div className="min-h-screen bg-background">
+      <div className="flex">
+        <div className="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0">
+          <div className="flex-1 flex flex-col min-h-0 border-r border-border bg-card">
+            <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+              <DashboardLogo />
+              <DesktopNav isAdmin={isAdmin} />
+            </div>
           </div>
-          <RecentActivity />
         </div>
-      </main>
+        
+        <div className="md:pl-72 flex flex-col flex-1">
+          <DashboardHeader userEmail={userEmail} handleSignOut={handleSignOut} />
+          <MobileNav isAdmin={isAdmin} />
+          
+          <main className="flex-1">
+            <div className="py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+              </div>
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                <div className="py-4">
+                  {/* Add your dashboard content here */}
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 };
