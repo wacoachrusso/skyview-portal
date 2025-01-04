@@ -14,56 +14,55 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps) {
   const formatContent = (content: string) => {
+    // Extract reference if it exists (text between [REF] tags)
+    const referenceMatch = content.match(/\[REF\](.*?)\[\/REF\]/s);
+    const reference = referenceMatch ? referenceMatch[1].trim() : null;
+    const mainContent = content.replace(/\[REF\].*?\[\/REF\]/s, '').trim();
+
     // Check if content contains a list or table-like structure
-    if (content.includes("1.") || content.includes("•") || content.includes("|")) {
-      const rows = content.split(/\d+\.\s+|\n/).filter(Boolean);
+    if (mainContent.includes("1.") || mainContent.includes("•") || mainContent.includes("|")) {
+      const rows = mainContent.split(/\d+\.\s+|\n/).filter(Boolean);
       
-      // Check if it's a table structure (contains ":" or "|")
-      if (content.includes(":") || content.includes("|")) {
-        return (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <tbody>
-                {rows.map((row, index) => {
-                  const [header, value] = row.split(/[:|]/).map(s => s.trim());
-                  if (!header || !value) return null;
-                  return (
-                    <tr key={index} className="border-t border-white/10">
-                      <td className="py-2 px-4 font-medium">{header}</td>
-                      <td className="py-2 px-4">{value}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        );
-      }
-      
-      // If it's a list, format as bullet points
       return (
-        <ul className="list-disc list-inside space-y-2">
-          {rows.map((item, index) => (
-            <li key={index} className="pl-2">{item.trim()}</li>
-          ))}
-        </ul>
+        <div className="space-y-4">
+          <div className="prose prose-invert">
+            {rows.map((item, index) => (
+              <div key={index} className="pl-2">
+                {item.trim()}
+              </div>
+            ))}
+          </div>
+          {reference && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <p className="text-sm text-blue-400 font-medium">Reference:</p>
+              <p className="text-sm text-gray-400">{reference}</p>
+            </div>
+          )}
+        </div>
       );
     }
     
-    // Use ReactMarkdown for regular text content
     return (
-      <ReactMarkdown
-        components={{
-          p: ({ children }) => <p className="mb-2">{children}</p>,
-          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-          em: ({ children }) => <em className="italic">{children}</em>,
-          ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
-          li: ({ children }) => <li className="pl-2">{children}</li>,
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+      <div className="space-y-4">
+        <ReactMarkdown
+          components={{
+            p: ({ children }) => <p className="mb-2">{children}</p>,
+            strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+            em: ({ children }) => <em className="italic">{children}</em>,
+            ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
+            ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
+            li: ({ children }) => <li className="pl-2">{children}</li>,
+          }}
+        >
+          {mainContent}
+        </ReactMarkdown>
+        {reference && (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-sm text-blue-400 font-medium">Reference:</p>
+            <p className="text-sm text-gray-400">{reference}</p>
+          </div>
+        )}
+      </div>
     );
   };
 
