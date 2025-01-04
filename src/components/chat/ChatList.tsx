@@ -32,17 +32,7 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage, co
 
   useEffect(() => {
     console.log("Messages state updated:", messages.length, "messages");
-    
-    if (messages.length > 0 && conversationId) {
-      try {
-        // Store messages for this specific conversation
-        localStorage.setItem(`chat-messages-${conversationId}`, JSON.stringify(messages));
-        console.log("Messages saved to localStorage for conversation:", conversationId);
-      } catch (error) {
-        console.error("Error saving messages to localStorage:", error);
-      }
-    }
-  }, [messages, conversationId]);
+  }, [messages]);
 
   return (
     <div className="flex flex-col h-full">

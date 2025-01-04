@@ -29,20 +29,34 @@ export function ChatContent({
     if (messages.length > 0) {
       console.log('Storing messages in chat history:', messages.length, 'messages');
       try {
-        const chatHistory = JSON.parse(localStorage.getItem('chat-history') || '[]');
-        const lastMessage = messages[messages.length - 1];
-        
-        // Only add to history if it's a new message and has valid ID
-        if (lastMessage?.id && !chatHistory.some((msg: Message) => msg.id === lastMessage.id)) {
-          chatHistory.push(lastMessage);
-          localStorage.setItem('chat-history', JSON.stringify(chatHistory));
-          console.log('Added new message to chat history:', lastMessage.id);
-        }
+        localStorage.setItem('current-chat-messages', JSON.stringify(messages));
+        console.log('Stored current chat messages in localStorage');
       } catch (error) {
-        console.error('Error storing messages in chat history:', error);
+        console.error('Error storing messages in localStorage:', error);
       }
+    } else {
+      // Clear stored messages when starting a new chat
+      localStorage.removeItem('current-chat-messages');
+      console.log('Cleared stored messages for new chat');
     }
   }, [messages]);
+
+  // Load stored messages when component mounts
+  useEffect(() => {
+    try {
+      const storedMessages = localStorage.getItem('current-chat-messages');
+      if (storedMessages) {
+        const parsedMessages = JSON.parse(storedMessages);
+        console.log('Loaded stored messages:', parsedMessages.length, 'messages');
+        // Only set messages if we don't already have messages (prevents overwriting new chat)
+        if (messages.length === 0) {
+          onSendMessage(''); // This will trigger a reload of the conversation
+        }
+      }
+    } catch (error) {
+      console.error('Error loading stored messages:', error);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
