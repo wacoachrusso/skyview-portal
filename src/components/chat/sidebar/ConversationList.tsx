@@ -29,12 +29,12 @@ export function ConversationList({
           <div
             key={conversation.id}
             onClick={() => onSelectConversation(conversation.id)}
-            className={`flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors ${
+            className={`flex items-center justify-between px-2 py-3 cursor-pointer hover:bg-white/5 transition-colors ${
               currentConversationId === conversation.id ? "bg-white/10" : ""
             }`}
           >
-            <div className="flex flex-col min-w-0 flex-shrink overflow-hidden mr-2">
-              <span className="text-sm text-white truncate max-w-[180px]">
+            <div className="flex flex-col min-w-0 flex-shrink overflow-hidden mr-1">
+              <span className="text-sm text-white truncate max-w-[200px]">
                 {conversation.title}
               </span>
               <span className="text-xs text-gray-400 truncate">
