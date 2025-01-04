@@ -9,7 +9,7 @@ export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { createNewSession, invalidateOtherSessions } = useSessionManagement();
+  const { createNewSession } = useSessionManagement();
   const provider = searchParams.get("provider");
 
   if (provider === "google") {
@@ -26,9 +26,8 @@ export const AuthCallback = () => {
           throw new Error("Invalid session");
         }
 
-        // Create a new session and invalidate others
-        const newSession = await createNewSession(session.user.id);
-        await invalidateOtherSessions(session.user.id, newSession.session_token);
+        // Create a new session (this will automatically invalidate other sessions)
+        await createNewSession(session.user.id);
 
         // Check if user exists in profiles
         const { data: profile, error: profileError } = await supabase
@@ -81,7 +80,7 @@ export const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast, createNewSession, invalidateOtherSessions]);
+  }, [navigate, toast, createNewSession]);
 
   return null;
 };

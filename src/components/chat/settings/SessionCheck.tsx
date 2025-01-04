@@ -7,7 +7,7 @@ import { useSessionManagement } from "@/hooks/useSessionManagement";
 export function SessionCheck() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { createNewSession, invalidateOtherSessions } = useSessionManagement();
+  const { createNewSession } = useSessionManagement();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -22,9 +22,8 @@ export function SessionCheck() {
           return;
         }
 
-        // Create a new session and invalidate others
-        const newSession = await createNewSession(session.user.id);
-        await invalidateOtherSessions(session.user.id, newSession.session_token);
+        // Create a new session (this will automatically invalidate other sessions)
+        await createNewSession(session.user.id);
 
         // Verify the session is still valid
         const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -71,9 +70,8 @@ export function SessionCheck() {
       if (event === 'SIGNED_IN' && session?.user) {
         console.log("New sign-in detected, creating session...");
         try {
-          // When a new sign-in occurs, create a new session and invalidate others
-          const newSession = await createNewSession(session.user.id);
-          await invalidateOtherSessions(session.user.id, newSession.session_token);
+          // When a new sign-in occurs, create a new session (this will invalidate others)
+          await createNewSession(session.user.id);
           
           // Only attempt re-authentication for Google users
           if (session.user.app_metadata.provider === 'google') {
@@ -105,7 +103,7 @@ export function SessionCheck() {
       console.log("Cleaning up session check...");
       subscription.unsubscribe();
     };
-  }, [navigate, toast, createNewSession, invalidateOtherSessions]);
+  }, [navigate, toast, createNewSession]);
 
   return null;
 }

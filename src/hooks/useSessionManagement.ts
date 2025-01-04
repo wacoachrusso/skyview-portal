@@ -16,13 +16,17 @@ export const useSessionManagement = () => {
       const { data: deviceInfo } = await fetch('https://api.ipify.org?format=json')
         .then(res => res.json());
 
+      // First invalidate any existing active sessions
+      await invalidateAllUserSessions(userId);
+
       const { data: session, error } = await supabase
         .from('sessions')
         .insert([{
           user_id: userId,
           session_token: sessionToken,
           device_info: deviceInfo,
-          ip_address: deviceInfo?.ip
+          ip_address: deviceInfo?.ip,
+          status: 'active'
         }])
         .select()
         .single();
@@ -36,20 +40,23 @@ export const useSessionManagement = () => {
     }
   };
 
-  const invalidateOtherSessions = async (userId: string, currentSessionToken: string) => {
-    console.log('Invalidating other sessions for user:', userId);
+  const invalidateAllUserSessions = async (userId: string) => {
+    console.log('Invalidating all sessions for user:', userId);
     
     try {
       const { error } = await supabase
-        .rpc('invalidate_other_sessions', {
-          p_user_id: userId,
-          p_current_session_token: currentSessionToken
-        });
+        .from('sessions')
+        .update({ 
+          status: 'invalidated',
+          invalidated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+        .eq('status', 'active');
 
       if (error) throw error;
-      console.log('Other sessions invalidated successfully');
+      console.log('All previous sessions invalidated');
     } catch (error) {
-      console.error('Error invalidating other sessions:', error);
+      console.error('Error invalidating sessions:', error);
       throw error;
     }
   };
@@ -115,9 +122,39 @@ export const useSessionManagement = () => {
 
         // Create a new session and invalidate others
         const newSession = await createNewSession(session.user.id);
-        await invalidateOtherSessions(session.user.id, newSession.session_token);
+
+        // Subscribe to session invalidation events
+        const subscription = supabase
+          .channel('session-invalidation')
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'sessions',
+              filter: `user_id=eq.${session.user.id}`
+            },
+            async (payload) => {
+              if (payload.new.status === 'invalidated' && 
+                  payload.new.session_token !== newSession.session_token) {
+                console.log('Session invalidated by another login');
+                toast({
+                  variant: "destructive",
+                  title: "Session Terminated",
+                  description: "Your session has been terminated because you logged in from another device."
+                });
+                await supabase.auth.signOut();
+                navigate('/login');
+              }
+            }
+          )
+          .subscribe();
 
         setIsLoading(false);
+
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
         console.error("Unexpected error in checkSession:", error);
         setIsLoading(false);
@@ -136,8 +173,8 @@ export const useSessionManagement = () => {
   return {
     isLoading,
     createNewSession,
-    invalidateOtherSessions,
     validateSession,
-    updateSessionActivity
+    updateSessionActivity,
+    invalidateAllUserSessions
   };
 };
