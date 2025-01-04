@@ -33,16 +33,18 @@ export function ConversationList({
               currentConversationId === conversation.id ? "bg-white/10" : ""
             }`}
           >
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-sm text-white truncate">{conversation.title}</span>
-              <span className="text-xs text-gray-400">
+            <div className="flex flex-col min-w-0 flex-shrink overflow-hidden mr-2">
+              <span className="text-sm text-white truncate max-w-[180px]">
+                {conversation.title}
+              </span>
+              <span className="text-xs text-gray-400 truncate">
                 {format(new Date(conversation.last_message_at), "MMM d, h:mm a")}
               </span>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="ml-2 text-gray-400 hover:text-white hover:bg-white/10"
+              className="flex-shrink-0 text-gray-400 hover:text-white hover:bg-white/10"
               onClick={(e) => handleDelete(e, conversation.id)}
             >
               <Trash2 className="h-4 w-4" />
