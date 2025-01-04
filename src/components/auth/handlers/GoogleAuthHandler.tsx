@@ -15,11 +15,10 @@ export const GoogleAuthHandler = () => {
       if (sessionError) {
         console.error('Session error:', sessionError);
         toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "There was a problem with your session."
+          title: "Welcome to SkyGuide!",
+          description: "Please select a subscription plan to get started."
         });
-        navigate('/login');
+        navigate('/?scrollTo=pricing-section');
         return;
       }
 
@@ -40,9 +39,8 @@ export const GoogleAuthHandler = () => {
         console.log('No profile found, redirecting to pricing');
         await supabase.auth.signOut();
         toast({
-          variant: "destructive",
-          title: "Account Required",
-          description: "Please sign up and select a plan before logging in with Google."
+          title: "Welcome to SkyGuide!",
+          description: "Please select a subscription plan to get started."
         });
         navigate('/?scrollTo=pricing-section');
         return;
@@ -53,8 +51,7 @@ export const GoogleAuthHandler = () => {
         console.log('No subscription plan, redirecting to pricing');
         await supabase.auth.signOut();
         toast({
-          variant: "destructive",
-          title: "Subscription Required",
+          title: "Welcome Back!",
           description: "Please select a subscription plan to continue."
         });
         navigate('/?scrollTo=pricing-section');
