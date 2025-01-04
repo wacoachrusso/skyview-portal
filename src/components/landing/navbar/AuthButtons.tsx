@@ -2,9 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { LogIn, LogOut, MessageSquare, User } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useLogout } from "@/hooks/useLogout";
 
 interface AuthButtonsProps {
   isLoading: boolean;
@@ -15,48 +13,7 @@ interface AuthButtonsProps {
 }
 
 export function AuthButtons({ isLoading, isLoggedIn, scrollToPricing, isMobile, showChatOnly }: AuthButtonsProps) {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleLogout = async () => {
-    try {
-      console.log("Starting logout process from navbar...");
-      
-      // First clear all local storage
-      localStorage.clear();
-      
-      // Then sign out from Supabase with global scope to clear all sessions
-      const { error } = await supabase.auth.signOut({ 
-        scope: 'global' 
-      });
-      
-      if (error) {
-        console.error("Error during logout:", error);
-        throw error;
-      }
-      
-      console.log("Successfully logged out");
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account",
-      });
-      
-      // Navigate after successful logout
-      navigate('/login', { replace: true });
-    } catch (error) {
-      console.error("Error during logout:", error);
-      
-      // Even if there's an error, ensure we clear local state and redirect
-      localStorage.clear();
-      navigate('/login', { replace: true });
-      
-      toast({
-        title: "Session ended",
-        description: "Your session has been cleared",
-        variant: "default",
-      });
-    }
-  };
+  const { handleLogout } = useLogout();
 
   // Show loading skeleton based on device type
   if (isLoading) {
