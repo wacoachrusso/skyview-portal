@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { createNewSession, invalidateOtherSessions } = useSessionManagement();
   const provider = searchParams.get("provider");
 
   if (provider === "google") {
@@ -24,6 +26,10 @@ export const AuthCallback = () => {
           throw new Error("Invalid session");
         }
 
+        // Create a new session and invalidate others
+        const newSession = await createNewSession(session.user.id);
+        await invalidateOtherSessions(session.user.id, newSession.session_token);
+
         // Check if user exists in profiles
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -39,16 +45,29 @@ export const AuthCallback = () => {
             title: "Account Required",
             description: "Please sign up and select a plan before logging in with Google."
           });
-          navigate('/signup');
+          navigate('/?scrollTo=pricing-section');
           return;
         }
 
-        // Check if profile is complete
-        if (profile.user_type && profile.airline) {
-          navigate('/dashboard');
-        } else {
-          navigate('/complete-profile');
+        // Check if profile has subscription
+        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+          console.log('No subscription plan, redirecting to pricing');
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Subscription Required",
+            description: "Please select a subscription plan to continue."
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
         }
+
+        // All good, redirect to dashboard
+        toast({
+          title: "Welcome back!",
+          description: "You've been successfully signed in."
+        });
+        navigate('/dashboard');
 
       } catch (error) {
         console.error("Error in auth callback:", error);
@@ -62,7 +81,7 @@ export const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast]);
+  }, [navigate, toast, createNewSession, invalidateOtherSessions]);
 
   return null;
 };
