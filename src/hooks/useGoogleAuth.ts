@@ -1,52 +1,53 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const checkExistingProfile = async (email: string) => {
-  console.log('Checking profile for:', email);
-  const { data: profile, error: profileError } = await supabase
+  console.log('Checking for existing profile with email:', email);
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('email', email)
     .single();
-  
-  return { profile, error: profileError };
+
+  return { profile, error };
 };
 
 export const useGoogleAuth = () => {
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('=== Starting Google Sign In Process ===');
-      
-      // Sign out any existing sessions before starting new sign in
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      // Proceed with Google OAuth
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting Google sign-in process');
+      setLoading(true);
+
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
           },
-          redirectTo: `${window.location.origin}/auth/callback?provider=google`
-        }
+        },
       });
 
-      if (error) {
-        console.error('Google sign in error:', error);
-        throw error;
+      if (signInError) {
+        console.error('Google sign-in error:', signInError);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "There was a problem signing in with Google."
+        });
+        return;
       }
 
-      // Get user data after OAuth
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        console.log('Checking if user exists in profiles');
-        const { profile, error: profileError } = await checkExistingProfile(user.email!);
+      if (user?.email) {
+        console.log('Google auth successful, checking profile');
+        const { profile, error: profileError } = await checkExistingProfile(user.email);
 
         if (profileError || !profile) {
           console.log('No existing profile found, redirecting to pricing');
@@ -60,58 +61,45 @@ export const useGoogleAuth = () => {
           return;
         }
 
-        // Check if account is active
-        if (profile.account_status !== 'active') {
-          console.log('Account not active:', profile.account_status);
+        // Check if account is active and has valid subscription
+        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+          console.log('No subscription plan, redirecting to pricing');
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
-            title: "Account Not Active",
-            description: "Your account is not active. Please contact support."
+            title: "Subscription Required",
+            description: "Please select a subscription plan to continue."
           });
-          navigate('/login');
+          navigate('/?scrollTo=pricing-section');
           return;
         }
 
-        // Check if email is verified
-        if (!user.email_confirmed_at) {
-          console.log('Email not verified');
+        if (profile.account_status === 'deleted') {
+          console.log('Account is deleted, redirecting to pricing');
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
-            title: "Email verification required",
-            description: "Please verify your email address before signing in."
+            title: "Account Unavailable",
+            description: "This account has been deleted. Please create a new account with a different email."
           });
-          navigate('/login');
+          navigate('/?scrollTo=pricing-section');
           return;
         }
 
-        console.log('Successful Google sign in with existing profile');
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in."
-        });
-        
-        // Check if profile is complete
-        if (profile.user_type && profile.airline) {
-          navigate('/dashboard');
-        } else {
-          navigate('/complete-profile');
-        }
+        console.log('Profile verified, proceeding with login');
+        navigate('/dashboard');
       }
-      
     } catch (error) {
-      console.error('=== Google Sign In Error ===');
-      console.error('Error details:', error);
-      
-      await supabase.auth.signOut();
+      console.error('Unexpected error during Google sign-in:', error);
       toast({
         variant: "destructive",
-        title: "Sign in failed",
-        description: "Could not sign in with Google. Please try again."
+        title: "Error",
+        description: "An unexpected error occurred. Please try again."
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  return { handleGoogleSignIn };
+  return { handleGoogleSignIn, loading };
 };
