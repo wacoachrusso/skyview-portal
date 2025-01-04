@@ -61,7 +61,7 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
-      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
+      <DashboardHeader userEmail={userEmail} handleSignOut={handleSignOut} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <Card className="bg-[#2A2F3C] border-white/10">

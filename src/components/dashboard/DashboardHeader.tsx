@@ -1,11 +1,11 @@
 interface DashboardHeaderProps {
-  userEmail: string;
-  isLoading: boolean;
+  userEmail: string | null;
+  isLoading?: boolean;
   handleSignOut: () => Promise<void>;
   isAdmin?: boolean;
 }
 
-export function DashboardHeader({ userEmail, isLoading, handleSignOut, isAdmin }: DashboardHeaderProps) {
+export function DashboardHeader({ userEmail, isLoading = false, handleSignOut, isAdmin }: DashboardHeaderProps) {
   return (
     <header className="flex items-center justify-between p-4 bg-background border-b border-border">
       <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>

@@ -8,7 +8,7 @@ import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
-  const { userEmail, isLoading: authLoading, signOut } = useAuthManagement();
+  const { userEmail, isLoading, handleSignOut } = useAuthManagement();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
 
@@ -52,8 +52,9 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <DashboardHeader 
           userEmail={userEmail} 
-          isAdmin={isAdmin} 
-          onSignOut={signOut}
+          isLoading={isLoading}
+          handleSignOut={handleSignOut}
+          isAdmin={isAdmin}
         />
         <div className="grid gap-6 mt-6">
           <WelcomeCard />

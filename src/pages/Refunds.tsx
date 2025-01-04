@@ -60,7 +60,7 @@ const Refunds = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-      <DashboardHeader userEmail={null} onSignOut={handleSignOut} />
+      <DashboardHeader userEmail={null} handleSignOut={handleSignOut} />
       <main className="container mx-auto px-4 py-12 max-w-4xl">
         <Card className="p-8 bg-card/95 backdrop-blur-sm shadow-xl">
           <h1 className="text-4xl font-bold text-white mb-8 text-left">Refund and Cancellation Policy</h1>
