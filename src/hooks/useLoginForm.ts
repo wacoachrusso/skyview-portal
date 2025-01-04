@@ -83,11 +83,13 @@ export const useLoginForm = () => {
       
       const profileData = await checkExistingProfile(formData.email);
 
+      // Only check account status if profile exists
       if (profileData?.account_status === 'locked') {
         handleAccountLocked();
         return;
       }
 
+      // Only check existing sessions if profile exists and has an ID
       if (profileData?.id) {
         const existingSessions = await checkExistingSessions(profileData.id);
         if (existingSessions && existingSessions.length > 0) {
@@ -104,6 +106,7 @@ export const useLoginForm = () => {
       if (error) {
         console.error('Login error:', error);
         
+        // Only update login attempts if profile exists
         if (error.message === 'Invalid login credentials' && profileData) {
           const newAttempts = (profileData.login_attempts || 0) + 1;
           const newStatus = newAttempts >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active';
