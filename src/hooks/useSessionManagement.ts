@@ -11,38 +11,42 @@ export const useSessionManagement = () => {
 
   // Subscribe to session invalidation events
   useEffect(() => {
-    const currentToken = localStorage.getItem('session_token');
-    if (!currentToken) return;
+    const setupSessionListener = async () => {
+      const currentToken = localStorage.getItem('session_token');
+      if (!currentToken) return;
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
 
-    console.log('Setting up session invalidation listener for user:', session.user.id);
-    
-    const subscription = supabase
-      .channel('session-invalidation')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'sessions',
-          filter: `user_id=eq.${session.user.id}`
-        },
-        async (payload) => {
-          if (payload.new.status === 'invalidated' && 
-              payload.new.session_token === currentToken) {
-            console.log('Session invalidated by another login');
-            await handleSessionInvalidation("Your session was terminated because you logged in on another device");
+      console.log('Setting up session invalidation listener for user:', session.user.id);
+      
+      const subscription = supabase
+        .channel('session-invalidation')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'sessions',
+            filter: `user_id=eq.${session.user.id}`
+          },
+          async (payload) => {
+            if (payload.new.status === 'invalidated' && 
+                payload.new.session_token === currentToken) {
+              console.log('Session invalidated by another login');
+              await handleSessionInvalidation("Your session was terminated because you logged in on another device");
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    return () => {
-      console.log('Cleaning up session invalidation listener');
-      subscription.unsubscribe();
+      return () => {
+        console.log('Cleaning up session invalidation listener');
+        subscription.unsubscribe();
+      };
     };
+
+    setupSessionListener();
   }, [navigate, toast]);
 
   const handleSessionInvalidation = async (message: string) => {
