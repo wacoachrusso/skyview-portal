@@ -16,8 +16,8 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
   const { 
     isListening, 
     transcript, 
-    startListening, 
-    stopListening, 
+    startListening,
+    stopListening,
     hasRecognitionSupport 
   } = useSpeechRecognition();
 

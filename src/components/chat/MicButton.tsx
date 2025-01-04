@@ -3,19 +3,20 @@ import { Mic, MicOff } from "lucide-react";
 
 interface MicButtonProps {
   isListening: boolean;
-  isLoading: boolean;
-  onToggle: () => void;
+  onStart: () => void;
+  onStop: () => void;
+  disabled?: boolean;
 }
 
-export function MicButton({ isListening, isLoading, onToggle }: MicButtonProps) {
+export function MicButton({ isListening, onStart, onStop, disabled }: MicButtonProps) {
   return (
     <Button 
       type="button"
       size="icon"
       variant="ghost"
       className={`text-white hover:bg-white/10 ${isListening ? 'bg-red-500/20' : ''}`}
-      disabled={isLoading}
-      onClick={onToggle}
+      disabled={disabled}
+      onClick={isListening ? onStop : onStart}
     >
       {isListening ? (
         <MicOff className="h-5 w-5" />
