@@ -32,11 +32,15 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SkyGuide <skyguide32@gmail.com>",
+        from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
         subject: "Welcome to SkyGuide!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
+            </div>
+            
             <h1 style="color: #1a1f2c;">Welcome to SkyGuide, ${name}!</h1>
             <p>Thank you for joining SkyGuide. We're excited to have you on board!</p>
             <p>You've signed up for our ${plan} plan. Here's what you can expect:</p>
