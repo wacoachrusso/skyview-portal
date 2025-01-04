@@ -48,10 +48,10 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
           variant="ghost"
           size="sm"
           onClick={() => navigate('/dashboard')}
-          className="text-muted-foreground hover:text-foreground hover:bg-accent/50 hidden md:flex items-center"
+          className="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center"
         >
           <LayoutDashboard className="h-4 w-4" />
-          <span className="ml-2">Dashboard</span>
+          <span className="ml-2 hidden md:inline">Dashboard</span>
         </Button>
         <Button
           variant="ghost"
