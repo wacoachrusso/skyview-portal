@@ -39,9 +39,10 @@ export const useGoogleAuth = () => {
         console.error('Google sign-in error:', signInError);
         toast({
           variant: "destructive",
-          title: "Authentication Error",
-          description: "There was a problem signing in with Google."
+          title: "Sign Up Required",
+          description: "Please sign up and select a subscription plan to continue.",
         });
+        navigate('/?scrollTo=pricing-section');
         return;
       }
 
@@ -55,9 +56,8 @@ export const useGoogleAuth = () => {
         if (profileError || !profile) {
           console.log('No existing profile found, redirecting to pricing');
           toast({
-            variant: "destructive",
-            title: "Account Required",
-            description: "Please sign up and select a plan before logging in with Google."
+            title: "Welcome to SkyGuide!",
+            description: "Please select a subscription plan to get started.",
           });
           await supabase.auth.signOut();
           navigate('/?scrollTo=pricing-section');
@@ -69,9 +69,8 @@ export const useGoogleAuth = () => {
           console.log('No subscription plan, redirecting to pricing');
           await supabase.auth.signOut();
           toast({
-            variant: "destructive",
             title: "Subscription Required",
-            description: "Please select a subscription plan to continue."
+            description: "Please select a subscription plan to continue.",
           });
           navigate('/?scrollTo=pricing-section');
           return;
@@ -95,10 +94,10 @@ export const useGoogleAuth = () => {
     } catch (error) {
       console.error('Unexpected error during Google sign-in:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred. Please try again."
+        title: "Welcome to SkyGuide!",
+        description: "Please select a subscription plan to get started.",
       });
+      navigate('/?scrollTo=pricing-section');
     } finally {
       setLoading(false);
     }
