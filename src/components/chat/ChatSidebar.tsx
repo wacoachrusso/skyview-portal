@@ -36,40 +36,92 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
   };
 
   const deleteConversation = async (conversationId: string) => {
-    const { error } = await supabase
-      .from('conversations')
-      .delete()
-      .eq('id', conversationId);
+    try {
+      // First delete all messages in the conversation
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
 
-    if (error) {
+      if (messagesError) throw messagesError;
+
+      // Then delete the conversation
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId);
+
+      if (conversationError) throw conversationError;
+
+      setConversations(prev => prev.filter(convo => convo.id !== conversationId));
+      
+      toast({
+        title: "Success",
+        description: "Conversation deleted successfully",
+      });
+
+      console.log('Conversation deleted:', conversationId);
+    } catch (error) {
       console.error('Error deleting conversation:', error);
       toast({
         title: "Error",
         description: "Failed to delete conversation.",
         variant: "destructive",
       });
-      return;
     }
-
-    setConversations(prev => prev.filter(convo => convo.id !== conversationId));
   };
 
   const deleteAllConversations = async () => {
-    const { error } = await supabase
-      .from('conversations')
-      .delete();
+    try {
+      // Get all conversation IDs for the current user
+      const { data: userConversations, error: fetchError } = await supabase
+        .from('conversations')
+        .select('id');
 
-    if (error) {
+      if (fetchError) throw fetchError;
+
+      if (!userConversations || userConversations.length === 0) {
+        toast({
+          title: "Info",
+          description: "No conversations to delete.",
+        });
+        return;
+      }
+
+      const conversationIds = userConversations.map(conv => conv.id);
+
+      // First delete all messages in these conversations
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .in('conversation_id', conversationIds);
+
+      if (messagesError) throw messagesError;
+
+      // Then delete all conversations
+      const { error: conversationsError } = await supabase
+        .from('conversations')
+        .delete()
+        .in('id', conversationIds);
+
+      if (conversationsError) throw conversationsError;
+
+      setConversations([]);
+      
+      toast({
+        title: "Success",
+        description: "All conversations deleted successfully",
+      });
+
+      console.log('All conversations deleted');
+    } catch (error) {
       console.error('Error deleting all conversations:', error);
       toast({
         title: "Error",
         description: "Failed to delete all conversations.",
         variant: "destructive",
       });
-      return;
     }
-
-    setConversations([]);
   };
 
   useEffect(() => {
