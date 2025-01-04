@@ -89,14 +89,14 @@ const Dashboard = () => {
           <div className="flex-1 flex flex-col min-h-0 border-r border-border bg-card">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <DashboardLogo />
-              <DesktopNav isAdmin={isAdmin} />
+              <DesktopNav isAccountPage={false} onSignOut={handleSignOut} />
             </div>
           </div>
         </div>
         
         <div className="md:pl-72 flex flex-col flex-1">
-          <DashboardHeader userEmail={userEmail} handleSignOut={handleSignOut} />
-          <MobileNav isAdmin={isAdmin} />
+          <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
+          <MobileNav isAccountPage={false} onSignOut={handleSignOut} />
           
           <main className="flex-1">
             <div className="py-6">
