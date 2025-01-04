@@ -30,11 +30,6 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
           </Button>
         )}
         <div className="flex items-center gap-3">
-          <img 
-            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
-            alt="SkyGuide Logo" 
-            className="h-8 w-auto"
-          />
           <div className="flex flex-col">
             <span className="text-lg font-semibold text-foreground">SkyGuide AI</span>
             <span className="text-xs text-muted-foreground">Your Contract Assistant</span>
