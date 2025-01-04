@@ -95,6 +95,41 @@ export const deleteUserData = async (userId: string) => {
       throw conversationsError;
     }
 
+    // Delete contract uploads from storage
+    console.log("Deleting user contract uploads...");
+    const { data: uploads, error: uploadsError } = await supabase
+      .from("contract_uploads")
+      .select("file_path")
+      .eq("user_id", userId);
+
+    if (uploadsError) {
+      console.error("Error fetching user uploads:", uploadsError);
+      throw uploadsError;
+    }
+
+    // Delete each file from storage
+    if (uploads && uploads.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from("contracts")
+        .remove(uploads.map(upload => upload.file_path));
+
+      if (storageError) {
+        console.error("Error deleting files from storage:", storageError);
+        throw storageError;
+      }
+    }
+
+    // Delete contract uploads records
+    const { error: uploadsDeleteError } = await supabase
+      .from("contract_uploads")
+      .delete()
+      .eq("user_id", userId);
+
+    if (uploadsDeleteError) {
+      console.error("Error deleting contract upload records:", uploadsDeleteError);
+      throw uploadsDeleteError;
+    }
+
     // Delete notifications BEFORE profile (important for foreign key constraint)
     console.log("Deleting user notifications...");
     const { error: notificationsError } = await supabase
@@ -105,6 +140,18 @@ export const deleteUserData = async (userId: string) => {
     if (notificationsError) {
       console.error("Error deleting user notifications:", notificationsError);
       throw notificationsError;
+    }
+
+    // Delete sessions
+    console.log("Deleting user sessions...");
+    const { error: sessionsError } = await supabase
+      .from("sessions")
+      .delete()
+      .eq("user_id", userId);
+
+    if (sessionsError) {
+      console.error("Error deleting user sessions:", sessionsError);
+      throw sessionsError;
     }
 
     // Finally, delete profile after all dependent records are deleted
