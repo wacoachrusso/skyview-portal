@@ -51,7 +51,6 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
     }
   };
 
-  // Update message when transcript changes
   useEffect(() => {
     if (transcript) {
       setMessage(transcript);
@@ -59,7 +58,7 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
   }, [transcript]);
 
   return (
-    <form onSubmit={handleSubmit} className="p-2 sm:p-4 bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10">
+    <form onSubmit={handleSubmit} className="w-full bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10 p-2 sm:p-4 shadow-lg">
       <div className="flex gap-2 items-end max-w-5xl mx-auto">
         <Textarea
           value={message}
