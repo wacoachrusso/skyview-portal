@@ -1,16 +1,11 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
 
-export const AuthCallback = () => {
-  const [searchParams] = useSearchParams();
-  const provider = searchParams.get("provider");
-
-  if (provider === "google") {
-    return <GoogleAuthHandler />;
-  }
+export const GoogleAuthHandler = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleAuthCallback = async () => {

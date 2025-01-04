@@ -1,14 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { PostgrestError } from "@supabase/supabase-js";
 
-interface ProfileCheckResult {
-  profile: any;
-  error: PostgrestError | null;
-}
-
-const checkExistingProfile = async (email: string): Promise<ProfileCheckResult> => {
+const checkExistingProfile = async (email: string) => {
   console.log('Checking profile for:', email);
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -17,67 +11,6 @@ const checkExistingProfile = async (email: string): Promise<ProfileCheckResult> 
     .single();
   
   return { profile, error: profileError };
-};
-
-const handleProfileCheck = async (email: string, toast: any): Promise<boolean> => {
-  const { profile, error } = await checkExistingProfile(email);
-  
-  if (error || !profile) {
-    console.log('No profile found, signing out');
-    await supabase.auth.signOut();
-    toast({
-      variant: "destructive",
-      title: "Account Required",
-      description: "Please sign up for an account first before signing in with Google."
-    });
-    return false;
-  }
-
-  // Check if the profile is active
-  if (profile.account_status !== 'active') {
-    console.log('Account not active:', profile.account_status);
-    await supabase.auth.signOut();
-    toast({
-      variant: "destructive",
-      title: "Account Not Active",
-      description: "Your account is not active. Please contact support."
-    });
-    return false;
-  }
-
-  return true;
-};
-
-const initiateGoogleAuth = async () => {
-  console.log('Initiating Google OAuth');
-  
-  // First sign out any existing sessions
-  await supabase.auth.signOut({ scope: 'global' });
-  
-  return await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-      },
-      redirectTo: `${window.location.origin}/auth/callback?provider=google`
-    }
-  });
-};
-
-const verifyEmailConfirmation = async (user: any, toast: any): Promise<boolean> => {
-  if (!user.email_confirmed_at) {
-    console.log('Email not verified');
-    await supabase.auth.signOut();
-    toast({
-      variant: "destructive",
-      title: "Email verification required",
-      description: "Please verify your email address before signing in."
-    });
-    return false;
-  }
-  return true;
 };
 
 export const useGoogleAuth = () => {
@@ -92,31 +25,79 @@ export const useGoogleAuth = () => {
       await supabase.auth.signOut({ scope: 'global' });
       
       // Proceed with Google OAuth
-      const { data, error } = await initiateGoogleAuth();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          redirectTo: `${window.location.origin}/auth/callback?provider=google`
+        }
+      });
 
       if (error) {
         console.error('Google sign in error:', error);
         throw error;
       }
 
-      // Verify user after OAuth
+      // Get user data after OAuth
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        console.log('Checking profile after OAuth');
-        const profileValid = await handleProfileCheck(user.email!, toast);
-        if (!profileValid) {
+        console.log('Checking if user exists in profiles');
+        const { profile, error: profileError } = await checkExistingProfile(user.email!);
+
+        if (profileError || !profile) {
+          console.log('No existing profile found, redirecting to signup');
+          toast({
+            variant: "destructive",
+            title: "Account Required",
+            description: "Please sign up and select a plan before logging in with Google."
+          });
+          await supabase.auth.signOut();
           navigate('/signup');
           return;
         }
 
-        const emailVerified = await verifyEmailConfirmation(user, toast);
-        if (!emailVerified) {
+        // Check if account is active
+        if (profile.account_status !== 'active') {
+          console.log('Account not active:', profile.account_status);
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Account Not Active",
+            description: "Your account is not active. Please contact support."
+          });
+          navigate('/login');
+          return;
+        }
+
+        // Check if email is verified
+        if (!user.email_confirmed_at) {
+          console.log('Email not verified');
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Email verification required",
+            description: "Please verify your email address before signing in."
+          });
           navigate('/login');
           return;
         }
 
         console.log('Successful Google sign in with existing profile');
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in."
+        });
+        
+        // Check if profile is complete
+        if (profile.user_type && profile.airline) {
+          navigate('/dashboard');
+        } else {
+          navigate('/complete-profile');
+        }
       }
       
     } catch (error) {
