@@ -70,7 +70,7 @@ serve(async (req) => {
       ],
       mode: mode || 'subscription',
       success_url: `${req.headers.get('origin')}/auth/callback?payment=success`,
-      cancel_url: `${req.headers.get('origin')}/auth/callback?payment=cancelled`,
+      cancel_url: `${req.headers.get('origin')}/`, // Updated to redirect to home page
     });
 
     console.log('Checkout session created:', session.id);
