@@ -10,6 +10,8 @@ export const GoogleAuthHandler = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log('Starting Google auth callback process...');
+        
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
@@ -17,12 +19,14 @@ export const GoogleAuthHandler = () => {
           throw new Error("Invalid session");
         }
 
-        // Check if user exists in profiles
+        // Check if user exists in profiles and has a subscription plan
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('email', session.user.email)
           .single();
+
+        console.log('Profile check result:', profile);
 
         if (profileError || !profile) {
           console.log('No profile found, redirecting to signup/pricing');
@@ -49,7 +53,21 @@ export const GoogleAuthHandler = () => {
           return;
         }
 
-        // All good, redirect to dashboard
+        // Check if account is active
+        if (profile.account_status !== 'active') {
+          console.log('Account not active:', profile.account_status);
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Account Not Active",
+            description: "Your account is not active. Please contact support."
+          });
+          navigate('/login');
+          return;
+        }
+
+        // All checks passed, proceed with login
+        console.log('All checks passed, proceeding with login');
         toast({
           title: "Welcome back!",
           description: "You've been successfully signed in."
@@ -57,7 +75,8 @@ export const GoogleAuthHandler = () => {
         navigate('/dashboard');
 
       } catch (error) {
-        console.error("Error in auth callback:", error);
+        console.error("Error in Google auth callback:", error);
+        await supabase.auth.signOut();
         toast({
           variant: "destructive",
           title: "Authentication Error",
