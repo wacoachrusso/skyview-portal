@@ -25,12 +25,24 @@ serve(async (req) => {
     const { content, subscriptionPlan } = await req.json();
     console.log('Received request with content:', content);
 
-    // Validate environment variables
-    if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY is not set');
-    }
-    if (!assistantId) {
-      throw new Error('OPENAI_ASSISTANT_ID is not set');
+    // Check for non-contract related queries using basic keyword detection
+    const nonContractKeywords = [
+      'weather', 'stocks', 'recipe', 'movie', 'game', 'sports',
+      'cryptocurrency', 'dating', 'shopping', 'entertainment'
+    ];
+
+    const containsNonContractContent = nonContractKeywords.some(keyword => 
+      content.toLowerCase().includes(keyword)
+    );
+
+    if (containsNonContractContent) {
+      console.log('Non-contract related query detected');
+      return new Response(
+        JSON.stringify({
+          response: "I apologize, but I can only assist with questions related to your union contract, its terms, policies, and provisions. Please rephrase your question to focus on contract-related matters. If you need general information, please use other appropriate resources."
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Create a thread
