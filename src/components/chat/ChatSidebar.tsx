@@ -150,15 +150,17 @@ export function ChatSidebar({ onSelectConversation, currentConversationId }: Cha
   );
 
   return (
-    <div className="w-64 sm:w-80 bg-[#1A1F2C] border-r border-white/10 flex flex-col shadow-xl">
+    <div className="w-64 sm:w-80 bg-[#1A1F2C] border-r border-white/10 flex flex-col h-full">
       <SidebarHeader onDeleteAll={deleteAllConversations} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
-      <ConversationList
-        conversations={filteredConversations}
-        currentConversationId={currentConversationId}
-        onSelectConversation={onSelectConversation}
-        onDeleteConversation={deleteConversation}
-      />
+      <div className="flex-1 overflow-y-auto">
+        <ConversationList
+          conversations={filteredConversations}
+          currentConversationId={currentConversationId}
+          onSelectConversation={onSelectConversation}
+          onDeleteConversation={deleteConversation}
+        />
+      </div>
     </div>
   );
 }

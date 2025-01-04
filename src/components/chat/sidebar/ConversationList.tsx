@@ -35,7 +35,7 @@ export function ConversationList({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#1E1E2E]/50">
+    <div className="flex-1">
       {conversations.map((conversation) => (
         <div
           key={conversation.id}
