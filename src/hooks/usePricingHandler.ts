@@ -32,16 +32,23 @@ export const usePricingHandler = () => {
         return;
       }
 
+      const userEmail = session.user.email;
+      if (!userEmail) {
+        throw new Error('User email not found');
+      }
+
       console.log('Making request to create-checkout-session with:', {
         priceId: plan.priceId,
         mode: plan.mode,
-        planName: plan.name
+        planName: plan.name,
+        email: userEmail
       });
       
       const response = await supabase.functions.invoke('create-checkout-session', {
         body: JSON.stringify({
           priceId: plan.priceId,
           mode: plan.mode,
+          email: userEmail
         }),
       });
 
