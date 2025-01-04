@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,54 @@ export const useSessionManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Subscribe to session invalidation events
+  useEffect(() => {
+    const currentToken = localStorage.getItem('session_token');
+    if (!currentToken) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+
+    console.log('Setting up session invalidation listener for user:', session.user.id);
+    
+    const subscription = supabase
+      .channel('session-invalidation')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'sessions',
+          filter: `user_id=eq.${session.user.id}`
+        },
+        async (payload) => {
+          if (payload.new.status === 'invalidated' && 
+              payload.new.session_token === currentToken) {
+            console.log('Session invalidated by another login');
+            await handleSessionInvalidation("Your session was terminated because you logged in on another device");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up session invalidation listener');
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
+
+  const handleSessionInvalidation = async (message: string) => {
+    console.log('Handling session invalidation:', message);
+    localStorage.clear();
+    await supabase.auth.signOut();
+    toast({
+      variant: "destructive",
+      title: "Session Ended",
+      description: message
+    });
+    navigate('/login');
+  };
 
   const createNewSession = async (userId: string) => {
     try {
@@ -91,6 +139,17 @@ export const useSessionManagement = () => {
       if (!sessionToken) {
         // Create a new session if none exists
         await createNewSession(session.user.id);
+      } else {
+        // Validate existing session
+        const { data: isValid } = await supabase
+          .rpc('is_session_valid', {
+            p_session_token: sessionToken
+          });
+
+        if (!isValid) {
+          console.log('Session token invalid, creating new session');
+          await createNewSession(session.user.id);
+        }
       }
 
       setIsLoading(false);
@@ -108,13 +167,7 @@ export const useSessionManagement = () => {
 
   // Create session interceptor
   const sessionInterceptor = createSessionInterceptor(() => {
-    console.log("Session invalid, redirecting to login");
-    localStorage.clear();
-    navigate('/login');
-    toast({
-      title: "Session Expired",
-      description: "Your session has expired. Please log in again."
-    });
+    handleSessionInvalidation("Your session has expired. Please log in again.");
   });
 
   return {

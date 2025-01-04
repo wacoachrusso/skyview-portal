@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { validateSessionToken } from "./sessionValidation";
 
 export const createSessionInterceptor = (handleSessionInvalid: (message: string) => void) => {
   return {
@@ -10,7 +9,12 @@ export const createSessionInterceptor = (handleSessionInvalid: (message: string)
         throw new Error("Unauthorized");
       }
 
-      const isValid = await validateSessionToken(sessionToken);
+      // Validate session token
+      const { data: isValid } = await supabase
+        .rpc('is_session_valid', {
+          p_session_token: sessionToken
+        });
+
       if (!isValid) {
         handleSessionInvalid("Your session is no longer active. Please log in again.");
         throw new Error("Unauthorized");
