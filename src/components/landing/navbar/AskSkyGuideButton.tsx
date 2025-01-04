@@ -9,12 +9,11 @@ export function AskSkyGuideButton() {
         asChild
         variant="secondary"
         size="sm"
-        className="relative text-white hover:bg-brand-gold hover:text-black transition-all duration-300 
-          animate-pulse hover:animate-none group"
+        className="text-white hover:bg-brand-gold hover:text-black"
       >
-        <Link to="/chat" className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 group-hover:rotate-6 transition-transform duration-300" />
-          <span className="font-medium">Ask SkyGuide</span>
+        <Link to="/chat">
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Ask SkyGuide
         </Link>
       </Button>
     </div>
