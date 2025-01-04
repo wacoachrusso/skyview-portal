@@ -47,37 +47,41 @@ export const useSignup = () => {
           email: formData.email,
         });
 
-        window.location.href = checkoutUrl;
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+        }
         return;
       }
 
       // Handle free plan signup
-      await handleFreeSignup(formData);
-
-      toast({
-        title: "Account created",
-        description: "Welcome to SkyGuide!",
-      });
-
-      navigate('/dashboard');
+      const signupResult = await handleFreeSignup(formData);
+      
+      if (signupResult) {
+        toast({
+          title: "Account created",
+          description: "Please check your email to verify your account.",
+        });
+        navigate('/login');
+      }
 
     } catch (error) {
       console.error("Error during signup:", error);
       
-      if (error instanceof Error && error.message.includes("User already registered")) {
-        toast({
-          variant: "destructive",
-          title: "Account exists",
-          description: "An account with this email already exists. Please sign in instead.",
-        });
-        navigate('/login');
-        return;
+      let errorMessage = "An unexpected error occurred";
+      
+      if (error instanceof Error) {
+        if (error.message.includes("User already registered")) {
+          errorMessage = "An account with this email already exists. Please sign in instead.";
+          navigate('/login');
+        } else {
+          errorMessage = error.message;
+        }
       }
-
+      
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        title: "Signup failed",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);

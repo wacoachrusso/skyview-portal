@@ -18,36 +18,47 @@ export const handleFreeSignup = async ({
 }: FreeSignupParams) => {
   console.log('Processing free plan signup for:', email);
 
-  const { data, error } = await supabase.auth.signUp({
-    email: email.trim().toLowerCase(),
-    password,
-    options: {
-      data: {
-        full_name: fullName.trim(),
-        user_type: jobTitle.toLowerCase(),
-        airline: airline.toLowerCase(),
-        subscription_plan: 'free',
-      },
-      emailRedirectTo: `${window.location.origin}/auth/callback`
-    }
-  });
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: {
+        data: {
+          full_name: fullName.trim(),
+          user_type: jobTitle.toLowerCase(),
+          airline: airline.toLowerCase(),
+          subscription_plan: 'free',
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
 
-  if (error) {
-    console.error("Signup error:", error);
+    if (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
+
+    if (!data.user) {
+      console.error("No user data returned from signup");
+      throw new Error('Failed to create account');
+    }
+
+    console.log("Free trial signup successful:", data);
+
+    // Send welcome email after successful signup
+    try {
+      await sendWelcomeEmail({
+        email: email.trim().toLowerCase(),
+        name: fullName.trim(),
+      });
+    } catch (emailError) {
+      console.error("Error sending welcome email:", emailError);
+      // Don't throw here - we still want to return the signup data even if email fails
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in handleFreeSignup:", error);
     throw error;
   }
-
-  if (!data.user) {
-    console.error("No user data returned from signup");
-    throw new Error('Failed to create account');
-  }
-
-  console.log("Free trial signup successful:", data);
-
-  await sendWelcomeEmail({
-    email: email.trim().toLowerCase(),
-    name: fullName.trim(),
-  });
-
-  return data;
 };
