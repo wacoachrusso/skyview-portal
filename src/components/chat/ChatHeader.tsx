@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, LayoutDashboard, FileText } from "lucide-react";
+import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { useContractHandler } from "@/hooks/useContractHandler";
+import { useAuthManagement } from "@/hooks/useAuthManagement";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
@@ -14,6 +15,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { handleContractClick } = useContractHandler();
+  const { handleSignOut } = useAuthManagement();
 
   return (
     <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -61,6 +63,15 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
         >
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline ml-2">New Chat</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSignOut}
+          className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="hidden sm:inline ml-2">Logout</span>
         </Button>
       </div>
     </header>
