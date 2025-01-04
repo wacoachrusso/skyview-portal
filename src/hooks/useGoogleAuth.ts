@@ -24,7 +24,7 @@ export const useGoogleAuth = () => {
       console.log('Starting Google sign-in process');
       setLoading(true);
 
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithOAuth({
+      const { data, error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -45,9 +45,12 @@ export const useGoogleAuth = () => {
         return;
       }
 
-      if (user?.email) {
+      // Get the current session to access user data
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user?.email) {
         console.log('Google auth successful, checking profile');
-        const { profile, error: profileError } = await checkExistingProfile(user.email);
+        const { profile, error: profileError } = await checkExistingProfile(session.user.email);
 
         if (profileError || !profile) {
           console.log('No existing profile found, redirecting to pricing');
