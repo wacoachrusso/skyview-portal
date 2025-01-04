@@ -6,6 +6,8 @@ import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const provider = searchParams.get("provider");
 
   if (provider === "google") {
