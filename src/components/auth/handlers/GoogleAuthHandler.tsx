@@ -29,7 +29,7 @@ export const GoogleAuthHandler = () => {
         console.log('Profile check result:', profile);
 
         if (profileError || !profile) {
-          console.log('No profile found, redirecting to signup/pricing');
+          console.log('No profile found, redirecting to pricing section');
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
