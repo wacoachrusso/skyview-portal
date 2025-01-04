@@ -63,7 +63,7 @@
   }
   
   body {
-    @apply bg-background text-foreground min-h-screen;
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     min-height: 100vh;
     min-height: -webkit-fill-available;
@@ -71,7 +71,7 @@
     line-height: 1.5;
     text-rendering: optimizeLegibility;
     margin: 0;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
     display: flex;
     flex-direction: column;
   }
