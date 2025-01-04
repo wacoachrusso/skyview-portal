@@ -1,12 +1,9 @@
 import { Conversation } from "@/types/chat";
-import { format } from "date-fns";
-import { MessageSquare, Trash2, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect, useRef, useState } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { ConversationItem } from "./ConversationItem";
+import { BulkActions } from "./BulkActions";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -24,7 +21,6 @@ export function ConversationList({
   const [selectedConversations, setSelectedConversations] = useState<string[]>([]);
   const [offlineConversations, setOfflineConversations] = useState<string[]>([]);
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Load offline conversations from localStorage on component mount
@@ -34,7 +30,20 @@ export function ConversationList({
     }
   }, []);
 
-  const handleSelect = (conversationId: string, checked: boolean) => {
+  const handleSelect = (conversationId: string) => {
+    if (selectedConversations.length > 0) {
+      handleCheckboxChange(conversationId, !selectedConversations.includes(conversationId));
+    } else {
+      onSelectConversation(conversationId);
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    onDeleteConversation(conversationId);
+  };
+
+  const handleCheckboxChange = (conversationId: string, checked: boolean) => {
     setSelectedConversations(prev => 
       checked 
         ? [...prev, conversationId]
@@ -47,19 +56,6 @@ export function ConversationList({
       onDeleteConversation(id);
     });
     setSelectedConversations([]);
-  };
-
-  const handleConversationClick = (conversationId: string) => {
-    if (selectedConversations.length > 0) {
-      handleSelect(conversationId, !selectedConversations.includes(conversationId));
-    } else {
-      onSelectConversation(conversationId);
-    }
-  };
-
-  const handleDelete = (e: React.MouseEvent, conversationId: string) => {
-    e.stopPropagation();
-    onDeleteConversation(conversationId);
   };
 
   const toggleOfflineAvailability = async (e: React.MouseEvent, conversationId: string) => {
@@ -108,88 +104,25 @@ export function ConversationList({
 
   return (
     <div className="flex flex-col h-full">
-      {selectedConversations.length > 0 && (
-        <div className="flex items-center justify-between p-2 bg-destructive/10 border-b border-border">
-          <span className="text-sm text-destructive">
-            {selectedConversations.length} selected
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteSelected}
-            className="gap-2"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete Selected
-          </Button>
-        </div>
-      )}
+      <BulkActions
+        selectedCount={selectedConversations.length}
+        onDeleteSelected={handleDeleteSelected}
+      />
       <ScrollArea className="flex-1">
         <div className="flex flex-col py-2">
           {conversations.map((conversation) => (
-            <div
+            <ConversationItem
               key={conversation.id}
-              onClick={() => handleConversationClick(conversation.id)}
-              className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 ${
-                currentConversationId === conversation.id 
-                  ? "bg-white/10 border-l-brand-gold" 
-                  : "border-l-transparent hover:border-l-white/20"
-              }`}
-            >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                {selectedConversations.length > 0 && (
-                  <Checkbox
-                    checked={selectedConversations.includes(conversation.id)}
-                    onCheckedChange={(checked) => 
-                      handleSelect(conversation.id, checked as boolean)
-                    }
-                    onClick={(e) => e.stopPropagation()}
-                    className="data-[state=checked]:bg-destructive data-[state=checked]:border-destructive"
-                  />
-                )}
-                <div className={`p-2 rounded-lg ${
-                  currentConversationId === conversation.id 
-                    ? "bg-brand-gold/20" 
-                    : "bg-white/5"
-                }`}>
-                  <MessageSquare className={`h-4 w-4 ${
-                    currentConversationId === conversation.id 
-                      ? "text-brand-gold" 
-                      : "text-gray-400"
-                  }`} />
-                </div>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-sm font-medium text-white truncate max-w-[180px]">
-                    {conversation.title}
-                  </span>
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <span>{format(new Date(conversation.last_message_at), "MMM d, h:mm a")}</span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0.5"
-                        onClick={(e) => handleDelete(e, conversation.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0.5"
-                        onClick={(e) => toggleOfflineAvailability(e, conversation.id)}
-                      >
-                        {offlineConversations.includes(conversation.id) ? (
-                          <EyeOff className="h-4 w-4 text-brand-gold hover:text-brand-gold/80" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-gray-400 hover:text-white" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              conversation={conversation}
+              isSelected={conversation.id === currentConversationId}
+              isOffline={offlineConversations.includes(conversation.id)}
+              onSelect={handleSelect}
+              onDelete={handleDelete}
+              onToggleOffline={toggleOfflineAvailability}
+              showCheckbox={selectedConversations.length > 0}
+              isChecked={selectedConversations.includes(conversation.id)}
+              onCheckChange={(checked) => handleCheckboxChange(conversation.id, checked)}
+            />
           ))}
         </div>
       </ScrollArea>
