@@ -11,9 +11,9 @@ export function AskSkyGuideButton() {
         size="sm"
         className="text-white hover:bg-brand-gold hover:text-black"
       >
-        <Link to="/chat" className="flex items-center">
-          <MessageSquare className="h-5 w-5 md:mr-0 lg:mr-2" />
-          <span className="hidden lg:inline">Ask SkyGuide</span>
+        <Link to="/chat">
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Ask SkyGuide
         </Link>
       </Button>
     </div>
