@@ -49,14 +49,14 @@ export const useGoogleAuth = () => {
         const { profile, error: profileError } = await checkExistingProfile(user.email!);
 
         if (profileError || !profile) {
-          console.log('No existing profile found, redirecting to signup');
+          console.log('No existing profile found, redirecting to pricing');
           toast({
             variant: "destructive",
             title: "Account Required",
             description: "Please sign up and select a plan before logging in with Google."
           });
           await supabase.auth.signOut();
-          navigate('/signup');
+          navigate('/?scrollTo=pricing-section');
           return;
         }
 

@@ -40,7 +40,7 @@ export const GoogleAuthHandler = () => {
           return;
         }
 
-        // Check if profile is complete and has subscription
+        // Check if account is active and has valid subscription
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
           console.log('No subscription plan, redirecting to pricing');
           await supabase.auth.signOut();
