@@ -32,14 +32,6 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
         <div className="flex flex-col items-start">
           <h1 className="text-lg font-semibold text-foreground leading-none"></h1>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/dashboard')}
-          className="text-muted-foreground hover:text-foreground hover:bg-accent/50 md:hidden flex items-center gap-2 ml-8 pl-2"
-        >
-          <LayoutDashboard className="h-4 w-4" />
-        </Button>
       </div>
 
       <div className="flex items-center gap-2">
@@ -51,6 +43,14 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
         >
           <FileText className="h-4 w-4" />
           <span className="ml-2 hidden sm:inline">View Contract</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/dashboard')}
+          className="text-muted-foreground hover:text-foreground hover:bg-accent/50 md:hidden flex items-center"
+        >
+          <LayoutDashboard className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
