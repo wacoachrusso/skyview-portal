@@ -20,7 +20,7 @@ export const useSessionManagement = () => {
 
       console.log('Setting up session invalidation listener for user:', session.user.id);
       
-      const subscription = supabase
+      return supabase
         .channel('session-invalidation')
         .on(
           'postgres_changes',
@@ -34,13 +34,11 @@ export const useSessionManagement = () => {
             if (payload.new.status === 'invalidated' && 
                 payload.new.session_token === currentToken) {
               console.log('Session invalidated by another login');
-              await handleSessionInvalidation("Your session was terminated because you logged in on another device");
+              await handleSessionInvalidation("Your session was ended because you logged in on another device");
             }
           }
         )
         .subscribe();
-
-      return subscription;
     };
 
     let subscription: any;
@@ -59,20 +57,32 @@ export const useSessionManagement = () => {
   const handleSessionInvalidation = async (message: string) => {
     console.log('Handling session invalidation:', message);
     localStorage.clear();
-    await supabase.auth.signOut();
-    toast({
-      variant: "destructive",
-      title: "Session Ended",
-      description: message
-    });
-    navigate('/login');
+    
+    try {
+      await supabase.auth.signOut();
+      toast({
+        variant: "default",
+        title: "Session Ended",
+        description: message
+      });
+    } catch (error) {
+      console.error('Error during forced signout:', error);
+      // Still show the message even if signOut fails
+      toast({
+        variant: "default",
+        title: "Session Ended",
+        description: message
+      });
+    }
+    
+    navigate('/login', { replace: true });
   };
 
   const createNewSession = async (userId: string) => {
     try {
       console.log('Creating new session for user:', userId);
       
-      // First invalidate any existing sessions
+      // First invalidate any existing sessions using RPC function
       const { error: invalidateError } = await supabase
         .rpc('invalidate_other_sessions', {
           p_user_id: userId,

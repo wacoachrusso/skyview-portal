@@ -17,10 +17,6 @@ export const useAuthState = () => {
       if (event === 'SIGNED_OUT' || !session) {
         console.log("User signed out or session ended");
         localStorage.clear();
-        toast({
-          title: "Signed Out",
-          description: "You have been signed out successfully."
-        });
         navigate('/login');
       } else if (session?.user) {
         console.log("Valid session detected");
