@@ -1,151 +1,82 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { Conversation } from "@/types/chat";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { SidebarHeader } from "./sidebar/SidebarHeader";
-import { SearchBar } from "./sidebar/SearchBar";
 import { ConversationList } from "./sidebar/ConversationList";
-import { useNavigate } from "react-router-dom";
+import { SearchBar } from "./sidebar/SearchBar";
+import { SidebarHeader } from "./sidebar/SidebarHeader";
 
 interface ChatSidebarProps {
-  onSelectConversation: (conversationId: string) => void;
   currentConversationId: string | null;
+  onSelectConversation: (conversationId: string) => void;
 }
 
-export function ChatSidebar({ onSelectConversation, currentConversationId }: ChatSidebarProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+export function ChatSidebar({ currentConversationId, onSelectConversation }: ChatSidebarProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const loadConversations = async () => {
-    console.log('Loading conversations...');
-    
-    try {
-      const { data: { session }, error: authError } = await supabase.auth.getSession();
-      
-      if (authError) {
-        console.error('Auth error:', authError);
-        throw authError;
-      }
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .order('last_message_at', { ascending: false });
 
-      if (!session) {
-        console.log('No active session found, redirecting to login');
-        navigate('/login');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .order('last_message_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading conversations:', error);
-        throw error;
-      }
-
-      console.log('Loaded conversations:', data?.length || 0);
-      setConversations(data || []);
-    } catch (error) {
-      console.error('Error in loadConversations:', error);
+    if (error) {
+      console.error('Error loading conversations:', error);
       toast({
         title: "Error",
-        description: "Failed to load conversations. Please try logging in again.",
+        description: "Failed to load conversations.",
         variant: "destructive",
-        duration: 3000
       });
-      navigate('/login');
-    }
-  };
-
-  const deleteConversation = async (conversationId: string) => {
-    if (!conversationId) {
-      console.error('No conversation ID provided for deletion');
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', conversationId);
+    setConversations(data);
+  };
 
-      if (error) throw error;
+  const deleteConversation = async (conversationId: string) => {
+    const { error } = await supabase
+      .from('conversations')
+      .delete()
+      .eq('id', conversationId);
 
-      toast({
-        title: "Success",
-        description: "Conversation deleted",
-        duration: 3000
-      });
-
-      if (currentConversationId === conversationId) {
-        onSelectConversation('');
-      }
-    } catch (error) {
+    if (error) {
       console.error('Error deleting conversation:', error);
       toast({
         title: "Error",
-        description: "Failed to delete conversation",
+        description: "Failed to delete conversation.",
         variant: "destructive",
-        duration: 3000
       });
+      return;
     }
+
+    setConversations(prev => prev.filter(convo => convo.id !== conversationId));
   };
 
   const deleteAllConversations = async () => {
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .delete()
-        .not('id', 'is', null);
+    const { error } = await supabase
+      .from('conversations')
+      .delete();
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "All conversations deleted",
-        duration: 3000
-      });
-      
-      onSelectConversation('');
-    } catch (error) {
+    if (error) {
       console.error('Error deleting all conversations:', error);
       toast({
         title: "Error",
-        description: "Failed to delete all conversations",
+        description: "Failed to delete all conversations.",
         variant: "destructive",
-        duration: 3000
       });
+      return;
     }
+
+    setConversations([]);
   };
 
   useEffect(() => {
     loadConversations();
-
-    // Set up real-time subscription for conversations
-    const channel = supabase
-      .channel('conversations_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations'
-        },
-        (payload) => {
-          console.log('Conversation change received:', payload);
-          loadConversations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
-  const filteredConversations = conversations.filter(conversation =>
+  const filteredConversations = conversations.filter((conversation) =>
     conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
