@@ -11,7 +11,7 @@ export function WelcomeMessage() {
           <h1 className="text-2xl font-bold text-white">Welcome to SkyGuide Contract Assistant</h1>
         </div>
         <p className="text-gray-300">
-          I'm here to help you understand your union contract. Please ask any questions you have about your contract.
+          Your contract questions answered in seconds. Ready when you are!
         </p>
       </div>
     </div>
