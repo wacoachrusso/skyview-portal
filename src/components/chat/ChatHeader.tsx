@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, LayoutDashboard, FileText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
+import { useContractHandler } from "@/hooks/useContractHandler";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
@@ -12,6 +13,7 @@ interface ChatHeaderProps {
 export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHeaderProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { handleContractClick } = useContractHandler();
 
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -42,7 +44,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => {}}
+          onClick={handleContractClick}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
         >
           <FileText className="h-4 w-4" />
