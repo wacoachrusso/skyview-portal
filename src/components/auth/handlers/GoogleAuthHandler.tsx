@@ -48,14 +48,17 @@ export const GoogleAuthHandler = () => {
 
       // Check if account is active and has valid subscription
       if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-        console.log('No subscription plan, redirecting to pricing');
-        await supabase.auth.signOut();
-        toast({
-          title: "Welcome Back!",
-          description: "Please select a subscription plan to continue."
-        });
-        navigate('/?scrollTo=pricing-section');
-        return;
+        // Check if free trial is exhausted
+        if (profile.query_count >= 1) {
+          console.log('Free trial exhausted, redirecting to pricing');
+          await supabase.auth.signOut();
+          toast({
+            title: "Free Trial Ended",
+            description: "Please select a subscription plan to continue."
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
+        }
       }
 
       console.log('Auth callback successful, redirecting to dashboard');
