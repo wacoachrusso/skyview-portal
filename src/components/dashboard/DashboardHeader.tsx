@@ -12,9 +12,10 @@ import {
 interface DashboardHeaderProps {
   userEmail: string | null;
   onSignOut: () => Promise<void>;
+  isAdmin?: boolean;  // Added isAdmin prop as optional
 }
 
-export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ userEmail, onSignOut, isAdmin }: DashboardHeaderProps) => {
   const navigate = useNavigate();
 
   const handleLogoClick = (e: React.MouseEvent) => {
