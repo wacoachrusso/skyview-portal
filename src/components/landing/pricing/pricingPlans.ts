@@ -4,9 +4,9 @@ export const plans = [
     price: "Free",
     description: "Perfect for trying out SkyGuide",
     features: [
-      "2 contract queries",
+      "1 contract query",
       "Basic contract interpretation",
-      "24/7 AI assistance",
+      "24/7 assistance",
       "Mobile app access"
     ],
     buttonText: "Start Free Trial",

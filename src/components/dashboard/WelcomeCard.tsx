@@ -28,7 +28,7 @@ export function WelcomeCard() {
           
         if (profile) {
           setPlan(profile.subscription_plan || "free");
-          setQueriesRemaining(2 - (profile.query_count || 0));
+          setQueriesRemaining(1 - (profile.query_count || 0));
           setSubscriptionStart(profile.last_query_timestamp ? new Date(profile.last_query_timestamp) : new Date());
           // Extract first name from full name
           const firstName = profile.full_name?.split(' ')[0] || '';
@@ -84,7 +84,7 @@ export function WelcomeCard() {
             <Crown className="h-6 w-6 text-yellow-400" />
           </div>
           <p className="text-white/70 mb-4">
-            {queriesRemaining} queries remaining in your free trial. Upgrade for unlimited access.
+            {queriesRemaining} query remaining in your free trial. Upgrade for unlimited access.
           </p>
           <Button
             onClick={handleUpgradeClick}
