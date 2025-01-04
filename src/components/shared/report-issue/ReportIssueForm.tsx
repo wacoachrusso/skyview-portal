@@ -4,13 +4,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { ReportIssueFormData } from "./types";
-import { useReportIssue } from "./useReportIssue";
 
 interface ReportIssueFormProps {
-  onClose: () => void;
+  isSubmitting: boolean;
+  onSubmit: (data: ReportIssueFormData) => void;
+  onCancel: () => void;
 }
 
-export function ReportIssueForm({ onClose }: ReportIssueFormProps) {
+export function ReportIssueForm({ isSubmitting, onSubmit, onCancel }: ReportIssueFormProps) {
   const form = useForm<ReportIssueFormData>({
     defaultValues: {
       title: "",
@@ -18,11 +19,9 @@ export function ReportIssueForm({ onClose }: ReportIssueFormProps) {
     },
   });
 
-  const { handleSubmit, isSubmitting } = useReportIssue(onClose);
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -59,7 +58,7 @@ export function ReportIssueForm({ onClose }: ReportIssueFormProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={onClose}
+            onClick={onCancel}
           >
             Cancel
           </Button>

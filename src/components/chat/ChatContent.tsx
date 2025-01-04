@@ -26,23 +26,19 @@ export function ChatContent({
   return (
     <div className="flex flex-col h-full">
       <ChatHeader onNewChat={onNewChat || (() => {})} />
-      <div className="flex-1 overflow-hidden relative">
-        <div className="absolute inset-0 overflow-y-auto">
-          {messages.length === 0 ? (
-            <WelcomeMessage />
-          ) : (
-            <ChatList
-              messages={messages}
-              currentUserId={currentUserId || ''}
-              isLoading={isLoading}
-              onCopyMessage={handleCopyMessage}
-            />
-          )}
-        </div>
+      <div className="flex-1 overflow-hidden">
+        {messages.length === 0 ? (
+          <WelcomeMessage />
+        ) : (
+          <ChatList
+            messages={messages}
+            currentUserId={currentUserId || ''}
+            isLoading={isLoading}
+            onCopyMessage={handleCopyMessage}
+          />
+        )}
       </div>
-      <div className="sticky bottom-0 w-full z-10">
-        <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
-      </div>
+      <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
     </div>
   );
 }

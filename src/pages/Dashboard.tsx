@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
+import { ContactDirectory } from "@/components/contact/ContactDirectory";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,58 +11,52 @@ import { supabase } from "@/integrations/supabase/client";
 const Dashboard = () => {
   const { userEmail, isLoading, handleSignOut } = useAuthManagement();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
 
   // Check if user is admin
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        console.log("Checking admin status...");
-        const { data: { user } } = await supabase.auth.getUser();
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
         
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single();
-          
-          setIsAdmin(profile?.is_admin || false);
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-      } finally {
-        setIsPageLoading(false);
+        setIsAdmin(profile?.is_admin || false);
       }
-    };
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
+  };
 
+  // Check admin status on component mount
+  useEffect(() => {
     checkAdminStatus();
   }, []);
 
-  // Show loading spinner while authentication or page is loading
-  if (authLoading || isPageLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+  if (isLoading) {
+    return <LoadingSpinner />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5">
-      <div className="container mx-auto px-4 py-8">
-        <DashboardHeader 
-          userEmail={userEmail} 
-          isLoading={isLoading}
-          handleSignOut={handleSignOut}
-          isAdmin={isAdmin}
-        />
-        <div className="grid gap-6 mt-6">
+      <div className="absolute inset-0 bg-glow-gradient pointer-events-none" />
+      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
+      <main className="container mx-auto px-4 py-8 max-w-7xl relative">
+        <div className="space-y-8">
           <WelcomeCard />
+          {isAdmin && (
+            <div className="p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border" />
+          )}
           <QuickActions />
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Contact Directory</h2>
+            <ContactDirectory />
+          </div>
           <RecentActivity />
         </div>
-      </div>
+      </main>
     </div>
   );
 };

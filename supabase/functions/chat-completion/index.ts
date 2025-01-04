@@ -16,26 +16,6 @@ const cleanResponse = (text: string) => {
     .trim();
 };
 
-const getOffTopicResponse = () => {
-  return "I apologize, but I am specifically designed to assist with airline contract-related questions. For the most accurate and helpful information, please ask questions about your airline contract. If you have other queries, I recommend reaching out to your union representative or appropriate department for assistance.";
-};
-
-const isContractRelated = (content: string) => {
-  const contractKeywords = [
-    'contract', 'agreement', 'clause', 'section', 'article', 'provision',
-    'pay', 'salary', 'wage', 'compensation', 'overtime',
-    'schedule', 'duty', 'rest', 'reserve', 'vacation',
-    'benefit', 'insurance', 'retirement', 'pension',
-    'grievance', 'discipline', 'termination',
-    'seniority', 'bidding', 'base', 'domicile',
-    'union', 'association', 'collective bargaining',
-    'per diem', 'training', 'sick leave'
-  ];
-
-  const contentLower = content.toLowerCase();
-  return contractKeywords.some(keyword => contentLower.includes(keyword.toLowerCase()));
-};
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -44,15 +24,6 @@ serve(async (req) => {
   try {
     const { content, subscriptionPlan } = await req.json();
     console.log('Received request with content:', content);
-
-    // Check if the question is contract-related
-    if (!isContractRelated(content)) {
-      console.log('Non-contract related question detected');
-      return new Response(
-        JSON.stringify({ response: getOffTopicResponse() }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     // Validate environment variables
     if (!openAIApiKey) {

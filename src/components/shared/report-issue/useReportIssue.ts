@@ -3,17 +3,16 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReportIssueFormData } from "./types";
 
-export const useReportIssue = (onClose: () => void) => {
+export function useReportIssue(onSuccess: () => void) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (data: ReportIssueFormData) => {
-    setIsSubmitting(true);
-    console.log("Submitting issue report:", data);
-
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      setIsSubmitting(true);
+      console.log("Submitting issue report:", data);
       
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("User not authenticated");
       }
@@ -25,28 +24,27 @@ export const useReportIssue = (onClose: () => void) => {
           profile_id: user.id,
           title: `Issue Report: ${data.title}`,
           message: data.description,
-          type: "system",  // Changed from "support" to "system" to match allowed values
+          type: "support",
           notification_type: "system"
         });
 
       if (error) {
+        console.error("Error submitting issue report:", error);
         throw error;
       }
 
       toast({
-        title: "Success",
-        description: "Your issue has been reported successfully.",
-        duration: 3000,
+        title: "Report Submitted",
+        description: "Thank you for your feedback. We'll look into this issue.",
       });
 
-      onClose();
+      onSuccess();
     } catch (error) {
-      console.error("Error submitting issue:", error);
+      console.error("Error submitting issue report:", error);
       toast({
-        title: "Error",
-        description: "Failed to submit issue. Please try again.",
         variant: "destructive",
-        duration: 3000,
+        title: "Error",
+        description: "Failed to submit report. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -54,7 +52,7 @@ export const useReportIssue = (onClose: () => void) => {
   };
 
   return {
+    isSubmitting,
     handleSubmit,
-    isSubmitting
   };
-};
+}

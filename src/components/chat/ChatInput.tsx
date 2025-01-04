@@ -4,7 +4,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { MicButton } from "./MicButton";
 import { SendButton } from "./SendButton";
-import { Disclaimer } from "../shared/Disclaimer";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -52,6 +51,7 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
     }
   };
 
+  // Update message when transcript changes
   useEffect(() => {
     if (transcript) {
       setMessage(transcript);
@@ -59,37 +59,32 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
   }, [transcript]);
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="w-full bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10 p-2 sm:p-4 shadow-lg">
-        <div className="flex gap-2 items-end max-w-5xl mx-auto">
-          <Textarea
-            value={message}
-            onChange={(e) => {
-              console.log('ChatInput - Message changed:', e.target.value);
-              setMessage(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask SkyGuide..."
-            className="min-h-[40px] sm:min-h-[50px] text-sm sm:text-base resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
-            disabled={isLoading}
-          />
-          {!isMobile && (
-            <MicButton 
-              isListening={isListening}
-              isLoading={isLoading}
-              onToggle={toggleListening}
-            />
-          )}
-          <SendButton 
+    <form onSubmit={handleSubmit} className="p-2 sm:p-4 bg-gradient-to-b from-[#1E1E2E] to-[#1A1F2C] border-t border-white/10">
+      <div className="flex gap-2 items-end max-w-5xl mx-auto">
+        <Textarea
+          value={message}
+          onChange={(e) => {
+            console.log('ChatInput - Message changed:', e.target.value);
+            setMessage(e.target.value);
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask SkyGuide..."
+          className="min-h-[40px] sm:min-h-[50px] text-sm sm:text-base resize-none bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
+          disabled={isLoading}
+        />
+        {!isMobile && (
+          <MicButton 
+            isListening={isListening}
             isLoading={isLoading}
-            hasMessage={message.trim().length > 0}
-            isMobile={isMobile}
+            onToggle={toggleListening}
           />
-        </div>
-      </form>
-      <div className="px-4 pb-4">
-        <Disclaimer />
+        )}
+        <SendButton 
+          isLoading={isLoading}
+          hasMessage={message.trim().length > 0}
+          isMobile={isMobile}
+        />
       </div>
-    </div>
+    </form>
   );
 }

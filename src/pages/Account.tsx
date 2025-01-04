@@ -123,7 +123,7 @@ const Account = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-      <DashboardHeader userEmail={userEmail} handleSignOut={handleSignOut} />
+      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
       <main className="container mx-auto px-4 py-8 max-w-4xl relative">
         <AccountHeader />
         <div className="space-y-6">
