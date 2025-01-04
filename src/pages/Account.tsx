@@ -17,7 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const Account = () => {
   const navigate = useNavigate();
@@ -31,10 +30,8 @@ const Account = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        console.log("Loading profile data...");
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          console.log("No authenticated user found");
           navigate('/login');
           return;
         }
@@ -45,20 +42,9 @@ const Account = () => {
           .from('profiles')
           .select('*')
           .eq('id', user.id)
-          .maybeSingle();
+          .single();
 
-        if (error) {
-          console.error('Error fetching profile:', error);
-          throw error;
-        }
-
-        if (!profileData) {
-          console.log("No profile found, redirecting to complete profile");
-          navigate('/complete-profile');
-          return;
-        }
-
-        console.log("Profile loaded successfully:", profileData);
+        if (error) throw error;
         setProfile(profileData);
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -118,7 +104,7 @@ const Account = () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
 
       setProfile(profileData);
     } catch (error) {
@@ -132,14 +118,7 @@ const Account = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-          <LoadingSpinner />
-        </div>
-      </div>
-    );
+    return <div className="flex items-center justify-center min-h-screen text-white">Loading...</div>;
   }
 
   return (

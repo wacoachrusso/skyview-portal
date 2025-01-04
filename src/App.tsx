@@ -14,7 +14,6 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Refunds from "@/pages/Refunds";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
-import CompleteProfile from "@/pages/CompleteProfile";
 import { AuthCallback } from "@/components/auth/AuthCallback";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -39,8 +38,7 @@ const PUBLIC_ROUTES = [
   "/about",
   "/auth/callback",
   "/forgot-password",
-  "/reset-password",
-  "/complete-profile"
+  "/reset-password"
 ];
 
 function App() {
@@ -58,7 +56,6 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/complete-profile" element={<CompleteProfile />} />
             
             {/* Protected routes */}
             <Route path="/chat" element={<Chat />} />
