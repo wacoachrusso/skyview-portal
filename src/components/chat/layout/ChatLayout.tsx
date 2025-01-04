@@ -40,7 +40,10 @@ export function ChatLayout({
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-[280px] bg-background border-r border-border">
               <ChatSidebar 
-                onSelectConversation={onSelectConversation}
+                onSelectConversation={(id) => {
+                  onSelectConversation(id);
+                  setIsSidebarOpen(false);
+                }}
                 currentConversationId={currentConversationId}
               />
             </SheetContent>
