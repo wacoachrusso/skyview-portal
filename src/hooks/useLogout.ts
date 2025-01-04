@@ -8,7 +8,7 @@ export const useLogout = () => {
 
   const handleLogout = async () => {
     try {
-      console.log("Starting logout process...");
+      console.log("Starting manual logout process...");
       
       // Get current session first
       const { data: { session } } = await supabase.auth.getSession();
@@ -42,8 +42,6 @@ export const useLogout = () => {
       
       if (error) {
         console.error("Error during signOut:", error);
-        // Even if there's an error, we want to redirect to login
-        // since the session is already invalidated
         navigate("/login", { replace: true });
         return;
       }
@@ -52,7 +50,8 @@ export const useLogout = () => {
       
       toast({
         title: "Logged out successfully",
-        description: "You have been logged out from all devices",
+        description: "You have been logged out",
+        variant: "default",
       });
       
       // Navigate to login page
