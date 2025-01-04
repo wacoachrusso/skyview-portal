@@ -1,6 +1,6 @@
 import { Conversation } from "@/types/chat";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -24,27 +24,42 @@ export function ConversationList({
 
   return (
     <ScrollArea className="h-full">
-      <div className="flex flex-col">
+      <div className="flex flex-col py-2">
         {conversations.map((conversation) => (
           <div
             key={conversation.id}
             onClick={() => onSelectConversation(conversation.id)}
-            className={`flex items-center justify-between px-2 py-3 cursor-pointer hover:bg-white/5 transition-colors ${
-              currentConversationId === conversation.id ? "bg-white/10" : ""
+            className={`group flex items-center justify-between px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 ${
+              currentConversationId === conversation.id 
+                ? "bg-white/10 border-l-brand-gold" 
+                : "border-l-transparent hover:border-l-white/20"
             }`}
           >
-            <div className="flex flex-col min-w-0 flex-shrink overflow-hidden mr-1">
-              <span className="text-sm text-white truncate max-w-[200px]">
-                {conversation.title}
-              </span>
-              <span className="text-xs text-gray-400 truncate">
-                {format(new Date(conversation.last_message_at), "MMM d, h:mm a")}
-              </span>
+            <div className="flex items-center gap-3 min-w-0 flex-shrink overflow-hidden mr-2">
+              <div className={`p-2 rounded-lg ${
+                currentConversationId === conversation.id 
+                  ? "bg-brand-gold/20" 
+                  : "bg-white/5"
+              }`}>
+                <MessageSquare className={`h-4 w-4 ${
+                  currentConversationId === conversation.id 
+                    ? "text-brand-gold" 
+                    : "text-gray-400"
+                }`} />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-medium text-white truncate max-w-[180px]">
+                  {conversation.title}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {format(new Date(conversation.last_message_at), "MMM d, h:mm a")}
+                </span>
+              </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="flex-shrink-0 text-gray-400 hover:text-white hover:bg-white/10"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white hover:bg-white/10"
               onClick={(e) => handleDelete(e, conversation.id)}
             >
               <Trash2 className="h-4 w-4" />
