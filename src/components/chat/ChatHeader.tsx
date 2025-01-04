@@ -17,7 +17,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
 
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {showBackButton && (
           <Button
             variant="ghost"
@@ -29,11 +29,22 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
+        <div className="flex items-center gap-3">
+          <img 
+            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+            alt="SkyGuide Logo" 
+            className="h-8 w-auto"
+          />
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold text-foreground">SkyGuide AI</span>
+            <span className="text-xs text-muted-foreground">Your Contract Assistant</span>
+          </div>
+        </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/dashboard')}
-          className="text-muted-foreground hover:text-foreground hover:bg-accent/50 hidden sm:flex items-center gap-2"
+          className="text-muted-foreground hover:text-foreground hover:bg-accent/50 hidden sm:flex items-center gap-2 ml-4"
         >
           <LayoutDashboard className="h-4 w-4" />
           <span>Dashboard</span>
