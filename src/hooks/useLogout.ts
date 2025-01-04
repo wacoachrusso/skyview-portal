@@ -63,15 +63,10 @@ export const useLogout = () => {
       // Even if there's an error, ensure we clean up local state
       localStorage.clear();
       
-      // Use a more friendly message for forced logouts
-      const wasForced = error instanceof Error && error.message.includes('forced');
-      
       toast({
-        title: wasForced ? "Session ended" : "Logged out",
-        description: wasForced 
-          ? "Your session was ended because you logged in on another device"
-          : "Your session has been cleared",
-        variant: wasForced ? "default" : "destructive",
+        title: "Logged out",
+        description: "Your session has been cleared",
+        variant: "default",
       });
       
       navigate("/login", { replace: true });
