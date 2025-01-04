@@ -10,41 +10,87 @@ import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
   const location = useLocation();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log('Index page mounted');
-    // Check for pricing section scroll
-    const searchParams = new URLSearchParams(location.search);
-    const scrollTo = searchParams.get('scrollTo');
-    if (scrollTo === 'pricing-section') {
-      const pricingSection = document.getElementById('pricing-section');
-      if (pricingSection) {
-        pricingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
+    let mounted = true;
 
-    // Check if it's iOS and not in standalone mode
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    
-    // Check if the prompt has been shown before
-    const hasShownPrompt = localStorage.getItem('iosInstallPromptShown');
-    
-    console.log('Device checks:', { isIOS, isStandalone, hasShownPrompt });
-    
-    if (isIOS && !isStandalone && !hasShownPrompt) {
-      setShowIOSPrompt(true);
-      localStorage.setItem('iosInstallPromptShown', 'true');
-    }
-  }, [location]);
+    const initializePage = async () => {
+      try {
+        // Check authentication state
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+        
+        if (authError) {
+          console.error('Auth error:', authError);
+          throw authError;
+        }
+
+        // Check for pricing section scroll
+        const searchParams = new URLSearchParams(location.search);
+        const scrollTo = searchParams.get('scrollTo');
+        if (scrollTo === 'pricing-section') {
+          const pricingSection = document.getElementById('pricing-section');
+          if (pricingSection) {
+            pricingSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+
+        // Check if it's iOS and not in standalone mode
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const hasShownPrompt = localStorage.getItem('iosInstallPromptShown');
+        
+        console.log('Device checks:', { isIOS, isStandalone, hasShownPrompt });
+        
+        if (isIOS && !isStandalone && !hasShownPrompt) {
+          setShowIOSPrompt(true);
+          localStorage.setItem('iosInstallPromptShown', 'true');
+        }
+
+        if (mounted) {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        if (mounted) {
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "There was a problem loading the page. Please refresh and try again."
+          });
+        }
+      }
+    };
+
+    initializePage();
+
+    return () => {
+      console.log('Index page cleanup');
+      mounted = false;
+    };
+  }, [location, toast]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
