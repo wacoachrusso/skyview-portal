@@ -40,13 +40,20 @@ export const useSessionManagement = () => {
         )
         .subscribe();
 
-      return () => {
-        console.log('Cleaning up session invalidation listener');
-        subscription.unsubscribe();
-      };
+      return subscription;
     };
 
-    setupSessionListener();
+    let subscription: any;
+    setupSessionListener().then(sub => {
+      subscription = sub;
+    });
+
+    return () => {
+      if (subscription) {
+        console.log('Cleaning up session invalidation listener');
+        subscription.unsubscribe();
+      }
+    };
   }, [navigate, toast]);
 
   const handleSessionInvalidation = async (message: string) => {
