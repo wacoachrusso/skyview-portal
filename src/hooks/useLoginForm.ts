@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { handleEmailVerification } from "@/utils/authUtils";
+import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 
 interface LoginFormData {
   email: string;
@@ -37,7 +38,7 @@ export const useLoginForm = () => {
       // First check if the account exists and get its status
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('login_attempts, account_status')
+        .select('id, login_attempts, account_status')
         .eq('email', formData.email.trim())
         .single();
 
