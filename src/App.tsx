@@ -12,7 +12,6 @@ import About from "@/pages/About";
 import ReleaseNotes from "@/pages/ReleaseNotes";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Refunds from "@/pages/Refunds";
-import CompleteProfile from "@/pages/CompleteProfile";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import { AuthCallback } from "@/components/auth/AuthCallback";
@@ -66,7 +65,6 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/release-notes" element={<ReleaseNotes />} />
             <Route path="/refunds" element={<Refunds />} />
-            <Route path="/complete-profile" element={<CompleteProfile />} />
           </Routes>
           <Toaster />
         </Router>

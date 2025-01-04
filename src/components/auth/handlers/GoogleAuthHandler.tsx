@@ -25,23 +25,36 @@ export const GoogleAuthHandler = () => {
           .single();
 
         if (profileError || !profile) {
-          console.log('No profile found, redirecting to signup');
+          console.log('No profile found, redirecting to signup/pricing');
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
             title: "Account Required",
             description: "Please sign up and select a plan before logging in with Google."
           });
-          navigate('/signup');
+          navigate('/?scrollTo=pricing-section');
           return;
         }
 
-        // Check if profile is complete
-        if (profile.user_type && profile.airline) {
-          navigate('/dashboard');
-        } else {
-          navigate('/complete-profile');
+        // Check if profile is complete and has subscription
+        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+          console.log('No subscription plan, redirecting to pricing');
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Subscription Required",
+            description: "Please select a subscription plan to continue."
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
         }
+
+        // All good, redirect to dashboard
+        toast({
+          title: "Welcome back!",
+          description: "You've been successfully signed in."
+        });
+        navigate('/dashboard');
 
       } catch (error) {
         console.error("Error in auth callback:", error);
