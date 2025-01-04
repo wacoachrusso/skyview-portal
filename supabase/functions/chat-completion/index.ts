@@ -39,7 +39,7 @@ serve(async (req) => {
       console.log('Non-contract related query detected');
       return new Response(
         JSON.stringify({
-          response: "I apologize, but I can only assist with questions related to your union contract, its terms, policies, and provisions. Please rephrase your question to focus on contract-related matters. If you need general information, please use other appropriate resources."
+          response: "I noticed your question might not be related to your union contract. I'm here specifically to help you understand your contract terms, policies, and provisions. Would you like to rephrase your question to focus on contract-related matters? I'm happy to help you navigate any aspect of your contract."
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -171,6 +171,7 @@ serve(async (req) => {
       JSON.stringify({ response: cleanedResponse }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error) {
     console.error('Error in chat completion:', error);
     return new Response(
