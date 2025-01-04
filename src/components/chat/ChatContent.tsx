@@ -4,6 +4,9 @@ import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
 import { WelcomeMessage } from "./WelcomeMessage";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatContentProps {
   messages: Message[];
@@ -20,6 +23,9 @@ export function ChatContent({
   onSendMessage,
   onNewChat 
 }: ChatContentProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
   };
@@ -35,11 +41,37 @@ export function ChatContent({
         console.error('Error storing messages in localStorage:', error);
       }
     } else {
-      // Clear stored messages when starting a new chat
       localStorage.removeItem('current-chat-messages');
       console.log('Cleared stored messages for new chat');
     }
   }, [messages]);
+
+  // Check for free trial status after each message
+  useEffect(() => {
+    const checkFreeTrialStatus = async () => {
+      if (!currentUserId) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_plan, query_count')
+        .eq('id', currentUserId)
+        .single();
+
+      if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+        console.log('Free trial ended, logging out user');
+        await supabase.auth.signOut();
+        toast({
+          title: "Free Trial Ended",
+          description: "Please select a subscription plan to continue."
+        });
+        navigate('/?scrollTo=pricing-section');
+      }
+    };
+
+    if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+      checkFreeTrialStatus();
+    }
+  }, [messages, currentUserId, navigate, toast]);
 
   // Load stored messages when component mounts
   useEffect(() => {
@@ -48,7 +80,6 @@ export function ChatContent({
       if (storedMessages) {
         const parsedMessages = JSON.parse(storedMessages);
         console.log('Loaded stored messages:', parsedMessages.length, 'messages');
-        // Only set messages if we don't already have messages (prevents overwriting new chat)
         if (messages.length === 0) {
           onSendMessage(''); // This will trigger a reload of the conversation
         }

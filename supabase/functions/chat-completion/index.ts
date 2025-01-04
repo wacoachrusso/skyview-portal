@@ -1,13 +1,18 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
 const cleanResponse = (text: string) => {
   return text
@@ -22,8 +27,31 @@ serve(async (req) => {
   }
 
   try {
-    const { content, subscriptionPlan } = await req.json();
+    const { content, subscriptionPlan, userId } = await req.json();
     console.log('Received request with content:', content);
+
+    // Check if user is on free plan and has exceeded query limit
+    if (subscriptionPlan === 'free') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('query_count')
+        .eq('id', userId)
+        .single();
+
+      if (profile && profile.query_count >= 1) {
+        console.log('Free trial limit exceeded');
+        return new Response(
+          JSON.stringify({
+            error: 'FREE_TRIAL_ENDED',
+            message: 'Your free trial has ended. Please upgrade to continue using SkyGuide.'
+          }),
+          { 
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
 
     // Check for non-contract related queries using basic keyword detection
     const nonContractKeywords = [
@@ -166,6 +194,18 @@ serve(async (req) => {
 
     const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
     console.log('Assistant response:', cleanedResponse);
+
+    // Update query count for free trial users
+    if (subscriptionPlan === 'free') {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ query_count: 1 })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Error updating query count:', updateError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ response: cleanedResponse }),
