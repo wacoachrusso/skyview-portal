@@ -91,7 +91,7 @@ export function ChatContent({
 
   return (
     <div className="flex flex-col h-full">
-      <ChatHeader onNewChat={onNewChat || (() => {})} />
+      <ChatHeader />
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <WelcomeMessage />
