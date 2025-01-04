@@ -34,25 +34,45 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
-        subject: "Welcome to SkyGuide!",
+        subject: "Welcome to SkyGuide - Your Aviation Career Partner!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="text-align: center; margin-bottom: 30px;">
               <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
             </div>
             
-            <h1 style="color: #1a1f2c;">Welcome to SkyGuide, ${name}!</h1>
-            <p>Thank you for joining SkyGuide. We're excited to have you on board!</p>
-            <p>You've signed up for our ${plan} plan. Here's what you can expect:</p>
-            <ul>
-              <li>Access to our AI-powered contract analysis</li>
-              <li>24/7 support</li>
-              <li>Regular updates and improvements</li>
+            <h1 style="color: #1a1f2c;">Welcome aboard, ${name}! 🎉</h1>
+            
+            <p>We're thrilled to have you join the SkyGuide community! You've taken the first step towards mastering your aviation career journey.</p>
+            
+            <h2 style="color: #1a1f2c; margin-top: 25px;">Here's what you can look forward to:</h2>
+            
+            <ul style="list-style-type: none; padding: 0;">
+              <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+                ✈️ <strong>Expert Contract Analysis:</strong> Understand your union contract with crystal-clear explanations
+              </li>
+              <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+                📱 <strong>24/7 Accessibility:</strong> Get answers to your contract questions anytime, anywhere
+              </li>
+              <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+                🎯 <strong>Precise Information:</strong> Find exactly what you need with our smart search capability
+              </li>
+              <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+                🔄 <strong>Regular Updates:</strong> Stay current with the latest contract information and features
+              </li>
             </ul>
-            <p>If you have any questions, simply reply to this email - we're here to help!</p>
-            <p>Best regards,<br>The SkyGuide Team</p>
+
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #1a1f2c; margin-top: 0;">Ready to get started?</h3>
+              <p>Simply log in to your account and upload your contract. Our team is here to support you every step of the way!</p>
+            </div>
+
+            <p style="margin-top: 25px;">Have questions? Need help getting started? Just reply to this email - we're here to help!</p>
+            
+            <p>Blue skies ahead,<br>The SkyGuide Team</p>
+            
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
-              <p>SkyGuide™ - Your Aviation Assistant</p>
+              <p>SkyGuide™ - Your Aviation Career Partner</p>
               <p>© 2024 SkyGuide. All rights reserved.</p>
             </div>
           </div>
