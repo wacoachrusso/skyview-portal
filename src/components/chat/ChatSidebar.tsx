@@ -5,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ConversationList } from "./sidebar/ConversationList";
 import { SearchBar } from "./sidebar/SearchBar";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ChatSidebarProps {
   currentConversationId: string | null;
@@ -15,8 +17,10 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const CHAT_LIMIT_WARNING = 25;
 
   const loadConversations = async () => {
+    console.log('Loading conversations...');
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
@@ -33,6 +37,16 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
     }
 
     setConversations(data);
+    console.log('Loaded conversations:', data.length);
+
+    // Show warning if exceeding chat limit
+    if (data.length >= CHAT_LIMIT_WARNING) {
+      toast({
+        title: "Chat History Notice",
+        description: "You have quite a few chats saved. Consider deleting old ones to keep things organized.",
+        duration: 5000,
+      });
+    }
   };
 
   const deleteConversation = async (conversationId: string) => {
@@ -124,8 +138,34 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
     }
   };
 
+  // Initial load
   useEffect(() => {
     loadConversations();
+  }, []);
+
+  // Set up real-time subscription for conversations
+  useEffect(() => {
+    console.log('Setting up real-time subscription for conversations...');
+    const channel = supabase
+      .channel('conversations_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations'
+        },
+        (payload) => {
+          console.log('Conversation change detected:', payload);
+          loadConversations(); // Reload all conversations when any change occurs
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up conversations subscription');
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const filteredConversations = conversations.filter((conversation) =>
@@ -136,6 +176,14 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
     <div className="w-64 sm:w-80 bg-[#1A1F2C] border-r border-white/10 flex flex-col h-full">
       <SidebarHeader onDeleteAll={deleteAllConversations} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      {conversations.length >= CHAT_LIMIT_WARNING && (
+        <Alert variant="warning" className="mx-2 my-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            You have {conversations.length} chats. Consider deleting old ones to keep things organized.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="flex-1 overflow-y-auto">
         <ConversationList
           conversations={filteredConversations}
