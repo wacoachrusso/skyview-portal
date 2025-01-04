@@ -35,7 +35,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
+    <div className="fixed inset-0 bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C] overflow-hidden">
       <ChatLayout 
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
