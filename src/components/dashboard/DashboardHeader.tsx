@@ -1,138 +1,23 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { LogOut, User, MessageSquare, Menu } from "lucide-react";
-import { NotificationBell } from "@/components/shared/NotificationBell";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 interface DashboardHeaderProps {
-  userEmail: string | null;
-  onSignOut: () => Promise<void>;
-  isAdmin?: boolean;  // Added isAdmin prop as optional
+  userEmail: string;
+  isLoading: boolean;
+  handleSignOut: () => Promise<void>;
 }
 
-export const DashboardHeader = ({ userEmail, onSignOut, isAdmin }: DashboardHeaderProps) => {
-  const navigate = useNavigate();
-
-  const handleLogoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate('/', { state: { fromDashboard: true } });
-  };
-
+export function DashboardHeader({ userEmail, isLoading, handleSignOut }: DashboardHeaderProps) {
   return (
-    <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo Section */}
-          <div className="flex items-center space-x-3">
-            <a 
-              href="/"
-              onClick={handleLogoClick}
-              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-            >
-              <img 
-                src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
-                alt="SkyGuide Logo" 
-                className="h-8 w-auto"
-              />
-              <span className="text-xl font-semibold text-foreground/90">
-                SkyGuide
-              </span>
-            </a>
-          </div>
-          
-          {/* Navigation Buttons - Desktop */}
-          <div className="hidden md:flex items-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <NotificationBell />
-              <Button 
-                asChild
-                variant="secondary"
-                size="sm"
-                className="text-white hover:bg-brand-gold hover:text-black"
-              >
-                <Link to="/chat">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Ask SkyGuide</span>
-                </Link>
-              </Button>
-            </div>
-            <Button 
-              asChild
-              variant="secondary"
-              size="sm"
-              className="text-white hover:bg-brand-gold hover:text-black"
-            >
-              <Link to="/account">
-                <User className="mr-2 h-4 w-4" />
-                <span>Account</span>
-              </Link>
-            </Button>
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={onSignOut}
-              className="bg-secondary/80 text-secondary-foreground hover:bg-secondary"
-            >
-              <LogOut className="h-5 w-5 sm:mr-2" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
-          </div>
-          
-          {/* Mobile Navigation */}
-          <div className="flex md:hidden items-center space-x-3">
-            {/* Chat Button and Notification Bell - Always visible on mobile */}
-            <div className="flex items-center space-x-2">
-              <NotificationBell />
-              <Button 
-                asChild
-                variant="ghost"
-                size="sm"
-                className="text-foreground/70 hover:text-foreground"
-              >
-                <Link to="/chat">
-                  <MessageSquare className="h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
-            
-            {/* Hamburger Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-foreground/70 hover:text-foreground"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
-                className="w-56 bg-background/95 backdrop-blur-sm border border-border"
-              >
-                <DropdownMenuItem asChild>
-                  <Link to="/account" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Account
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="text-destructive focus:text-destructive"
-                  onClick={onSignOut}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+    <header className="flex items-center justify-between p-4 bg-background border-b border-border">
+      <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
+      <div className="flex items-center">
+        <span className="text-sm text-gray-500">{userEmail}</span>
+        <button
+          onClick={handleSignOut}
+          disabled={isLoading}
+          className={`ml-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-opacity ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {isLoading ? 'Signing out...' : 'Sign Out'}
+        </button>
       </div>
-    </nav>
+    </header>
   );
-};
+}
