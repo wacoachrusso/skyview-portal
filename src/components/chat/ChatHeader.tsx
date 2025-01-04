@@ -31,7 +31,6 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
         )}
         <div className="flex flex-col items-start">
           <h1 className="text-lg font-semibold text-foreground leading-none">SkyGuide AI</h1>
-          <span className="text-xs text-muted-foreground mt-1">Your Contract Assistant</span>
         </div>
         <Button
           variant="ghost"
