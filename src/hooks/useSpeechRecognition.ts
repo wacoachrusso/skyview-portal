@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 export function useSpeechRecognition() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [hasRecognitionSupport, setHasRecognitionSupport] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -15,7 +14,6 @@ export function useSpeechRecognition() {
       
       if (SpeechRecognitionAPI) {
         console.log('Speech recognition is supported');
-        setHasRecognitionSupport(true);
         recognitionRef.current = new SpeechRecognitionAPI();
         
         if (recognitionRef.current) {
@@ -54,7 +52,6 @@ export function useSpeechRecognition() {
         }
       } else {
         console.log('Speech recognition is not supported');
-        setHasRecognitionSupport(false);
       }
     }
 
@@ -120,12 +117,19 @@ export function useSpeechRecognition() {
     resetSilenceTimeout();
   };
 
+  const toggleListening = async () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      await startListening();
+    }
+  };
+
   return {
     isListening,
     transcript,
-    startListening,
+    toggleListening,
     stopListening,
-    setTranscript,
-    hasRecognitionSupport
+    setTranscript
   };
 }
