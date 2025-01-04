@@ -16,8 +16,8 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
   const { handleContractClick } = useContractHandler();
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center gap-4">
+    <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center space-x-4">
         {showBackButton && (
           <Button
             variant="ghost"
@@ -29,11 +29,9 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold text-foreground">SkyGuide AI</span>
-            <span className="text-xs text-muted-foreground">Your Contract Assistant</span>
-          </div>
+        <div className="flex flex-col items-start">
+          <h1 className="text-lg font-semibold text-foreground leading-none">SkyGuide AI</h1>
+          <span className="text-xs text-muted-foreground mt-1">Your Contract Assistant</span>
         </div>
         <Button
           variant="ghost"
