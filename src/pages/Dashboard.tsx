@@ -4,9 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardLogo } from "@/components/dashboard/DashboardLogo";
-import { DesktopNav } from "@/components/dashboard/DesktopNav";
-import { MobileNav } from "@/components/dashboard/MobileNav";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
@@ -109,33 +106,15 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0">
-        <div className="flex-1 flex flex-col min-h-0 border-r border-border bg-card">
-          <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-            <DashboardLogo />
-            <DesktopNav isAccountPage={false} onSignOut={handleSignOut} />
-          </div>
-        </div>
-      </div>
+      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
       
-      <div className="md:pl-72 flex flex-col flex-1">
-        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-        <MobileNav isAccountPage={false} onSignOut={handleSignOut} />
-        
-        <main className="flex-1">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <WelcomeCard />
-              <div className="mt-8">
-                <QuickActions />
-              </div>
-              <div className="mt-8">
-                <RecentActivity />
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          <WelcomeCard />
+          <QuickActions />
+          <RecentActivity />
+        </div>
+      </main>
     </div>
   );
 }

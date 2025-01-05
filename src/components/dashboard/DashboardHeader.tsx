@@ -17,8 +17,10 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <DashboardLogo />
-          <DesktopNav isAccountPage={isAccountPage} onSignOut={onSignOut} />
-          <MobileNav isAccountPage={isAccountPage} onSignOut={onSignOut} />
+          <div className="flex items-center space-x-4">
+            <DesktopNav isAccountPage={isAccountPage} onSignOut={onSignOut} />
+            <MobileNav isAccountPage={isAccountPage} onSignOut={onSignOut} />
+          </div>
         </div>
       </div>
     </nav>
