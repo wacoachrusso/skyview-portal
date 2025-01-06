@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cached_responses: {
+        Row: {
+          access_count: number
+          created_at: string
+          id: string
+          last_accessed_at: string
+          query: string
+          response: string
+        }
+        Insert: {
+          access_count?: number
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          query: string
+          response: string
+        }
+        Update: {
+          access_count?: number
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          query?: string
+          response?: string
+        }
+        Relationships: []
+      }
       contract_uploads: {
         Row: {
           file_name: string
@@ -199,6 +226,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      openai_assistants: {
+        Row: {
+          airline: string
+          assistant_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          work_group: string
+        }
+        Insert: {
+          airline: string
+          assistant_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          work_group: string
+        }
+        Update: {
+          airline?: string
+          assistant_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          work_group?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -479,6 +539,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_cached_responses: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       delete_user_completely: {
         Args: {
           user_email: string
