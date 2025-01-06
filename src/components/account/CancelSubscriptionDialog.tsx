@@ -12,12 +12,14 @@ import {
 interface CancelSubscriptionDialogProps {
   open: boolean;
   onClose: () => void;
+  onConfirm: () => Promise<void>;
   onReadPolicy: () => void;
 }
 
 export const CancelSubscriptionDialog = ({
   open,
   onClose,
+  onConfirm,
   onReadPolicy,
 }: CancelSubscriptionDialogProps) => {
   return (
@@ -38,6 +40,12 @@ export const CancelSubscriptionDialog = ({
             className="bg-brand-gold hover:bg-brand-gold/90 text-black"
           >
             Read Refund Policy
+          </AlertDialogAction>
+          <AlertDialogAction
+            onClick={onConfirm}
+            variant="destructive"
+          >
+            Confirm Cancellation
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
