@@ -6,7 +6,7 @@ import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
 import Settings from "@/pages/Settings";
 import Account from "@/pages/Account";
-import CompleteProfile from "@/pages/CompleteProfile;
+import CompleteProfile from "@/pages/CompleteProfile";
 
 function App() {
   return (
