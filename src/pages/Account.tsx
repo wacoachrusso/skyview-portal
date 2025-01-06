@@ -30,8 +30,10 @@ const Account = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
+        console.log("Loading profile data...");
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
+          console.log("No authenticated user found");
           navigate('/login');
           return;
         }
@@ -42,9 +44,24 @@ const Account = () => {
           .from('profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching profile:', error);
+          throw error;
+        }
+
+        if (!profileData) {
+          console.log("No profile found for user");
+          toast({
+            variant: "destructive",
+            title: "Profile Not Found",
+            description: "Unable to load your profile information.",
+          });
+          return;
+        }
+
+        console.log("Profile loaded successfully:", profileData);
         setProfile(profileData);
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -104,7 +121,7 @@ const Account = () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       setProfile(profileData);
     } catch (error) {
