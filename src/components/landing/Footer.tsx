@@ -1,6 +1,6 @@
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Facebook, Twitter, Linkedin, Instagram, Mail, MessageSquare } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
 
 export function Footer() {
   const scrollToTop = () => {
@@ -31,29 +31,9 @@ export function Footer() {
           <div>
             <h3 className="font-bold mb-4 text-white">Support</h3>
             <ul className="space-y-2">
-              <li>
-                <a 
-                  href="mailto:support@skyguide.com" 
-                  className="inline-flex items-center text-sm hover:text-white transition-colors"
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Email Support
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#" 
-                  className="inline-flex items-center text-sm hover:text-white transition-colors"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.location.href = '/chat';
-                  }}
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Live Chat
-                </a>
-              </li>
+              <li><a href="#" className="text-sm hover:text-white transition-colors">Help Center</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">FAQs</a></li>
+              <li><a href="#" className="text-sm hover:text-white transition-colors">Contact Support</a></li>
             </ul>
           </div>
           <div>
@@ -73,19 +53,6 @@ export function Footer() {
               </a>
             </div>
           </div>
-        </div>
-
-        {/* Support Button - Fixed Position */}
-        <div className="fixed bottom-24 right-8 z-50">
-          <Button
-            asChild
-            className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <a href="mailto:support@skyguide.com" className="inline-flex items-center space-x-2">
-              <Mail className="h-5 w-5" />
-              <span>Contact Support</span>
-            </a>
-          </Button>
         </div>
 
         <div className="mt-12 text-center text-sm">
