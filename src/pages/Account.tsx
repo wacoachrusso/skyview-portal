@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AccountHeader } from "@/components/account/AccountHeader";
 import { AccountInfo } from "@/components/account/AccountInfo";
 import { SubscriptionInfo } from "@/components/account/SubscriptionInfo";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +32,13 @@ const Account = () => {
     const loadProfile = async () => {
       try {
         console.log("Loading profile data...");
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error("Error getting user:", userError);
+          throw userError;
+        }
+
         if (!user) {
           console.log("No authenticated user found");
           navigate('/login');
@@ -40,15 +47,15 @@ const Account = () => {
 
         setUserEmail(user.email);
 
-        const { data: profileData, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching profile:', error);
-          throw error;
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          throw profileError;
         }
 
         if (!profileData) {
@@ -76,7 +83,7 @@ const Account = () => {
     };
 
     loadProfile();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handlePlanChange = (newPlan: string) => {
     navigate('/?scrollTo=pricing-section');
@@ -116,7 +123,6 @@ const Account = () => {
         description: "Your subscription has been cancelled successfully.",
       });
 
-      // Refresh profile data
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
@@ -135,7 +141,28 @@ const Account = () => {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen text-white">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
+        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+          <LoadingSpinner size="lg" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
+        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+          <div className="text-center text-white">
+            <h2 className="text-xl font-semibold mb-2">Profile Not Found</h2>
+            <p>Unable to load your profile information.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
