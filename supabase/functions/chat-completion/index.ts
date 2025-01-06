@@ -1,25 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-
-const cleanResponse = (text: string) => {
-  return text
-    .replace(/【.*?】/g, '')
-    .replace(/\[\d+:\d+†.*?\]/g, '')
-    .trim();
-};
+import { corsHeaders } from './utils/corsHeaders';
+import { cleanResponse } from './utils/cleanResponse';
+import { createThread, addMessageToThread, runAssistant, checkRunStatus, getMessages } from './utils/openai';
+import { getCachedResponse, cacheResponse } from './utils/caching';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,7 +14,17 @@ serve(async (req) => {
     const { content, subscriptionPlan, userId } = await req.json();
     console.log('Received request with content:', content);
 
-    // Check if user is on free plan and has exceeded query limit
+    // Check cache first
+    const cachedResponse = await getCachedResponse(content);
+    if (cachedResponse) {
+      console.log('Returning cached response');
+      return new Response(
+        JSON.stringify({ response: cachedResponse }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check subscription plan
     if (subscriptionPlan === 'free') {
       const { data: profile } = await supabase
         .from('profiles')
@@ -53,7 +47,7 @@ serve(async (req) => {
       }
     }
 
-    // Check for non-contract related queries using basic keyword detection
+    // Check for non-contract queries
     const nonContractKeywords = [
       'weather', 'stocks', 'recipe', 'movie', 'game', 'sports',
       'cryptocurrency', 'dating', 'shopping', 'entertainment'
@@ -64,128 +58,34 @@ serve(async (req) => {
     );
 
     if (containsNonContractContent) {
-      console.log('Non-contract related query detected');
+      const response = "I noticed your question might not be related to your union contract. I'm here specifically to help you understand your contract terms, policies, and provisions. Would you like to rephrase your question to focus on contract-related matters? I'm happy to help you navigate any aspect of your contract.";
+      
+      // Cache this response too
+      await cacheResponse(content, response);
+      
       return new Response(
-        JSON.stringify({
-          response: "I noticed your question might not be related to your union contract. I'm here specifically to help you understand your contract terms, policies, and provisions. Would you like to rephrase your question to focus on contract-related matters? I'm happy to help you navigate any aspect of your contract."
-        }),
+        JSON.stringify({ response }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create a thread
-    console.log('Creating thread...');
-    const threadResponse = await fetch('https://api.openai.com/v1/threads', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      }
-    });
-
-    if (!threadResponse.ok) {
-      const errorData = await threadResponse.text();
-      console.error('Thread creation failed:', errorData);
-      throw new Error(`Failed to create thread: ${errorData}`);
-    }
-
-    const thread = await threadResponse.json();
-    console.log('Created thread:', thread.id);
-
-    // Add message to thread with instruction to include references
-    console.log('Adding message to thread...');
-    const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({
-        role: 'user',
-        content: `${content}\n\nPlease include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]`
-      })
-    });
-
-    if (!messageResponse.ok) {
-      const errorData = await messageResponse.text();
-      console.error('Message creation failed:', errorData);
-      throw new Error('Failed to add message to thread');
-    }
-
-    console.log('Added message to thread');
-
-    // Run the assistant
-    console.log('Running assistant...');
-    const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({
-        assistant_id: assistantId
-      })
-    });
-
-    if (!runResponse.ok) {
-      const errorData = await runResponse.text();
-      console.error('Run creation failed:', errorData);
-      throw new Error('Failed to run assistant');
-    }
-
-    const run = await runResponse.json();
-    console.log('Started run:', run.id);
+    // Create thread and get response
+    const thread = await createThread();
+    await addMessageToThread(thread.id, content);
+    const run = await runAssistant(thread.id);
 
     // Poll for completion
     let runStatus;
     do {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const statusResponse = await fetch(
-        `https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'OpenAI-Beta': 'assistants=v2'
-          }
-        }
-      );
-      
-      if (!statusResponse.ok) {
-        const errorData = await statusResponse.text();
-        console.error('Status check failed:', errorData);
-        throw new Error('Failed to check run status');
-      }
-      
-      runStatus = await statusResponse.json();
-      console.log('Run status:', runStatus.status);
+      runStatus = await checkRunStatus(thread.id, run.id);
     } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
 
     if (runStatus.status !== 'completed') {
       throw new Error(`Run failed with status: ${runStatus.status}`);
     }
 
-    // Get messages
-    console.log('Retrieving messages...');
-    const messagesResponse = await fetch(
-      `https://api.openai.com/v1/threads/${thread.id}/messages`,
-      {
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'OpenAI-Beta': 'assistants=v2'
-        }
-      }
-    );
-
-    if (!messagesResponse.ok) {
-      const errorData = await messagesResponse.text();
-      console.error('Messages retrieval failed:', errorData);
-      throw new Error('Failed to retrieve messages');
-    }
-
-    const messages = await messagesResponse.json();
+    const messages = await getMessages(thread.id);
     const assistantMessage = messages.data.find(m => m.role === 'assistant');
     
     if (!assistantMessage) {
@@ -194,6 +94,9 @@ serve(async (req) => {
 
     const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
     console.log('Assistant response:', cleanedResponse);
+
+    // Cache the response
+    await cacheResponse(content, cleanedResponse);
 
     // Update query count for free trial users
     if (subscriptionPlan === 'free') {
