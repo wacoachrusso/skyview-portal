@@ -33,10 +33,15 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
         >
           {mainContent}
         </ReactMarkdown>
-        {reference && (
+        {reference ? (
           <div className="mt-4 pt-4 border-t border-white/10">
             <p className="text-sm text-blue-400 font-medium">Reference:</p>
             <p className="text-sm text-gray-400 whitespace-pre-wrap">{reference}</p>
+          </div>
+        ) : (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-sm text-yellow-400 font-medium">Note:</p>
+            <p className="text-sm text-gray-400">No specific contract reference available for this query.</p>
           </div>
         )}
       </div>
