@@ -7,7 +7,6 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { FAQ } from "@/components/dashboard/FAQ";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -114,7 +113,6 @@ export default function Dashboard() {
           <WelcomeCard />
           <QuickActions />
           <RecentActivity />
-          <FAQ />
         </div>
       </main>
     </div>
