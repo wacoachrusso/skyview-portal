@@ -17,7 +17,7 @@ export function HomeFAQ() {
     },
     {
       question: "How does SkyGuide ensure accuracy?",
-      answer: "SkyGuide is trained specifically on your union contract, ensuring all responses are based directly on your contract's actual terms and provisions. Every interpretation comes with references to specific sections, allowing you to verify the information in your contract."
+      answer: "Every response is based directly on your official union contract, with specific section references provided so you can verify the information. The system is regularly updated to ensure all interpretations align with the latest contract terms."
     },
     {
       question: "Who can benefit from using SkyGuide?",
@@ -28,8 +28,8 @@ export function HomeFAQ() {
       answer: "You can ask about any aspect of your contract, including scheduling rules, pay provisions, benefits, vacation policies, reserve rules, and more. SkyGuide helps you understand complex contract language and how it applies to your specific situation."
     },
     {
-      question: "Is my contract information secure?",
-      answer: "Absolutely. We prioritize the security and confidentiality of your contract information. All data is encrypted and stored securely, and access is strictly limited to authorized users only."
+      question: "Is my information secure?",
+      answer: "Absolutely. We prioritize the security and confidentiality of all user interactions. All data is encrypted and stored securely, and access is strictly limited to authorized users only."
     }
   ];
 

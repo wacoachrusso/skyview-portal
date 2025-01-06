@@ -10,15 +10,11 @@ export const FAQ = () => {
   const faqs = [
     {
       question: "How do I get started with SkyGuide?",
-      answer: "Begin by clicking the 'Ask SkyGuide' quick action on your dashboard. You can ask questions about your union contract, and we'll provide relevant information and explanations from your contract documents. Make sure to upload your contract document first for the most accurate responses."
+      answer: "Begin by clicking the 'Ask SkyGuide' quick action on your dashboard. You can immediately start asking questions about your union contract's terms, policies, or provisions. Your contract is already loaded and ready for reference."
     },
     {
       question: "What types of questions can I ask?",
       answer: "You can ask any questions related to your union contract's terms, policies, or provisions. This includes questions about work rules, benefits, scheduling, pay rates, and other contract-related topics. For non-contract questions, please consult your union representative."
-    },
-    {
-      question: "How do I upload my contract document?",
-      answer: "Click on the 'Contract' quick action on your dashboard. You can then upload your contract document in PDF format. Once uploaded, SkyGuide will be able to reference your specific contract when providing answers."
     },
     {
       question: "Can I save my conversations with SkyGuide?",
