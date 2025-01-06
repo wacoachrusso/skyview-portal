@@ -10,7 +10,7 @@ export const FAQ = () => {
   const faqs = [
     {
       question: "How do I get started with SkyGuide?",
-      answer: "Begin by clicking the 'Ask SkyGuide' quick action on your dashboard. You can immediately start asking questions about your union contract's terms, policies, or provisions. Your contract is already loaded and ready for reference."
+      answer: "Simply click the 'Ask SkyGuide' quick action on your dashboard and start asking questions about your union contract."
     },
     {
       question: "What types of questions can I ask?",
@@ -18,15 +18,15 @@ export const FAQ = () => {
     },
     {
       question: "Can I save my conversations with SkyGuide?",
-      answer: "Yes! All your conversations are automatically saved and can be accessed later. You can view your conversation history by clicking on the 'Search' quick action, which allows you to find previous discussions and answers."
+      answer: "Yes! All your conversations are automatically saved and can be accessed later. You can view your conversation history by clicking on the 'Search' quick action."
     },
     {
       question: "How do I report an issue or provide feedback?",
-      answer: "Use the 'Report Issue' quick action on your dashboard to submit any technical issues, incorrect information, or general feedback. Our team actively monitors these reports to improve the service."
+      answer: "Use the 'Report Issue' quick action on your dashboard to submit any concerns or feedback. Our team actively monitors these reports to improve the service."
     },
     {
       question: "How can I customize my experience?",
-      answer: "Click on the 'Settings' quick action to customize your experience. You can adjust notification preferences, manage your account settings, and configure other preferences to make SkyGuide work better for you."
+      answer: "Click on the 'Settings' quick action to customize your experience. You can adjust notification preferences and manage your account settings."
     }
   ];
 
