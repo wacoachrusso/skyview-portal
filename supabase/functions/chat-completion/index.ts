@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCachedResponse, cacheResponse } from './utils/responseCache.ts';
 import { createThread, addMessageToThread, runAssistant, getRunStatus, getMessages } from './utils/openAI.ts';
 import { cleanResponse, containsNonContractContent } from './utils/validation.ts';
+import { withRetry, isRateLimitError } from './utils/retryUtils.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -62,7 +63,6 @@ serve(async (req) => {
       console.log('Non-contract related query detected');
       const response = "I noticed your question might not be related to your union contract. I'm here specifically to help you understand your contract terms, policies, and provisions. Would you like to rephrase your question to focus on contract-related matters? I'm happy to help you navigate any aspect of your contract.";
       
-      // Cache this standard response
       await cacheResponse(content, response);
       
       return new Response(
@@ -71,32 +71,43 @@ serve(async (req) => {
       );
     }
 
-    // Process the request with OpenAI
-    const thread = await createThread();
-    await addMessageToThread(thread.id, content);
-    const run = await runAssistant(thread.id);
+    // Process the request with OpenAI using retry mechanism
+    const processOpenAIRequest = async () => {
+      const thread = await createThread();
+      await addMessageToThread(thread.id, content);
+      const run = await runAssistant(thread.id);
 
-    // Poll for completion
-    let runStatus;
-    do {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      runStatus = await getRunStatus(thread.id, run.id);
-      console.log('Run status:', runStatus.status);
-    } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
+      // Poll for completion with retries
+      let runStatus;
+      do {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        runStatus = await withRetry(() => getRunStatus(thread.id, run.id), {
+          maxRetries: 3,
+          shouldRetry: (error) => !isRateLimitError(error)
+        });
+        console.log('Run status:', runStatus.status);
+      } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
 
-    if (runStatus.status !== 'completed') {
-      throw new Error(`Run failed with status: ${runStatus.status}`);
-    }
+      if (runStatus.status !== 'completed') {
+        throw new Error(`Run failed with status: ${runStatus.status}`);
+      }
 
-    // Get the response
-    const messages = await getMessages(thread.id);
-    const assistantMessage = messages.data.find(m => m.role === 'assistant');
-    
-    if (!assistantMessage) {
-      throw new Error('No assistant response found');
-    }
+      const messages = await getMessages(thread.id);
+      const assistantMessage = messages.data.find(m => m.role === 'assistant');
+      
+      if (!assistantMessage) {
+        throw new Error('No assistant response found');
+      }
 
-    const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
+      return cleanResponse(assistantMessage.content[0].text.value);
+    };
+
+    const cleanedResponse = await withRetry(processOpenAIRequest, {
+      maxRetries: 3,
+      initialDelay: 1000,
+      shouldRetry: (error) => !isRateLimitError(error)
+    });
+
     console.log('Assistant response:', cleanedResponse);
 
     // Cache the response for future use
@@ -121,10 +132,17 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in chat completion:', error);
+    
+    const errorMessage = error.message || 'An unexpected error occurred';
+    const statusCode = error.status || 500;
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: errorMessage,
+        retryAfter: isRateLimitError(error) ? 60 : undefined // Suggest retry after 1 minute for rate limits
+      }),
       { 
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
