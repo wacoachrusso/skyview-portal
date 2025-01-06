@@ -75,6 +75,7 @@ const Account = () => {
       <CancelSubscriptionDialog
         open={showCancelDialog}
         onClose={handleCancelDialogClose}
+        onConfirm={handleCancelSubscription}
         onReadPolicy={handleReadRefundPolicy}
       />
     </div>

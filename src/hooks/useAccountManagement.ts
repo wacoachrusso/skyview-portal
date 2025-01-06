@@ -13,7 +13,9 @@ export const useAccountManagement = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        console.log("Loading profile data...");
+        console.log("Starting to load profile data...");
+        setIsLoading(true);
+        
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
@@ -41,18 +43,9 @@ export const useAccountManagement = () => {
           throw profileError;
         }
 
-        if (!profileData) {
-          console.log("No profile found for user");
-          toast({
-            variant: "destructive",
-            title: "Profile Not Found",
-            description: "Unable to load your profile information.",
-          });
-          return;
-        }
-
-        console.log("Profile loaded successfully:", profileData);
+        console.log("Profile data received:", profileData);
         setProfile(profileData);
+
       } catch (error) {
         console.error('Error loading profile:', error);
         toast({
