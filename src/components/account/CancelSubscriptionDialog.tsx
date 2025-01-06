@@ -43,7 +43,7 @@ export const CancelSubscriptionDialog = ({
           </AlertDialogAction>
           <AlertDialogAction
             onClick={onConfirm}
-            variant="destructive"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             Confirm Cancellation
           </AlertDialogAction>
