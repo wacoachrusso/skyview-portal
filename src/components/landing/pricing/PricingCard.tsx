@@ -23,11 +23,11 @@ interface PricingCardProps {
 export function PricingCard({ plan, onSelect }: PricingCardProps) {
   return (
     <Card
-      className={`relative ${plan.gradient} border-2 border-white/10 backdrop-blur-sm p-6 rounded-xl transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/5`}
+      className={`relative ${plan.gradient} border-2 border-white/10 backdrop-blur-sm p-6 rounded-xl transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/5 mt-6`}
     >
       {plan.isPopular && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-          <span className="bg-brand-gold text-brand-navy px-4 py-1 rounded-full text-sm font-semibold">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-auto whitespace-nowrap">
+          <span className="bg-brand-gold text-brand-navy px-6 py-1 rounded-full text-sm font-semibold">
             Most Popular
           </span>
         </div>
