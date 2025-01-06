@@ -36,7 +36,7 @@ export function ReleaseNotePopup() {
         const viewedNotes: string[] = viewedNotesString ? JSON.parse(viewedNotesString) : [];
         console.log('Previously viewed release notes:', viewedNotes);
 
-        // Get all release notes ordered by date
+        // Get the latest release note
         const { data: notes, error } = await supabase
           .from('release_notes')
           .select('*')
@@ -56,12 +56,17 @@ export function ReleaseNotePopup() {
           const hasBeenViewed = viewedNotes.includes(latestReleaseNote.id);
           console.log('Has this note been viewed?', hasBeenViewed);
 
-          if (!hasBeenViewed) {
+          // Only show if not viewed and is a recent note (within last 30 days)
+          const releaseDate = new Date(latestReleaseNote.release_date);
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+          if (!hasBeenViewed && releaseDate >= thirtyDaysAgo) {
             console.log('Showing release note popup for:', latestReleaseNote.title);
             setLatestNote(latestReleaseNote);
             setOpen(true);
           } else {
-            console.log('Release note already viewed:', latestReleaseNote.id);
+            console.log('Release note already viewed or too old:', latestReleaseNote.id);
           }
         }
       } catch (error) {
