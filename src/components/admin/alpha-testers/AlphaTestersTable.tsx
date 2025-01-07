@@ -30,28 +30,27 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
 
       if (error) throw error;
 
-      // Send notification email if they became a promoter
-      if (!currentStatus) {
-        console.log("Sending promoter welcome email");
-        const tester = testers.find(t => t.id === testerId);
-        if (tester) {
-          const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
-            body: { 
-              email: tester.email,
-              fullName: tester.full_name,
-              isPromoter: true
-            },
-          });
+      const tester = testers.find(t => t.id === testerId);
+      if (tester) {
+        console.log("Sending promoter status change email");
+        const { error: emailError } = await supabase.functions.invoke("send-alpha-status-email", {
+          body: { 
+            email: tester.email,
+            fullName: tester.full_name,
+            status: tester.status,
+            isPromoterChange: true,
+            becamePromoter: !currentStatus
+          },
+        });
 
-          if (emailError) {
-            console.error("Error sending promoter welcome email:", emailError);
-            toast({
-              variant: "destructive",
-              title: "Warning",
-              description: "Promoter status updated but failed to send welcome email",
-            });
-            return;
-          }
+        if (emailError) {
+          console.error("Error sending promoter status change email:", emailError);
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: "Status updated but failed to send notification email",
+          });
+          return;
         }
       }
 
@@ -81,14 +80,15 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
 
       if (error) throw error;
 
-      // Send status update email
       const tester = testers.find(t => t.id === testerId);
       if (tester) {
-        const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
+        console.log("Sending status update email");
+        const { error: emailError } = await supabase.functions.invoke("send-alpha-status-email", {
           body: { 
             email: tester.email,
             fullName: tester.full_name,
-            status: newStatus
+            status: newStatus,
+            isPromoterChange: tester.is_promoter
           },
         });
 
