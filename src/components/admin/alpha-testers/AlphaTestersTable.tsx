@@ -81,6 +81,28 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
 
       if (error) throw error;
 
+      // Send status update email
+      const tester = testers.find(t => t.id === testerId);
+      if (tester) {
+        const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
+          body: { 
+            email: tester.email,
+            fullName: tester.full_name,
+            status: newStatus
+          },
+        });
+
+        if (emailError) {
+          console.error("Error sending status update email:", emailError);
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: "Status updated but failed to send notification email",
+          });
+          return;
+        }
+      }
+
       toast({
         title: "Success",
         description: "Tester status updated successfully",

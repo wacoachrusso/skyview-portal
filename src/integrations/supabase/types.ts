@@ -14,10 +14,12 @@ export type Database = {
           created_at: string
           email: string
           feedback_count: number | null
+          feedback_request_count: number | null
           full_name: string | null
           id: string
           is_promoter: boolean | null
           last_feedback_at: string | null
+          last_feedback_request_at: string | null
           notes: string | null
           profile_id: string | null
           status: Database["public"]["Enums"]["tester_status"] | null
@@ -26,10 +28,12 @@ export type Database = {
           created_at?: string
           email: string
           feedback_count?: number | null
+          feedback_request_count?: number | null
           full_name?: string | null
           id?: string
           is_promoter?: boolean | null
           last_feedback_at?: string | null
+          last_feedback_request_at?: string | null
           notes?: string | null
           profile_id?: string | null
           status?: Database["public"]["Enums"]["tester_status"] | null
@@ -38,10 +42,12 @@ export type Database = {
           created_at?: string
           email?: string
           feedback_count?: number | null
+          feedback_request_count?: number | null
           full_name?: string | null
           id?: string
           is_promoter?: boolean | null
           last_feedback_at?: string | null
+          last_feedback_request_at?: string | null
           notes?: string | null
           profile_id?: string | null
           status?: Database["public"]["Enums"]["tester_status"] | null
@@ -633,6 +639,10 @@ export type Database = {
           session_token: string
           expires_at: string
         }[]
+      }
+      send_weekly_feedback_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
