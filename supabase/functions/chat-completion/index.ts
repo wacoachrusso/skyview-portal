@@ -6,17 +6,24 @@ import { createThread, addMessageToThread, runAssistant, getRunStatus, getMessag
 import { cleanResponse, containsNonContractContent } from './utils/validation.ts';
 import { withRetry, isRateLimitError } from './utils/retryUtils.ts';
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
+
+if (!openAIApiKey || !assistantId) {
+  throw new Error('Required environment variables are not set');
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -24,6 +31,10 @@ serve(async (req) => {
   try {
     const { content, subscriptionPlan, userId } = await req.json();
     console.log('Received request with content:', content);
+
+    if (!content) {
+      throw new Error('Content is required');
+    }
 
     // Check for cached response first
     const cachedResponse = await getCachedResponse(content);
@@ -73,8 +84,13 @@ serve(async (req) => {
 
     // Process the request with OpenAI using retry mechanism
     const processOpenAIRequest = async () => {
+      console.log('Creating new thread...');
       const thread = await createThread();
+      
+      console.log('Adding message to thread...');
       await addMessageToThread(thread.id, content);
+      
+      console.log('Running assistant...');
       const run = await runAssistant(thread.id);
 
       // Poll for completion with retries
@@ -139,7 +155,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: errorMessage,
-        retryAfter: isRateLimitError(error) ? 60 : undefined // Suggest retry after 1 minute for rate limits
+        retryAfter: isRateLimitError(error) ? 60 : undefined
       }),
       { 
         status: statusCode,
