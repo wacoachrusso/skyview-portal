@@ -30,6 +30,31 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
 
       if (error) throw error;
 
+      // Send notification email if they became a promoter
+      if (!currentStatus) {
+        console.log("Sending promoter welcome email");
+        const tester = testers.find(t => t.id === testerId);
+        if (tester) {
+          const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
+            body: { 
+              email: tester.email,
+              fullName: tester.full_name,
+              isPromoter: true
+            },
+          });
+
+          if (emailError) {
+            console.error("Error sending promoter welcome email:", emailError);
+            toast({
+              variant: "destructive",
+              title: "Warning",
+              description: "Promoter status updated but failed to send welcome email",
+            });
+            return;
+          }
+        }
+      }
+
       toast({
         title: "Success",
         description: `Tester ${currentStatus ? "removed from" : "marked as"} promoter`,
@@ -95,9 +120,9 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
                 <Badge
                   variant={
                     tester.status === "active"
-                      ? "success"
+                      ? "default"
                       : tester.status === "inactive"
-                      ? "warning"
+                      ? "secondary"
                       : "destructive"
                   }
                   className="cursor-pointer"

@@ -10,6 +10,7 @@ const corsHeaders = {
 interface WelcomeEmailRequest {
   email: string;
   fullName: string;
+  isPromoter?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -20,12 +21,26 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, fullName } = await req.json() as WelcomeEmailRequest;
-    console.log(`Sending welcome email to ${email}`);
+    const { email, fullName, isPromoter } = await req.json() as WelcomeEmailRequest;
+    console.log(`Sending ${isPromoter ? 'promoter' : 'welcome'} email to ${email}`);
 
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY is not configured");
     }
+
+    const promoterContent = isPromoter ? `
+      <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
+        <h2 style="color: #2563eb;">🌟 You're now a SkyGuide Promoter!</h2>
+        <p>As a promoter, you'll have additional responsibilities and benefits:</p>
+        <ul>
+          <li>Early access to major feature releases</li>
+          <li>Direct communication channel with our development team</li>
+          <li>Opportunity to influence product direction</li>
+          <li>Special recognition in our community</li>
+        </ul>
+        <p>We'll be reaching out soon with more details about your enhanced role!</p>
+      </div>
+    ` : '';
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -36,13 +51,15 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "SkyGuide Alpha Program <alpha@skyguide.site>",
         to: [email],
-        subject: "Welcome to the SkyGuide Alpha Testing Program!",
+        subject: isPromoter ? "🌟 Welcome to the SkyGuide Promoter Program!" : "Welcome to the SkyGuide Alpha Testing Program!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1>Welcome to SkyGuide Alpha, ${fullName}!</h1>
             
             <p>Thank you for joining our alpha testing program. Your participation will help shape the future of SkyGuide and ensure we're building the best possible tool for aviation professionals.</p>
             
+            ${promoterContent}
+
             <h2>What to Expect:</h2>
             
             <ul>
