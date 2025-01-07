@@ -1,0 +1,17 @@
+project_id = "xnlzqsoujwsffoxhhybk"
+
+[api]
+enabled = true
+url = "https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/"
+
+[[functions]]
+name = "send-alpha-welcome"
+verify_jwt = false
+
+[[functions]]
+name = "send-feedback-request"
+verify_jwt = false
+
+[[functions]]
+name = "send-promoter-feedback"
+verify_jwt = false
