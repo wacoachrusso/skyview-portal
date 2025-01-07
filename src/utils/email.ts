@@ -13,9 +13,8 @@ const generateUnsubscribeLink = async (email: string): Promise<string> => {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   
-  // Use the correct method to get the Supabase URL
-  const url = supabase.getUrl();
-  return `${url}/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
+  // Use the URL directly from the configuration
+  return `https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
 };
 
 export const getEmailFooter = async (email: string): Promise<string> => {
