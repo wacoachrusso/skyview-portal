@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard } from "lucide-react";
+import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard, Star, UserCog } from "lucide-react";
 import { MetricCard } from "./stats/MetricCard";
 import { StatsDialog } from "./stats/StatsDialog";
 import { useAdminStats } from "@/hooks/useAdminStats";
@@ -53,6 +53,18 @@ export const SystemStats = () => {
           refetch();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'alpha_testers'
+        },
+        () => {
+          console.log("Detected change in alpha_testers table, refetching stats...");
+          refetch();
+        }
+      )
       .subscribe();
 
     // Cleanup subscription on component unmount
@@ -67,6 +79,24 @@ export const SystemStats = () => {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Active Alpha Testers"
+          value={stats?.alphaTestersCount || 0}
+          icon={UserCog}
+          onClick={() => {
+            setSelectedMetric("alphaTesters");
+            setIsDialogOpen(true);
+          }}
+        />
+        <MetricCard
+          title="Active Promoters"
+          value={stats?.promotersCount || 0}
+          icon={Star}
+          onClick={() => {
+            setSelectedMetric("promoters");
+            setIsDialogOpen(true);
+          }}
+        />
         <MetricCard
           title="Total Users"
           value={stats?.userCount || 0}

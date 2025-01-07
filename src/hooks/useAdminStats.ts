@@ -18,6 +18,8 @@ export const useAdminStats = () => {
         { count: newUserCount, data: newUsers },
         { count: monthlySubCount, data: monthlySubUsers },
         { count: yearlySubCount, data: yearlySubUsers },
+        { count: alphaTestersCount, data: alphaTesters },
+        { count: promotersCount, data: promoters },
       ] = await Promise.all([
         // Total users (excluding deleted)
         supabase
@@ -63,6 +65,19 @@ export const useAdminStats = () => {
           .select("*", { count: "exact" })
           .eq("subscription_plan", "yearly")
           .neq('account_status', 'deleted'),
+        
+        // Active alpha testers
+        supabase
+          .from("alpha_testers")
+          .select("*, profiles(full_name, email)", { count: "exact" })
+          .eq("status", "active"),
+        
+        // Active promoters
+        supabase
+          .from("alpha_testers")
+          .select("*, profiles(full_name, email)", { count: "exact" })
+          .eq("status", "active")
+          .eq("is_promoter", true),
       ]);
 
       console.log("Stats fetched:", {
@@ -73,6 +88,8 @@ export const useAdminStats = () => {
         newUserCount,
         monthlySubCount,
         yearlySubCount,
+        alphaTestersCount,
+        promotersCount,
       });
 
       return {
@@ -83,6 +100,8 @@ export const useAdminStats = () => {
         newUserCount,
         monthlySubCount,
         yearlySubCount,
+        alphaTestersCount,
+        promotersCount,
         details: {
           users,
           activeUsers,
@@ -91,6 +110,8 @@ export const useAdminStats = () => {
           newUsers,
           monthlySubUsers,
           yearlySubUsers,
+          alphaTesters,
+          promoters,
         },
       };
     },

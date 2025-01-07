@@ -8,6 +8,8 @@ interface StatsDetails {
   newUsers?: any[];
   monthlySubUsers?: any[];
   yearlySubUsers?: any[];
+  alphaTesters?: any[];
+  promoters?: any[];
 }
 
 export const getDialogContent = (details: StatsDetails | undefined, selectedMetric: string | null) => {
@@ -72,6 +74,23 @@ export const getDialogContent = (details: StatsDetails | undefined, selectedMetr
         label: user.full_name || "Unnamed User",
         info: `Email: ${user.email || "N/A"}`,
         date: `Joined: ${format(new Date(user.created_at), "MMM d, yyyy")}`,
+      })),
+    },
+    
+    alphaTesters: {
+      title: "Active Alpha Testers",
+      data: details.alphaTesters?.map((tester) => ({
+        label: tester.profiles?.full_name || "Unnamed Tester",
+        info: `Email: ${tester.profiles?.email || "N/A"}`,
+        date: format(new Date(tester.created_at), "MMM d, yyyy"),
+      })),
+    },
+    promoters: {
+      title: "Active Promoters",
+      data: details.promoters?.map((promoter) => ({
+        label: promoter.profiles?.full_name || "Unnamed Promoter",
+        info: `Email: ${promoter.profiles?.email || "N/A"}`,
+        date: format(new Date(promoter.created_at), "MMM d, yyyy"),
       })),
     },
   };
