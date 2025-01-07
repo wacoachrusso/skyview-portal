@@ -16,7 +16,7 @@ const generateUnsubscribeLink = async (email: string): Promise<string> => {
   // Use the correct URL format for Supabase Edge Functions
   const supabaseUrl = new URL(supabase.supabaseUrl);
   return `${supabaseUrl.origin}/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
-}
+};
 
 export const getEmailFooter = async (email: string): Promise<string> => {
   const unsubscribeLink = await generateUnsubscribeLink(email);
