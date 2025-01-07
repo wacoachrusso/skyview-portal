@@ -48,8 +48,8 @@ export const usePricingHandler = () => {
         mode: plan.mode,
         email: userEmail
       });
-      
-      // Get fresh access token
+
+      // Get fresh session token
       const { data: { session: freshSession }, error: refreshError } = await supabase.auth.refreshSession();
       
       if (refreshError) {
@@ -61,10 +61,17 @@ export const usePricingHandler = () => {
         throw new Error('No valid session found');
       }
 
+      // Get current session token
+      const sessionToken = localStorage.getItem('session_token');
+      if (!sessionToken) {
+        throw new Error('No session token found');
+      }
+
       const response = await supabase.functions.invoke('create-checkout-session', {
         body: JSON.stringify({
           priceId: plan.priceId,
-          mode: plan.mode
+          mode: plan.mode,
+          sessionToken
         }),
         headers: {
           Authorization: `Bearer ${freshSession.access_token}`

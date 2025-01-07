@@ -14,17 +14,10 @@ serve(async (req) => {
   }
 
   try {
-    // Get request body
-    const { priceId, mode } = await req.json();
-    
-    if (!priceId) {
-      throw new Error('Price ID is required');
-    }
-
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key for admin access
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Use service role key for admin access
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -50,6 +43,18 @@ serve(async (req) => {
     }
 
     console.log('Found user:', user.email);
+
+    // Parse request body
+    const { priceId, mode, sessionToken } = await req.json();
+
+    // Verify session token is valid
+    const { data: isValid } = await supabaseAdmin.rpc('is_session_valid', {
+      p_session_token: sessionToken
+    });
+
+    if (!isValid) {
+      throw new Error('Invalid session token');
+    }
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
