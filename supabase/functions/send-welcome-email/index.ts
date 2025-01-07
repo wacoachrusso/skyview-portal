@@ -11,18 +11,18 @@ interface EmailRequest {
   email: string;
   name: string;
   plan: string;
+  footer: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("Processing welcome email request");
   
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, name, plan } = await req.json() as EmailRequest;
+    const { email, name, plan, footer } = await req.json() as EmailRequest;
     console.log(`Sending welcome email to ${email} for ${name} with plan ${plan}`);
 
     const res = await fetch("https://api.resend.com/emails", {
@@ -71,10 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <p>Blue skies ahead,<br>The SkyGuide Team</p>
             
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
-              <p>SkyGuide™ - Your Aviation Career Partner</p>
-              <p>© 2024 SkyGuide. All rights reserved.</p>
-            </div>
+            ${footer}
           </div>
         `,
       }),
