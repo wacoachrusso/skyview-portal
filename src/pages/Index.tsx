@@ -47,7 +47,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-[calc(3.5rem+env(safe-area-inset-top))]">
       <Navbar />
       <main>
         <Hero />

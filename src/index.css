@@ -71,9 +71,7 @@
     line-height: 1.5;
     text-rendering: optimizeLegibility;
     margin: 0;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
-    display: flex;
-    flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
   #root {
@@ -93,6 +91,14 @@
     #root {
       min-height: -webkit-fill-available;
     }
+  }
+
+  /* Navigation bar specific styles */
+  nav.fixed-nav {
+    padding-top: max(env(safe-area-inset-top), 16px);
+    background-color: rgba(26, 54, 93, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 }
 
@@ -127,7 +133,7 @@
 /* Responsive typography */
 @screen sm {
   html {
-    font-size: 16px; /* Keep minimum 16px even on small screens */
+    font-size: 16px;
   }
 }
 
