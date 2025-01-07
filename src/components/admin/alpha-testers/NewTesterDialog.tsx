@@ -39,10 +39,28 @@ export const NewTesterDialog = ({
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Alpha tester added successfully",
+      // Send welcome email
+      console.log("Sending welcome email to new tester");
+      const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
+        body: { 
+          email: data.email,
+          fullName: data.fullName
+        },
       });
+
+      if (emailError) {
+        console.error("Error sending welcome email:", emailError);
+        toast({
+          variant: "destructive",
+          title: "Warning",
+          description: "Tester added but failed to send welcome email",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Alpha tester added and welcome email sent",
+        });
+      }
 
       reset();
       onSuccess();
