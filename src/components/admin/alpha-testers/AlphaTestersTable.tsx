@@ -129,7 +129,7 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
             <TableHead>Status</TableHead>
             <TableHead>Feedback Count</TableHead>
             <TableHead>Last Feedback</TableHead>
-            <TableHead>Promoter</TableHead>
+            <TableHead className="whitespace-nowrap">Promoter Status</TableHead>
             <TableHead>Created At</TableHead>
           </TableRow>
         </TableHeader>
@@ -168,12 +168,17 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
                   : "Never"}
               </TableCell>
               <TableCell>
-                <Switch
-                  checked={tester.is_promoter}
-                  onCheckedChange={() =>
-                    togglePromoterStatus(tester.id, tester.is_promoter)
-                  }
-                />
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={tester.is_promoter}
+                    onCheckedChange={() =>
+                      togglePromoterStatus(tester.id, tester.is_promoter)
+                    }
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {tester.is_promoter ? "Promoter" : "Tester"}
+                  </span>
+                </div>
               </TableCell>
               <TableCell>
                 {format(new Date(tester.created_at), "MMM d, yyyy")}
