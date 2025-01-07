@@ -13,54 +13,76 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-  );
-
   try {
-    // Get the session or user object
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    const email = user?.email;
-
-    if (!email) {
-      throw new Error('No email found');
+    // Get request body
+    const { priceId, mode } = await req.json();
+    
+    if (!priceId) {
+      throw new Error('Price ID is required');
     }
 
+    // Initialize Supabase client
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Use service role key for admin access
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    // Get user from auth header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    // Get user details using the service role key
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user?.email) {
+      console.error('User error:', userError);
+      throw new Error('Unauthorized');
+    }
+
+    console.log('Found user:', user.email);
+
+    // Initialize Stripe
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
 
-    const { priceId, mode } = await req.json();
-
+    // Check for existing customer
     const customers = await stripe.customers.list({
-      email: email,
+      email: user.email,
       limit: 1
     });
 
     let customer_id = undefined;
     if (customers.data.length > 0) {
       customer_id = customers.data[0].id;
-      // check if already subscribed to this price
+      
+      // Check if already subscribed
       const subscriptions = await stripe.subscriptions.list({
-        customer: customers.data[0].id,
+        customer: customer_id,
         status: 'active',
         price: priceId,
         limit: 1
       });
 
       if (subscriptions.data.length > 0) {
-        throw new Error("Customer already is subscribed for this");
+        throw new Error('Already subscribed to this plan');
       }
     }
 
-    console.log('Creating payment session...');
+    console.log('Creating checkout session...');
     const session = await stripe.checkout.sessions.create({
       customer: customer_id,
-      customer_email: customer_id ? undefined : email,
+      customer_email: customer_id ? undefined : user.email,
       line_items: [
         {
           price: priceId,
@@ -69,10 +91,13 @@ serve(async (req) => {
       ],
       mode: mode || 'subscription',
       success_url: `${req.headers.get('origin')}/auth/callback?payment=success`,
-      cancel_url: `${req.headers.get('origin')}/?scrollTo=pricing-section`, // Redirect to pricing section on cancel
+      cancel_url: `${req.headers.get('origin')}/?scrollTo=pricing-section`,
+      metadata: {
+        user_id: user.id,
+      },
     });
 
-    console.log('Payment session created:', session.id);
+    console.log('Checkout session created:', session.id);
     return new Response(
       JSON.stringify({ url: session.url }),
       { 
@@ -81,12 +106,15 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error creating payment session:', error);
+    console.error('Error in create-checkout-session:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }),
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: error.status || 400,
       }
     );
   }
