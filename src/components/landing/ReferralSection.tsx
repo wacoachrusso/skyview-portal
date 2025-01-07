@@ -86,9 +86,9 @@ export function ReferralSection() {
     } catch (error) {
       console.error("Error in referral process:", error);
       toast({
+        variant: "destructive",
         title: "Error",
         description: "Failed to send referral. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -101,11 +101,16 @@ export function ReferralSection() {
         <div className="max-w-2xl mx-auto text-center">
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
             <h2 className="text-3xl font-bold text-white mb-4">
-              Share SkyGuide & Get Rewarded
+              Share SkyGuide & Both Get Rewarded
             </h2>
-            <p className="text-gray-200 mb-8">
-              Invite your colleagues and both get a free month of premium access when they sign up!
+            <p className="text-gray-200 mb-2">
+              Invite your colleagues and earn rewards:
             </p>
+            <ul className="text-gray-200 mb-8 text-sm space-y-2">
+              <li>• You'll get a free month when they subscribe</li>
+              <li>• They'll get a free month after their first paid month</li>
+              <li>• Both rewards are automatically applied</li>
+            </ul>
             <form onSubmit={handleReferral} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <Input
                 type="email"

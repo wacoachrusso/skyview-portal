@@ -329,9 +329,11 @@ export type Database = {
           created_at: string
           id: string
           referee_email: string
+          referee_paid_month: boolean | null
           referral_code: string
           referrer_id: string
           reward_claimed: boolean | null
+          reward_eligible_date: string | null
           status: string
         }
         Insert: {
@@ -339,9 +341,11 @@ export type Database = {
           created_at?: string
           id?: string
           referee_email: string
+          referee_paid_month?: boolean | null
           referral_code: string
           referrer_id: string
           reward_claimed?: boolean | null
+          reward_eligible_date?: string | null
           status?: string
         }
         Update: {
@@ -349,9 +353,11 @@ export type Database = {
           created_at?: string
           id?: string
           referee_email?: string
+          referee_paid_month?: boolean | null
           referral_code?: string
           referrer_id?: string
           reward_claimed?: boolean | null
+          reward_eligible_date?: string | null
           status?: string
         }
         Relationships: [
