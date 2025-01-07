@@ -63,11 +63,16 @@ const getPromoterChangeMessage = (becamePromoter: boolean) => {
 const handler = async (req: Request): Promise<Response> => {
   console.log("Processing alpha status change email");
   
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    if (!RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is not configured");
+    }
+
     const { email, fullName, status, isPromoterChange, becamePromoter }: EmailRequest = await req.json();
     
     console.log("Sending status change email to:", email, {
@@ -140,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending status change email:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
