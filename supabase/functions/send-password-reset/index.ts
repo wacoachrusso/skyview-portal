@@ -7,6 +7,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Generate unsubscribe link
+const generateUnsubscribeLink = async (email: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(email + Deno.env.get("RESEND_WEBHOOK_SECRET"));
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  return `${new URL(Deno.env.get('SUPABASE_URL') || '').origin}/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
+};
+
+// Generate email footer
+const getEmailFooter = async (email: string): Promise<string> => {
+  const unsubscribeLink = await generateUnsubscribeLink(email);
+  
+  return `
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+      <p>SkyGuide™ - Your Aviation Career Partner</p>
+      <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+      <p style="margin-top: 20px;">
+        <a href="${unsubscribeLink}" style="color: #666; text-decoration: underline;">
+          Unsubscribe from these emails
+        </a>
+      </p>
+    </div>
+  `;
+};
+
 interface RequestBody {
   email: string;
 }
@@ -54,6 +82,8 @@ serve(async (req) => {
       throw new Error("No reset link generated");
     }
 
+    const emailFooter = await getEmailFooter(email);
+
     // Send custom email using Resend
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     
@@ -93,11 +123,7 @@ serve(async (req) => {
                 <p>Best regards,<br>The SkyGuide Team</p>
               </div>
               
-              <div style="text-align: center; padding: 20px 0; color: #666; font-size: 14px; border-top: 1px solid #eee;">
-                <p style="margin-bottom: 10px;">SkyGuide™ - Your Aviation Assistant</p>
-                <p style="margin-bottom: 10px;">Built by aviation professionals, for aviation professionals.</p>
-                <p style="margin-bottom: 10px;">© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
-              </div>
+              ${emailFooter}
             </div>
           </body>
         </html>

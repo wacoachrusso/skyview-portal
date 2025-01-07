@@ -7,6 +7,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Generate unsubscribe link
+const generateUnsubscribeLink = async (email: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(email + Deno.env.get("RESEND_WEBHOOK_SECRET"));
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  return `${new URL(Deno.env.get('SUPABASE_URL') || '').origin}/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
+};
+
+// Generate email footer
+const getEmailFooter = async (email: string): Promise<string> => {
+  const unsubscribeLink = await generateUnsubscribeLink(email);
+  
+  return `
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+      <p>SkyGuide™ - Your Aviation Career Partner</p>
+      <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+      <p style="margin-top: 20px;">
+        <a href="${unsubscribeLink}" style="color: #666; text-decoration: underline;">
+          Unsubscribe from these emails
+        </a>
+      </p>
+    </div>
+  `;
+};
+
 interface EmailRequest {
   email: string;
   inviteUrl: string;
@@ -16,7 +44,6 @@ interface EmailRequest {
 const handler = async (req: Request): Promise<Response> => {
   console.log("Processing invite email request");
   
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,6 +57,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("RESEND_API_KEY is not set");
       throw new Error("RESEND_API_KEY is not configured");
     }
+
+    const emailFooter = await getEmailFooter(email);
 
     console.log("Sending email via Resend API");
     const res = await fetch("https://api.resend.com/emails", {
@@ -117,16 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
                   </div>
                 </div>
                 
-                <!-- Footer -->
-                <div style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                  <p style="color: #64748b; font-size: 14px; margin: 0;">
-                    This exclusive invitation expires in 24 hours.<br>Don't miss out on your free premium access!
-                  </p>
-                  <div style="margin-top: 20px; color: #94a3b8; font-size: 12px;">
-                    <p style="margin: 5px 0;">SkyGuide - Your Contract Assistant</p>
-                    <p style="margin: 5px 0;">© 2024 SkyGuide. All rights reserved.</p>
-                  </div>
-                </div>
+                ${emailFooter}
               </div>
             </body>
           </html>
