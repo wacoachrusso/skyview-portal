@@ -9,6 +9,7 @@ import { LayoutDashboard } from "lucide-react";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { NotificationManager } from "@/components/admin/NotificationManager";
+import { AlphaTesters } from "@/components/admin/AlphaTesters";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -74,6 +75,7 @@ const AdminDashboard = () => {
         <TabsList className="mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="alpha-testers">Alpha Testers</TabsTrigger>
           <TabsTrigger value="release-notes">Release Notes</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -84,6 +86,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="users">
           <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="alpha-testers">
+          <AlphaTesters />
         </TabsContent>
 
         <TabsContent value="release-notes">

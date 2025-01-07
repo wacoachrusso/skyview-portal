@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      alpha_testers: {
+        Row: {
+          created_at: string
+          email: string
+          feedback_count: number | null
+          full_name: string | null
+          id: string
+          is_promoter: boolean | null
+          last_feedback_at: string | null
+          notes: string | null
+          profile_id: string | null
+          status: Database["public"]["Enums"]["tester_status"] | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          feedback_count?: number | null
+          full_name?: string | null
+          id?: string
+          is_promoter?: boolean | null
+          last_feedback_at?: string | null
+          notes?: string | null
+          profile_id?: string | null
+          status?: Database["public"]["Enums"]["tester_status"] | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          feedback_count?: number | null
+          full_name?: string | null
+          id?: string
+          is_promoter?: boolean | null
+          last_feedback_at?: string | null
+          notes?: string | null
+          profile_id?: string | null
+          status?: Database["public"]["Enums"]["tester_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alpha_testers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cached_responses: {
         Row: {
           access_count: number
@@ -598,6 +645,7 @@ export type Database = {
         | "none"
       notification_type: "update" | "release" | "system"
       session_status: "active" | "expired" | "invalidated"
+      tester_status: "active" | "inactive" | "removed"
     }
     CompositeTypes: {
       [_ in never]: never
