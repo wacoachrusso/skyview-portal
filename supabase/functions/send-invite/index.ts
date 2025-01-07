@@ -70,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "SkyGuide <notifications@skyguide.site>",
         to: [email],
-        subject: `${inviterName ? `${inviterName} thinks you'll love` : "Discover"} SkyGuide - Your Contract Assistant + 1 Month Free!`,
+        subject: `${inviterName ? `${inviterName} thinks you'll love` : "Discover"} SkyGuide - Your Contract Assistant + Special Reward Offer!`,
         html: `
           <!DOCTYPE html>
           <html>
@@ -94,6 +94,21 @@ const handler = async (req: Request): Promise<Response> => {
                     your professional contract assistant that's revolutionizing how aviation professionals understand and manage their contracts.
                   </p>
                   
+                  <!-- Special Offer Box -->
+                  <div style="background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; text-align: center;">
+                    <h2 style="color: #1a365d; margin: 0 0 15px; font-size: 24px;">Special Reward Offer</h2>
+                    <div style="background-color: white; border-radius: 6px; padding: 20px; margin-top: 15px;">
+                      <p style="color: #1a365d; font-size: 16px; margin: 0 0 10px;">
+                        <strong>Here's how the rewards work:</strong>
+                      </p>
+                      <ul style="color: #1a365d; text-align: left; margin: 0; padding-left: 20px;">
+                        <li style="margin-bottom: 8px;">Your friend gets a free month when you subscribe</li>
+                        <li style="margin-bottom: 8px;">You get a free month after your first paid month</li>
+                        <li>Both rewards are automatically applied to your accounts</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
                   <div style="background-color: #f8fafc; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
                     <h2 style="color: #1a365d; font-size: 20px; margin-top: 0; margin-bottom: 20px;">Why Aviation Professionals Love SkyGuide:</h2>
                     
@@ -115,34 +130,12 @@ const handler = async (req: Request): Promise<Response> => {
                     </div>
                   </div>
                   
-                  <!-- Special Offer -->
-                  <div style="background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; text-align: center;">
-                    <h2 style="color: #1a365d; margin: 0 0 15px; font-size: 24px;">Special Welcome Offer</h2>
-                    <p style="color: #1a365d; font-size: 18px; margin: 0 0 20px;">
-                      Get <strong>1 Month FREE</strong> Premium Access<br>
-                      <span style="font-size: 16px;">Limited time offer - Start using SkyGuide today!</span>
-                    </p>
-                  </div>
-                  
                   <!-- CTA Button -->
                   <div style="text-align: center; margin: 35px 0;">
                     <a href="${inviteUrl}" 
                        style="display: inline-block; background-color: #1a365d; color: white; padding: 16px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 18px; transition: background-color 0.3s ease;">
-                      Claim Your Free Month
+                      Get Started Now
                     </a>
-                  </div>
-                  
-                  <!-- Testimonials -->
-                  <div style="background: linear-gradient(135deg, #1a365d 0%, #334155 100%); border-radius: 8px; padding: 25px; color: white; margin: 30px 0;">
-                    <h3 style="margin: 0 0 15px; font-size: 20px;">What Our Users Say:</h3>
-                    <div style="border-left: 3px solid #D4AF37; padding-left: 20px; margin-bottom: 15px;">
-                      <p style="font-style: italic; margin: 0 0 10px; font-size: 16px;">
-                        "SkyGuide has completely transformed how I understand my contract. It's like having a contract expert in your pocket, available whenever you need it. The time and stress it saves is invaluable."
-                      </p>
-                      <p style="margin: 0; font-weight: 500; font-size: 14px;">
-                        - Captain Michael R., 12 years experience
-                      </p>
-                    </div>
                   </div>
                 </div>
                 
