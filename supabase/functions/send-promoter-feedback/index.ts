@@ -45,42 +45,58 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email to each promoter
     const emailPromises = promoters.map(async (promoter: any) => {
       const emailContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1>Weekly Promoter Update</h1>
-          
-          <p>Hi ${promoter.full_name},</p>
-          
-          <p>Thank you for being a valued SkyGuide promoter! Your role in helping us grow is invaluable.</p>
-
-          <h2>This Week's Promotion Tips:</h2>
-          <ul>
-            ${promotionTips.map(tip => `<li>${tip}</li>`).join('')}
-          </ul>
-
-          <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px;">
-            <h3>Weekly Feedback</h3>
-            <p>Please take a moment to share your promotion activities:</p>
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>SkyGuide Promoter Update</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
+            </div>
             
-            <ol>
-              <li>How many colleagues did you introduce to SkyGuide this week?</li>
-              <li>How many signed up for monthly plans?</li>
-              <li>How many signed up for yearly plans?</li>
-              <li>What challenges did you face when promoting SkyGuide?</li>
-              <li>What resources would help you be more effective in your promoter role?</li>
-            </ol>
+            <h1 style="color: #1a365d; text-align: center;">Weekly Promoter Update</h1>
+            
+            <p style="color: #1a365d;">Hi ${promoter.full_name},</p>
+            
+            <p>Thank you for being a valued SkyGuide promoter! Your role in helping us grow is invaluable.</p>
 
-            <p>Reply directly to this email with your responses!</p>
-          </div>
+            <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
+              <h2 style="color: #1a365d; margin-top: 0;">This Week's Promotion Tips:</h2>
+              <ul style="color: #1a365d;">
+                ${promotionTips.map(tip => `<li>${tip}</li>`).join('')}
+              </ul>
+            </div>
 
-          <div style="background-color: #e8f4ff; padding: 20px; margin: 20px 0; border-radius: 8px;">
-            <h3>Share Your Success Story</h3>
-            <p>Have a great promotion success story? We'd love to hear it! Your experiences can inspire other promoters and help us improve our platform.</p>
-          </div>
+            <div style="background-color: #e8f4ff; padding: 20px; margin: 20px 0; border-radius: 8px;">
+              <h3 style="color: #1a365d; margin-top: 0;">Weekly Feedback</h3>
+              <p>Please share your promotion activities this week:</p>
+              
+              <ol style="color: #1a365d;">
+                <li>How many colleagues did you introduce to SkyGuide?</li>
+                <li>How many signed up for monthly plans?</li>
+                <li>How many signed up for yearly plans?</li>
+                <li>What challenges did you face when promoting SkyGuide?</li>
+                <li>What resources would help you be more effective in your promoter role?</li>
+              </ol>
+            </div>
 
-          <p>Your dedication to growing the SkyGuide community is greatly appreciated!</p>
-          
-          <p>Best regards,<br>The SkyGuide Team</p>
-        </div>
+            <div style="background-color: #f8fafc; padding: 20px; margin: 20px 0; border-radius: 8px;">
+              <h3 style="color: #1a365d; margin-top: 0;">Share Your Success Story</h3>
+              <p>Have a great promotion success story? We'd love to hear it! Your experiences can inspire other promoters and help us improve our platform.</p>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666;">
+              <p>Your dedication to growing the SkyGuide community is greatly appreciated!</p>
+              <p style="color: #1a365d; font-weight: bold;">The SkyGuide Team</p>
+              <div style="margin-top: 20px; font-size: 12px;">
+                <p>SkyGuide™ - Your Aviation Career Partner</p>
+                <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+              </div>
+            </div>
+          </body>
+        </html>
       `;
 
       const res = await fetch("https://api.resend.com/emails", {
@@ -91,6 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
         },
         body: JSON.stringify({
           from: "SkyGuide Promoter Program <promoters@skyguide.site>",
+          reply_to: "skyguide32@gmail.com",
           to: [promoter.email],
           subject: "🌟 Weekly SkyGuide Promoter Update & Feedback Request",
           html: emailContent,
