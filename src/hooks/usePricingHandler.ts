@@ -8,7 +8,13 @@ export const usePricingHandler = () => {
 
   const handlePlanSelection = async (plan: any) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication error');
+      }
       
       if (!session) {
         console.log('User not logged in, redirecting to signup with plan:', {
@@ -40,16 +46,29 @@ export const usePricingHandler = () => {
       console.log('Making request to create-checkout-session with:', {
         priceId: plan.priceId,
         mode: plan.mode,
-        planName: plan.name,
         email: userEmail
       });
       
+      // Get fresh access token
+      const { data: { session: freshSession }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError) {
+        console.error('Error refreshing session:', refreshError);
+        throw new Error('Failed to refresh authentication');
+      }
+
+      if (!freshSession) {
+        throw new Error('No valid session found');
+      }
+
       const response = await supabase.functions.invoke('create-checkout-session', {
         body: JSON.stringify({
           priceId: plan.priceId,
-          mode: plan.mode,
-          email: userEmail
+          mode: plan.mode
         }),
+        headers: {
+          Authorization: `Bearer ${freshSession.access_token}`
+        }
       });
 
       console.log('Checkout session response:', response);
