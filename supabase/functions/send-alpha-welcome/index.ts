@@ -49,14 +49,16 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SkyGuide Alpha Program <alpha@skyguide.site>",
+        from: isPromoter 
+          ? "SkyGuide Promoter Program <promoters@skyguide.site>"
+          : "SkyGuide Alpha Tester Program <alpha@skyguide.site>",
         to: [email],
         subject: isPromoter ? "🌟 Welcome to the SkyGuide Promoter Program!" : "Welcome to the SkyGuide Alpha Testing Program!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1>Welcome to SkyGuide Alpha, ${fullName}!</h1>
+            <h1>Welcome to SkyGuide ${isPromoter ? 'Promoter' : 'Alpha'}, ${fullName}!</h1>
             
-            <p>Thank you for joining our alpha testing program. Your participation will help shape the future of SkyGuide and ensure we're building the best possible tool for aviation professionals.</p>
+            <p>Thank you for joining our ${isPromoter ? 'promoter' : 'alpha testing'} program. Your participation will help shape the future of SkyGuide and ensure we're building the best possible tool for aviation professionals.</p>
             
             ${promoterContent}
 
@@ -64,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <ul>
               <li><strong>Weekly Feedback:</strong> Every week, you'll receive an email requesting your feedback about your experience with SkyGuide.</li>
-              <li><strong>Your Commitment:</strong> As an alpha tester, we ask that you respond to these weekly feedback requests to help us improve the platform.</li>
+              <li><strong>Your Commitment:</strong> As an ${isPromoter ? 'promoter' : 'alpha tester'}, we ask that you respond to these weekly feedback requests to help us improve the platform.</li>
               <li><strong>Early Access:</strong> You'll get first access to new features and updates before they're released to the general public.</li>
             </ul>
             

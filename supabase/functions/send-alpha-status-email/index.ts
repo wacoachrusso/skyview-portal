@@ -63,7 +63,6 @@ const getPromoterChangeMessage = (becamePromoter: boolean) => {
 const handler = async (req: Request): Promise<Response> => {
   console.log("Processing alpha status change email");
   
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -91,7 +90,9 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SkyGuide Alpha Program <alpha@skyguide.site>",
+        from: isPromoterChange 
+          ? "SkyGuide Promoter Program <promoters@skyguide.site>"
+          : "SkyGuide Alpha Tester Program <alpha@skyguide.site>",
         reply_to: "skyguide32@gmail.com",
         to: [email],
         subject: `SkyGuide ${isPromoterChange ? 'Promoter' : 'Alpha Tester'} Status Update`,
