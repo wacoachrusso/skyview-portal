@@ -49,18 +49,6 @@ export const usePricingHandler = () => {
         email: userEmail
       });
 
-      // Get fresh session token
-      const { data: { session: freshSession }, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError) {
-        console.error('Error refreshing session:', refreshError);
-        throw new Error('Failed to refresh authentication');
-      }
-
-      if (!freshSession) {
-        throw new Error('No valid session found');
-      }
-
       // Get current session token
       const sessionToken = localStorage.getItem('session_token');
       if (!sessionToken) {
@@ -74,7 +62,7 @@ export const usePricingHandler = () => {
           sessionToken
         }),
         headers: {
-          Authorization: `Bearer ${freshSession.access_token}`
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
