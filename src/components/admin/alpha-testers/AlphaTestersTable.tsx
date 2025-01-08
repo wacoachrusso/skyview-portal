@@ -73,6 +73,26 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
   const updateStatus = async (testerId: string, newStatus: "active" | "inactive" | "removed") => {
     try {
       console.log("Updating tester status:", { testerId, newStatus });
+      
+      // Get tester information before update
+      const tester = testers.find(t => t.id === testerId);
+      if (!tester) throw new Error("Tester not found");
+
+      // If status is being set to removed, update the profile subscription plan
+      if (newStatus === "removed") {
+        console.log("Updating profile subscription plan for removed tester");
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ subscription_plan: null })
+          .eq("id", tester.profile_id);
+
+        if (profileError) {
+          console.error("Error updating profile subscription:", profileError);
+          throw profileError;
+        }
+      }
+
+      // Update alpha tester status
       const { error } = await supabase
         .from("alpha_testers")
         .update({ status: newStatus })
@@ -80,27 +100,26 @@ export const AlphaTestersTable = ({ testers, refetch }: AlphaTestersTableProps) 
 
       if (error) throw error;
 
-      const tester = testers.find(t => t.id === testerId);
-      if (tester) {
-        console.log("Sending status update email");
-        const { error: emailError } = await supabase.functions.invoke("send-alpha-status-email", {
-          body: { 
-            email: tester.email,
-            fullName: tester.full_name,
-            status: newStatus,
-            isPromoterChange: tester.is_promoter
-          },
-        });
+      // Send status update email
+      console.log("Sending status update email");
+      const { error: emailError } = await supabase.functions.invoke("send-alpha-status-email", {
+        body: { 
+          email: tester.email,
+          fullName: tester.full_name,
+          status: newStatus,
+          isPromoterChange: tester.is_promoter,
+          requiresPlan: newStatus === "removed"
+        },
+      });
 
-        if (emailError) {
-          console.error("Error sending status update email:", emailError);
-          toast({
-            variant: "destructive",
-            title: "Warning",
-            description: "Status updated but failed to send notification email",
-          });
-          return;
-        }
+      if (emailError) {
+        console.error("Error sending status update email:", emailError);
+        toast({
+          variant: "destructive",
+          title: "Warning",
+          description: "Status updated but failed to send notification email",
+        });
+        return;
       }
 
       toast({

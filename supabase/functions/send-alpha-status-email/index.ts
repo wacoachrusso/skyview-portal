@@ -14,6 +14,7 @@ interface EmailRequest {
   status: 'active' | 'inactive' | 'removed';
   isPromoterChange?: boolean;
   becamePromoter?: boolean;
+  requiresPlan?: boolean;
 }
 
 const getStatusMessage = (status: string, isPromoter = false) => {
@@ -24,10 +25,31 @@ const getStatusMessage = (status: string, isPromoter = false) => {
         : "You can now continue testing and providing valuable feedback."
     }`,
     inactive: `Your ${isPromoter ? "promoter" : "alpha tester"} status has been temporarily set to inactive. During this time, you won't receive feedback requests or ${isPromoter ? "promoter updates" : "testing notifications"}. If you believe this was done in error, please contact our support team.`,
-    removed: `Your participation in the ${isPromoter ? "promoter" : "alpha tester"} program has been discontinued. We appreciate your contributions to SkyGuide. If you believe this was done in error, please contact our support team.`,
+    removed: `Your participation in the ${isPromoter ? "promoter" : "alpha tester"} program has been discontinued. We appreciate your contributions to SkyGuide.`,
   };
   return statusMessages[status as keyof typeof statusMessages];
 };
+
+const getPricingSection = () => `
+  <div style="margin: 20px 0; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
+    <h3 style="color: #1a365d; margin-top: 0;">Continue Using SkyGuide</h3>
+    <p>To continue using SkyGuide, please select one of our paid plans:</p>
+    <div style="margin: 20px 0;">
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #1a365d;">Monthly Plan</strong>
+        <p>$4.99/month - Perfect for trying out SkyGuide</p>
+      </div>
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #1a365d;">Annual Plan</strong>
+        <p>$49.88/year - Best value, save $10 annually</p>
+      </div>
+    </div>
+    <a href="https://skyguide.site/#pricing-section" 
+       style="display: inline-block; background-color: #1a365d; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+      View Pricing Plans
+    </a>
+  </div>
+`;
 
 const getPromoterChangeMessage = (becamePromoter: boolean) => {
   if (becamePromoter) {
@@ -72,16 +94,18 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const { email, fullName, status, isPromoterChange, becamePromoter }: EmailRequest = await req.json();
+    const { email, fullName, status, isPromoterChange, becamePromoter, requiresPlan }: EmailRequest = await req.json();
     
     console.log("Sending status change email to:", email, {
       status,
       isPromoterChange,
-      becamePromoter
+      becamePromoter,
+      requiresPlan
     });
 
     const statusMessage = getStatusMessage(status, isPromoterChange);
     const promoterChangeContent = isPromoterChange ? getPromoterChangeMessage(becamePromoter!) : '';
+    const pricingContent = requiresPlan ? getPricingSection() : '';
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -118,6 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
 
               ${promoterChangeContent}
+              ${pricingContent}
               
               <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666;">
                 <p>Thank you for being part of SkyGuide!</p>
