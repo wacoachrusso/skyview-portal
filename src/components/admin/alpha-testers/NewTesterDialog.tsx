@@ -45,47 +45,49 @@ export const NewTesterDialog = ({
       setIsSubmitting(true);
       console.log("Adding new tester:", data);
 
-      // Get the current user's session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw sessionError;
-      if (!session) throw new Error('Not authenticated');
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        console.error("No active session found");
+        throw new Error("Please sign in again to add testers");
+      }
 
-      // First check if current user is admin using their ID
-      const { data: adminCheck, error: adminError } = await supabase
+      // Check admin status
+      const { data: adminProfile, error: adminError } = await supabase
         .from('profiles')
         .select('is_admin')
         .eq('id', session.user.id)
         .single();
 
-      if (adminError) throw adminError;
-      if (!adminCheck?.is_admin) {
-        throw new Error('Only administrators can add testers');
+      if (adminError) {
+        console.error("Error checking admin status:", adminError);
+        throw new Error("Failed to verify admin privileges");
       }
 
-      console.log("Creating auth user with provided credentials");
+      if (!adminProfile?.is_admin) {
+        console.error("User is not an admin");
+        throw new Error("Only administrators can add testers");
+      }
 
-      // Create auth user with email and password
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Create the new user account
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-            subscription_plan: 'alpha'
-          }
+        email_confirm: true,
+        user_metadata: {
+          full_name: data.fullName,
+          subscription_plan: 'alpha'
         }
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Failed to create user');
+      if (authError) {
+        console.error("Error creating auth user:", authError);
+        throw authError;
+      }
 
-      // Sign out the newly created user immediately to prevent auto-login
-      await supabase.auth.signOut();
-
-      // Get the current admin's session again
-      const { data: { session: adminSession }, error: adminSessionError } = await supabase.auth.getSession();
-      if (adminSessionError) throw adminSessionError;
-      if (!adminSession) throw new Error('Admin session lost');
+      if (!authData.user) {
+        throw new Error("Failed to create user account");
+      }
 
       // Insert alpha tester record
       const { error: testerError } = await supabase
@@ -99,9 +101,12 @@ export const NewTesterDialog = ({
           is_promoter: data.isPromoter
         });
 
-      if (testerError) throw testerError;
+      if (testerError) {
+        console.error("Error creating alpha tester record:", testerError);
+        throw testerError;
+      }
 
-      // Send welcome email with credentials
+      // Send welcome email
       console.log("Sending welcome email to new tester");
       const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
         body: { 
