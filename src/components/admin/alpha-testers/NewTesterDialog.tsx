@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
 
 interface NewTesterDialogProps {
   open: boolean;
@@ -16,6 +17,8 @@ interface NewTesterDialogProps {
 interface FormData {
   email: string;
   fullName: string;
+  password: string;
+  isPromoter: boolean;
 }
 
 export const NewTesterDialog = ({
@@ -25,31 +28,13 @@ export const NewTesterDialog = ({
 }: NewTesterDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { register, handleSubmit, reset } = useForm<FormData>();
-
-  const generateSecurePassword = () => {
-    // Ensure we have at least one of each required character type
-    const lowercase = "abcdefghijklmnopqrstuvwxyz";
-    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const numbers = "0123456789";
-    const special = "!@#$%^&*()_+-=[]{}";
-
-    let password = "";
-    // Add one character from each required set
-    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
-    password += special.charAt(Math.floor(Math.random() * special.length));
-
-    // Fill the rest with random characters from all sets
-    const allChars = lowercase + uppercase + numbers + special;
-    for (let i = password.length; i < 12; i++) {
-      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  const { register, handleSubmit, reset, watch } = useForm<FormData>({
+    defaultValues: {
+      isPromoter: false
     }
+  });
 
-    // Shuffle the password to make it more random
-    return password.split('').sort(() => Math.random() - 0.5).join('');
-  };
+  const isPromoter = watch('isPromoter');
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -73,14 +58,12 @@ export const NewTesterDialog = ({
         throw new Error('Only administrators can add testers');
       }
 
-      // Generate a secure password
-      const temporaryPassword = generateSecurePassword();
-      console.log("Generated temporary password for new tester");
+      console.log("Creating auth user with provided credentials");
 
       // Create auth user with email and password
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
-        password: temporaryPassword,
+        password: data.password,
         options: {
           data: {
             full_name: data.fullName,
@@ -98,9 +81,10 @@ export const NewTesterDialog = ({
         .insert({
           email: data.email,
           full_name: data.fullName,
-          temporary_password: temporaryPassword,
+          temporary_password: data.password,
           profile_id: authData.user.id,
-          status: 'active'
+          status: 'active',
+          is_promoter: data.isPromoter
         });
 
       if (testerError) throw testerError;
@@ -111,8 +95,9 @@ export const NewTesterDialog = ({
         body: { 
           email: data.email,
           fullName: data.fullName,
-          temporaryPassword,
-          loginUrl: `${window.location.origin}/login`
+          temporaryPassword: data.password,
+          loginUrl: `${window.location.origin}/login`,
+          isPromoter: data.isPromoter
         },
       });
 
@@ -126,7 +111,7 @@ export const NewTesterDialog = ({
       } else {
         toast({
           title: "Success",
-          description: "Alpha tester added and welcome email sent with login credentials",
+          description: `${data.isPromoter ? 'Promoter' : 'Alpha tester'} added and welcome email sent with login credentials`,
         });
       }
 
@@ -149,7 +134,7 @@ export const NewTesterDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Alpha Tester</DialogTitle>
+          <DialogTitle>Add New {isPromoter ? 'Promoter' : 'Alpha Tester'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -172,6 +157,24 @@ export const NewTesterDialog = ({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              {...register("password", { required: true })}
+              placeholder="Enter password"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isPromoter"
+              {...register("isPromoter")}
+            />
+            <Label htmlFor="isPromoter">Add as Promoter</Label>
+          </div>
+
           <div className="flex justify-end space-x-2">
             <Button
               type="button"
@@ -181,7 +184,7 @@ export const NewTesterDialog = ({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Tester"}
+              {isSubmitting ? "Adding..." : `Add ${isPromoter ? 'Promoter' : 'Tester'}`}
             </Button>
           </div>
         </form>
