@@ -8,6 +8,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { FAQ } from "@/components/dashboard/FAQ";
+import { ContactDirectory } from "@/components/contact/ContactDirectory";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -113,6 +114,7 @@ export default function Dashboard() {
         <div className="space-y-8">
           <WelcomeCard />
           <QuickActions />
+          <ContactDirectory />
           <RecentActivity />
           <FAQ />
         </div>
