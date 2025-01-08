@@ -69,14 +69,16 @@ export const NewTesterDialog = ({
         throw new Error("Only administrators can add testers");
       }
 
-      // Create the new user account
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Create the new user account using signUp
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: data.fullName,
-          subscription_plan: 'alpha'
+        options: {
+          data: {
+            full_name: data.fullName,
+            subscription_plan: 'alpha'
+          },
+          emailRedirectTo: `${window.location.origin}/login`
         }
       });
 
