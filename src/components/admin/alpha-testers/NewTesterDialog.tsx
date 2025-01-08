@@ -57,17 +57,19 @@ export const NewTesterDialog = ({
       console.log("Adding new tester:", data);
 
       // Get the current user's session
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
       if (!session) throw new Error('Not authenticated');
 
       // First check if current user is admin using their ID
-      const { data: currentProfile } = await supabase
+      const { data: adminCheck, error: adminError } = await supabase
         .from('profiles')
         .select('is_admin')
         .eq('id', session.user.id)
         .single();
 
-      if (!currentProfile?.is_admin) {
+      if (adminError) throw adminError;
+      if (!adminCheck?.is_admin) {
         throw new Error('Only administrators can add testers');
       }
 
@@ -76,7 +78,7 @@ export const NewTesterDialog = ({
       console.log("Generated temporary password for new tester");
 
       // Create auth user with email and password
-      const { error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: temporaryPassword,
         options: {
@@ -88,28 +90,20 @@ export const NewTesterDialog = ({
       });
 
       if (authError) throw authError;
-
-      // Get the user's profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', data.email)
-        .single();
-
-      if (!profile) throw new Error('Profile not found');
+      if (!authData.user) throw new Error('Failed to create user');
 
       // Insert alpha tester record
-      const { error } = await supabase
+      const { error: testerError } = await supabase
         .from("alpha_testers")
         .insert({
           email: data.email,
           full_name: data.fullName,
           temporary_password: temporaryPassword,
-          profile_id: profile.id,
+          profile_id: authData.user.id,
           status: 'active'
         });
 
-      if (error) throw error;
+      if (testerError) throw testerError;
 
       // Send welcome email with credentials
       console.log("Sending welcome email to new tester");
