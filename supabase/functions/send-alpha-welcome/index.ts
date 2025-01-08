@@ -10,6 +10,8 @@ const corsHeaders = {
 interface WelcomeEmailRequest {
   email: string;
   fullName: string;
+  temporaryPassword: string;
+  loginUrl: string;
   isPromoter?: boolean;
 }
 
@@ -21,7 +23,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, fullName, isPromoter } = await req.json() as WelcomeEmailRequest;
+    const { email, fullName, temporaryPassword, loginUrl, isPromoter } = await req.json() as WelcomeEmailRequest;
     console.log(`Sending ${isPromoter ? 'promoter' : 'welcome'} email to ${email}`);
 
     if (!RESEND_API_KEY) {
@@ -61,6 +63,14 @@ const handler = async (req: Request): Promise<Response> => {
             <p>Thank you for joining our ${isPromoter ? 'promoter' : 'alpha testing'} program. Your participation will help shape the future of SkyGuide and ensure we're building the best possible tool for aviation professionals.</p>
             
             ${promoterContent}
+
+            <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
+              <h2 style="margin-top: 0;">Your Login Credentials</h2>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Temporary Password:</strong> ${temporaryPassword}</p>
+              <p style="color: #dc2626;">Please change your password after your first login!</p>
+              <p><a href="${loginUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login to SkyGuide</a></p>
+            </div>
 
             <h2>What to Expect:</h2>
             

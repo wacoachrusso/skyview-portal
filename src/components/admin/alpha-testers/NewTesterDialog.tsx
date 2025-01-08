@@ -27,24 +27,66 @@ export const NewTesterDialog = ({
   const { toast } = useToast();
   const { register, handleSubmit, reset } = useForm<FormData>();
 
+  const generateSecurePassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
       console.log("Adding new tester:", data);
 
+      // Generate a secure password
+      const temporaryPassword = generateSecurePassword();
+      console.log("Generated temporary password for new tester");
+
+      // Create auth user with email and password
+      const { error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: temporaryPassword,
+        options: {
+          data: {
+            full_name: data.fullName,
+            subscription_plan: 'alpha'
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Get the user's profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', data.email)
+        .single();
+
+      if (!profile) throw new Error('Profile not found');
+
+      // Insert alpha tester record
       const { error } = await supabase.from("alpha_testers").insert({
         email: data.email,
         full_name: data.fullName,
+        temporary_password: temporaryPassword,
+        profile_id: profile.id
       });
 
       if (error) throw error;
 
-      // Send welcome email
+      // Send welcome email with credentials
       console.log("Sending welcome email to new tester");
       const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
         body: { 
           email: data.email,
-          fullName: data.fullName
+          fullName: data.fullName,
+          temporaryPassword,
+          loginUrl: `${window.location.origin}/login`
         },
       });
 
@@ -58,7 +100,7 @@ export const NewTesterDialog = ({
       } else {
         toast({
           title: "Success",
-          description: "Alpha tester added and welcome email sent",
+          description: "Alpha tester added and welcome email sent with login credentials",
         });
       }
 
