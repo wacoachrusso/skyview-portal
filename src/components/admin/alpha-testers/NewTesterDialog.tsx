@@ -28,19 +28,43 @@ export const NewTesterDialog = ({
   const { register, handleSubmit, reset } = useForm<FormData>();
 
   const generateSecurePassword = () => {
-    const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    // Ensure we have at least one of each required character type
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    const special = "!@#$%^&*()_+-=[]{}";
+
     let password = "";
-    for (let i = 0; i < length; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    // Add one character from each required set
+    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    password += special.charAt(Math.floor(Math.random() * special.length));
+
+    // Fill the rest with random characters from all sets
+    const allChars = lowercase + uppercase + numbers + special;
+    for (let i = password.length; i < 12; i++) {
+      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
     }
-    return password;
+
+    // Shuffle the password to make it more random
+    return password.split('').sort(() => Math.random() - 0.5).join('');
   };
 
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
       console.log("Adding new tester:", data);
+
+      // First check if current user is admin
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .single();
+
+      if (!currentProfile?.is_admin) {
+        throw new Error('Only administrators can add testers');
+      }
 
       // Generate a secure password
       const temporaryPassword = generateSecurePassword();
@@ -70,12 +94,15 @@ export const NewTesterDialog = ({
       if (!profile) throw new Error('Profile not found');
 
       // Insert alpha tester record
-      const { error } = await supabase.from("alpha_testers").insert({
-        email: data.email,
-        full_name: data.fullName,
-        temporary_password: temporaryPassword,
-        profile_id: profile.id
-      });
+      const { error } = await supabase
+        .from("alpha_testers")
+        .insert({
+          email: data.email,
+          full_name: data.fullName,
+          temporary_password: temporaryPassword,
+          profile_id: profile.id,
+          status: 'active'
+        });
 
       if (error) throw error;
 
@@ -112,7 +139,7 @@ export const NewTesterDialog = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to add alpha tester",
+        description: error instanceof Error ? error.message : "Failed to add alpha tester",
       });
     } finally {
       setIsSubmitting(false);
