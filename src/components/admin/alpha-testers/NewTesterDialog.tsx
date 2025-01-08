@@ -56,10 +56,15 @@ export const NewTesterDialog = ({
       setIsSubmitting(true);
       console.log("Adding new tester:", data);
 
-      // First check if current user is admin
+      // Get the current user's session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      // First check if current user is admin using their ID
       const { data: currentProfile } = await supabase
         .from('profiles')
         .select('is_admin')
+        .eq('id', session.user.id)
         .single();
 
       if (!currentProfile?.is_admin) {
