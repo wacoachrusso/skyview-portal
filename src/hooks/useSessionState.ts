@@ -32,6 +32,11 @@ export const useSessionState = () => {
         return;
       }
 
+      // Ensure refresh token is stored
+      if (session.refresh_token) {
+        localStorage.setItem('supabase.refresh-token', session.refresh_token);
+      }
+
       // Create a new session (this will automatically invalidate other sessions)
       await createNewSession(session.user.id);
 

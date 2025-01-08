@@ -21,7 +21,12 @@ export const useAuthStateHandler = () => {
     if (event === 'SIGNED_IN' && session?.user) {
       console.log("New sign-in detected, creating session...");
       try {
-        // When a new sign-in occurs, create a new session (this will invalidate others)
+        // Store the refresh token in localStorage
+        if (session.refresh_token) {
+          localStorage.setItem('supabase.refresh-token', session.refresh_token);
+        }
+
+        // When a new sign-in occurs, create a new session
         await createNewSession(session.user.id);
         
         // Only attempt re-authentication for Google users
@@ -40,18 +45,11 @@ export const useAuthStateHandler = () => {
 
           if (reAuthError) {
             console.error("Error re-authenticating:", reAuthError);
-            localStorage.clear();
-            await supabase.auth.signOut();
-            toast({
-              variant: "destructive",
-              title: "Session Error",
-              description: "Your session has expired. Please log in again."
-            });
-            navigate('/login');
+            throw reAuthError;
           }
         }
 
-        // Notify user if they were logged out from another device
+        // Check for active sessions
         const { data: activeSessions } = await supabase
           .from('sessions')
           .select('id')
