@@ -91,16 +91,17 @@ export const NewTesterDialog = ({
         throw new Error("Failed to create user account");
       }
 
-      // Insert alpha tester record using service role client
-      const { error: testerError } = await supabase.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true,
-        user_metadata: {
+      // Insert alpha tester record
+      const { error: testerError } = await supabase
+        .from("alpha_testers")
+        .insert({
+          email: data.email,
           full_name: data.fullName,
-          subscription_plan: 'alpha'
-        }
-      });
+          temporary_password: data.password,
+          profile_id: authData.user.id,
+          status: 'active',
+          is_promoter: data.isPromoter
+        });
 
       if (testerError) {
         console.error("Error creating alpha tester record:", testerError);
