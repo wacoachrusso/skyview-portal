@@ -2,12 +2,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Switch } from "@/components/ui/switch";
-import { Eye, EyeOff, RefreshCw } from "lucide-react";
+import { TesterFormFields } from "./components/TesterFormFields";
+import { generatePassword } from "./utils/passwordUtils";
 
 interface NewTesterDialogProps {
   open: boolean;
@@ -38,26 +36,8 @@ export const NewTesterDialog = ({
 
   const isPromoter = watch('isPromoter');
 
-  const generatePassword = () => {
-    const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let password = "";
-    
-    // Ensure at least one of each required character type
-    password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)]; // Uppercase
-    password += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)]; // Lowercase
-    password += "0123456789"[Math.floor(Math.random() * 10)]; // Number
-    password += "!@#$%^&*"[Math.floor(Math.random() * 8)]; // Special char
-    
-    // Fill the rest randomly
-    for (let i = password.length; i < length; i++) {
-      password += charset[Math.floor(Math.random() * charset.length)];
-    }
-    
-    // Shuffle the password
-    password = password.split('').sort(() => Math.random() - 0.5).join('');
-    
-    setValue('password', password);
+  const handleGeneratePassword = () => {
+    setValue('password', generatePassword());
   };
 
   const onSubmit = async (data: FormData) => {
@@ -98,6 +78,14 @@ export const NewTesterDialog = ({
 
       if (authError) throw authError;
       if (!authData.user) throw new Error('Failed to create user');
+
+      // Sign out the newly created user immediately to prevent auto-login
+      await supabase.auth.signOut();
+
+      // Get the current admin's session again
+      const { data: { session: adminSession }, error: adminSessionError } = await supabase.auth.getSession();
+      if (adminSessionError) throw adminSessionError;
+      if (!adminSession) throw new Error('Admin session lost');
 
       // Insert alpha tester record
       const { error: testerError } = await supabase
@@ -162,69 +150,13 @@ export const NewTesterDialog = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              {...register("email", { required: true })}
-              placeholder="Enter tester's email"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input
-              id="fullName"
-              {...register("fullName", { required: true })}
-              placeholder="Enter tester's full name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                {...register("password", { required: true })}
-                placeholder="Enter password"
-                className="pr-20"
-              />
-              <div className="absolute right-0 top-0 flex h-full items-center space-x-1 pr-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={generatePassword}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isPromoter"
-              {...register("isPromoter")}
-            />
-            <Label htmlFor="isPromoter">Add as Promoter</Label>
-          </div>
+          <TesterFormFields
+            register={register}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            generatePassword={handleGeneratePassword}
+            isPromoter={isPromoter}
+          />
 
           <div className="flex justify-end space-x-2">
             <Button
