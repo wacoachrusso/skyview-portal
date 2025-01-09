@@ -27,10 +27,10 @@ export const useUserManagement = () => {
       }
 
       // Transform the data to ensure it matches ProfilesRow type
-      const transformedData = data.map(user => ({
+      const transformedData: ProfilesRow[] = data.map(user => ({
         ...user,
-        assistant_id: user.assistant_id || null // Ensure assistant_id is always present
-      })) as ProfilesRow[];
+        assistant_id: user.assistant_id || null,
+      }));
 
       console.log("Users data fetched:", transformedData);
       return transformedData;

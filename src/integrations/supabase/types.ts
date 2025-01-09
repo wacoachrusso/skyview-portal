@@ -320,6 +320,7 @@ export type Database = {
         Row: {
           account_status: string | null
           airline: string | null
+          assistant_id: string | null
           created_at: string
           email: string | null
           email_notifications: boolean | null
@@ -340,6 +341,7 @@ export type Database = {
         Insert: {
           account_status?: string | null
           airline?: string | null
+          assistant_id?: string | null
           created_at?: string
           email?: string | null
           email_notifications?: boolean | null
@@ -360,6 +362,7 @@ export type Database = {
         Update: {
           account_status?: string | null
           airline?: string | null
+          assistant_id?: string | null
           created_at?: string
           email?: string | null
           email_notifications?: boolean | null
