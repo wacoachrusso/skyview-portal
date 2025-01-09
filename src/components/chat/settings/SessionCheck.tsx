@@ -15,9 +15,11 @@ export function SessionCheck() {
 
   useEffect(() => {
     const setupAuth = async () => {
+      console.log("Setting up auth and checking session...");
       // Check current session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.log("No active session found");
         navigate('/login');
         return;
       }
@@ -37,6 +39,23 @@ export function SessionCheck() {
           description: "Please select a subscription plan to continue."
         });
         navigate('/?scrollTo=pricing-section');
+        return;
+      }
+
+      // Verify session is still valid
+      const { data: sessionValid } = await supabase
+        .rpc('is_session_valid', {
+          p_session_token: localStorage.getItem('session_token')
+        });
+
+      if (!sessionValid) {
+        console.log("Session invalid or superseded by another device");
+        await supabase.auth.signOut();
+        toast({
+          title: "Session Ended",
+          description: "Your account has been signed in on another device."
+        });
+        navigate('/login');
         return;
       }
 

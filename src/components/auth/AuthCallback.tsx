@@ -19,6 +19,7 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log("Handling auth callback...");
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
@@ -27,6 +28,7 @@ export const AuthCallback = () => {
         }
 
         // Create a new session (this will automatically invalidate other sessions)
+        console.log("Creating new session and invalidating others...");
         await createNewSession(session.user.id);
 
         // Check if user exists in profiles
@@ -62,7 +64,7 @@ export const AuthCallback = () => {
         // All good, redirect to dashboard
         toast({
           title: "Welcome back!",
-          description: "You've been successfully signed in."
+          description: "You've been successfully signed in. Any other active sessions have been ended."
         });
         navigate('/dashboard');
 
