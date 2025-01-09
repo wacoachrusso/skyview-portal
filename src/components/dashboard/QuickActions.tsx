@@ -1,64 +1,40 @@
-import { Link } from "react-router-dom";
-import { Search, FileText, Settings, MessageSquare, Bug } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { ActionCard } from "./ActionCard";
-import { useContractHandler } from "./useContractHandler";
-import { useState } from "react";
-import { ReportIssueDialog } from "../shared/report-issue/ReportIssueDialog";
+import { MessageSquare, FileText, Users, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const QuickActions = () => {
-  const { handleContractClick } = useContractHandler();
-  const [showReportDialog, setShowReportDialog] = useState(false);
+  const navigate = useNavigate();
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4 text-foreground/90">Quick Actions</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Link to="/chat" className="block">
-          <ActionCard
-            icon={MessageSquare}
-            title="Ask SkyGuide"
-            description="Start a conversation"
-          />
-        </Link>
-
-        <Link to="/search" className="block">
-          <ActionCard
-            icon={Search}
-            title="Search"
-            description="Find information"
-          />
-        </Link>
-
-        <a href="#" onClick={handleContractClick} className="block">
-          <ActionCard
-            icon={FileText}
-            title="Contract"
-            description="View contract"
-          />
-        </a>
-
-        <Link to="/settings" className="block">
-          <ActionCard
-            icon={Settings}
-            title="Settings"
-            description="Manage preferences"
-          />
-        </Link>
-
-        <div className="block">
-          <ActionCard
-            icon={Bug}
-            title="Report Issue"
-            description="Submit feedback"
-            onClick={() => setShowReportDialog(true)}
-          />
-        </div>
+    <Card className="p-6 bg-card-gradient shadow-lg">
+      <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ActionCard
+          icon={MessageSquare}
+          title="Start Chat"
+          description="Ask questions about your contract"
+          onClick={() => navigate('/chat')}
+        />
+        <ActionCard
+          icon={FileText}
+          title="View Contract"
+          description="Access your union contract"
+          onClick={() => navigate('/contract')}
+        />
+        <ActionCard
+          icon={Users}
+          title="Union Reps"
+          description="Contact your representatives"
+          onClick={() => navigate('/representatives')}
+        />
+        <ActionCard
+          icon={Settings}
+          title="Settings"
+          description="Manage your preferences"
+          onClick={() => navigate('/settings')}
+        />
       </div>
-
-      <ReportIssueDialog 
-        open={showReportDialog} 
-        onOpenChange={setShowReportDialog}
-      />
-    </div>
+    </Card>
   );
 };
