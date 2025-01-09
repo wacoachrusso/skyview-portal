@@ -6,11 +6,11 @@ interface Assistant {
 }
 
 const ASSISTANT_MAPPING: Record<string, Assistant> = {
-  "American Airlines_Flight Attendant": {
+  "american airlines_flight attendant": {
     name: "SkyGuide AMERICAN AIRLINES FLIGHT ATTENDANT",
     id: "asst_xpkEzhLUt4Qn6uzRzSxAekGh"
   },
-  "United Airlines_Flight Attendant": {
+  "united airlines_flight attendant": {
     name: "SkyGuide UAL FLIGHT ATTENDANT",
     id: "asst_YdZtVHPSq6TIYKRkKcOqtwzn"
   }
