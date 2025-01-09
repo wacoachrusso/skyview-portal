@@ -42,9 +42,11 @@ export const useSignup = () => {
         .select('assistant_id')
         .eq('airline', formData.airline.toLowerCase())
         .eq('work_group', formData.jobTitle.toLowerCase())
+        .eq('is_active', true)
         .single();
 
-      if (assistantError && !assistant) {
+      if (assistantError || !assistant) {
+        console.error('Assistant lookup error:', assistantError);
         console.log('No matching assistant found for:', {
           airline: formData.airline,
           jobTitle: formData.jobTitle

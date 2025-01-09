@@ -19,6 +19,7 @@ export const handleFreeSignup = async ({
   assistantId,
 }: FreeSignupParams) => {
   console.log('Processing free plan signup for:', email);
+  console.log('Using assistant ID:', assistantId);
 
   try {
     const { data, error } = await supabase.auth.signUp({
