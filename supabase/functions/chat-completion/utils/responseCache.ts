@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -17,16 +17,17 @@ export async function getCachedResponse(query: string, airline?: string, workGro
     .single();
 
   if (error) {
-    console.error('Error checking cache:', error);
+    console.log('No cached response found or error:', error.message);
     return null;
   }
 
   if (data) {
-    console.log('Cache hit! Updating access count');
+    console.log('Found cached response, updating access count');
+    
     // Update access count and last accessed timestamp
     await supabase
       .from('cached_responses')
-      .update({ 
+      .update({
         access_count: data.access_count + 1,
         last_accessed_at: new Date().toISOString()
       })
