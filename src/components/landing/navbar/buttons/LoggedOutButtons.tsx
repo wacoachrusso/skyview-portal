@@ -14,7 +14,7 @@ export const LoggedOutButtons = ({ isMobile, scrollToPricing }: LoggedOutButtons
         asChild 
         variant={isMobile ? "ghost" : "secondary"}
         size="sm"
-        className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-accent`}
+        className={`${isMobile ? 'w-full justify-start' : 'bg-brand-slate hover:bg-brand-slate/90'}`}
       >
         <Link to="/login">
           <LogIn className="mr-2 h-4 w-4" />
@@ -25,7 +25,7 @@ export const LoggedOutButtons = ({ isMobile, scrollToPricing }: LoggedOutButtons
         onClick={scrollToPricing}
         size="sm"
         variant={isMobile ? "ghost" : "default"}
-        className={`${isMobile ? 'w-full justify-start' : ''} hover:bg-accent`}
+        className={`${isMobile ? 'w-full justify-start' : 'bg-brand-slate hover:bg-brand-slate/90'}`}
       >
         Sign Up
       </Button>
