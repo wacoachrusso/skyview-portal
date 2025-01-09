@@ -10,48 +10,67 @@ export function useSpeechRecognition() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-      
-      if (SpeechRecognitionAPI) {
-        console.log('Speech recognition is supported');
-        recognitionRef.current = new SpeechRecognitionAPI();
+      try {
+        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
         
-        if (recognitionRef.current) {
-          recognitionRef.current.continuous = true;
-          recognitionRef.current.interimResults = true;
+        if (SpeechRecognitionAPI) {
+          console.log('Speech recognition is supported');
+          recognitionRef.current = new SpeechRecognitionAPI();
+          
+          if (recognitionRef.current) {
+            recognitionRef.current.continuous = true;
+            recognitionRef.current.interimResults = true;
+            recognitionRef.current.lang = 'en-US';
 
-          recognitionRef.current.onresult = (event) => {
-            console.log('Speech recognition result received');
-            resetSilenceTimeout();
+            recognitionRef.current.onresult = (event) => {
+              console.log('Speech recognition result received');
+              resetSilenceTimeout();
 
-            const newTranscript = Array.from(event.results)
-              .map(result => result[0])
-              .map(result => result.transcript)
-              .join('');
-            
-            console.log('Speech recognition result:', newTranscript);
-            setTranscript(newTranscript);
+              let finalTranscript = '';
+              let interimTranscript = '';
 
-            startSilenceDetection();
-          };
+              for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                  finalTranscript += transcript;
+                } else {
+                  interimTranscript += transcript;
+                }
+              }
 
-          recognitionRef.current.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-            stopListening();
-            toast({
-              title: "Error",
-              description: "There was an error with speech recognition. Please try again.",
-              variant: "destructive",
-            });
-          };
+              const newTranscript = finalTranscript || interimTranscript;
+              console.log('Speech recognition result:', newTranscript);
+              setTranscript(newTranscript);
 
-          recognitionRef.current.onend = () => {
-            console.log('Speech recognition ended');
-            stopListening();
-          };
+              startSilenceDetection();
+            };
+
+            recognitionRef.current.onerror = (event) => {
+              console.error('Speech recognition error:', event.error);
+              handleSpeechError(event.error);
+              stopListening();
+            };
+
+            recognitionRef.current.onend = () => {
+              console.log('Speech recognition ended');
+              setIsListening(false);
+            };
+          }
+        } else {
+          console.log('Speech recognition is not supported');
+          toast({
+            title: "Not Supported",
+            description: "Speech recognition is not supported in your browser. Please try using Chrome, Edge, or Safari.",
+            variant: "destructive",
+          });
         }
-      } else {
-        console.log('Speech recognition is not supported');
+      } catch (error) {
+        console.error('Error initializing speech recognition:', error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize speech recognition. Please try a different browser.",
+          variant: "destructive",
+        });
       }
     }
 
@@ -59,6 +78,31 @@ export function useSpeechRecognition() {
       cleanup();
     };
   }, []);
+
+  const handleSpeechError = (error: string) => {
+    let message = "There was an error with speech recognition. Please try again.";
+    
+    switch (error) {
+      case 'not-allowed':
+        message = "Please allow microphone access to use speech recognition.";
+        break;
+      case 'no-speech':
+        message = "No speech was detected. Please try again.";
+        break;
+      case 'network':
+        message = "Network error occurred. Please check your connection.";
+        break;
+      case 'aborted':
+        message = "Speech recognition was aborted.";
+        break;
+    }
+
+    toast({
+      title: "Speech Recognition Error",
+      description: message,
+      variant: "destructive",
+    });
+  };
 
   const resetSilenceTimeout = () => {
     if (silenceTimeoutRef.current) {
@@ -72,13 +116,17 @@ export function useSpeechRecognition() {
     silenceTimeoutRef.current = setTimeout(() => {
       console.log('Silence detected, stopping recognition');
       stopListening();
-    }, 1500); // Stop after 1.5 seconds of silence
+    }, 2000); // Stop after 2 seconds of silence
   };
 
   const stopListening = () => {
     if (recognitionRef.current) {
       console.log('Stopping speech recognition');
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
+      }
     }
     setIsListening(false);
     resetSilenceTimeout();
@@ -89,7 +137,7 @@ export function useSpeechRecognition() {
       console.log('Speech recognition is not available');
       toast({
         title: "Not Supported",
-        description: "Speech recognition is not supported in your browser.",
+        description: "Speech recognition is not supported in your browser. Please try Chrome, Edge, or Safari.",
         variant: "destructive",
       });
       return;
@@ -112,7 +160,11 @@ export function useSpeechRecognition() {
 
   const cleanup = () => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Error cleaning up speech recognition:', error);
+      }
     }
     resetSilenceTimeout();
   };
