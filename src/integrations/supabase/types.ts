@@ -68,33 +68,27 @@ export type Database = {
       cached_responses: {
         Row: {
           access_count: number
-          airline: string | null
           created_at: string
           id: string
           last_accessed_at: string
           query: string
           response: string
-          work_group: string | null
         }
         Insert: {
           access_count?: number
-          airline?: string | null
           created_at?: string
           id?: string
           last_accessed_at?: string
           query: string
           response: string
-          work_group?: string | null
         }
         Update: {
           access_count?: number
-          airline?: string | null
           created_at?: string
           id?: string
           last_accessed_at?: string
           query?: string
           response?: string
-          work_group?: string | null
         }
         Relationships: []
       }

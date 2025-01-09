@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { supabaseClient } from './utils/supabase.ts';
-import { getCachedResponse, cacheResponse } from './utils/responseCache.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,14 +14,12 @@ serve(async (req) => {
   }
 
   try {
-    const { content, subscriptionPlan } = await req.json();
+    const { content } = await req.json();
     const authHeader = req.headers.get('Authorization');
     
     if (!authHeader) {
       throw new Error('No authorization header');
     }
-
-    console.log('Processing request for content:', content);
 
     // Get user profile and check assistant assignment
     const { data: profile, error: profileError } = await supabaseClient.auth.getUser(
@@ -30,29 +27,19 @@ serve(async (req) => {
     );
 
     if (profileError || !profile?.user) {
-      console.error('Failed to get user profile:', profileError);
       throw new Error('Failed to get user profile');
     }
 
     // Get the user's assigned assistant
     const { data: userProfile, error: userProfileError } = await supabaseClient
       .from('profiles')
-      .select('assistant_id, airline, user_type')
+      .select('assistant_id')
       .eq('id', profile.user.id)
       .single();
 
     if (userProfileError || !userProfile?.assistant_id) {
       console.error('Error getting assistant ID:', userProfileError);
       throw new Error('No assistant assigned to your profile. Please contact support.');
-    }
-
-    // Check cache first
-    const cachedResponse = await getCachedResponse(content, userProfile.airline, userProfile.user_type);
-    if (cachedResponse) {
-      console.log('Returning cached response');
-      return new Response(JSON.stringify({ response: cachedResponse }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
     }
 
     // Get the assistant configuration
@@ -97,12 +84,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
-
-    // Cache the response
-    await cacheResponse(content, aiResponse, userProfile.airline, userProfile.user_type);
-
-    return new Response(JSON.stringify({ response: aiResponse }), {
+    return new Response(JSON.stringify({ response: data.choices[0].message.content }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
