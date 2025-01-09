@@ -14,18 +14,25 @@ export default defineConfig(({ mode }) => ({
     },
   },
   server: {
-    host: "::",
+    host: true,
     port: 8080,
+    strictPort: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
     proxy: {
-      // Redirect all requests to index.html
-      "/*": {
+      // Handle all routes through index.html for SPA routing
+      "^(?!/assets|/lovable-uploads).*": {
         target: "/index.html",
-        changeOrigin: true,
         rewrite: () => "/index.html"
       }
     }
   },
   preview: {
-    port: 8080
+    port: 8080,
+    strictPort: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    }
   }
 }));
