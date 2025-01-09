@@ -18,14 +18,16 @@ export const ActionCard = ({ icon: Icon, title, description, onClick }: ActionCa
 
   return (
     <Card 
-      className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-brand-navy/90 to-brand-slate/90 border-0 cursor-pointer"
+      className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-action-card border border-brand-purple/10 backdrop-blur-sm cursor-pointer group"
       onClick={handleClick}
     >
       <CardContent className="p-6 flex items-center space-x-4">
-        <Icon className="h-6 w-6 text-white/90" />
+        <div className="p-3 rounded-lg bg-brand-purple/10 group-hover:bg-brand-purple/20 transition-colors">
+          <Icon className="h-6 w-6 text-brand-purple" />
+        </div>
         <div>
-          <h3 className="font-medium text-lg text-white/90">{title}</h3>
-          <p className="text-white/70 text-sm">{description}</p>
+          <h3 className="font-medium text-lg text-foreground/90 group-hover:text-brand-purple transition-colors">{title}</h3>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </div>
       </CardContent>
     </Card>

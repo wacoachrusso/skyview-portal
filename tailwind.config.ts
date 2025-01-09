@@ -25,14 +25,17 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#1a365d",
+          DEFAULT: "#9b87f5",
           foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#1e293b",
+          DEFAULT: "#7E69AB",
           foreground: "#ffffff",
         },
         brand: {
+          purple: "#8B5CF6",
+          magenta: "#D946EF",
+          orange: "#F97316",
           gold: "#D4AF37",
           navy: "#1a365d",
           slate: "#334155",
@@ -46,7 +49,7 @@ export default {
           foreground: "#94a3b8",
         },
         accent: {
-          DEFAULT: "#1e293b",
+          DEFAULT: "#7E69AB",
           foreground: "#ffffff",
         },
         card: {
@@ -55,13 +58,16 @@ export default {
         },
       },
       backgroundImage: {
-        'hero-gradient': 'linear-gradient(135deg, #1a365d 0%, #334155 100%)',
+        'hero-gradient': 'linear-gradient(135deg, #9b87f5 0%, #7E69AB 100%)',
         'card-gradient': 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
         'feature-gradient': 'linear-gradient(to right, #243949 0%, #517fa4 100%)',
-        'testimonial-gradient': 'linear-gradient(225deg, #1a365d 0%, #334155 100%)',
-        'cta-gradient': 'linear-gradient(to right, #1a365d 0%, #334155 100%)',
+        'testimonial-gradient': 'linear-gradient(225deg, #8B5CF6 0%, #D946EF 100%)',
+        'cta-gradient': 'linear-gradient(to right, #9b87f5 0%, #7E69AB 100%)',
         'footer-gradient': 'linear-gradient(to bottom, #1e293b 0%, #0f172a 100%)',
-        'glow-gradient': 'radial-gradient(circle at center, rgba(212,175,55,0.15) 0%, transparent 70%)',
+        'glow-gradient': 'radial-gradient(circle at center, rgba(155,135,245,0.15) 0%, transparent 70%)',
+        'action-card': 'linear-gradient(225deg, rgba(155,135,245,0.1) 0%, rgba(126,105,171,0.1) 100%)',
+        'welcome-card': 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(217,70,239,0.1) 100%)',
+        'stats-card': 'linear-gradient(225deg, rgba(249,115,22,0.1) 0%, rgba(212,175,55,0.1) 100%)',
       },
       borderRadius: {
         lg: "var(--radius)",
