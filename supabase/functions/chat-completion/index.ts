@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { content, subscriptionPlan } = await req.json();
+    const { content } = await req.json();
     const authHeader = req.headers.get('Authorization');
     
     if (!authHeader) {
@@ -42,6 +42,18 @@ serve(async (req) => {
       throw new Error('No assistant assigned to your profile. Please contact support.');
     }
 
+    // Get the assistant configuration
+    const { data: assistant, error: assistantError } = await supabaseClient
+      .from('openai_assistants')
+      .select('*')
+      .eq('assistant_id', userProfile.assistant_id)
+      .single();
+
+    if (assistantError || !assistant) {
+      console.error('Error getting assistant configuration:', assistantError);
+      throw new Error('Failed to get assistant configuration');
+    }
+
     // Send query to OpenAI with the correct assistant
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -51,7 +63,7 @@ serve(async (req) => {
         'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({
-        model: subscriptionPlan === 'premium' ? 'gpt-4o' : 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
