@@ -12,7 +12,7 @@ export const useUserManagement = () => {
   const [userToDelete, setUserToDelete] = useState<ProfilesRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: users, refetch } = useQuery({
+  const { data: users, refetch, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
       console.log("Fetching users data...");
@@ -128,6 +128,11 @@ export const useUserManagement = () => {
         title: "Success",
         description: "User account deleted successfully",
       });
+      
+      // Clear the selected user if it was the one that was deleted
+      if (selectedUser?.id === user.id) {
+        setSelectedUser(null);
+      }
     } catch (error) {
       console.error("Error in handleDeleteUser:", error);
       toast({
@@ -147,6 +152,7 @@ export const useUserManagement = () => {
     selectedUser,
     userToDelete,
     isDeleting,
+    isLoading,
     setSelectedUser,
     setUserToDelete,
     toggleAdminStatus,

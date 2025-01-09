@@ -15,6 +15,7 @@ export const UserManagement = () => {
     toggleAdminStatus,
     updateAccountStatus,
     handleDeleteUser,
+    isLoading,
   } = useUserManagement();
 
   // Filter out deleted users completely and ensure we're working with the latest data
@@ -24,6 +25,14 @@ export const UserManagement = () => {
     email: u.email,
     status: u.account_status
   })));
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
