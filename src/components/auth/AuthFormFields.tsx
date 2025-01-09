@@ -51,10 +51,19 @@ const validatePassword = (password: string) => {
 export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPassword }: AuthFormFieldsProps) => {
   const isOptionEnabled = (airline: string, jobTitle: string) => {
     if (airline) {
+      // Allow American Airlines for Flight Attendants, United Airlines for all
+      if (airline.toLowerCase() === "american airlines") {
+        return formData.jobTitle.toLowerCase() === "flight attendant";
+      }
       return airline.toLowerCase() === "united airlines";
     }
     if (jobTitle) {
-      return jobTitle.toLowerCase() === "flight attendant";
+      // Enable Flight Attendant for both United and American Airlines
+      if (jobTitle.toLowerCase() === "flight attendant") {
+        return true;
+      }
+      // Enable Pilot only for United Airlines
+      return jobTitle.toLowerCase() === "pilot" && formData.airline.toLowerCase() === "united airlines";
     }
     return true;
   };
@@ -136,7 +145,14 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
         <Label htmlFor="jobTitle" className="text-gray-200">Select Job Title</Label>
         <Select 
           value={formData.jobTitle}
-          onValueChange={(value) => setFormData({ ...formData, jobTitle: value })}
+          onValueChange={(value) => {
+            // Reset airline if changing from Flight Attendant to Pilot
+            if (value === "pilot" && formData.airline.toLowerCase() === "american airlines") {
+              setFormData({ ...formData, jobTitle: value, airline: "" });
+            } else {
+              setFormData({ ...formData, jobTitle: value });
+            }
+          }}
         >
           <SelectTrigger className="bg-white/10 border-white/20 text-white">
             <SelectValue placeholder="Select Job Title" />

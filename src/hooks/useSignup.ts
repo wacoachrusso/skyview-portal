@@ -49,9 +49,10 @@ export const useSignup = () => {
           airline: formData.airline,
           jobTitle: formData.jobTitle
         });
-      } else {
-        console.log('Found matching assistant:', assistant);
+        throw new Error('No matching assistant found for your role. Please contact support.');
       }
+
+      console.log('Found matching assistant:', assistant);
 
       // For paid plans, handle Stripe checkout
       if (selectedPlan !== 'free' && priceId) {
@@ -65,7 +66,7 @@ export const useSignup = () => {
           jobTitle: formData.jobTitle,
           airline: formData.airline,
           plan: selectedPlan,
-          assistantId: assistant?.assistant_id || null
+          assistantId: assistant.assistant_id
         });
 
         // Create and redirect to checkout
@@ -83,7 +84,7 @@ export const useSignup = () => {
       // Handle free plan signup
       const signupResult = await handleFreeSignup({
         ...formData,
-        assistantId: assistant?.assistant_id || null
+        assistantId: assistant.assistant_id
       });
       
       if (signupResult) {
