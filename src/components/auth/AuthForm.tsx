@@ -31,6 +31,13 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting signup form with data:', {
+      email: formData.email,
+      fullName: formData.fullName,
+      jobTitle: formData.jobTitle,
+      airline: formData.airline,
+      plan: finalSelectedPlan
+    });
     handleSignupSubmit(formData, finalSelectedPlan, statePriceId);
   };
 
