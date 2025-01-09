@@ -5,6 +5,7 @@ interface PendingSignup {
   jobTitle: string;
   airline: string;
   plan: string;
+  assistantId?: string | null;
 }
 
 export const storePendingSignup = (signupData: PendingSignup) => {

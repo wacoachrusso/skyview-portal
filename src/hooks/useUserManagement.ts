@@ -25,8 +25,15 @@ export const useUserManagement = () => {
         console.error("Error fetching users:", error);
         throw error;
       }
-      console.log("Users data fetched:", data);
-      return data as ProfilesRow[];
+
+      // Transform the data to ensure it matches ProfilesRow type
+      const transformedData = data.map(user => ({
+        ...user,
+        assistant_id: user.assistant_id || null // Ensure assistant_id is always present
+      })) as ProfilesRow[];
+
+      console.log("Users data fetched:", transformedData);
+      return transformedData;
     },
   });
 

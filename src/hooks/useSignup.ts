@@ -65,7 +65,7 @@ export const useSignup = () => {
           jobTitle: formData.jobTitle,
           airline: formData.airline,
           plan: selectedPlan,
-          assistantId: assistant?.assistant_id
+          assistantId: assistant?.assistant_id || null
         });
 
         // Create and redirect to checkout
@@ -83,7 +83,7 @@ export const useSignup = () => {
       // Handle free plan signup
       const signupResult = await handleFreeSignup({
         ...formData,
-        assistantId: assistant?.assistant_id
+        assistantId: assistant?.assistant_id || null
       });
       
       if (signupResult) {
