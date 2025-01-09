@@ -27,9 +27,13 @@ export const AuthCallback = () => {
           throw new Error("Invalid session");
         }
 
-        // Create a new session (this will automatically invalidate other sessions)
+        // Create a new session and invalidate others
         console.log("Creating new session and invalidating others...");
-        await createNewSession(session.user.id);
+        const newSession = await createNewSession(session.user.id);
+        
+        if (!newSession) {
+          throw new Error("Failed to create new session");
+        }
 
         // Check if user exists in profiles
         const { data: profile, error: profileError } = await supabase
