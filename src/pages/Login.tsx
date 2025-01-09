@@ -7,8 +7,10 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Login page mounted');
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session check result:', session ? 'User logged in' : 'No session');
       if (session) {
         console.log('User already logged in:', session.user.id);
         // Check if profile is complete
@@ -29,7 +31,7 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-hero-gradient flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#1A1F2C] flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         <div className="bg-[#1A1F2C]/95 backdrop-blur-lg border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
           <div className="mb-8 flex flex-col items-center">
