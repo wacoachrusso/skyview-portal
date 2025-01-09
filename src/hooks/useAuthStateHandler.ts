@@ -21,12 +21,13 @@ export const useAuthStateHandler = () => {
     if (event === 'SIGNED_IN' && session?.user) {
       console.log("New sign-in detected, creating session...");
       try {
-        // Store the refresh token in localStorage
+        // Store the refresh token
         if (session.refresh_token) {
           localStorage.setItem('supabase.refresh-token', session.refresh_token);
+          document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`;
         }
 
-        // When a new sign-in occurs, create a new session
+        // Create a new session
         await createNewSession(session.user.id);
         
         // Only attempt re-authentication for Google users

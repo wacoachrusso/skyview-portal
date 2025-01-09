@@ -56,7 +56,13 @@ export const useSessionManagement = () => {
 
   const handleSessionInvalidation = async (message: string) => {
     console.log('Handling session invalidation:', message);
+    
+    // Clear all local storage except refresh token
+    const refreshToken = localStorage.getItem('supabase.refresh-token');
     localStorage.clear();
+    if (refreshToken) {
+      localStorage.setItem('supabase.refresh-token', refreshToken);
+    }
     
     try {
       await supabase.auth.signOut();
@@ -67,7 +73,6 @@ export const useSessionManagement = () => {
       });
     } catch (error) {
       console.error('Error during forced signout:', error);
-      // Still show the message even if signOut fails
       toast({
         variant: "default",
         title: "Session Ended",
@@ -124,8 +129,9 @@ export const useSessionManagement = () => {
       // Store session token
       localStorage.setItem('session_token', sessionToken);
       
-      // Set refresh token in secure cookie
-      document.cookie = `refresh_token=${refreshToken}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
+      // Store refresh token in both localStorage and secure cookie
+      localStorage.setItem('supabase.refresh-token', refreshToken);
+      document.cookie = `sb-refresh-token=${refreshToken}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
 
       console.log('New session created successfully:', session);
       return session;
@@ -150,6 +156,12 @@ export const useSessionManagement = () => {
         setIsLoading(false);
         navigate('/login');
         return;
+      }
+
+      // Ensure refresh token is properly stored
+      if (session.refresh_token) {
+        localStorage.setItem('supabase.refresh-token', session.refresh_token);
+        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`;
       }
 
       // Get current session token
