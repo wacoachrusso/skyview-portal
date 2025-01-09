@@ -8,6 +8,7 @@ interface Window {
 interface SpeechRecognition {
   continuous: boolean;
   interimResults: boolean;
+  lang: string;
   onresult: (event: any) => void;
   onerror: (event: any) => void;
   onend: () => void;
