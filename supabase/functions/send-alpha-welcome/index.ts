@@ -80,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
               <li><strong>Early Access:</strong> You'll get first access to new features and updates before they're released to the general public.</li>
             </ul>
             
-            <p>Your first feedback request will arrive in about a week. Please take a few minutes to explore the platform and note any thoughts, suggestions, or issues you encounter.</p>
+            <p>Your first feedback request will arrive in about a week. Please take some time to explore the platform and note any thoughts or suggestions you have.</p>
             
             <p>If you have any questions or run into any problems, you can reply directly to this email.</p>
             

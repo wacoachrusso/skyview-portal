@@ -15,7 +15,6 @@ interface EmailRequest {
 const handler = async (req: Request): Promise<Response> => {
   console.log('Processing trial ended email request');
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -33,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: 'SkyGuide <notifications@skyguide.site>',
         to: [email],
-        subject: 'Your Free Trial Has Ended - Continue Exploring with SkyGuide!',
+        subject: 'Your Free Trial Has Ended - Continue Your Journey with SkyGuide!',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #1a1f2c; margin-bottom: 20px;">Thank you for trying SkyGuide!</h2>
@@ -44,8 +43,8 @@ const handler = async (req: Request): Promise<Response> => {
             
             <p>With a SkyGuide subscription, you'll get:</p>
             <ul>
-              <li>✈️ Unlimited contract queries</li>
-              <li>⚡ Real-time contract interpretation</li>
+              <li>✈️ Unlimited access to contract information</li>
+              <li>⚡ Quick answers to your questions</li>
               <li>📱 24/7 access on any device</li>
               <li>🔍 Advanced search capabilities</li>
               <li>📊 Personalized insights</li>
@@ -58,7 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
               </a>
             </div>
             
-            <p>Join thousands of aviation professionals who trust SkyGuide for their contract navigation needs.</p>
+            <p>Join thousands of aviation professionals who trust SkyGuide for their career needs.</p>
             
             <p>Best regards,<br>The SkyGuide Team</p>
           </div>

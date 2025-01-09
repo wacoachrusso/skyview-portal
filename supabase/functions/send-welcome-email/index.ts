@@ -43,28 +43,28 @@ const handler = async (req: Request): Promise<Response> => {
             
             <h1 style="color: #1a1f2c;">Welcome aboard, ${name}! 🎉</h1>
             
-            <p>We're thrilled to have you join the SkyGuide community! You've taken the first step towards mastering your aviation career journey.</p>
+            <p>We're thrilled to have you join the SkyGuide community! You've taken the first step towards enhancing your aviation career journey.</p>
             
             <h2 style="color: #1a1f2c; margin-top: 25px;">Here's what you can look forward to:</h2>
             
             <ul style="list-style-type: none; padding: 0;">
               <li style="margin: 15px 0; padding-left: 25px; position: relative;">
-                ✈️ <strong>Expert Contract Analysis:</strong> Understand your union contract with crystal-clear explanations
+                ✈️ <strong>Expert Guidance:</strong> Clear explanations of your union contract terms
               </li>
               <li style="margin: 15px 0; padding-left: 25px; position: relative;">
-                📱 <strong>24/7 Accessibility:</strong> Get answers to your contract questions anytime, anywhere
+                📱 <strong>24/7 Accessibility:</strong> Get answers to your questions anytime, anywhere
               </li>
               <li style="margin: 15px 0; padding-left: 25px; position: relative;">
-                🎯 <strong>Precise Information:</strong> Find exactly what you need with our smart search capability
+                🎯 <strong>Precise Information:</strong> Find exactly what you need with our smart search
               </li>
               <li style="margin: 15px 0; padding-left: 25px; position: relative;">
-                🔄 <strong>Regular Updates:</strong> Stay current with the latest contract information and features
+                🔄 <strong>Regular Updates:</strong> Stay current with the latest information
               </li>
             </ul>
 
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
               <h3 style="color: #1a1f2c; margin-top: 0;">Ready to get started?</h3>
-              <p>Simply log in to your account and upload your contract. Our team is here to support you every step of the way!</p>
+              <p>Simply log in to your account to begin exploring. Our team is here to support you every step of the way!</p>
             </div>
 
             <p style="margin-top: 25px;">Have questions? Need help getting started? Just reply to this email - we're here to help!</p>
