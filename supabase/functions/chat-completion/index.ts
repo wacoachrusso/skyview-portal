@@ -1,100 +1,165 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { supabaseClient } from './utils/supabase.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCachedResponse, cacheResponse } from './utils/responseCache.ts';
+import { createThread, addMessageToThread, runAssistant, getRunStatus, getMessages } from './utils/openAI.ts';
+import { cleanResponse, containsNonContractContent } from './utils/validation.ts';
+import { withRetry, isRateLimitError } from './utils/retryUtils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
+
+if (!openAIApiKey || !assistantId) {
+  throw new Error('Required environment variables are not set');
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { content } = await req.json();
-    const authHeader = req.headers.get('Authorization');
-    
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    const { content, subscriptionPlan, userId } = await req.json();
+    console.log('Received request with content:', content);
+
+    if (!content) {
+      throw new Error('Content is required');
     }
 
-    // Get user profile and check assistant assignment
-    const { data: profile, error: profileError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (profileError || !profile?.user) {
-      throw new Error('Failed to get user profile');
+    // Check for cached response first
+    const cachedResponse = await getCachedResponse(content);
+    if (cachedResponse) {
+      console.log('Using cached response');
+      return new Response(
+        JSON.stringify({ response: cachedResponse }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Get the user's assigned assistant
-    const { data: userProfile, error: userProfileError } = await supabaseClient
-      .from('profiles')
-      .select('assistant_id')
-      .eq('id', profile.user.id)
-      .single();
+    // Check subscription status
+    if (subscriptionPlan === 'free') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('query_count')
+        .eq('id', userId)
+        .single();
 
-    if (userProfileError || !userProfile?.assistant_id) {
-      console.error('Error getting assistant ID:', userProfileError);
-      throw new Error('No assistant assigned to your profile. Please contact support.');
-    }
-
-    // Get the assistant configuration
-    const { data: assistant, error: assistantError } = await supabaseClient
-      .from('openai_assistants')
-      .select('*')
-      .eq('assistant_id', userProfile.assistant_id)
-      .single();
-
-    if (assistantError || !assistant) {
-      console.error('Error getting assistant configuration:', assistantError);
-      throw new Error('Failed to get assistant configuration');
-    }
-
-    // Send query to OpenAI with the correct assistant
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that answers questions about airline contracts. Always provide references to specific sections when possible.'
-          },
-          {
-            role: 'user',
-            content
+      if (profile && profile.query_count >= 1) {
+        console.log('Free trial limit exceeded');
+        return new Response(
+          JSON.stringify({
+            error: 'FREE_TRIAL_ENDED',
+            message: 'Your free trial has ended. Please upgrade to continue using SkyGuide.'
+          }),
+          { 
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI API error:', error);
-      throw new Error('Failed to get response from AI');
+        );
+      }
     }
 
-    const data = await response.json();
-    return new Response(JSON.stringify({ response: data.choices[0].message.content }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Check for non-contract content
+    if (containsNonContractContent(content)) {
+      console.log('Non-contract related query detected');
+      const response = "I noticed your question might not be related to your union contract. I'm here specifically to help you understand your contract terms, policies, and provisions. Would you like to rephrase your question to focus on contract-related matters? I'm happy to help you navigate any aspect of your contract.";
+      
+      await cacheResponse(content, response);
+      
+      return new Response(
+        JSON.stringify({ response }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Process the request with OpenAI using retry mechanism
+    const processOpenAIRequest = async () => {
+      console.log('Creating new thread...');
+      const thread = await createThread();
+      
+      console.log('Adding message to thread...');
+      await addMessageToThread(thread.id, content);
+      
+      console.log('Running assistant...');
+      const run = await runAssistant(thread.id);
+
+      // Poll for completion with retries
+      let runStatus;
+      do {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        runStatus = await withRetry(() => getRunStatus(thread.id, run.id), {
+          maxRetries: 3,
+          shouldRetry: (error) => !isRateLimitError(error)
+        });
+        console.log('Run status:', runStatus.status);
+      } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
+
+      if (runStatus.status !== 'completed') {
+        throw new Error(`Run failed with status: ${runStatus.status}`);
+      }
+
+      const messages = await getMessages(thread.id);
+      const assistantMessage = messages.data.find(m => m.role === 'assistant');
+      
+      if (!assistantMessage) {
+        throw new Error('No assistant response found');
+      }
+
+      return cleanResponse(assistantMessage.content[0].text.value);
+    };
+
+    const cleanedResponse = await withRetry(processOpenAIRequest, {
+      maxRetries: 3,
+      initialDelay: 1000,
+      shouldRetry: (error) => !isRateLimitError(error)
     });
+
+    console.log('Assistant response:', cleanedResponse);
+
+    // Cache the response for future use
+    await cacheResponse(content, cleanedResponse);
+
+    // Update query count for free trial users
+    if (subscriptionPlan === 'free') {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ query_count: 1 })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Error updating query count:', updateError);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ response: cleanedResponse }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Error in chat completion:', error);
+    
+    const errorMessage = error.message || 'An unexpected error occurred';
+    const statusCode = error.status || 500;
+    
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ 
+        error: errorMessage,
+        retryAfter: isRateLimitError(error) ? 60 : undefined
+      }),
       { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: statusCode,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

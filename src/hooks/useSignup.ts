@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { createStripeCheckoutSession } from "@/utils/stripeUtils";
 import { handleFreeSignup } from "@/utils/freeSignupUtils";
 import { storePendingSignup } from "@/utils/signupStorage";
-import { getAssistant } from "@/utils/assistantUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SignupFormData {
@@ -37,8 +36,25 @@ export const useSignup = () => {
         plan: selectedPlan 
       });
 
-      // Get the correct assistant based on airline and job title
-      const assistant = getAssistant(formData.airline, formData.jobTitle);
+      // Check if there's a matching assistant for this user's role
+      const { data: assistant, error: assistantError } = await supabase
+        .from('openai_assistants')
+        .select('assistant_id')
+        .eq('airline', formData.airline.toLowerCase())
+        .eq('work_group', formData.jobTitle.toLowerCase())
+        .eq('is_active', true)
+        .single();
+
+      if (assistantError || !assistant) {
+        console.error('Assistant lookup error:', assistantError);
+        console.log('No matching assistant found for:', {
+          airline: formData.airline,
+          jobTitle: formData.jobTitle
+        });
+        throw new Error('No matching assistant found for your role. Please contact support.');
+      }
+
+      console.log('Found matching assistant:', assistant);
 
       // For paid plans, handle Stripe checkout
       if (selectedPlan !== 'free' && priceId) {
@@ -52,7 +68,7 @@ export const useSignup = () => {
           jobTitle: formData.jobTitle,
           airline: formData.airline,
           plan: selectedPlan,
-          assistantId: assistant.id
+          assistantId: assistant.assistant_id
         });
 
         // Create and redirect to checkout
@@ -70,7 +86,7 @@ export const useSignup = () => {
       // Handle free plan signup
       const signupResult = await handleFreeSignup({
         ...formData,
-        assistantId: assistant.id
+        assistantId: assistant.assistant_id
       });
       
       if (signupResult) {
