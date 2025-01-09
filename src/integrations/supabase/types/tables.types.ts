@@ -107,6 +107,7 @@ export interface ProfilesRow {
   subscription_plan: string | null;
   user_type: string | null;
   account_status: string | null;
+  assistant_id: string | null;
 }
 
 export interface ProfilesTable {

@@ -7,6 +7,7 @@ interface FreeSignupParams {
   fullName: string;
   jobTitle: string;
   airline: string;
+  assistantId?: string;
 }
 
 export const handleFreeSignup = async ({
@@ -15,6 +16,7 @@ export const handleFreeSignup = async ({
   fullName,
   jobTitle,
   airline,
+  assistantId,
 }: FreeSignupParams) => {
   console.log('Processing free plan signup for:', email);
 
@@ -28,6 +30,7 @@ export const handleFreeSignup = async ({
           user_type: jobTitle.toLowerCase(),
           airline: airline.toLowerCase(),
           subscription_plan: 'free',
+          assistant_id: assistantId // Include the assistant ID in user metadata
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }

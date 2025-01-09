@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createStripeCheckoutSession } from "@/utils/stripeUtils";
 import { handleFreeSignup } from "@/utils/freeSignupUtils";
 import { storePendingSignup } from "@/utils/signupStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SignupFormData {
   email: string;
@@ -27,6 +28,31 @@ export const useSignup = () => {
     setLoading(true);
 
     try {
+      console.log('Starting signup process with data:', { 
+        email: formData.email,
+        fullName: formData.fullName,
+        jobTitle: formData.jobTitle,
+        airline: formData.airline,
+        plan: selectedPlan 
+      });
+
+      // Check if there's a matching assistant for this user's role
+      const { data: assistant, error: assistantError } = await supabase
+        .from('openai_assistants')
+        .select('assistant_id')
+        .eq('airline', formData.airline.toLowerCase())
+        .eq('work_group', formData.jobTitle.toLowerCase())
+        .single();
+
+      if (assistantError && !assistant) {
+        console.log('No matching assistant found for:', {
+          airline: formData.airline,
+          jobTitle: formData.jobTitle
+        });
+      } else {
+        console.log('Found matching assistant:', assistant);
+      }
+
       // For paid plans, handle Stripe checkout
       if (selectedPlan !== 'free' && priceId) {
         console.log('Starting paid plan signup process:', { plan: selectedPlan, priceId });
@@ -39,6 +65,7 @@ export const useSignup = () => {
           jobTitle: formData.jobTitle,
           airline: formData.airline,
           plan: selectedPlan,
+          assistantId: assistant?.assistant_id
         });
 
         // Create and redirect to checkout
@@ -54,7 +81,10 @@ export const useSignup = () => {
       }
 
       // Handle free plan signup
-      const signupResult = await handleFreeSignup(formData);
+      const signupResult = await handleFreeSignup({
+        ...formData,
+        assistantId: assistant?.assistant_id
+      });
       
       if (signupResult) {
         toast({
