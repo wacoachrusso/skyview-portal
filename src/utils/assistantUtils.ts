@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 interface Assistant {
   name: string;
   id: string;
@@ -29,4 +31,37 @@ export const getAssistant = (airline: string, jobTitle: string): Assistant => {
   
   console.log('Found assistant:', assistant);
   return assistant;
+};
+
+export const assignAssistantToUser = async (userId: string, airline: string, jobTitle: string) => {
+  console.log('Assigning assistant to user:', { userId, airline, jobTitle });
+  
+  try {
+    // Get the assistant details
+    const assistant = getAssistant(airline, jobTitle);
+    
+    // Update the user's profile in the database
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        assistant_id: assistant.id 
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error assigning assistant to user:', error);
+      throw error;
+    }
+
+    console.log('Successfully assigned assistant to user:', {
+      userId,
+      assistantName: assistant.name,
+      assistantId: assistant.id
+    });
+
+    return assistant;
+  } catch (error) {
+    console.error('Failed to assign assistant to user:', error);
+    throw error;
+  }
 };
