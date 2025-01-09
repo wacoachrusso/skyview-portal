@@ -14,6 +14,12 @@ interface SignupFormData {
   airline: string;
 }
 
+// Assistant mapping based on airline and job title combination
+const ASSISTANT_MAPPING: Record<string, string> = {
+  "American Airlines_Flight Attendant": "asst_xpkEzhLUt4Qn6uzRzSxAekGh",
+  "United Airlines_Flight Attendant": "asst_YdZtVHPSq6TIYKRkKcOqtwzn",
+};
+
 export const useSignup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -36,25 +42,26 @@ export const useSignup = () => {
         plan: selectedPlan 
       });
 
-      // Check if there's a matching assistant for this user's role
-      const { data: assistant, error: assistantError } = await supabase
-        .from('openai_assistants')
-        .select('assistant_id')
-        .eq('airline', formData.airline.toLowerCase())
-        .eq('work_group', formData.jobTitle.toLowerCase())
-        .eq('is_active', true)
-        .single();
+      // Get the correct assistant ID based on airline and job title combination
+      const assistantKey = `${formData.airline}_${formData.jobTitle}`;
+      const assistantId = ASSISTANT_MAPPING[assistantKey];
 
-      if (assistantError || !assistant) {
-        console.error('Assistant lookup error:', assistantError);
-        console.log('No matching assistant found for:', {
+      console.log('Looking up assistant for:', {
+        airline: formData.airline,
+        jobTitle: formData.jobTitle,
+        assistantKey,
+        foundAssistantId: assistantId
+      });
+
+      if (!assistantId) {
+        console.error('No matching assistant found for:', {
           airline: formData.airline,
           jobTitle: formData.jobTitle
         });
         throw new Error('No matching assistant found for your role. Please contact support.');
       }
 
-      console.log('Found matching assistant:', assistant);
+      console.log('Found matching assistant:', assistantId);
 
       // For paid plans, handle Stripe checkout
       if (selectedPlan !== 'free' && priceId) {
@@ -68,7 +75,7 @@ export const useSignup = () => {
           jobTitle: formData.jobTitle,
           airline: formData.airline,
           plan: selectedPlan,
-          assistantId: assistant.assistant_id
+          assistantId: assistantId
         });
 
         // Create and redirect to checkout
@@ -86,7 +93,7 @@ export const useSignup = () => {
       // Handle free plan signup
       const signupResult = await handleFreeSignup({
         ...formData,
-        assistantId: assistant.assistant_id
+        assistantId: assistantId
       });
       
       if (signupResult) {
