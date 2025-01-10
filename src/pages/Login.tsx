@@ -9,24 +9,35 @@ const Login = () => {
   useEffect(() => {
     console.log('Login page mounted');
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Session check result:', session ? 'User logged in' : 'No session');
-      if (session) {
-        console.log('User already logged in:', session.user.id);
-        // Check if profile is complete
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type, airline')
-          .eq('id', session.user.id)
-          .single();
+      try {
+        console.log('Checking user session...');
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session check result:', session ? 'User logged in' : 'No session');
+        
+        if (session) {
+          console.log('User already logged in:', session.user.id);
+          // Check if profile is complete
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_type, airline')
+            .eq('id', session.user.id)
+            .single();
 
-        if (profile?.user_type && profile?.airline) {
-          navigate('/dashboard');
+          if (profile?.user_type && profile?.airline) {
+            console.log('Profile complete, redirecting to dashboard');
+            navigate('/dashboard');
+          } else {
+            console.log('Profile incomplete, redirecting to complete-profile');
+            navigate('/complete-profile');
+          }
         } else {
-          navigate('/complete-profile');
+          console.log('No active session, showing login form');
         }
+      } catch (error) {
+        console.error('Error checking user session:', error);
       }
     };
+    
     checkUser();
   }, [navigate]);
 

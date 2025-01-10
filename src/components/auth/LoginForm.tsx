@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 export const LoginForm = () => {
+  console.log('Rendering LoginForm component');
+  
   const {
     loading,
     showPassword,
@@ -28,7 +30,7 @@ export const LoginForm = () => {
           <div className="w-full border-t border-white/10"></div>
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="px-2 text-gray-400 bg-transparent">Or continue with email</span>
+          <span className="px-2 text-gray-400 bg-[#1A1F2C]">Or continue with email</span>
         </div>
       </div>
 
