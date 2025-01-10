@@ -9,8 +9,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react({
-        // Add better error handling for development
-        devTools: true,
+        // Use correct React plugin options
+        jsxRuntime: 'automatic',
+        development: mode === 'development',
       }),
       mode === 'development' && componentTagger(),
     ].filter(Boolean),
