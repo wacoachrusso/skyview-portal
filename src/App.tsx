@@ -26,8 +26,14 @@ const retryLoadComponent = (fn: () => Promise<any>, retriesLeft = 3): Promise<an
 };
 
 // Lazy load components with retry
-const Index = lazy(() => retryLoadComponent(() => import("@/pages/Index")));
-const Login = lazy(() => retryLoadComponent(() => import("@/pages/Login")));
+const Index = lazy(() => {
+  console.log('Loading Index component');
+  return retryLoadComponent(() => import("@/pages/Index"));
+});
+const Login = lazy(() => {
+  console.log('Loading Login component');
+  return retryLoadComponent(() => import("@/pages/Login"));
+});
 const SignUp = lazy(() => retryLoadComponent(() => import("@/pages/SignUp")));
 const Chat = lazy(() => retryLoadComponent(() => import("@/pages/Chat")));
 const Account = lazy(() => retryLoadComponent(() => import("@/pages/Account")));
@@ -68,6 +74,8 @@ const publicRoutes = [
 function App() {
   useEffect(() => {
     console.log('App component mounted');
+    console.log('Current route:', window.location.pathname);
+    
     return () => {
       console.log('App component unmounted');
     };
@@ -77,31 +85,35 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
-          <Suspense fallback={
-            <div className="flex h-screen w-full items-center justify-center">
-              <LoadingSpinner />
+          <Suspense 
+            fallback={
+              <div className="flex h-screen w-full items-center justify-center bg-background">
+                <LoadingSpinner />
+              </div>
+            }
+          >
+            <div className="min-h-screen bg-background">
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                
+                {/* Protected routes */}
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/release-notes" element={<ReleaseNotes />} />
+                <Route path="/refunds" element={<Refunds />} />
+              </Routes>
             </div>
-          }>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              
-              {/* Protected routes */}
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/release-notes" element={<ReleaseNotes />} />
-              <Route path="/refunds" element={<Refunds />} />
-            </Routes>
           </Suspense>
           <Toaster />
         </Router>
