@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthCallback } from "@/components/auth/AuthCallback";
@@ -66,11 +66,22 @@ const publicRoutes = [
 ];
 
 function App() {
+  useEffect(() => {
+    console.log('App component mounted');
+    return () => {
+      console.log('App component unmounted');
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={
+            <div className="flex h-screen w-full items-center justify-center">
+              <LoadingSpinner />
+            </div>
+          }>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />

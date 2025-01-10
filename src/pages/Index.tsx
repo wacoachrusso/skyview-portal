@@ -17,6 +17,7 @@ export default function Index() {
 
   useEffect(() => {
     console.log('Index page mounted');
+    
     // Check for pricing section scroll
     const searchParams = new URLSearchParams(location.search);
     const scrollTo = searchParams.get('scrollTo');
@@ -40,6 +41,10 @@ export default function Index() {
       setShowIOSPrompt(true);
       localStorage.setItem('iosInstallPromptShown', 'true');
     }
+
+    return () => {
+      console.log('Index page unmounted');
+    };
   }, [location]);
 
   const handleClosePrompt = () => {
