@@ -4,52 +4,66 @@ import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthCallback } from "@/components/auth/AuthCallback";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import "./App.css";
 
-// Lazy load route components
-const Index = lazy(() => import("@/pages/Index"));
-const Login = lazy(() => import("@/pages/Login"));
-const SignUp = lazy(() => import("@/pages/SignUp"));
-const Chat = lazy(() => import("@/pages/Chat"));
-const Account = lazy(() => import("@/pages/Account"));
-const Settings = lazy(() => import("@/pages/Settings"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
-const About = lazy(() => import("@/pages/About"));
-const ReleaseNotes = lazy(() => import("@/pages/ReleaseNotes"));
-const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
-const Refunds = lazy(() => import("@/pages/Refunds"));
-const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+// Lazy load route components with retry logic
+const retryLoadComponent = (fn: () => Promise<any>, retriesLeft = 3): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    fn()
+      .then(resolve)
+      .catch((error) => {
+        console.warn(`Error loading component, retries left: ${retriesLeft}`, error);
+        if (retriesLeft === 0) {
+          reject(error);
+          return;
+        }
+        setTimeout(() => {
+          retryLoadComponent(fn, retriesLeft - 1).then(resolve, reject);
+        }, 1500);
+      });
+  });
+};
 
-// Create a client with default options
+// Lazy load components with retry
+const Index = lazy(() => retryLoadComponent(() => import("@/pages/Index")));
+const Login = lazy(() => retryLoadComponent(() => import("@/pages/Login")));
+const SignUp = lazy(() => retryLoadComponent(() => import("@/pages/SignUp")));
+const Chat = lazy(() => retryLoadComponent(() => import("@/pages/Chat")));
+const Account = lazy(() => retryLoadComponent(() => import("@/pages/Account")));
+const Settings = lazy(() => retryLoadComponent(() => import("@/pages/Settings")));
+const Dashboard = lazy(() => retryLoadComponent(() => import("@/pages/Dashboard")));
+const AdminDashboard = lazy(() => retryLoadComponent(() => import("@/pages/AdminDashboard")));
+const About = lazy(() => retryLoadComponent(() => import("@/pages/About")));
+const ReleaseNotes = lazy(() => retryLoadComponent(() => import("@/pages/ReleaseNotes")));
+const PrivacyPolicy = lazy(() => retryLoadComponent(() => import("@/pages/PrivacyPolicy")));
+const Refunds = lazy(() => retryLoadComponent(() => import("@/pages/Refunds")));
+const ForgotPassword = lazy(() => retryLoadComponent(() => import("@/pages/ForgotPassword")));
+const ResetPassword = lazy(() => retryLoadComponent(() => import("@/pages/ResetPassword")));
+
+// Create a client with optimized options
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
     },
   },
 });
 
-// Define public routes that don't require authentication
-const PUBLIC_ROUTES = [
+// Routes that don't require authentication
+const publicRoutes = [
   "/",
   "/login",
   "/signup",
   "/privacy-policy",
   "/about",
-  "/auth/callback",
   "/forgot-password",
   "/reset-password"
 ];
-
-// Loading component for Suspense fallback
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-  </div>
-);
 
 function App() {
   return (
