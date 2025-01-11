@@ -33,45 +33,11 @@ export function useDownloadChat() {
         textContent += `[${timestamp}] ${role}:\n${message.content}\n\n`;
       });
 
-      // Create blob and URL
       const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
       const filename = `chat-${title}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
 
       try {
-        // Try using the native msSaveOrOpenBlob for IE & Edge if available
-        if (window.navigator.msSaveOrOpenBlob) {
-          window.navigator.msSaveOrOpenBlob(blob, filename);
-        } else {
-          // For modern browsers
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          
-          // Set link properties
-          link.href = url;
-          link.download = filename;
-          link.style.display = 'none';
-          
-          // Append link, trigger click, and clean up
-          document.body.appendChild(link);
-          
-          // Use a proper click event that works across platforms
-          const clickEvent = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-            composed: true
-          });
-          
-          link.dispatchEvent(clickEvent);
-          
-          // Clean up
-          setTimeout(() => {
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-          }, 100);
-        }
-
-        // Update downloaded_at timestamp in the database
+        // Update database first to ensure offline status is set
         const { error: updateError } = await supabase
           .from('conversations')
           .update({ downloaded_at: new Date().toISOString() })
@@ -79,10 +45,31 @@ export function useDownloadChat() {
 
         if (updateError) {
           console.error('Error updating downloaded_at:', updateError);
+          throw updateError;
         }
 
-        setDownloadInProgress(false);
+        // Create download URL
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        // Set link properties
+        link.href = url;
+        link.download = filename;
+        link.target = '_blank'; // Important for iOS
+        link.rel = 'noopener noreferrer';
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
 
+        setDownloadInProgress(false);
+        
         toast({
           title: "Chat downloaded successfully",
           description: "Your chat has been saved to your device.",
@@ -94,6 +81,7 @@ export function useDownloadChat() {
 
       } catch (downloadError) {
         console.error('Error during file download:', downloadError);
+        setDownloadInProgress(false);
         throw downloadError;
       }
 

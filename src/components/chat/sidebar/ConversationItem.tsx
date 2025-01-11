@@ -44,10 +44,14 @@ export function ConversationItem({
     }
 
     console.log('Conversation interaction:', conversation.id);
-    onSelect(conversation.id);
+    // Ensure we don't trigger selection during download
+    if (!downloadInProgress) {
+      onSelect(conversation.id);
+    }
   };
 
   const handleToggleOffline = async (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     
     if (isOffline) {
@@ -72,6 +76,8 @@ export function ConversationItem({
   };
 
   const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     onDelete(e, conversation.id);
   };
 
