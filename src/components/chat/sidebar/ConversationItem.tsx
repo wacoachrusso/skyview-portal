@@ -71,6 +71,10 @@ export function ConversationItem({
     }
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    onDelete(e, conversation.id);
+  };
+
   return (
     <>
       <div
@@ -103,7 +107,7 @@ export function ConversationItem({
               downloadedAt={conversation.downloaded_at}
               isOffline={isOffline}
               downloadInProgress={downloadInProgress}
-              onDelete={onDelete}
+              onDelete={handleDelete}
               onToggleOffline={handleToggleOffline}
             />
           </div>
