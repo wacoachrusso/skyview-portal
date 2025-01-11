@@ -17,6 +17,9 @@ export function Footer() {
             <p className="text-sm">
               Your trusted companion for contract interpretation.
             </p>
+            <a href="mailto:support@skyguide.site" className="text-sm hover:text-white transition-colors mt-2 block">
+              support@skyguide.site
+            </a>
           </div>
           <div>
             <h3 className="font-bold mb-4 text-white">Company</h3>
