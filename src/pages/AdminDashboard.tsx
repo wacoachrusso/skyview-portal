@@ -4,6 +4,7 @@ import { AdminTabs } from "@/components/admin/dashboard/AdminTabs";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 const AdminDashboard = () => {
+  console.log('Rendering AdminDashboard component');
   const [activeTab, setActiveTab] = useState("overview");
   
   // Check admin access on component mount
