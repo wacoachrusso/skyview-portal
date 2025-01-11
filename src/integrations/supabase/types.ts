@@ -373,17 +373,20 @@ export type Database = {
       profiles: {
         Row: {
           account_status: string | null
+          address: string | null
           airline: string | null
           assistant_id: string | null
           created_at: string
           email: string | null
           email_notifications: boolean | null
+          employee_id: string | null
           full_name: string | null
           id: string
           is_admin: boolean | null
           last_ip_address: string | null
           last_query_timestamp: string | null
           login_attempts: number | null
+          phone_number: string | null
           push_notifications: boolean | null
           push_subscription: Json | null
           query_count: number | null
@@ -394,17 +397,20 @@ export type Database = {
         }
         Insert: {
           account_status?: string | null
+          address?: string | null
           airline?: string | null
           assistant_id?: string | null
           created_at?: string
           email?: string | null
           email_notifications?: boolean | null
+          employee_id?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean | null
           last_ip_address?: string | null
           last_query_timestamp?: string | null
           login_attempts?: number | null
+          phone_number?: string | null
           push_notifications?: boolean | null
           push_subscription?: Json | null
           query_count?: number | null
@@ -415,17 +421,20 @@ export type Database = {
         }
         Update: {
           account_status?: string | null
+          address?: string | null
           airline?: string | null
           assistant_id?: string | null
           created_at?: string
           email?: string | null
           email_notifications?: boolean | null
+          employee_id?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
           last_ip_address?: string | null
           last_query_timestamp?: string | null
           login_attempts?: number | null
+          phone_number?: string | null
           push_notifications?: boolean | null
           push_subscription?: Json | null
           query_count?: number | null
