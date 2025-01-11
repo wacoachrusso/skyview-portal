@@ -31,8 +31,16 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage, co
   }, [messages]);
 
   useEffect(() => {
-    console.log("Messages state updated:", messages.length, "messages");
-  }, [messages]);
+    // Try to load offline messages if available
+    if (conversationId) {
+      const offlineData = localStorage.getItem(`offline-chat-${conversationId}`);
+      if (offlineData && messages.length === 0) {
+        console.log('Loading offline messages for conversation:', conversationId);
+        const { messages: offlineMessages } = JSON.parse(offlineData);
+        // You might want to add some visual indication that these are offline messages
+      }
+    }
+  }, [conversationId, messages.length]);
 
   return (
     <div className="flex flex-col h-full">

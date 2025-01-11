@@ -28,6 +28,21 @@ export function ConversationItem({
   isChecked,
   onCheckChange
 }: ConversationItemProps) {
+  const { toast } = useToast();
+
+  const handleToggleOffline = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleOffline(e, conversation.id);
+    
+    toast({
+      title: isOffline ? "Chat removed from offline storage" : "Chat saved for offline access",
+      description: isOffline 
+        ? "This chat will no longer be available offline" 
+        : "This chat will be available when you're offline",
+      duration: 3000
+    });
+  };
+
   return (
     <div
       onClick={() => onSelect(conversation.id)}
@@ -78,7 +93,7 @@ export function ConversationItem({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 p-0.5"
-                onClick={(e) => onToggleOffline(e, conversation.id)}
+                onClick={handleToggleOffline}
               >
                 {isOffline ? (
                   <EyeOff className="h-4 w-4 text-brand-gold hover:text-brand-gold/80" />

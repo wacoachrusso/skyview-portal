@@ -15,6 +15,7 @@ export const useOfflineConversations = () => {
   }, []);
 
   const removeFromOfflineStorage = (conversationId: string) => {
+    console.log('Removing conversation from offline storage:', conversationId);
     const newOfflineConversations = offlineConversations.filter(id => id !== conversationId);
     setOfflineConversations(newOfflineConversations);
     localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
@@ -26,36 +27,43 @@ export const useOfflineConversations = () => {
     
     if (isCurrentlyOffline) {
       removeFromOfflineStorage(conversationId);
-      toast({
-        title: "Removed from offline storage",
-        description: "This chat will no longer be available offline",
-      });
     } else {
       try {
-        // Fetch messages directly from the database for the conversation
-        const { data: messages, error } = await supabase
+        console.log('Fetching messages for offline storage:', conversationId);
+        // Fetch messages for the conversation
+        const { data: messages, error: messagesError } = await supabase
           .from('messages')
           .select('*')
           .eq('conversation_id', conversationId)
           .order('created_at', { ascending: true });
 
-        if (error) throw error;
+        if (messagesError) throw messagesError;
         
         if (!messages || messages.length === 0) {
           throw new Error('No messages found for this conversation');
         }
+
+        // Fetch conversation details
+        const { data: conversation, error: conversationError } = await supabase
+          .from('conversations')
+          .select('*')
+          .eq('id', conversationId)
+          .single();
+
+        if (conversationError) throw conversationError;
         
-        // Store the messages for offline access
-        localStorage.setItem(`offline-chat-${conversationId}`, JSON.stringify(messages));
+        // Store both conversation and messages
+        const offlineData = {
+          conversation,
+          messages
+        };
+        
+        // Store the chat data for offline access
+        localStorage.setItem(`offline-chat-${conversationId}`, JSON.stringify(offlineData));
         const newOfflineConversations = [...offlineConversations, conversationId];
         setOfflineConversations(newOfflineConversations);
         localStorage.setItem('offline-conversations', JSON.stringify(newOfflineConversations));
         
-        toast({
-          title: "Saved for offline viewing",
-          description: "This chat will be available when you're offline",
-        });
-
         console.log('Chat saved for offline viewing:', conversationId);
       } catch (error) {
         console.error('Error saving chat for offline viewing:', error);
