@@ -30,7 +30,9 @@ const Chat = () => {
   }, [navigate]);
 
   const handleSelectConversation = async (conversationId: string) => {
+    console.log('Loading conversation:', conversationId);
     await loadConversation(conversationId);
+    setCurrentConversationId(conversationId);
     setIsSidebarOpen(false);
   };
 

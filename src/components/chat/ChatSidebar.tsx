@@ -15,6 +15,11 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
   const [searchQuery, setSearchQuery] = useState("");
   const { conversations, deleteConversation, deleteAllConversations, CHAT_LIMIT_WARNING } = useConversations();
 
+  const handleSelectConversation = async (conversationId: string) => {
+    console.log('Selecting conversation:', conversationId);
+    onSelectConversation(conversationId);
+  };
+
   const filteredConversations = conversations.filter((conversation) =>
     conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -30,7 +35,7 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
         <ConversationList
           conversations={filteredConversations}
           currentConversationId={currentConversationId}
-          onSelectConversation={onSelectConversation}
+          onSelectConversation={handleSelectConversation}
           onDeleteConversation={deleteConversation}
         />
       </div>
