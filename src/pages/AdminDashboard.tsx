@@ -28,11 +28,16 @@ const AdminDashboard = () => {
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('is_admin')
           .eq('id', session.user.id)
           .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          throw error;
+        }
 
         console.log('Admin check result:', profile);
 
@@ -50,6 +55,11 @@ const AdminDashboard = () => {
         console.log('Admin access granted');
       } catch (error) {
         console.error('Error checking admin access:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to verify admin access. Please try again."
+        });
         navigate('/login');
       }
     };
