@@ -1,9 +1,11 @@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AlphaTester } from "../types";
+import { useState } from "react";
 
 export const useTesterActions = (testers: AlphaTester[] | undefined, refetch: () => void) => {
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const togglePromoterStatus = async (testerId: string, currentStatus: boolean) => {
     try {
@@ -120,8 +122,57 @@ export const useTesterActions = (testers: AlphaTester[] | undefined, refetch: ()
     }
   };
 
+  const deleteTester = async (testerId: string) => {
+    try {
+      setIsDeleting(true);
+      console.log("Deleting tester:", testerId);
+
+      const tester = testers?.find(t => t.id === testerId);
+      if (!tester) throw new Error("Tester not found");
+
+      // Delete the alpha tester record
+      const { error: deleteError } = await supabase
+        .from("alpha_testers")
+        .delete()
+        .eq("id", testerId);
+
+      if (deleteError) throw deleteError;
+
+      // If there's a profile_id, delete the profile
+      if (tester.profile_id) {
+        const { error: profileDeleteError } = await supabase
+          .from("profiles")
+          .delete()
+          .eq("id", tester.profile_id);
+
+        if (profileDeleteError) {
+          console.error("Error deleting profile:", profileDeleteError);
+          throw profileDeleteError;
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "Tester deleted successfully",
+      });
+
+      refetch();
+    } catch (error) {
+      console.error("Error deleting tester:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete tester",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return {
     togglePromoterStatus,
     updateStatus,
+    deleteTester,
+    isDeleting,
   };
 };

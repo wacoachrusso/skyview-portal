@@ -15,7 +15,7 @@ export const AlphaTesters = () => {
       console.log("Fetching alpha testers...");
       const { data, error } = await supabase
         .from("alpha_testers")
-        .select("*, profiles(full_name, email)")
+        .select("*, profiles(full_name, email, user_type, airline)")
         .order("created_at", { ascending: false });
 
       if (error) {

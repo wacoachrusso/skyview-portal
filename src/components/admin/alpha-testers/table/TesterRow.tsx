@@ -3,18 +3,23 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { AlphaTester } from "../types";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface TesterRowProps {
   tester: AlphaTester;
   onStatusChange: (testerId: string, newStatus: "active" | "inactive" | "removed") => void;
   onPromoterToggle: (testerId: string, currentStatus: boolean) => void;
+  onDelete: () => void;
 }
 
-export const TesterRow = ({ tester, onStatusChange, onPromoterToggle }: TesterRowProps) => {
+export const TesterRow = ({ tester, onStatusChange, onPromoterToggle, onDelete }: TesterRowProps) => {
   return (
     <TableRow key={tester.id}>
       <TableCell>{tester.full_name || "N/A"}</TableCell>
       <TableCell>{tester.email}</TableCell>
+      <TableCell>{tester.profiles?.user_type || "N/A"}</TableCell>
+      <TableCell>{tester.profiles?.airline || "N/A"}</TableCell>
       <TableCell>
         <Badge
           variant={
@@ -59,6 +64,16 @@ export const TesterRow = ({ tester, onStatusChange, onPromoterToggle }: TesterRo
       </TableCell>
       <TableCell>
         {format(new Date(tester.created_at), "MMM d, yyyy")}
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </TableCell>
     </TableRow>
   );
