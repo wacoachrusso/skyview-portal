@@ -36,16 +36,29 @@ export function useDownloadChat() {
       // Create blob and URL
       const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
-
-      // Create and trigger download
+      
+      // For Android, we need to create a download link that triggers the browser's download prompt
       const link = document.createElement('a');
       link.href = url;
       link.download = `chat-${title}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
+      link.target = '_blank'; // This helps trigger download dialog on Android
+      link.rel = 'noopener noreferrer';
       
-      // For Android, we need to use the click event
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
+      // Trigger download
+      if (/Android/i.test(navigator.userAgent)) {
+        // For Android, simulate a user interaction
+        const clickEvent = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: false
+        });
+        link.dispatchEvent(clickEvent);
+      } else {
+        // For other platforms
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
 
       // Update downloaded_at timestamp in the database
       const { error: updateError } = await supabase
@@ -55,12 +68,10 @@ export function useDownloadChat() {
 
       if (updateError) {
         console.error('Error updating downloaded_at:', updateError);
-        // Don't throw here, as the download itself was successful
       }
       
       // Clean up with increased timeout for Android
       setTimeout(() => {
-        document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         setDownloadInProgress(false);
       }, 2000);
