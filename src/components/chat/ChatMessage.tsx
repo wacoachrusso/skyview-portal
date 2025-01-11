@@ -1,14 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
-import { format } from "date-fns";
-import { TypeAnimation } from 'react-type-animation';
-import { Copy, ThumbsUp, ThumbsDown, Flag } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import ReactMarkdown from 'react-markdown';
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { MessageContent } from "./message/MessageContent";
+import { MessageActions } from "./message/MessageActions";
+import { MessageMetadata } from "./message/MessageMetadata";
+import { useFeedbackHandling } from "./message/useFeedbackHandling";
 import { FlagFeedbackDialog } from "./FlagFeedbackDialog";
 
 interface ChatMessageProps {
@@ -18,72 +14,8 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps) {
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
-  const [feedback, setFeedback] = useState<any>(null);
   const [isFlagDialogOpen, setIsFlagDialogOpen] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchFeedback = async () => {
-      if (isCurrentUser) return;
-      
-      const { data, error } = await supabase
-        .from('message_feedback')
-        .select('*')
-        .eq('message_id', message.id)
-        .single();
-
-      if (!error && data) {
-        setFeedback(data);
-      }
-    };
-
-    fetchFeedback();
-  }, [message.id, isCurrentUser]);
-
-  const handleFeedback = async (rating: number, isIncorrect: boolean = false, feedbackText?: string) => {
-    if (isCurrentUser) return; // Only allow feedback on AI messages
-    
-    setIsSubmittingFeedback(true);
-    try {
-      const { data, error } = await supabase
-        .from('message_feedback')
-        .upsert({
-          message_id: message.id,
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          rating,
-          is_incorrect: isIncorrect,
-          feedback_text: feedbackText
-        });
-
-      if (error) throw error;
-
-      setFeedback({ rating, is_incorrect: isIncorrect, feedback_text: feedbackText });
-      
-      // Show different toast messages based on the feedback type
-      if (isIncorrect) {
-        toast({
-          title: "Message Flagged",
-          description: "Thank you for your feedback. Our team will review this message.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Feedback submitted",
-          description: "Thank you for your feedback!",
-        });
-      }
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit feedback. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmittingFeedback(false);
-    }
-  };
+  const { isSubmittingFeedback, feedback, handleFeedback } = useFeedbackHandling(message.id, isCurrentUser);
 
   const handleFlag = () => {
     setIsFlagDialogOpen(true);
@@ -91,41 +23,7 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
 
   const handleFlagSubmit = (feedbackText: string) => {
     handleFeedback(1, true, feedbackText);
-  };
-
-  const formatContent = (content: string) => {
-    // Extract reference if it exists (text between [REF] tags)
-    const referenceMatch = content.match(/\[REF\](.*?)\[\/REF\]/s);
-    const reference = referenceMatch ? referenceMatch[1].trim() : null;
-    const mainContent = content.replace(/\[REF\].*?\[\/REF\]/s, '').trim();
-
-    return (
-      <div className="space-y-4">
-        <ReactMarkdown
-          components={{
-            p: ({ children }) => <p className="mb-2">{children}</p>,
-            strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-            em: ({ children }) => <em className="italic">{children}</em>,
-            ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
-            ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
-            li: ({ children }) => <li className="pl-2">{children}</li>,
-          }}
-        >
-          {mainContent}
-        </ReactMarkdown>
-        {reference ? (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-sm text-blue-400 font-medium">Reference:</p>
-            <p className="text-sm text-gray-400 whitespace-pre-wrap">{reference}</p>
-          </div>
-        ) : (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-sm text-yellow-400 font-medium">Note:</p>
-            <p className="text-sm text-gray-400">No specific contract reference available for this query.</p>
-          </div>
-        )}
-      </div>
-    );
+    setIsFlagDialogOpen(false);
   };
 
   return (
@@ -144,75 +42,18 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
               : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white shadow-md"
           )}
         >
-          {isCurrentUser ? (
-            <p className="text-sm sm:text-base">{message.content}</p>
-          ) : (
-            <div className="text-sm sm:text-base min-h-[20px]">
-              <TypeAnimation
-                sequence={[message.content]}
-                wrapper="div"
-                cursor={false}
-                repeat={0}
-                speed={90}
-                className="whitespace-pre-wrap"
-              />
-            </div>
-          )}
+          <MessageContent message={message} isCurrentUser={isCurrentUser} />
+          
           <div className="flex items-center justify-between gap-2 mt-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] sm:text-xs opacity-50">
-                {format(new Date(message.created_at), "h:mm a")}
-              </span>
-              {feedback && (
-                <Badge 
-                  variant={feedback.rating === 5 ? "success" : feedback.is_incorrect ? "destructive" : "secondary"}
-                  className="text-[10px]"
-                >
-                  {feedback.is_incorrect ? "Flagged" : feedback.rating === 5 ? "Helpful" : "Not Helpful"}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              {!isCurrentUser && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-                    onClick={() => handleFeedback(5)}
-                    disabled={isSubmittingFeedback}
-                  >
-                    <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-                    onClick={() => handleFeedback(1)}
-                    disabled={isSubmittingFeedback}
-                  >
-                    <ThumbsDown className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-                    onClick={handleFlag}
-                    disabled={isSubmittingFeedback}
-                  >
-                    <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
-                </>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-                onClick={onCopy}
-              >
-                <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-              </Button>
-            </div>
+            <MessageMetadata timestamp={message.created_at} feedback={feedback} />
+            <MessageActions
+              isCurrentUser={isCurrentUser}
+              onThumbsUp={() => handleFeedback(5)}
+              onThumbsDown={() => handleFeedback(1)}
+              onFlag={handleFlag}
+              onCopy={onCopy}
+              isSubmittingFeedback={isSubmittingFeedback}
+            />
           </div>
         </div>
       </div>
