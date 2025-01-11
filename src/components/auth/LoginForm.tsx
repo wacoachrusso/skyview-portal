@@ -4,14 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { useLoginForm } from "@/hooks/useLoginForm";
-import { useTransition } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 export const LoginForm = () => {
   console.log('Rendering LoginForm component');
-  const [isPending, startTransition] = useTransition();
   
   const {
     loading,
@@ -19,16 +17,9 @@ export const LoginForm = () => {
     formData,
     setShowPassword,
     setFormData,
-    handleSubmit: originalHandleSubmit
+    handleSubmit
   } = useLoginForm();
   const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    startTransition(() => {
-      originalHandleSubmit(e);
-    });
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -55,7 +46,6 @@ export const LoginForm = () => {
             required
             autoComplete="email"
             placeholder="Enter your email"
-            disabled={isPending}
           />
         </div>
 
@@ -71,13 +61,11 @@ export const LoginForm = () => {
               required
               autoComplete="current-password"
               placeholder="Enter your password"
-              disabled={isPending}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-              disabled={isPending}
             >
               {showPassword ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>
@@ -97,7 +85,6 @@ export const LoginForm = () => {
                 setFormData({ ...formData, rememberMe: checked as boolean })
               }
               className="border-white/20 data-[state=checked]:bg-brand-gold data-[state=checked]:border-brand-gold"
-              disabled={isPending}
             />
             <Label htmlFor="rememberMe" className="text-sm text-gray-200 cursor-pointer">
               Stay logged in
@@ -108,7 +95,6 @@ export const LoginForm = () => {
             variant="link"
             className="text-brand-gold hover:text-brand-gold/80 text-sm px-0"
             onClick={() => navigate('/forgot-password')}
-            disabled={isPending}
           >
             Forgot password?
           </Button>
@@ -117,16 +103,9 @@ export const LoginForm = () => {
         <Button 
           type="submit" 
           className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold h-11"
-          disabled={loading || isPending}
+          disabled={loading}
         >
-          {(loading || isPending) ? (
-            <div className="flex items-center gap-2">
-              <LoadingSpinner size="sm" />
-              <span>Logging in...</span>
-            </div>
-          ) : (
-            "Login"
-          )}
+          {loading ? "Logging in..." : "Login"}
         </Button>
 
         <p className="text-center text-sm text-gray-400">
