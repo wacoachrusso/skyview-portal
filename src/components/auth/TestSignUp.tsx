@@ -15,9 +15,11 @@ export const TestSignUp = () => {
     const timestamp = new Date().getTime();
     const testEmail = `testuser${timestamp}@example.com`;
     
-    console.log("Starting minimal test signup with:", {
+    console.log("Starting test signup with:", {
       email: testEmail,
-      password: "MyTestPassword123!"
+      fullName: "Test User",
+      jobTitle: "flight attendant",
+      airline: "american airlines"
     });
 
     try {
@@ -27,8 +29,8 @@ export const TestSignUp = () => {
         options: {
           data: {
             full_name: "Test User",
-            user_type: "pilot",
-            airline: "test airline",
+            user_type: "flight attendant",
+            airline: "american airlines",
             subscription_plan: "free"
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
@@ -50,7 +52,7 @@ export const TestSignUp = () => {
         throw error;
       }
 
-      console.log("Signup successful:", data);
+      console.log("Test signup successful:", data);
       
       toast({
         title: "Success",
