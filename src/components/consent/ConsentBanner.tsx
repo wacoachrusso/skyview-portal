@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useConsents } from "@/hooks/useConsents";
 
-export const ConsentBanner = () => {
+interface ConsentBannerProps {
+  onAccept: (preferences: "essential" | "analytics" | "marketing" | "all" | "none") => void;
+}
+
+export const ConsentBanner = ({ onAccept }: ConsentBannerProps) => {
   const navigate = useNavigate();
-  const { handleCookieConsent } = useConsents();
 
   const handleViewPolicy = () => {
     navigate("/privacy-policy");
@@ -32,7 +34,7 @@ export const ConsentBanner = () => {
             Learn More
           </Button>
           <Button
-            onClick={() => handleCookieConsent("all")}
+            onClick={() => onAccept("all")}
             className="bg-brand-gold hover:bg-brand-gold/90 text-black"
           >
             Accept

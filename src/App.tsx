@@ -25,7 +25,7 @@ function App() {
         <Toaster />
         
         {showConsentBanner && (
-          <ConsentBanner />
+          <ConsentBanner onAccept={handleCookieConsent} />
         )}
         
         <DisclaimerDialog
