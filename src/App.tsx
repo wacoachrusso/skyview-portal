@@ -6,12 +6,25 @@ import { useConsents } from "@/hooks/useConsents";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 import { SessionCheck } from "@/components/chat/settings/SessionCheck";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5000,
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

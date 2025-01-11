@@ -14,7 +14,10 @@ export type MetricType =
   | "yearlySubUsers";
 
 export const useMetricsData = () => {
-  const { data: stats, refetch } = useAdminStats();
+  const { data: stats, refetch, isLoading } = useAdminStats();
+
+  console.log("Metrics data loading state:", isLoading);
+  console.log("Current stats:", stats);
 
   const metrics = [
     {
@@ -79,5 +82,5 @@ export const useMetricsData = () => {
     },
   ];
 
-  return { metrics, stats, refetch };
+  return { metrics, stats, refetch, isLoading };
 };
