@@ -45,6 +45,16 @@ export function useDownloadChat() {
       // Append, click, and clean up
       document.body.appendChild(link);
       link.click();
+
+      // Update downloaded_at timestamp in the database
+      const { error: updateError } = await supabase
+        .from('conversations')
+        .update({ downloaded_at: new Date().toISOString() })
+        .eq('id', conversationId);
+
+      if (updateError) {
+        console.error('Error updating downloaded_at:', updateError);
+      }
       
       // Use setTimeout to ensure the download starts before cleanup
       setTimeout(() => {
@@ -58,7 +68,7 @@ export function useDownloadChat() {
       
       let toastMessage = "Chat saved for offline access";
       if (isIOS) {
-        toastMessage = "Chat downloaded to Files app. You can find it in Downloads or Documents folder.";
+        toastMessage = "Chat downloaded. Open in Notes app to save it for offline access.";
       } else if (isAndroid) {
         toastMessage = "Chat downloaded to Downloads folder. Access it through your device's Files app.";
       }

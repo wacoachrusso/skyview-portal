@@ -94,6 +94,7 @@ export function ConversationItem({
             </span>
             <ConversationMetadata
               lastMessageAt={conversation.last_message_at}
+              downloadedAt={conversation.downloaded_at}
               isOffline={isOffline}
               downloadInProgress={downloadInProgress}
               onDelete={(e) => onDelete(e, conversation.id)}
