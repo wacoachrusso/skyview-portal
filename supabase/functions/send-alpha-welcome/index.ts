@@ -39,6 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
           <li>Direct communication channel with our development team</li>
           <li>Opportunity to influence product direction</li>
           <li>Special recognition in our community</li>
+          <li>Unlimited access to all SkyGuide features at no cost</li>
         </ul>
         <p>We'll be reaching out soon with more details about your enhanced role!</p>
       </div>
@@ -70,6 +71,17 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Temporary Password:</strong> ${temporaryPassword}</p>
               <p style="color: #dc2626;">Please change your password after your first login!</p>
               <p><a href="${loginUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login to SkyGuide</a></p>
+            </div>
+
+            <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
+              <h2 style="margin-top: 0;">Special Access Benefits</h2>
+              <p>As a ${isPromoter ? 'promoter' : 'alpha tester'}, you have:</p>
+              <ul>
+                <li><strong>Unlimited Access:</strong> You can use all SkyGuide features without any usage limits or charges</li>
+                <li><strong>Priority Support:</strong> Direct access to our support team</li>
+                <li><strong>Early Access:</strong> Be the first to try new features</li>
+              </ul>
+              <p><strong>Note:</strong> These benefits are active as long as you maintain your ${isPromoter ? 'promoter' : 'alpha tester'} status. If your status changes, you'll need to subscribe to a paid plan to continue using SkyGuide.</p>
             </div>
 
             <h2>What to Expect:</h2>

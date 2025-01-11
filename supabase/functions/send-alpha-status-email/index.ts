@@ -23,9 +23,9 @@ const getStatusMessage = (status: string, isPromoter = false) => {
       isPromoter 
         ? "You can now continue promoting SkyGuide and earning rewards."
         : "You can now continue testing and providing valuable feedback."
-    }`,
-    inactive: `Your ${isPromoter ? "promoter" : "alpha tester"} status has been temporarily set to inactive. During this time, you won't receive feedback requests or ${isPromoter ? "promoter updates" : "testing notifications"}. If you believe this was done in error, please contact our support team.`,
-    removed: `Your participation in the ${isPromoter ? "promoter" : "alpha tester"} program has been discontinued. We appreciate your contributions to SkyGuide.`,
+    } You now have unlimited access to all SkyGuide features at no cost.`,
+    inactive: `Your ${isPromoter ? "promoter" : "alpha tester"} status has been temporarily set to inactive. During this time, you won't receive feedback requests or ${isPromoter ? "promoter updates" : "testing notifications"}. Your unlimited access has been suspended - to continue using SkyGuide, you'll need to select a paid plan. If you believe this was done in error, please contact our support team.`,
+    removed: `Your participation in the ${isPromoter ? "promoter" : "alpha tester"} program has been discontinued. We appreciate your contributions to SkyGuide. To continue using the platform, you'll need to select one of our paid subscription plans.`,
   };
   return statusMessages[status as keyof typeof statusMessages];
 };
@@ -62,6 +62,7 @@ const getPromoterChangeMessage = (becamePromoter: boolean) => {
           <li>You'll receive weekly updates and resources</li>
           <li>You can earn rewards for successful referrals</li>
           <li>You'll have early access to new features</li>
+          <li>You now have unlimited access to all SkyGuide features at no cost</li>
         </ul>
         <p>We'll send you more details about the promoter program in a separate email.</p>
       </div>
@@ -75,6 +76,7 @@ const getPromoterChangeMessage = (becamePromoter: boolean) => {
           <li>You'll continue to have access to all alpha testing features</li>
           <li>You'll receive regular testing feedback requests</li>
           <li>You won't receive promoter-specific updates anymore</li>
+          <li>You still have unlimited access to all SkyGuide features at no cost</li>
         </ul>
         <p>Thank you for your participation in the promoter program!</p>
       </div>
