@@ -20,9 +20,19 @@ export function DownloadDialog({ open, onOpenChange, onConfirm }: DownloadDialog
             This will download a copy of the chat to your device and make it available offline. The chat will be saved as a text file in your downloads folder.
             
             {isIOS && (
-              <p className="mt-2">
-                On iOS devices, you can find downloaded files in the Files app under Downloads or Documents folder.
-              </p>
+              <div className="mt-2 space-y-2">
+                <p>On iOS devices:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>The chat will be downloaded to the Files app under Downloads or Documents folder.</li>
+                  <li>You can open the file in the Notes app to keep it easily accessible:</li>
+                  <ol className="list-decimal pl-4 mt-1 space-y-1">
+                    <li>Tap the downloaded file in Files</li>
+                    <li>Tap the Share button (square with arrow)</li>
+                    <li>Select "Notes" from the share options</li>
+                    <li>The chat will be saved as a new note for offline viewing</li>
+                  </ol>
+                </ul>
+              </div>
             )}
             
             {isAndroid && (
