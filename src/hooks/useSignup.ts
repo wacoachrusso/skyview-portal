@@ -43,15 +43,21 @@ export const useSignup = () => {
         .eq('airline', formData.airline.toLowerCase())
         .eq('work_group', formData.jobTitle.toLowerCase())
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (assistantError || !assistant) {
+      console.log('Assistant lookup result:', { assistant, error: assistantError });
+
+      if (assistantError) {
         console.error('Assistant lookup error:', assistantError);
+        throw new Error('Error looking up assistant configuration. Please try again.');
+      }
+
+      if (!assistant) {
         console.log('No matching assistant found for:', {
           airline: formData.airline,
           jobTitle: formData.jobTitle
         });
-        throw new Error('No matching assistant found for your role. Please contact support.');
+        throw new Error('We currently do not support your airline and role combination. Please contact support for assistance.');
       }
 
       console.log('Found matching assistant:', assistant);
