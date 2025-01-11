@@ -10,6 +10,7 @@ export function AppRoutes() {
     <Routes>
       {/* Public routes - no authentication required */}
       <Route path="/" element={<LazyRoutes.Index />} />
+      <Route path="/index" element={<LazyRoutes.Index />} />
       <Route path="/login" element={<LazyRoutes.Login />} />
       <Route path="/signup" element={<LazyRoutes.SignUp />} />
       <Route path="/privacy-policy" element={<LazyRoutes.PrivacyPolicy />} />
