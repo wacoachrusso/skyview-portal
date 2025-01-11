@@ -1,7 +1,7 @@
+import { useState } from "react";
 import { Conversation } from "@/types/chat";
 import { MessageSquare } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
 import { DownloadDialog } from "./DownloadDialog";
 import { useDownloadChat } from "@/hooks/useDownloadChat";
 import { ConversationMetadata } from "./conversation/ConversationMetadata";
@@ -32,8 +32,12 @@ export function ConversationItem({
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const { downloadChat, downloadInProgress } = useDownloadChat();
 
-  const handleClick = () => {
-    console.log('Conversation clicked:', conversation.id);
+  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent event bubbling
+    e.stopPropagation();
+    e.preventDefault();
+    
+    console.log('Conversation clicked/touched:', conversation.id);
     onSelect(conversation.id);
   };
 
@@ -64,8 +68,11 @@ export function ConversationItem({
   return (
     <>
       <div
+        role="button"
+        tabIndex={0}
         onClick={handleClick}
-        className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 ${
+        onTouchStart={handleClick}
+        className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 touch-manipulation ${
           isSelected 
             ? "bg-white/10 border-l-brand-gold" 
             : "border-l-transparent hover:border-l-white/20"
