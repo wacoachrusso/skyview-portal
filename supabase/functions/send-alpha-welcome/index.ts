@@ -26,24 +26,6 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, fullName, temporaryPassword, loginUrl, isPromoter } = await req.json() as WelcomeEmailRequest;
     console.log(`Sending ${isPromoter ? 'promoter' : 'welcome'} email to ${email}`);
 
-    if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
-
-    const promoterContent = isPromoter ? `
-      <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
-        <h2 style="color: #2563eb;">🌟 You're now a SkyGuide Promoter!</h2>
-        <p>As a promoter, you'll have additional responsibilities and benefits:</p>
-        <ul>
-          <li>Early access to major feature releases</li>
-          <li>Direct communication channel with our development team</li>
-          <li>Opportunity to influence product direction</li>
-          <li>Special recognition in our community</li>
-        </ul>
-        <p>We'll be reaching out soon with more details about your enhanced role!</p>
-      </div>
-    ` : '';
-
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -54,34 +36,49 @@ const handler = async (req: Request): Promise<Response> => {
         from: isPromoter 
           ? "SkyGuide Promoter Program <promoters@skyguide.site>"
           : "SkyGuide Alpha Tester Program <alpha@skyguide.site>",
-        reply_to: isPromoter ? "promoters@skyguide.site" : "alpha@skyguide.site",
         to: [email],
-        subject: isPromoter ? "🌟 Welcome to the SkyGuide Promoter Program!" : "Welcome to the SkyGuide Alpha Testing Program!",
+        subject: isPromoter ? "Welcome to the SkyGuide Promoter Program!" : "Welcome to SkyGuide Alpha Testing!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1>Welcome to SkyGuide ${isPromoter ? 'Promoter' : 'Alpha'}, ${fullName}!</h1>
+            <div style="text-align: center; margin-bottom: 30px;">
+              <img src="https://skyguide.site/lovable-uploads/1dd682b4-7bc7-4b35-8220-f70f8ed54990.png" alt="SkyGuide Logo" style="width: 200px;">
+            </div>
             
-            <p>Thank you for joining our ${isPromoter ? 'promoter' : 'alpha testing'} program. Your participation will help shape the future of SkyGuide and ensure we're building the best possible tool for aviation professionals.</p>
+            <h1 style="color: #1a1f2c;">Welcome aboard, ${fullName}! 🎉</h1>
             
-            ${promoterContent}
-
-            <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
-              <h2 style="margin-top: 0;">Your Login Credentials</h2>
+            <p>We're thrilled to have you join the SkyGuide ${isPromoter ? 'promoter' : 'alpha testing'} program!</p>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #1a1f2c; margin-top: 0;">Your Login Credentials</h3>
               <p><strong>Email:</strong> ${email}</p>
               <p><strong>Temporary Password:</strong> ${temporaryPassword}</p>
               <p style="color: #dc2626;">Please change your password after your first login!</p>
-              <p><a href="${loginUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login to SkyGuide</a></p>
+              <p><a href="${loginUrl}" style="display: inline-block; padding: 12px 24px; background-color: #1a365d; color: #ffffff; text-decoration: none; border-radius: 4px;">Login to SkyGuide</a></p>
             </div>
 
-            <h2>What to Expect:</h2>
-            
-            <ul>
-              <li><strong>Weekly Feedback:</strong> Every week, you'll receive an email requesting your feedback about your experience with SkyGuide.</li>
-              <li><strong>Your Commitment:</strong> As an ${isPromoter ? 'promoter' : 'alpha tester'}, we ask that you respond to these weekly feedback requests to help us improve the platform.</li>
-              <li><strong>Early Access:</strong> You'll get first access to new features and updates before they're released to the general public.</li>
-            </ul>
-            
-            <p>Your first feedback request will arrive in about a week. Please take some time to explore the platform and note any thoughts or suggestions you have.</p>
+            ${isPromoter ? `
+              <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <h3 style="color: #1a365d; margin-top: 0;">Your Role as a Promoter</h3>
+                <ul style="color: #1a365d;">
+                  <li>Early access to major feature releases</li>
+                  <li>Direct communication with our development team</li>
+                  <li>Opportunity to influence product direction</li>
+                  <li>Special recognition in our community</li>
+                </ul>
+              </div>
+            ` : `
+              <div style="background-color: #f3f4f6; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <h3 style="color: #1a365d; margin-top: 0;">What to Expect</h3>
+                <ul style="color: #1a365d;">
+                  <li>Weekly feedback requests</li>
+                  <li>Early access to new features</li>
+                  <li>Direct impact on product development</li>
+                  <li>Regular updates on improvements</li>
+                </ul>
+              </div>
+            `}
+
+            <p style="margin-top: 25px;">Have questions? Need help getting started? Our support team is here to help!</p>
             
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
               <p>SkyGuide™ - Your Aviation Career Partner</p>
@@ -102,16 +99,18 @@ const handler = async (req: Request): Promise<Response> => {
     const data = await res.json();
     console.log("Welcome email sent successfully:", data);
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error in send-alpha-welcome function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("Error in welcome email function:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 };
 

@@ -78,11 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <div style="margin-top: 20px; font-size: 12px;">
                   <p>SkyGuide™ - Your Aviation Career Partner</p>
                   <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
-                  <p>
-                    <a href="mailto:support@skyguide.site" style="color: #666; text-decoration: underline;">
-                      Contact Support
-                    </a>
-                  </p>
+                  <p>Need help? <a href="mailto:support@skyguide.site" style="color: #666; text-decoration: underline;">Contact Support</a></p>
                 </div>
               </div>
             </body>
