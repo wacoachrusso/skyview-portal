@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Conversation } from "@/types/chat";
-import { MessageSquare } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DownloadDialog } from "./DownloadDialog";
 import { useDownloadChat } from "@/hooks/useDownloadChat";
 import { ConversationMetadata } from "./conversation/ConversationMetadata";
+import { ConversationIcon } from "./conversation/ConversationIcon";
+import { ConversationTitle } from "./conversation/ConversationTitle";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -33,7 +34,6 @@ export function ConversationItem({
   const { downloadChat, downloadInProgress } = useDownloadChat();
 
   const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-    // Prevent event bubbling
     e.stopPropagation();
     e.preventDefault();
     
@@ -89,21 +89,9 @@ export function ConversationItem({
               className="data-[state=checked]:bg-destructive data-[state=checked]:border-destructive"
             />
           )}
-          <div className={`p-2 rounded-lg ${
-            isSelected 
-              ? "bg-brand-gold/20" 
-              : "bg-white/5"
-          }`}>
-            <MessageSquare className={`h-4 w-4 ${
-              isSelected 
-                ? "text-brand-gold" 
-                : "text-gray-400"
-            }`} />
-          </div>
+          <ConversationIcon isSelected={isSelected} />
           <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-sm font-medium text-white truncate max-w-[180px]">
-              {conversation.title}
-            </span>
+            <ConversationTitle title={conversation.title} />
             <ConversationMetadata
               lastMessageAt={conversation.last_message_at}
               downloadedAt={conversation.downloaded_at}
