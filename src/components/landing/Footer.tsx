@@ -1,6 +1,6 @@
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
 
 export function Footer() {
   const scrollToTop = () => {
@@ -25,7 +25,7 @@ export function Footer() {
             <h3 className="font-bold mb-4 text-white">Company</h3>
             <ul className="space-y-2">
               <li><a href="/about" className="text-sm hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="text-sm hover:text-white transition-colors">Contact</a></li>
+              <li><a href="mailto:support@skyguide.site" className="text-sm hover:text-white transition-colors">Contact Support</a></li>
               <li><a href="/privacy-policy" className="text-sm hover:text-white transition-colors">Privacy Policy</a></li>
               <li><a href="/refunds" className="text-sm hover:text-white transition-colors">Refund Policy</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">Terms of Service</a></li>
@@ -36,7 +36,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li><a href="/help-center" className="text-sm hover:text-white transition-colors">Help Center</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">FAQs</a></li>
-              <li><a href="#" className="text-sm hover:text-white transition-colors">Contact Support</a></li>
+              <li><a href="mailto:support@skyguide.site" className="text-sm hover:text-white transition-colors">Contact Support</a></li>
             </ul>
           </div>
           <div>
@@ -53,6 +53,9 @@ export function Footer() {
               </a>
               <a href="#" className="hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram className="w-5 h-5" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="YouTube">
+                <Youtube className="w-5 h-5" />
               </a>
             </div>
           </div>
