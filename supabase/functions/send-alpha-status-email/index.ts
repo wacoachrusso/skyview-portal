@@ -10,7 +10,7 @@ const corsHeaders = {
 
 interface EmailRequest {
   email: string;
-  fullName: string;
+  fullName?: string;
   status: 'active' | 'inactive' | 'removed';
   isPromoterChange?: boolean;
   becamePromoter?: boolean;
@@ -126,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
             <head>
               <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
               <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-              <title>SkyGuide Status Update</title>
+              <title>SkyGuide ${isPromoterChange ? 'Promoter' : 'Alpha Tester'} Status Update</title>
             </head>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="text-align: center; margin-bottom: 30px;">
@@ -150,6 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <div style="margin-top: 20px; font-size: 12px;">
                   <p>SkyGuide™ - Your Aviation Career Partner</p>
                   <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+                  <p>Need help? <a href="mailto:support@skyguide.site" style="color: #666; text-decoration: underline;">Contact Support</a></p>
                 </div>
               </div>
             </body>
@@ -171,7 +172,7 @@ const handler = async (req: Request): Promise<Response> => {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error sending status change email:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,

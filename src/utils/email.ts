@@ -24,6 +24,7 @@ export const getEmailFooter = async (email: string, isPriorityEmail: boolean = f
     <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
       <p>SkyGuide™ - Your Aviation Career Partner</p>
       <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+      <p>Need help? <a href="mailto:support@skyguide.site" style="color: #666; text-decoration: underline;">Contact Support</a></p>
       ${!isPriorityEmail ? `
         <p style="margin-top: 20px;">
           <a href="${unsubscribeLink}" style="color: #666; text-decoration: underline;">
