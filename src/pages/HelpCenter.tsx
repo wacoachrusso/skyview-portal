@@ -50,7 +50,7 @@ export default function HelpCenter() {
             <AccordionItem value="item-5" className="bg-card rounded-lg border border-border/50">
               <AccordionTrigger className="px-4">What payment methods do you accept?</AccordionTrigger>
               <AccordionContent className="px-4 text-muted-foreground">
-                We accept all major credit cards including Visa, MasterCard, and American Express. All payments are processed securely through our payment provider.
+                We accept all major credit cards including Visa, MasterCard, and American Express, as well as digital payment methods like Google Pay and Amazon Pay. All payments are processed securely through our payment provider.
               </AccordionContent>
             </AccordionItem>
 
