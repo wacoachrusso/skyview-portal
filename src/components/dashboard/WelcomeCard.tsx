@@ -9,7 +9,7 @@ export const WelcomeCard = () => {
             Welcome to SkyGuide
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base max-w-2xl">
-            Your AI-powered assistant for understanding your union contract. Ask questions, get instant answers, and stay informed about your rights and benefits.
+            Your assistant for understanding your union contract. Ask questions, get instant answers, and stay informed about your rights and benefits.
           </p>
         </div>
       </CardContent>
