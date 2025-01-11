@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Handle all routes through index.html for SPA routing
         "^(?!/assets|/lovable-uploads).*": {
-          target: "/index.html",
+          target: "/",
           rewrite: () => "/index.html"
         }
       }
