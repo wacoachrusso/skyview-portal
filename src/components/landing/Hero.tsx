@@ -28,8 +28,8 @@ export function Hero() {
               Tailored for flight attendants and pilots across all airlines
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
-              End Contract Confusion— <br className="hidden md:block" />
-              Get Instant Answers Now
+              Navigate Your Contract <br className="hidden md:block" />
+              Confidently
             </h1>
             <p className="text-base md:text-lg text-gray-200 mb-12 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
               Get instant, accurate answers to your contract questions with SkyGuide. Our advanced system helps you navigate complex contract details, ensuring you understand your rights and make informed decisions with ease.
