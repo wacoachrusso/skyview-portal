@@ -30,6 +30,7 @@ export function ChatContent({
   const [hasInitializedChat, setHasInitializedChat] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [offlineError, setOfflineError] = useState<string | null>(null);
+  const [storedMessages, setStoredMessages] = useState<Message[]>([]);
 
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
@@ -41,15 +42,44 @@ export function ChatContent({
       console.log('App is online');
       setIsOffline(false);
       setOfflineError(null);
+      
+      // Try to sync stored messages when coming back online
+      const stored = localStorage.getItem('current-chat-messages');
+      if (stored) {
+        console.log('Found stored messages to sync');
+        try {
+          const parsedMessages = JSON.parse(stored);
+          setStoredMessages(parsedMessages);
+        } catch (error) {
+          console.error('Error parsing stored messages:', error);
+        }
+      }
     };
     
     const handleOffline = () => {
       console.log('App is offline');
       setIsOffline(true);
+      // Load stored messages when going offline
+      const stored = localStorage.getItem('current-chat-messages');
+      if (stored) {
+        try {
+          const parsedMessages = JSON.parse(stored);
+          setStoredMessages(parsedMessages);
+          console.log('Loaded stored messages for offline use:', parsedMessages.length);
+        } catch (error) {
+          console.error('Error loading stored messages:', error);
+          setOfflineError('Unable to load stored messages');
+        }
+      }
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    
+    // Initial offline check
+    if (!navigator.onLine) {
+      handleOffline();
+    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -68,16 +98,13 @@ export function ChatContent({
         console.error('Error storing messages in localStorage:', error);
         setOfflineError('Unable to store messages for offline access');
       }
-    } else {
-      localStorage.removeItem('current-chat-messages');
-      console.log('Cleared stored messages for new chat');
     }
   }, [messages]);
 
   // Check for free trial status after each message
   useEffect(() => {
     const checkFreeTrialStatus = async () => {
-      if (!currentUserId) return;
+      if (!currentUserId || isOffline) return;
 
       try {
         const { data: profile } = await supabase
@@ -108,32 +135,6 @@ export function ChatContent({
     }
   }, [messages, currentUserId, navigate, toast]);
 
-  // Load stored messages when component mounts
-  useEffect(() => {
-    const initializeChat = async () => {
-      if (hasInitializedChat || !currentUserId) return;
-
-      console.log('Initializing chat for user:', currentUserId);
-      try {
-        const storedMessages = localStorage.getItem('current-chat-messages');
-        if (storedMessages) {
-          const parsedMessages = JSON.parse(storedMessages);
-          console.log('Found stored messages:', parsedMessages.length);
-          if (messages.length === 0 && parsedMessages.length > 0) {
-            console.log('Loading stored conversation');
-            await onSendMessage(''); // This will trigger a reload of the conversation
-          }
-        }
-        setHasInitializedChat(true);
-      } catch (error) {
-        console.error('Error initializing chat:', error);
-        setOfflineError('Unable to load stored messages');
-      }
-    };
-
-    initializeChat();
-  }, [currentUserId, messages.length, onSendMessage, hasInitializedChat]);
-
   return (
     <div className="flex flex-col h-full">
       <ChatHeader onNewChat={onNewChat || (() => {})} />
@@ -141,17 +142,17 @@ export function ChatContent({
         <Alert variant="destructive" className="mb-4 mx-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            You are currently offline. Some features may be limited.
+            You are currently offline. You can view your previous conversations, but new messages cannot be sent.
             {offlineError && <div className="mt-2 text-sm">{offlineError}</div>}
           </AlertDescription>
         </Alert>
       )}
       <div className="flex-1 overflow-y-auto">
-        {messages.length === 0 ? (
+        {messages.length === 0 && storedMessages.length === 0 ? (
           <WelcomeMessage />
         ) : (
           <ChatList
-            messages={messages}
+            messages={isOffline ? storedMessages : messages}
             currentUserId={currentUserId || ''}
             isLoading={isLoading}
             onCopyMessage={handleCopyMessage}

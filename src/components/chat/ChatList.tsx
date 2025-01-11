@@ -7,10 +7,9 @@ interface ChatListProps {
   currentUserId: string;
   isLoading?: boolean;
   onCopyMessage: (content: string) => void;
-  conversationId?: string;
 }
 
-export function ChatList({ messages, currentUserId, isLoading, onCopyMessage, conversationId }: ChatListProps) {
+export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,18 +28,6 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage, co
       scrollToBottom();
     }
   }, [messages]);
-
-  useEffect(() => {
-    // Try to load offline messages if available
-    if (conversationId) {
-      const offlineData = localStorage.getItem(`offline-chat-${conversationId}`);
-      if (offlineData && messages.length === 0) {
-        console.log('Loading offline messages for conversation:', conversationId);
-        const { messages: offlineMessages } = JSON.parse(offlineData);
-        // You might want to add some visual indication that these are offline messages
-      }
-    }
-  }, [conversationId, messages.length]);
 
   return (
     <div className="flex flex-col h-full">
