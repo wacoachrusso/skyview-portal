@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { FlagFeedbackDialog } from "./FlagFeedbackDialog";
 
 interface ChatMessageProps {
   message: Message;
@@ -19,6 +20,7 @@ interface ChatMessageProps {
 export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps) {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [feedback, setFeedback] = useState<any>(null);
+  const [isFlagDialogOpen, setIsFlagDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
     fetchFeedback();
   }, [message.id, isCurrentUser]);
 
-  const handleFeedback = async (rating: number, isIncorrect: boolean = false) => {
+  const handleFeedback = async (rating: number, isIncorrect: boolean = false, feedbackText?: string) => {
     if (isCurrentUser) return; // Only allow feedback on AI messages
     
     setIsSubmittingFeedback(true);
@@ -50,18 +52,19 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
           message_id: message.id,
           user_id: (await supabase.auth.getUser()).data.user?.id,
           rating,
-          is_incorrect: isIncorrect
+          is_incorrect: isIncorrect,
+          feedback_text: feedbackText
         });
 
       if (error) throw error;
 
-      setFeedback({ rating, is_incorrect: isIncorrect });
+      setFeedback({ rating, is_incorrect: isIncorrect, feedback_text: feedbackText });
       
       // Show different toast messages based on the feedback type
       if (isIncorrect) {
         toast({
           title: "Message Flagged",
-          description: "Thank you for flagging this message. Our team will review it.",
+          description: "Thank you for your feedback. Our team will review this message.",
           variant: "destructive",
         });
       } else {
@@ -80,6 +83,14 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
     } finally {
       setIsSubmittingFeedback(false);
     }
+  };
+
+  const handleFlag = () => {
+    setIsFlagDialogOpen(true);
+  };
+
+  const handleFlagSubmit = (feedbackText: string) => {
+    handleFeedback(1, true, feedbackText);
   };
 
   const formatContent = (content: string) => {
@@ -118,91 +129,98 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
   };
 
   return (
-    <div
-      className={cn(
-        "flex w-full gap-2 p-1 sm:p-2 group",
-        isCurrentUser ? "justify-end" : "justify-start"
-      )}
-    >
+    <>
       <div
         className={cn(
-          "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2 relative",
-          isCurrentUser
-            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-            : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white shadow-md"
+          "flex w-full gap-2 p-1 sm:p-2 group",
+          isCurrentUser ? "justify-end" : "justify-start"
         )}
       >
-        {isCurrentUser ? (
-          <p className="text-sm sm:text-base">{message.content}</p>
-        ) : (
-          <div className="text-sm sm:text-base min-h-[20px]">
-            <TypeAnimation
-              sequence={[message.content]}
-              wrapper="div"
-              cursor={false}
-              repeat={0}
-              speed={90}
-              className="whitespace-pre-wrap"
-            />
-          </div>
-        )}
-        <div className="flex items-center justify-between gap-2 mt-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] sm:text-xs opacity-50">
-              {format(new Date(message.created_at), "h:mm a")}
-            </span>
-            {feedback && (
-              <Badge 
-                variant={feedback.rating === 5 ? "success" : feedback.is_incorrect ? "destructive" : "secondary"}
-                className="text-[10px]"
+        <div
+          className={cn(
+            "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2 relative",
+            isCurrentUser
+              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+              : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white shadow-md"
+          )}
+        >
+          {isCurrentUser ? (
+            <p className="text-sm sm:text-base">{message.content}</p>
+          ) : (
+            <div className="text-sm sm:text-base min-h-[20px]">
+              <TypeAnimation
+                sequence={[message.content]}
+                wrapper="div"
+                cursor={false}
+                repeat={0}
+                speed={90}
+                className="whitespace-pre-wrap"
+              />
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-2 mt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] sm:text-xs opacity-50">
+                {format(new Date(message.created_at), "h:mm a")}
+              </span>
+              {feedback && (
+                <Badge 
+                  variant={feedback.rating === 5 ? "success" : feedback.is_incorrect ? "destructive" : "secondary"}
+                  className="text-[10px]"
+                >
+                  {feedback.is_incorrect ? "Flagged" : feedback.rating === 5 ? "Helpful" : "Not Helpful"}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {!isCurrentUser && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+                    onClick={() => handleFeedback(5)}
+                    disabled={isSubmittingFeedback}
+                  >
+                    <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+                    onClick={() => handleFeedback(1)}
+                    disabled={isSubmittingFeedback}
+                  >
+                    <ThumbsDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+                    onClick={handleFlag}
+                    disabled={isSubmittingFeedback}
+                  >
+                    <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+                onClick={onCopy}
               >
-                {feedback.is_incorrect ? "Flagged" : feedback.rating === 5 ? "Helpful" : "Not Helpful"}
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            {!isCurrentUser && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-                  onClick={() => handleFeedback(5)}
-                  disabled={isSubmittingFeedback}
-                >
-                  <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-                  onClick={() => handleFeedback(1)}
-                  disabled={isSubmittingFeedback}
-                >
-                  <ThumbsDown className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-                  onClick={() => handleFeedback(1, true)}
-                  disabled={isSubmittingFeedback}
-                >
-                  <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-              </>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
-              onClick={onCopy}
-            >
-              <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+                <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <FlagFeedbackDialog
+        isOpen={isFlagDialogOpen}
+        onClose={() => setIsFlagDialogOpen(false)}
+        onSubmit={handleFlagSubmit}
+      />
+    </>
   );
 }
