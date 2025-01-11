@@ -57,10 +57,19 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
 
       setFeedback({ rating, is_incorrect: isIncorrect });
       
-      toast({
-        title: "Feedback submitted",
-        description: "Thank you for your feedback!",
-      });
+      // Show different toast messages based on the feedback type
+      if (isIncorrect) {
+        toast({
+          title: "Message Flagged",
+          description: "Thank you for flagging this message. Our team will review it.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Feedback submitted",
+          description: "Thank you for your feedback!",
+        });
+      }
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({
