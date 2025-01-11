@@ -15,12 +15,22 @@ export const useLoginFormState = () => {
     rememberMe: false
   });
 
+  const resetForm = () => {
+    setFormData({
+      email: "",
+      password: "",
+      rememberMe: false
+    });
+    setLoading(false);
+  };
+
   return {
     loading,
     setLoading,
     showPassword,
     setShowPassword,
     formData,
-    setFormData
+    setFormData,
+    resetForm
   };
 };

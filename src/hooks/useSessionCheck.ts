@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 export const useSessionCheck = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -20,12 +17,7 @@ export const useSessionCheck = () => {
           console.error("Session error:", sessionError);
           if (mounted) {
             setIsLoading(false);
-            toast({
-              variant: "destructive",
-              title: "Session Error",
-              description: "There was a problem with your session. Please log in again."
-            });
-            navigate('/login');
+            setIsAuthenticated(false);
           }
           return;
         }
@@ -34,60 +26,41 @@ export const useSessionCheck = () => {
           console.log("No active session found");
           if (mounted) {
             setIsLoading(false);
-            toast({
-              variant: "destructive",
-              title: "Session Required",
-              description: "Please log in to access this page."
-            });
-            navigate('/login');
+            setIsAuthenticated(false);
           }
           return;
         }
 
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          console.error("Error getting user or no user found:", userError);
-          if (mounted) {
-            await supabase.auth.signOut();
-            localStorage.clear();
-            setIsLoading(false);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: "Could not verify your identity. Please log in again."
-            });
-            navigate('/login');
-          }
-          return;
-        }
-
-        console.log("Valid session found for user:", user.email);
+        console.log("Valid session found for user:", session.user.email);
         if (mounted) {
+          setIsAuthenticated(true);
           setIsLoading(false);
         }
       } catch (error) {
         console.error("Unexpected error in checkSession:", error);
         if (mounted) {
-          localStorage.clear();
           setIsLoading(false);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "An unexpected error occurred. Please try again."
-          });
-          navigate('/login');
+          setIsAuthenticated(false);
         }
       }
     };
 
     checkSession();
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
+      if (mounted) {
+        setIsAuthenticated(!!session);
+        setIsLoading(false);
+      }
+    });
+
     return () => {
       console.log("Session check cleanup");
       mounted = false;
+      subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, []);
 
-  return { isLoading };
+  return { isLoading, isAuthenticated };
 };

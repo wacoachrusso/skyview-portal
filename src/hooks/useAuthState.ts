@@ -4,71 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export const useAuthState = () => {
+  console.log("Initializing useAuthState hook");
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-
-  const checkDisclaimerConsent = async (userId: string) => {
-    console.log("Checking disclaimer consent for user:", userId);
-    const { data: consent, error } = await supabase
-      .from('disclaimer_consents')
-      .select('status')
-      .eq('user_id', userId)
-      .single();
-
-    if (error) {
-      console.error("Error checking disclaimer consent:", error);
-      return false;
-    }
-
-    return consent?.status === 'accepted';
-  };
-
-  const handleDisclaimerAccept = async () => {
-    console.log("Handling disclaimer acceptance");
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user?.id) {
-      console.error("No user session found");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('disclaimer_consents')
-      .insert([
-        { user_id: session.user.id, status: 'accepted' }
-      ]);
-
-    if (error) {
-      console.error("Error saving disclaimer consent:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save your consent. Please try again."
-      });
-      return;
-    }
-
-    setShowDisclaimer(false);
-    toast({
-      title: "Welcome to SkyGuide",
-      description: "Thank you for accepting the disclaimer."
-    });
-  };
-
-  const handleDisclaimerReject = async () => {
-    console.log("User rejected disclaimer");
-    await supabase.auth.signOut();
-    toast({
-      variant: "destructive",
-      title: "Disclaimer Required",
-      description: "You must accept the disclaimer to use SkyGuide."
-    });
-    navigate('/login');
-  };
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -82,30 +24,28 @@ export const useAuthState = () => {
         console.log("Valid session detected");
         setUserEmail(session.user.email);
         
-        // Check disclaimer consent
-        const hasAccepted = await checkDisclaimerConsent(session.user.id);
-        if (!hasAccepted) {
-          setShowDisclaimer(true);
-        }
-        
         // Sign out other sessions when a new sign in occurs
         if (event === 'SIGNED_IN') {
           console.log('New sign-in detected, invalidating other sessions...');
           const currentToken = localStorage.getItem('session_token');
           
-          const { error: signOutError } = await supabase
-            .rpc('invalidate_other_sessions', {
-              p_user_id: session.user.id,
-              p_current_session_token: currentToken || ''
-            });
-          
-          if (signOutError) {
-            console.error("Error signing out other sessions:", signOutError);
-            toast({
-              variant: "destructive",
-              title: "Session Warning",
-              description: "Unable to sign out other sessions. You may be signed in on other devices."
-            });
+          try {
+            const { error: signOutError } = await supabase
+              .rpc('invalidate_other_sessions', {
+                p_user_id: session.user.id,
+                p_current_session_token: currentToken || ''
+              });
+            
+            if (signOutError) {
+              console.error("Error signing out other sessions:", signOutError);
+              toast({
+                variant: "destructive",
+                title: "Session Warning",
+                description: "Unable to sign out other sessions. You may be signed in on other devices."
+              });
+            }
+          } catch (error) {
+            console.error("Unexpected error during session invalidation:", error);
           }
         }
       }
@@ -117,10 +57,5 @@ export const useAuthState = () => {
     };
   }, [navigate, toast]);
 
-  return { 
-    userEmail,
-    showDisclaimer,
-    handleDisclaimerAccept,
-    handleDisclaimerReject 
-  };
+  return { userEmail };
 };
