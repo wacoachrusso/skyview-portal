@@ -2,9 +2,12 @@ import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
 import { format } from "date-fns";
 import { TypeAnimation } from 'react-type-animation';
-import { Copy } from "lucide-react";
+import { Copy, ThumbsUp, ThumbsDown, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from 'react-markdown';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessageProps {
   message: Message;
@@ -13,6 +16,41 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps) {
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const { toast } = useToast();
+
+  const handleFeedback = async (rating: number, isIncorrect: boolean = false) => {
+    if (isCurrentUser) return; // Only allow feedback on AI messages
+    
+    setIsSubmittingFeedback(true);
+    try {
+      const { error } = await supabase
+        .from('message_feedback')
+        .upsert({
+          message_id: message.id,
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          rating,
+          is_incorrect: isIncorrect
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Feedback submitted",
+        description: "Thank you for your feedback!",
+      });
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
   const formatContent = (content: string) => {
     // Extract reference if it exists (text between [REF] tags)
     const referenceMatch = content.match(/\[REF\](.*?)\[\/REF\]/s);
@@ -77,18 +115,51 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
             />
           </div>
         )}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 mt-2">
           <span className="text-[10px] sm:text-xs opacity-50">
             {format(new Date(message.created_at), "h:mm a")}
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="opacity-0 group-hover:opacity-100 transition-opacity -mr-2 text-white/70 hover:text-white hover:bg-white/10"
-            onClick={onCopy}
-          >
-            <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {!isCurrentUser && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={() => handleFeedback(5)}
+                  disabled={isSubmittingFeedback}
+                >
+                  <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={() => handleFeedback(1)}
+                  disabled={isSubmittingFeedback}
+                >
+                  <ThumbsDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={() => handleFeedback(1, true)}
+                  disabled={isSubmittingFeedback}
+                >
+                  <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+              </>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-white/70 hover:text-white hover:bg-white/10"
+              onClick={onCopy}
+            >
+              <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

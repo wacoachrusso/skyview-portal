@@ -194,6 +194,44 @@ export type Database = {
         }
         Relationships: []
       }
+      message_feedback: {
+        Row: {
+          created_at: string
+          feedback_text: string | null
+          id: string
+          is_incorrect: boolean | null
+          message_id: string
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          is_incorrect?: boolean | null
+          message_id: string
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          is_incorrect?: boolean | null
+          message_id?: string
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_feedback_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
