@@ -54,23 +54,21 @@ export function useDownloadChat() {
 
       if (updateError) {
         console.error('Error updating downloaded_at:', updateError);
+        // Don't throw here, as the download itself was successful
       }
       
-      // Use setTimeout to ensure the download starts before cleanup
+      // Clean up
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         setDownloadInProgress(false);
-      }, 100);
+      }, 1000); // Increased timeout to ensure download starts
 
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isAndroid = /Android/.test(navigator.userAgent);
       
       let toastMessage = "Chat saved for offline access";
       if (isIOS) {
-        toastMessage = "Chat downloaded. Open in Notes app to save it for offline access.";
-      } else if (isAndroid) {
-        toastMessage = "Chat downloaded to Downloads folder. Access it through your device's Files app.";
+        toastMessage = "Chat downloaded. Find it in Files app under Downloads or Documents.";
       }
       
       toast({
@@ -89,7 +87,7 @@ export function useDownloadChat() {
         title: "Download failed",
         description: "There was an error downloading the chat. Please try again.",
         variant: "destructive",
-        duration: 2000
+        duration: 3000
       });
       return false;
     }

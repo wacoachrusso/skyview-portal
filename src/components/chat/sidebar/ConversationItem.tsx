@@ -33,11 +33,17 @@ export function ConversationItem({
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const { downloadChat, downloadInProgress } = useDownloadChat();
 
-  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
+  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
-    console.log('Conversation clicked/touched:', conversation.id);
+    // If checkbox is shown, handle selection differently
+    if (showCheckbox) {
+      onCheckChange?.(!isChecked);
+      return;
+    }
+
+    console.log('Conversation interaction:', conversation.id);
     onSelect(conversation.id);
   };
 
@@ -70,8 +76,8 @@ export function ConversationItem({
       <div
         role="button"
         tabIndex={0}
-        onClick={handleClick}
-        onTouchStart={handleClick}
+        onClick={handleInteraction}
+        onTouchEnd={handleInteraction}
         className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 touch-manipulation ${
           isSelected 
             ? "bg-white/10 border-l-brand-gold" 
@@ -97,7 +103,7 @@ export function ConversationItem({
               downloadedAt={conversation.downloaded_at}
               isOffline={isOffline}
               downloadInProgress={downloadInProgress}
-              onDelete={(e) => onDelete(e, conversation.id)}
+              onDelete={onDelete}
               onToggleOffline={handleToggleOffline}
             />
           </div>
