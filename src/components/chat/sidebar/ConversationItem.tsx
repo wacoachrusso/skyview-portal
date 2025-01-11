@@ -51,7 +51,7 @@ export function ConversationItem({
 
       messages?.forEach((message) => {
         const timestamp = format(new Date(message.created_at), 'h:mm a');
-        const role = message.role === 'assistant' ? 'AI' : 'You';
+        const role = message.role === 'assistant' ? 'SkyGuide' : 'You';
         textContent += `[${timestamp}] ${role}:\n${message.content}\n\n`;
       });
       
