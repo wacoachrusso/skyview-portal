@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 
 export const useAuthState = () => {
   const navigate = useNavigate();
@@ -26,12 +25,19 @@ export const useAuthState = () => {
     return consent?.status === 'accepted';
   };
 
-  const handleDisclaimerAccept = async (userId: string) => {
-    console.log("Handling disclaimer acceptance for user:", userId);
+  const handleDisclaimerAccept = async () => {
+    console.log("Handling disclaimer acceptance");
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user?.id) {
+      console.error("No user session found");
+      return;
+    }
+
     const { error } = await supabase
       .from('disclaimer_consents')
       .insert([
-        { user_id: userId, status: 'accepted' }
+        { user_id: session.user.id, status: 'accepted' }
       ]);
 
     if (error) {
@@ -114,7 +120,7 @@ export const useAuthState = () => {
   return { 
     userEmail,
     showDisclaimer,
-    handleDisclaimerAccept: () => session?.user && handleDisclaimerAccept(session.user.id),
+    handleDisclaimerAccept,
     handleDisclaimerReject 
   };
 };
