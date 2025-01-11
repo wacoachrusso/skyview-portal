@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useConsents } from "@/hooks/useConsents";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
+import { SessionCheck } from "@/components/chat/settings/SessionCheck";
 
 function App() {
   return (
@@ -14,7 +15,6 @@ function App() {
   );
 }
 
-// Separate component to use hooks inside Router context
 function AppContent() {
   const { 
     showCookieConsent, 
@@ -23,11 +23,11 @@ function AppContent() {
     handleDisclaimerConsent 
   } = useConsents();
 
-  // Show disclaimer first, then cookie consent
   const showConsentBanner = showCookieConsent && !showDisclaimer;
 
   return (
     <ThemeProvider>
+      <SessionCheck />
       <AppRoutes />
       <Toaster />
       
