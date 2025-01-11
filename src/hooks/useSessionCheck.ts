@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 export const useSessionCheck = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -35,20 +31,7 @@ export const useSessionCheck = () => {
           return;
         }
 
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          console.error("Error getting user or no user found:", userError);
-          if (mounted) {
-            await supabase.auth.signOut();
-            localStorage.clear();
-            setIsLoading(false);
-            setIsAuthenticated(false);
-          }
-          return;
-        }
-
-        console.log("Valid session found for user:", user.email);
+        console.log("Valid session found for user:", session.user.email);
         if (mounted) {
           setIsAuthenticated(true);
           setIsLoading(false);
@@ -56,7 +39,6 @@ export const useSessionCheck = () => {
       } catch (error) {
         console.error("Unexpected error in checkSession:", error);
         if (mounted) {
-          localStorage.clear();
           setIsLoading(false);
           setIsAuthenticated(false);
         }
@@ -65,9 +47,18 @@ export const useSessionCheck = () => {
 
     checkSession();
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
+      if (mounted) {
+        setIsAuthenticated(!!session);
+        setIsLoading(false);
+      }
+    });
+
     return () => {
       console.log("Session check cleanup");
       mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 

@@ -7,14 +7,16 @@ export function ProtectedRoute() {
   
   console.log('ProtectedRoute - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
 
+  // Show nothing while checking authentication
   if (isLoading) {
-    return null; // or a loading spinner
+    return null;
   }
 
+  // Redirect to login if not authenticated, but only for protected routes
   if (!isAuthenticated) {
-    // Redirect to login while saving the attempted location
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Allow access to protected routes if authenticated
   return <Outlet />;
 }
