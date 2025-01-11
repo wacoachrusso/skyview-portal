@@ -16,6 +16,7 @@ interface MicButtonProps {
 export function MicButton({ onRecognized, disabled }: MicButtonProps) {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [currentTranscript, setCurrentTranscript] = useState("");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -31,7 +32,12 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
             .map(result => result[0])
             .map(result => result.transcript)
             .join('');
-          onRecognized(transcript);
+          
+          // Only update if the transcript has changed
+          if (transcript !== currentTranscript) {
+            setCurrentTranscript(transcript);
+            onRecognized(transcript);
+          }
         };
 
         recognition.onerror = (event) => {
@@ -41,18 +47,20 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
 
         recognition.onend = () => {
           setIsListening(false);
+          setCurrentTranscript(""); // Reset transcript when recognition ends
         };
 
         setRecognition(recognition);
       }
     }
-  }, [onRecognized]);
+  }, [onRecognized, currentTranscript]);
 
   const toggleListening = () => {
     if (!recognition) return;
 
     if (isListening) {
       recognition.stop();
+      setCurrentTranscript(""); // Reset transcript when stopping
     } else {
       recognition.start();
       setIsListening(true);
