@@ -35,7 +35,10 @@ export const useNotificationActions = () => {
         return false;
       }
 
+      // Invalidate both admin and user notification queries
       await queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      
       return true;
     } catch (error) {
       console.error("Error deleting notification:", error);
@@ -113,6 +116,10 @@ export const useNotificationActions = () => {
           throw insertError;
         }
 
+        // Play notification sound
+        const audio = new Audio('/notification-sound.mp3');
+        await audio.play();
+
         for (const profile of usersToNotify) {
           if (profile.push_subscription) {
             try {
@@ -129,6 +136,7 @@ export const useNotificationActions = () => {
                   },
                   renotify: true,
                   requireInteraction: true,
+                  sound: '/notification-sound.mp3'
                 }
               );
             } catch (error) {
@@ -138,6 +146,7 @@ export const useNotificationActions = () => {
         }
 
         await queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+        await queryClient.invalidateQueries({ queryKey: ["notifications"] });
         return true;
       }
 

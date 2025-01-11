@@ -10,6 +10,7 @@ self.addEventListener('push', function(event) {
       icon: data.icon || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       badge: data.badge || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       vibrate: [200, 100, 200],
+      sound: '/notification-sound.mp3',
       data: {
         ...data.data,
         url: data.url || '/release-notes',
