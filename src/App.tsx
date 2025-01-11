@@ -12,7 +12,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes (previously cacheTime)
+      gcTime: 1000 * 60 * 30, // 30 minutes
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
@@ -24,6 +24,7 @@ function App() {
   useEffect(() => {
     console.log('App component mounted');
     console.log('Current route:', window.location.pathname);
+    console.log('Environment:', import.meta.env.MODE);
     
     return () => {
       console.log('App component unmounted');

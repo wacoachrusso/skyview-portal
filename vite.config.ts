@@ -22,13 +22,6 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       headers: {
         'Access-Control-Allow-Origin': '*',
-      },
-      proxy: {
-        // Handle all routes through index.html for SPA routing
-        "^(?!/assets|/lovable-uploads).*": {
-          target: "/",
-          rewrite: () => "/index.html"
-        }
       }
     },
     preview: {
@@ -38,18 +31,15 @@ export default defineConfig(({ mode }) => {
         'Access-Control-Allow-Origin': '*',
       }
     },
-    // Add better error handling and logging
     build: {
       sourcemap: true,
       rollupOptions: {
         onwarn(warning, warn) {
-          // Log build warnings
           console.warn('Build warning:', warning);
           warn(warning);
         },
       },
     },
-    // Add better error logging for development
     logLevel: 'info',
   };
 });
