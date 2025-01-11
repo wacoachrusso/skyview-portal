@@ -1,85 +1,31 @@
-import { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationDialog } from "./notifications/NotificationDialog";
 import { NotificationItem } from "./notifications/NotificationItem";
-import { supabase } from "@/integrations/supabase/client";
+import { NotificationBellButton } from "./notifications/NotificationBellButton";
+import { useNotificationState } from "@/hooks/notifications/useNotificationState";
 
 export const NotificationBell = () => {
-  const [open, setOpen] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState<any>(null);
-  const { notifications, deleteNotification, refetchNotifications } = useNotifications();
-  const unreadCount = notifications?.filter((n) => !n.is_read).length || 0;
-
-  useEffect(() => {
-    if (open && notifications?.length > 0) {
-      markNotificationsAsRead();
-    }
-  }, [open, notifications]);
-
-  const markNotificationsAsRead = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      console.log("Marking notifications as read");
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-
-      if (error) {
-        console.error("Error marking notifications as read:", error);
-        throw error;
-      }
-
-      await refetchNotifications();
-    } catch (error) {
-      console.error("Error marking notifications as read:", error);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    console.log("Deleting notification:", id);
-    try {
-      await deleteNotification(id);
-      setSelectedNotification(null);
-      await refetchNotifications();
-    } catch (error) {
-      console.error("Error deleting notification:", error);
-    }
-  };
-
-  const handleNotificationClick = (notification: any) => {
-    console.log("Opening notification details:", notification);
-    setSelectedNotification(notification);
-    setOpen(false);
-  };
+  const {
+    open,
+    setOpen,
+    selectedNotification,
+    setSelectedNotification,
+    notifications,
+    unreadCount,
+    handleDelete,
+    handleNotificationClick,
+  } = useNotificationState();
 
   return (
     <>
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative">
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-2 -right-2 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
-              >
-                {unreadCount}
-              </Badge>
-            )}
-          </Button>
+          <NotificationBellButton unreadCount={unreadCount} />
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
