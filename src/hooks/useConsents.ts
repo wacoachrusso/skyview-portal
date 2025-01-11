@@ -11,6 +11,8 @@ export const useConsents = () => {
 
   useEffect(() => {
     const checkConsents = async () => {
+      console.log("Checking consents for user:", userEmail);
+      
       if (!userEmail) {
         // For non-authenticated users, check localStorage
         const hasAcceptedCookies = localStorage.getItem("cookie-consent");
@@ -50,6 +52,8 @@ export const useConsents = () => {
   }, [userEmail]);
 
   const handleCookieConsent = async (preferences: "essential" | "analytics" | "marketing" | "all" | "none") => {
+    console.log("Handling cookie consent:", preferences);
+    
     if (userEmail) {
       const { data: user } = await supabase
         .from("profiles")
@@ -76,6 +80,8 @@ export const useConsents = () => {
   };
 
   const handleDisclaimerConsent = async (accepted: boolean) => {
+    console.log("Handling disclaimer consent:", accepted);
+    
     if (userEmail) {
       const { data: user } = await supabase
         .from("profiles")

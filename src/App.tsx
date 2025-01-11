@@ -19,8 +19,8 @@ function App() {
   const showConsentBanner = showCookieConsent && !showDisclaimer;
 
   return (
-    <BrowserRouter>
-      <ThemeProvider>
+    <ThemeProvider>
+      <BrowserRouter>
         <AppRoutes />
         <Toaster />
         
@@ -33,8 +33,8 @@ function App() {
           onAccept={() => handleDisclaimerConsent(true)}
           onReject={() => handleDisclaimerConsent(false)}
         />
-      </ThemeProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

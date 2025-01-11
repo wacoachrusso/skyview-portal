@@ -9,6 +9,7 @@ export const useAuthState = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
