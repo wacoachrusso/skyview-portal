@@ -97,7 +97,7 @@ export const getDialogContent = (details: StatsDetails | undefined, selectedMetr
       title: "Message Feedback",
       data: details.messageFeedback?.map((feedback) => ({
         label: feedback.messages?.content?.substring(0, 100) + "..." || "Message Content",
-        info: `From: ${feedback.profiles?.full_name || "Anonymous"}`,
+        info: `From: ${feedback.user?.full_name || "Anonymous"}`,
         date: format(new Date(feedback.created_at), "MMM d, yyyy"),
         rating: feedback.rating,
         isIncorrect: feedback.is_incorrect,

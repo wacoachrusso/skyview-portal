@@ -86,7 +86,7 @@ export const useAdminStats = () => {
           .select(`
             *,
             messages (content),
-            profiles (full_name, email)
+            user:profiles!message_feedback_profile_id_fkey (full_name, email)
           `, { count: 'exact' })
           .order('created_at', { ascending: false })
       ]);
