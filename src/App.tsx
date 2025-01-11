@@ -46,6 +46,7 @@ const PrivacyPolicy = lazy(() => retryLoadComponent(() => import("@/pages/Privac
 const Refunds = lazy(() => retryLoadComponent(() => import("@/pages/Refunds")));
 const ForgotPassword = lazy(() => retryLoadComponent(() => import("@/pages/ForgotPassword")));
 const ResetPassword = lazy(() => retryLoadComponent(() => import("@/pages/ResetPassword")));
+const HelpCenter = lazy(() => retryLoadComponent(() => import("@/pages/HelpCenter")));
 
 // Create a client with optimized options
 const queryClient = new QueryClient({
@@ -68,7 +69,8 @@ const publicRoutes = [
   "/privacy-policy",
   "/about",
   "/forgot-password",
-  "/reset-password"
+  "/reset-password",
+  "/help-center"
 ];
 
 function App() {
@@ -103,6 +105,7 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/help-center" element={<HelpCenter />} />
                 
                 {/* Protected routes */}
                 <Route path="/chat" element={<Chat />} />

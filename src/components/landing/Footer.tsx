@@ -34,7 +34,7 @@ export function Footer() {
           <div>
             <h3 className="font-bold mb-4 text-white">Support</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm hover:text-white transition-colors">Help Center</a></li>
+              <li><a href="/help-center" className="text-sm hover:text-white transition-colors">Help Center</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">FAQs</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">Contact Support</a></li>
             </ul>
