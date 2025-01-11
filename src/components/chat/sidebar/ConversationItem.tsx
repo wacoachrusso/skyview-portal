@@ -1,11 +1,10 @@
 import { Conversation } from "@/types/chat";
-import { format } from "date-fns";
-import { MessageSquare, Trash2, ArrowDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MessageSquare } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { DownloadDialog } from "./DownloadDialog";
 import { useDownloadChat } from "@/hooks/useDownloadChat";
+import { ConversationMetadata } from "./conversation/ConversationMetadata";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -93,32 +92,13 @@ export function ConversationItem({
             <span className="text-sm font-medium text-white truncate max-w-[180px]">
               {conversation.title}
             </span>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <span>{format(new Date(conversation.last_message_at), "MMM d, h:mm a")}</span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 p-0.5"
-                  onClick={(e) => onDelete(e, conversation.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 p-0.5"
-                  onClick={handleToggleOffline}
-                  disabled={downloadInProgress}
-                >
-                  <ArrowDown className={`h-4 w-4 ${
-                    isOffline 
-                      ? "text-brand-gold" 
-                      : "text-gray-400 hover:text-white"
-                  }`} />
-                </Button>
-              </div>
-            </div>
+            <ConversationMetadata
+              lastMessageAt={conversation.last_message_at}
+              isOffline={isOffline}
+              downloadInProgress={downloadInProgress}
+              onDelete={(e) => onDelete(e, conversation.id)}
+              onToggleOffline={handleToggleOffline}
+            />
           </div>
         </div>
       </div>
