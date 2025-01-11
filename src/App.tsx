@@ -15,7 +15,9 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 30, // 30 minutes
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true, // Changed to true to keep data fresh
+      refetchOnMount: true, // Added to ensure data loads on component mount
+      refetchOnReconnect: true, // Added to refetch when reconnecting
     },
   },
 });
@@ -26,8 +28,24 @@ function App() {
     console.log('Current route:', window.location.pathname);
     console.log('Environment:', import.meta.env.MODE);
     
+    // Add listener for online/offline status
+    const handleOnline = () => {
+      console.log('Application is online');
+      queryClient.invalidateQueries(); // Refetch all queries when coming back online
+    };
+
+    const handleOffline = () => {
+      console.log('Application is offline');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Clean up event listeners
     return () => {
       console.log('App component unmounted');
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
