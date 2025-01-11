@@ -26,11 +26,13 @@ export const useUserManagement = () => {
         throw error;
       }
 
-      // Transform the data to ensure it matches ProfilesRow type
-      const transformedData: ProfilesRow[] = data.map(user => ({
-        ...user,
-        assistant_id: user.assistant_id || null,
-      }));
+      // Filter out any null entries and ensure all required fields are present
+      const transformedData: ProfilesRow[] = (data || [])
+        .filter(user => user && user.id)
+        .map(user => ({
+          ...user,
+          assistant_id: user.assistant_id || null,
+        }));
 
       console.log("Users data fetched:", transformedData);
       return transformedData;
@@ -38,6 +40,11 @@ export const useUserManagement = () => {
   });
 
   const toggleAdminStatus = async (userId: string, currentStatus: boolean) => {
+    if (!userId) {
+      console.error("Invalid user ID provided to toggleAdminStatus");
+      return;
+    }
+
     try {
       console.log("Toggling admin status for user:", userId);
       setUpdatingUser(userId);

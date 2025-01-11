@@ -18,8 +18,12 @@ export const UserManagement = () => {
     isLoading,
   } = useUserManagement();
 
-  // Filter out deleted users completely and ensure we're working with the latest data
-  const activeUsers = users?.filter(user => user.account_status !== 'deleted') || [];
+  // Filter out deleted users and null values completely
+  const activeUsers = users?.filter(user => 
+    user && 
+    user.id && 
+    user.account_status !== 'deleted'
+  ) || [];
 
   console.log('Current users with statuses:', activeUsers.map(u => ({
     email: u.email,
@@ -45,7 +49,7 @@ export const UserManagement = () => {
         setUserToDelete={setUserToDelete}
       />
 
-      {selectedUser && (
+      {selectedUser && selectedUser.id && (
         <UserDetailsDialog
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
