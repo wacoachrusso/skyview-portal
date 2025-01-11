@@ -1,10 +1,28 @@
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export function Footer() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFaqClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      // If we're on the homepage, just scroll to FAQ
+      const faqSection = document.getElementById('faq');
+      if (faqSection) {
+        faqSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // If we're on another page, navigate to homepage and then scroll to FAQ
+      navigate('/?scrollTo=faq');
+    }
   };
 
   return (
@@ -34,7 +52,7 @@ export function Footer() {
           <div>
             <h3 className="font-bold mb-4 text-white">Support</h3>
             <ul className="space-y-2">
-              <li><a href="/#faq" className="text-sm hover:text-white transition-colors">FAQs</a></li>
+              <li><a href="#" onClick={handleFaqClick} className="text-sm hover:text-white transition-colors">FAQs</a></li>
               <li><a href="/help-center" className="text-sm hover:text-white transition-colors">Help Center</a></li>
               <li><a href="mailto:support@skyguide.site" className="text-sm hover:text-white transition-colors">Contact Support</a></li>
             </ul>
