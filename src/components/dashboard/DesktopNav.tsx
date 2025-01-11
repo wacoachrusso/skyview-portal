@@ -9,8 +9,13 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-export const DesktopNav = () => {
-  const { profile } = useUserProfile();
+interface DesktopNavProps {
+  isAccountPage: boolean;
+  onSignOut: () => Promise<void>;
+}
+
+export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
+  const { userProfile } = useUserProfile();
 
   return (
     <nav className="hidden md:flex flex-col gap-2">
@@ -49,7 +54,7 @@ export const DesktopNav = () => {
         <Bell className="h-5 w-5" />
         <span>Release Notes</span>
       </Link>
-      {profile?.is_admin && (
+      {userProfile?.is_admin && (
         <Link
           to="/admin"
           className="flex items-center gap-2 p-2 hover:bg-accent rounded-lg text-blue-600 dark:text-blue-400"
