@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, startTransition, useState, useTransition } from "react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PolicyHeader } from "@/components/privacy-policy/PolicyHeader";
@@ -12,31 +12,39 @@ import { ContactSection } from "@/components/privacy-policy/ContactSection";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const PrivacyPolicyContent = () => {
+  const [isPending, startContentTransition] = useTransition();
+
   return (
     <div className="bg-card rounded-lg shadow-lg p-8 mb-8">
       <PolicyHeader />
       
       <ScrollArea className="h-[calc(100vh-300px)] pr-4">
         <div className="space-y-8">
-          <CommitmentSection />
-          
-          <Separator />
-          <InformationSection />
-          
-          <Separator />
-          <DataProtectionSection />
-          
-          <Separator />
-          <DataUsageSection />
-          
-          <Separator />
-          <PrivacyRightsSection />
-          
-          <Separator />
-          <InternationalTransfersSection />
-          
-          <Separator />
-          <ContactSection />
+          {isPending ? (
+            <LoadingSpinner size="lg" />
+          ) : (
+            <>
+              <CommitmentSection />
+              
+              <Separator />
+              <InformationSection />
+              
+              <Separator />
+              <DataProtectionSection />
+              
+              <Separator />
+              <DataUsageSection />
+              
+              <Separator />
+              <PrivacyRightsSection />
+              
+              <Separator />
+              <InternationalTransfersSection />
+              
+              <Separator />
+              <ContactSection />
+            </>
+          )}
         </div>
       </ScrollArea>
     </div>
