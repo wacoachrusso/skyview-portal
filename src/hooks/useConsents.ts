@@ -11,7 +11,11 @@ export const useConsents = () => {
 
   useEffect(() => {
     const checkExistingConsents = async () => {
-      if (!userEmail) return;
+      // Only check consents if user is logged in
+      if (!userEmail) {
+        console.log('No user logged in, skipping consent checks');
+        return;
+      }
 
       try {
         console.log('Checking existing consents for user:', userEmail);
@@ -60,9 +64,13 @@ export const useConsents = () => {
     checkExistingConsents();
   }, [userEmail, handleCookieConsent, handleDisclaimerConsent]);
 
+  // Only show consents if user is logged in
+  const shouldShowCookieConsent = !!userEmail && showCookieConsent;
+  const shouldShowDisclaimer = !!userEmail && showDisclaimer;
+
   return {
-    showCookieConsent,
-    showDisclaimer,
+    showCookieConsent: shouldShowCookieConsent,
+    showDisclaimer: shouldShowDisclaimer,
     handleCookieConsent,
     handleDisclaimerConsent
   };

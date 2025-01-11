@@ -49,15 +49,18 @@ function AppContent() {
       <AppRoutes />
       <Toaster />
       
+      {/* Only show consent banners if user is logged in */}
       {showConsentBanner && (
         <ConsentBanner onAccept={handleCookieConsent} />
       )}
       
-      <DisclaimerDialog
-        open={showDisclaimer}
-        onAccept={() => handleDisclaimerConsent(true)}
-        onReject={() => handleDisclaimerConsent(false)}
-      />
+      {showDisclaimer && (
+        <DisclaimerDialog
+          open={showDisclaimer}
+          onAccept={() => handleDisclaimerConsent(true)}
+          onReject={() => handleDisclaimerConsent(false)}
+        />
+      )}
     </ThemeProvider>
   );
 }
