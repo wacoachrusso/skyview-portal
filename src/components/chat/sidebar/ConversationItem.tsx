@@ -39,7 +39,7 @@ export function ConversationItem({
       description: isOffline 
         ? "This chat will no longer be available offline" 
         : "This chat will be available when you're offline",
-      duration: 3000
+      duration: 2000
     });
   };
 
