@@ -136,7 +136,7 @@ export const useNotificationActions = () => {
                   },
                   renotify: true,
                   requireInteraction: true,
-                  sound: '/notification-sound.mp3'
+                  vibrate: [200, 100, 200]
                 }
               );
             } catch (error) {

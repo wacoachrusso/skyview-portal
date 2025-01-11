@@ -28,6 +28,7 @@ interface NotificationOptions {
   requireInteraction?: boolean;
   actions?: NotificationAction[];
   silent?: boolean;
+  sound?: string;
 }
 
 interface NotificationAction {
