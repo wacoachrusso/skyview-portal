@@ -32,32 +32,46 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: 'SkyGuide <notifications@skyguide.site>',
         to: [email],
-        subject: 'Your Free Trial Has Ended - Continue Your Journey with SkyGuide!',
+        subject: 'Your Free Trial Has Ended - Choose Your SkyGuide Plan',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1a1f2c; margin-bottom: 20px;">Thank you for trying SkyGuide!</h2>
+            <h2 style="color: #1a1f2c; margin-bottom: 20px;">Time to Upgrade Your SkyGuide Experience!</h2>
             
             <p>Hi ${name},</p>
             
-            <p>Your free trial has come to an end, but your journey with SkyGuide doesn't have to stop here! 🚀</p>
+            <p>You've completed your free trial query with SkyGuide. Ready to unlock unlimited access? Choose the plan that works best for you:</p>
             
-            <p>With a SkyGuide subscription, you'll get:</p>
-            <ul>
-              <li>✈️ Unlimited access to contract information</li>
-              <li>⚡ Quick answers to your questions</li>
-              <li>📱 24/7 access on any device</li>
-              <li>🔍 Advanced search capabilities</li>
-              <li>📊 Personalized insights</li>
-            </ul>
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #1a1f2c; margin-top: 0;">Available Plans:</h3>
+              <ul style="list-style-type: none; padding: 0;">
+                <li style="margin: 15px 0; padding-left: 25px;">
+                  🌟 <strong>Monthly Plan - $4.99/month</strong>
+                  <br>Perfect for active flight crew
+                </li>
+                <li style="margin: 15px 0; padding-left: 25px;">
+                  ⭐ <strong>Annual Plan - $49.88/year</strong>
+                  <br>Best value - Save $10 annually
+                </li>
+              </ul>
+            </div>
             
             <div style="margin: 30px 0; text-align: center;">
               <a href="${req.headers.get('origin')}/?scrollTo=pricing-section" 
                  style="background-color: #fbbf24; color: #1a1f2c; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                View Pricing Plans
+                Choose Your Plan
               </a>
             </div>
             
-            <p>Join thousands of aviation professionals who trust SkyGuide for their career needs.</p>
+            <p>With a paid subscription, you'll get:</p>
+            <ul>
+              <li>✈️ Unlimited contract queries</li>
+              <li>⚡ Advanced interpretation</li>
+              <li>📱 24/7 access on any device</li>
+              <li>🔍 Custom contract uploads</li>
+              <li>💫 Premium features</li>
+            </ul>
+            
+            <p>Questions about our plans? Reply to this email and we'll help you choose the best option for your needs.</p>
             
             <p>Best regards,<br>The SkyGuide Team</p>
           </div>

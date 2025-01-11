@@ -31,7 +31,7 @@ export const handleFreeSignup = async ({
           user_type: jobTitle.toLowerCase(),
           airline: airline.toLowerCase(),
           subscription_plan: 'free',
-          assistant_id: assistantId // Include the assistant ID in user metadata
+          assistant_id: assistantId
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
@@ -49,15 +49,20 @@ export const handleFreeSignup = async ({
 
     console.log("Free trial signup successful:", data);
 
-    // Send welcome email after successful signup
+    // Send free trial welcome email
     try {
-      await sendWelcomeEmail({
-        email: email.trim().toLowerCase(),
-        name: fullName.trim(),
+      const { error: emailError } = await supabase.functions.invoke('send-free-trial-welcome', {
+        body: {
+          email: email.trim().toLowerCase(),
+          name: fullName.trim(),
+        }
       });
+
+      if (emailError) {
+        console.error("Error sending free trial welcome email:", emailError);
+      }
     } catch (emailError) {
-      console.error("Error sending welcome email:", emailError);
-      // Don't throw here - we still want to return the signup data even if email fails
+      console.error("Error sending free trial welcome email:", emailError);
     }
 
     return data;
