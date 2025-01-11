@@ -10,11 +10,19 @@ interface NotificationItemProps {
 }
 
 export const NotificationItem = ({ notification, onDelete, onClick }: NotificationItemProps) => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await onDelete(notification.id);
+  };
+
   return (
     <DropdownMenuItem
       key={notification.id}
       className="flex flex-col items-start p-4 space-y-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 last:border-0"
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
     >
       <div className="flex justify-between items-start w-full">
         <div className="flex items-start space-x-3">
@@ -38,10 +46,7 @@ export const NotificationItem = ({ notification, onDelete, onClick }: Notificati
         <Button
           variant="ghost"
           size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(notification.id);
-          }}
+          onClick={handleDelete}
           className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
         >
           <Trash2 className="h-4 w-4" />

@@ -42,7 +42,7 @@ export const NotificationBell = () => {
         throw error;
       }
 
-      refetchNotifications();
+      await refetchNotifications();
     } catch (error) {
       console.error("Error marking notifications as read:", error);
     }
@@ -50,13 +50,19 @@ export const NotificationBell = () => {
 
   const handleDelete = async (id: string) => {
     console.log("Deleting notification:", id);
-    await deleteNotification(id);
-    await refetchNotifications();
+    try {
+      await deleteNotification(id);
+      setSelectedNotification(null);
+      await refetchNotifications();
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const handleNotificationClick = (notification: any) => {
     console.log("Opening notification details:", notification);
     setSelectedNotification(notification);
+    setOpen(false);
   };
 
   return (
@@ -68,7 +74,7 @@ export const NotificationBell = () => {
             {unreadCount > 0 && (
               <Badge
                 variant="destructive"
-                className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
+                className="absolute -top-2 -right-2 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
               >
                 {unreadCount}
               </Badge>
@@ -99,7 +105,11 @@ export const NotificationBell = () => {
       <NotificationDialog
         notification={selectedNotification}
         open={!!selectedNotification}
-        onOpenChange={() => setSelectedNotification(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedNotification(null);
+          }
+        }}
       />
     </>
   );
