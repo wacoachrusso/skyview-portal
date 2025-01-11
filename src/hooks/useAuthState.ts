@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export const useAuthState = () => {
+  console.log("Initializing useAuthState hook");
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -28,19 +29,23 @@ export const useAuthState = () => {
           console.log('New sign-in detected, invalidating other sessions...');
           const currentToken = localStorage.getItem('session_token');
           
-          const { error: signOutError } = await supabase
-            .rpc('invalidate_other_sessions', {
-              p_user_id: session.user.id,
-              p_current_session_token: currentToken || ''
-            });
-          
-          if (signOutError) {
-            console.error("Error signing out other sessions:", signOutError);
-            toast({
-              variant: "destructive",
-              title: "Session Warning",
-              description: "Unable to sign out other sessions. You may be signed in on other devices."
-            });
+          try {
+            const { error: signOutError } = await supabase
+              .rpc('invalidate_other_sessions', {
+                p_user_id: session.user.id,
+                p_current_session_token: currentToken || ''
+              });
+            
+            if (signOutError) {
+              console.error("Error signing out other sessions:", signOutError);
+              toast({
+                variant: "destructive",
+                title: "Session Warning",
+                description: "Unable to sign out other sessions. You may be signed in on other devices."
+              });
+            }
+          } catch (error) {
+            console.error("Unexpected error during session invalidation:", error);
           }
         }
       }

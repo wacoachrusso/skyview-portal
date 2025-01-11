@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "@/components/routing/AppRoutes";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -8,6 +7,15 @@ import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 
 function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+// Separate component to use hooks inside Router context
+function AppContent() {
   const { 
     showCookieConsent, 
     showDisclaimer, 
@@ -19,22 +27,20 @@ function App() {
   const showConsentBanner = showCookieConsent && !showDisclaimer;
 
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <AppRoutes />
-        <Toaster />
-        
-        {showConsentBanner && (
-          <ConsentBanner onAccept={handleCookieConsent} />
-        )}
-        
-        <DisclaimerDialog
-          open={showDisclaimer}
-          onAccept={() => handleDisclaimerConsent(true)}
-          onReject={() => handleDisclaimerConsent(false)}
-        />
-      </ThemeProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <AppRoutes />
+      <Toaster />
+      
+      {showConsentBanner && (
+        <ConsentBanner onAccept={handleCookieConsent} />
+      )}
+      
+      <DisclaimerDialog
+        open={showDisclaimer}
+        onAccept={() => handleDisclaimerConsent(true)}
+        onReject={() => handleDisclaimerConsent(false)}
+      />
+    </ThemeProvider>
   );
 }
 
