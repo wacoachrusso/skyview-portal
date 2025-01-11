@@ -43,7 +43,8 @@ export const useNotifications = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email, push_notifications");
+        .select("id, full_name, email, push_notifications")
+        .neq('account_status', 'deleted'); // Don't include deleted profiles
       if (error) throw error;
       return data;
     },
@@ -101,13 +102,24 @@ export const useNotifications = () => {
 
       let usersToNotify: any[] = [];
 
+      // Get current user's profile to check if they're admin
+      const { data: adminProfile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+
       if (notification.profile_id === "all") {
         const { data: pushEnabledProfiles } = await supabase
           .from("profiles")
           .select("id, push_notifications, push_subscription")
-          .eq("push_notifications", true);
+          .eq("push_notifications", true)
+          .neq('account_status', 'deleted');
         
-        usersToNotify = pushEnabledProfiles || [];
+        // Filter out admin from recipients if sender is admin
+        usersToNotify = (pushEnabledProfiles || []).filter(profile => 
+          !(adminProfile?.is_admin && profile.id === user.id)
+        );
       } else {
         const { data: profile } = await supabase
           .from("profiles")
@@ -126,7 +138,7 @@ export const useNotifications = () => {
         type: notification.type,
         notification_type: notification.type,
         profile_id: profile.id,
-        user_id: profile.id, // Set user_id to match profile_id
+        user_id: profile.id,
       }));
 
       if (notificationsToInsert.length > 0) {
@@ -167,6 +179,7 @@ export const useNotifications = () => {
         }
       }
 
+      // Invalidate queries to trigger a refresh
       queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
       
       toast({
