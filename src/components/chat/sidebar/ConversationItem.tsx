@@ -32,6 +32,11 @@ export function ConversationItem({
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const { downloadChat, downloadInProgress } = useDownloadChat();
 
+  const handleClick = () => {
+    console.log('Conversation clicked:', conversation.id);
+    onSelect(conversation.id);
+  };
+
   const handleToggleOffline = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -59,7 +64,7 @@ export function ConversationItem({
   return (
     <>
       <div
-        onClick={() => onSelect(conversation.id)}
+        onClick={handleClick}
         className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 ${
           isSelected 
             ? "bg-white/10 border-l-brand-gold" 
