@@ -7,6 +7,7 @@ export const useSessionCheck = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -20,12 +21,7 @@ export const useSessionCheck = () => {
           console.error("Session error:", sessionError);
           if (mounted) {
             setIsLoading(false);
-            toast({
-              variant: "destructive",
-              title: "Session Error",
-              description: "There was a problem with your session. Please log in again."
-            });
-            navigate('/login');
+            setIsAuthenticated(false);
           }
           return;
         }
@@ -34,12 +30,7 @@ export const useSessionCheck = () => {
           console.log("No active session found");
           if (mounted) {
             setIsLoading(false);
-            toast({
-              variant: "destructive",
-              title: "Session Required",
-              description: "Please log in to access this page."
-            });
-            navigate('/login');
+            setIsAuthenticated(false);
           }
           return;
         }
@@ -52,18 +43,14 @@ export const useSessionCheck = () => {
             await supabase.auth.signOut();
             localStorage.clear();
             setIsLoading(false);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: "Could not verify your identity. Please log in again."
-            });
-            navigate('/login');
+            setIsAuthenticated(false);
           }
           return;
         }
 
         console.log("Valid session found for user:", user.email);
         if (mounted) {
+          setIsAuthenticated(true);
           setIsLoading(false);
         }
       } catch (error) {
@@ -71,12 +58,7 @@ export const useSessionCheck = () => {
         if (mounted) {
           localStorage.clear();
           setIsLoading(false);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "An unexpected error occurred. Please try again."
-          });
-          navigate('/login');
+          setIsAuthenticated(false);
         }
       }
     };
@@ -87,7 +69,7 @@ export const useSessionCheck = () => {
       console.log("Session check cleanup");
       mounted = false;
     };
-  }, [navigate, toast]);
+  }, []);
 
-  return { isLoading };
+  return { isLoading, isAuthenticated };
 };
