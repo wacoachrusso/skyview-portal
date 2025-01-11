@@ -20,6 +20,7 @@ export const useAdminStats = () => {
         { count: yearlySubCount, data: yearlySubUsers },
         { count: alphaTestersCount, data: alphaTesters },
         { count: promotersCount, data: promoters },
+        { count: messageFeedbackCount, data: messageFeedback }
       ] = await Promise.all([
         // Total users (excluding deleted)
         supabase
@@ -78,6 +79,16 @@ export const useAdminStats = () => {
           .select("*, profiles(full_name, email)", { count: "exact" })
           .eq("status", "active")
           .eq("is_promoter", true),
+
+        // Message feedback with related data
+        supabase
+          .from('message_feedback')
+          .select(`
+            *,
+            messages (content),
+            profiles (full_name, email)
+          `, { count: 'exact' })
+          .order('created_at', { ascending: false })
       ]);
 
       console.log("Stats fetched:", {
@@ -90,6 +101,7 @@ export const useAdminStats = () => {
         yearlySubCount,
         alphaTestersCount,
         promotersCount,
+        messageFeedbackCount
       });
 
       return {
@@ -102,6 +114,7 @@ export const useAdminStats = () => {
         yearlySubCount,
         alphaTestersCount,
         promotersCount,
+        messageFeedbackCount,
         details: {
           users,
           activeUsers,
@@ -112,6 +125,7 @@ export const useAdminStats = () => {
           yearlySubUsers,
           alphaTesters,
           promoters,
+          messageFeedback
         },
       };
     },

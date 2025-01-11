@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard, Star, UserCog } from "lucide-react";
+import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard, Star, UserCog, MessageSquare } from "lucide-react";
 import { MetricCard } from "./stats/MetricCard";
 import { StatsDialog } from "./stats/StatsDialog";
 import { useAdminStats } from "@/hooks/useAdminStats";
@@ -11,7 +11,6 @@ export const SystemStats = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: stats, refetch } = useAdminStats();
 
-  // Set up real-time subscriptions for relevant tables
   useEffect(() => {
     console.log("Setting up real-time subscriptions for admin stats...");
     
@@ -79,6 +78,15 @@ export const SystemStats = () => {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Message Feedback"
+          value={stats?.messageFeedbackCount || 0}
+          icon={MessageSquare}
+          onClick={() => {
+            setSelectedMetric("messageFeedback");
+            setIsDialogOpen(true);
+          }}
+        />
         <MetricCard
           title="Active Alpha Testers"
           value={stats?.alphaTestersCount || 0}
