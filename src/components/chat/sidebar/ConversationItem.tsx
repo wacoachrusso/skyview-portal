@@ -49,10 +49,10 @@ export function ConversationItem({
     const success = await downloadChat(conversation.id, conversation.title);
     
     if (success) {
-      const mockEvent = new React.MouseEvent('click', {
+      const mockEvent = new MouseEvent('click', {
         bubbles: true,
         cancelable: true,
-      });
+      }) as unknown as React.MouseEvent;
       onToggleOffline(mockEvent, conversation.id);
     }
   };
