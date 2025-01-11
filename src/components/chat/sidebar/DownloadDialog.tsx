@@ -17,7 +17,7 @@ export function DownloadDialog({ open, onOpenChange, onConfirm }: DownloadDialog
         <DialogHeader>
           <DialogTitle>Download Chat for Offline Use</DialogTitle>
           <DialogDescription>
-            This will download a copy of the chat to your device and make it available offline. The chat will be saved as a text file in your downloads folder.
+            This will download a copy of the chat to your device and make it available offline. The chat will be saved as a text file.
             
             {isIOS && (
               <div className="mt-2 space-y-2">
@@ -36,9 +36,18 @@ export function DownloadDialog({ open, onOpenChange, onConfirm }: DownloadDialog
             )}
             
             {isAndroid && (
-              <p className="mt-2">
-                On Android devices, you can find downloaded files in your Downloads folder through the Files app.
-              </p>
+              <div className="mt-2 space-y-2">
+                <p>On Android devices:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>The chat will be saved to your Downloads folder</li>
+                  <li>You can access it through:</li>
+                  <ol className="list-decimal pl-4 mt-1 space-y-1">
+                    <li>Your device's Files app</li>
+                    <li>The Downloads folder</li>
+                    <li>Or your preferred file manager app</li>
+                  </ol>
+                </ul>
+              </div>
             )}
           </DialogDescription>
         </DialogHeader>

@@ -42,7 +42,8 @@ export function useDownloadChat() {
       link.href = url;
       link.download = `chat-${title}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
       
-      // Append, click, and clean up
+      // For Android, we need to use the click event
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
 
@@ -57,18 +58,18 @@ export function useDownloadChat() {
         // Don't throw here, as the download itself was successful
       }
       
-      // Clean up
+      // Clean up with increased timeout for Android
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         setDownloadInProgress(false);
-      }, 1000); // Increased timeout to ensure download starts
+      }, 2000);
 
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
       
       let toastMessage = "Chat saved for offline access";
-      if (isIOS) {
-        toastMessage = "Chat downloaded. Find it in Files app under Downloads or Documents.";
+      if (isAndroid) {
+        toastMessage = "Chat downloaded. Find it in your Downloads folder.";
       }
       
       toast({
