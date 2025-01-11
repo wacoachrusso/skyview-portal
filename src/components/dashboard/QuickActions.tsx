@@ -7,9 +7,9 @@ export const QuickActions = () => {
   const navigate = useNavigate();
 
   return (
-    <Card className="p-6 bg-card-gradient shadow-lg">
-      <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <Card className="p-8 bg-card-gradient shadow-lg">
+      <h2 className="text-2xl font-bold text-center mb-8 tracking-tight">Quick Actions</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <ActionCard
           icon={MessageSquare}
           title="Start Chat"
