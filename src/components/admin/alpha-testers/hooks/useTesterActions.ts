@@ -62,7 +62,8 @@ export const useTesterActions = (testers: AlphaTester[] | undefined, refetch: ()
       const tester = testers?.find(t => t.id === testerId);
       if (!tester) throw new Error("Tester not found");
 
-      if (newStatus === "removed") {
+      // Only attempt to update profile if profile_id exists
+      if (newStatus === "removed" && tester.profile_id) {
         console.log("Updating profile subscription plan for removed tester");
         const { error: profileError } = await supabase
           .from("profiles")
