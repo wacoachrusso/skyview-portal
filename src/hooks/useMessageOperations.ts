@@ -16,7 +16,7 @@ export function useMessageOperations(currentUserId: string | null, currentConver
         {
           content,
           user_id: currentUserId,
-          role: 'user',
+          role: 'user' as const,
           conversation_id: conversationId
         }
       ])
@@ -35,7 +35,7 @@ export function useMessageOperations(currentUserId: string | null, currentConver
         {
           content,
           user_id: null,
-          role: 'assistant',
+          role: 'assistant' as const,
           conversation_id: conversationId
         }
       ]);
@@ -47,7 +47,7 @@ export function useMessageOperations(currentUserId: string | null, currentConver
     if (!conversationId) return;
     
     console.log('Loading messages for conversation:', conversationId);
-    const { data: messages, error } = await supabase
+    const { data: messagesData, error } = await supabase
       .from('messages')
       .select('*')
       .eq('conversation_id', conversationId)
@@ -58,8 +58,14 @@ export function useMessageOperations(currentUserId: string | null, currentConver
       return;
     }
 
-    console.log('Loaded messages:', messages?.length || 0);
-    setMessages(messages || []);
+    // Ensure the role is properly typed when setting messages
+    const typedMessages = messagesData?.map(msg => ({
+      ...msg,
+      role: msg.role as 'user' | 'assistant'
+    })) || [];
+
+    console.log('Loaded messages:', typedMessages.length);
+    setMessages(typedMessages);
   };
 
   return {
