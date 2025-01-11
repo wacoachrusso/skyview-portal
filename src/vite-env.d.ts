@@ -39,4 +39,5 @@ interface NotificationAction {
 interface Navigator {
   setAppBadge?: (count: number) => Promise<void>;
   clearAppBadge?: () => Promise<void>;
+  msSaveOrOpenBlob?: (blob: Blob, defaultName?: string) => boolean;
 }

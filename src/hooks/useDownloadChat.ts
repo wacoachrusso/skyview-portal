@@ -37,60 +37,65 @@ export function useDownloadChat() {
       const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
       const filename = `chat-${title}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
 
-      // Use the native browser download API if available
-      if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-        // For IE & Edge
-        window.navigator.msSaveOrOpenBlob(blob, filename);
-      } else {
-        // For modern browsers
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        
-        // Set link properties
-        link.href = url;
-        link.download = filename;
-        link.style.display = 'none';
-        
-        // Append link, trigger click, and clean up
-        document.body.appendChild(link);
-        
-        // Use a proper click event that works across platforms
-        const clickEvent = new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true,
-          composed: true
+      try {
+        // Try using the native msSaveOrOpenBlob for IE & Edge if available
+        if (window.navigator.msSaveOrOpenBlob) {
+          window.navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+          // For modern browsers
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          
+          // Set link properties
+          link.href = url;
+          link.download = filename;
+          link.style.display = 'none';
+          
+          // Append link, trigger click, and clean up
+          document.body.appendChild(link);
+          
+          // Use a proper click event that works across platforms
+          const clickEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            composed: true
+          });
+          
+          link.dispatchEvent(clickEvent);
+          
+          // Clean up
+          setTimeout(() => {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+        }
+
+        // Update downloaded_at timestamp in the database
+        const { error: updateError } = await supabase
+          .from('conversations')
+          .update({ downloaded_at: new Date().toISOString() })
+          .eq('id', conversationId);
+
+        if (updateError) {
+          console.error('Error updating downloaded_at:', updateError);
+        }
+
+        setDownloadInProgress(false);
+
+        toast({
+          title: "Chat downloaded successfully",
+          description: "Your chat has been saved to your device.",
+          duration: 3000
         });
-        
-        link.dispatchEvent(clickEvent);
-        
-        // Clean up
-        setTimeout(() => {
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        }, 100);
+
+        console.log('Chat download completed successfully');
+        return true;
+
+      } catch (downloadError) {
+        console.error('Error during file download:', downloadError);
+        throw downloadError;
       }
-
-      // Update downloaded_at timestamp in the database
-      const { error: updateError } = await supabase
-        .from('conversations')
-        .update({ downloaded_at: new Date().toISOString() })
-        .eq('id', conversationId);
-
-      if (updateError) {
-        console.error('Error updating downloaded_at:', updateError);
-      }
-
-      setDownloadInProgress(false);
-
-      toast({
-        title: "Chat downloaded successfully",
-        description: "Your chat has been saved to your device.",
-        duration: 3000
-      });
-
-      console.log('Chat download completed successfully');
-      return true;
 
     } catch (error) {
       console.error('Error downloading chat:', error);
