@@ -1,74 +1,64 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Flag } from "lucide-react";
-
-interface DetailItem {
-  label: string;
-  info: string;
-  date: string;
-  rating?: number;
-  isIncorrect?: boolean;
-}
-
-interface DialogContentData {
-  title: string;
-  data: DetailItem[];
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { getDialogContent } from "./getDialogContent";
+import { MetricType } from "./metrics/useMetricsData";
+import { useState } from "react";
 
 interface StatsDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  content: DialogContentData | null;
+  onClose: () => void;
+  selectedMetric: MetricType | null;
+  onRefresh: () => void;
 }
 
-export const StatsDialog = ({ isOpen, onOpenChange, content }: StatsDialogProps) => {
-  if (!content) return null;
+export function StatsDialog({ isOpen, onClose, selectedMetric, onRefresh }: StatsDialogProps) {
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const getFeedbackIcon = (rating?: number, isIncorrect?: boolean) => {
-    if (isIncorrect) return <Flag className="h-4 w-4 text-red-500" />;
-    if (rating === 5) return <ThumbsUp className="h-4 w-4 text-green-500" />;
-    if (rating === 1) return <ThumbsDown className="h-4 w-4 text-red-500" />;
-    return null;
+  const handleDelete = async (feedbackId: string) => {
+    try {
+      setIsDeleting(true);
+      console.log('Deleting feedback:', feedbackId);
+      
+      const { error } = await supabase
+        .from('message_feedback')
+        .delete()
+        .eq('id', feedbackId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Feedback deleted",
+        description: "The feedback has been successfully deleted.",
+      });
+      
+      onRefresh();
+    } catch (error) {
+      console.error('Error deleting feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete feedback. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
+  const dialogContent = getDialogContent(selectedMetric, handleDelete, isDeleting);
+
+  if (!selectedMetric) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{content.title}</DialogTitle>
+          <DialogTitle>{dialogContent.title}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          {content.data?.map((item, index) => (
-            <div
-              key={index}
-              className="rounded-lg border p-4 hover:bg-muted/50"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{item.label}</h3>
-                {getFeedbackIcon(item.rating, item.isIncorrect)}
-              </div>
-              <p className="text-sm text-muted-foreground">{item.info}</p>
-              <div className="mt-2 flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">{item.date}</p>
-                {item.rating && (
-                  <Badge variant={item.rating === 5 ? "success" : "destructive"}>
-                    Rating: {item.rating}
-                  </Badge>
-                )}
-                {item.isIncorrect && (
-                  <Badge variant="destructive">Flagged as Incorrect</Badge>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        {dialogContent.content}
       </DialogContent>
     </Dialog>
   );
-};
+}

@@ -1,109 +1,134 @@
+import { MetricType } from "./metrics/useMetricsData";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
-interface StatsDetails {
-  users?: any[];
-  activeUsers?: any[];
-  notifications?: any[];
-  releaseNotes?: any[];
-  newUsers?: any[];
-  monthlySubUsers?: any[];
-  yearlySubUsers?: any[];
-  alphaTesters?: any[];
-  promoters?: any[];
-  messageFeedback?: any[];
-}
+export const getDialogContent = (
+  metric: MetricType | null,
+  onDelete: (id: string) => Promise<void>,
+  isDeleting: boolean
+) => {
+  const { data: feedbackData } = useQuery({
+    queryKey: ["messageFeedback"],
+    queryFn: async () => {
+      console.log('Fetching message feedback data');
+      const { data, error } = await supabase
+        .from("message_feedback")
+        .select(`
+          *,
+          messages:messages(content),
+          profiles:profiles(full_name, email)
+        `)
+        .order('created_at', { ascending: false });
 
-export const getDialogContent = (details: StatsDetails | undefined, selectedMetric: string | null) => {
-  if (!details || !selectedMetric) return null;
+      if (error) throw error;
+      return data;
+    },
+    enabled: metric === "messageFeedback"
+  });
 
-  const content = {
-    users: {
-      title: "User Details",
-      data: details.users?.map((user) => ({
-        label: user.full_name || "Unnamed User",
-        info: `Email: ${user.email || "N/A"} | Type: ${user.user_type || "N/A"}`,
-        date: format(new Date(user.created_at), "MMM d, yyyy"),
-      })),
-    },
-    activeUsers: {
-      title: "Active User Details",
-      data: details.activeUsers?.map((user) => ({
-        label: user.full_name || "Unnamed User",
-        info: `Email: ${user.email || "N/A"} | Last Active: ${
-          user.last_query_timestamp
-            ? format(new Date(user.last_query_timestamp), "MMM d, yyyy")
-            : "N/A"
-        }`,
-        date: format(new Date(user.created_at), "MMM d, yyyy"),
-      })),
-    },
-    notifications: {
-      title: "Notification Details",
-      data: details.notifications?.map((notif) => ({
-        label: notif.title,
-        info: notif.message,
-        date: format(new Date(notif.created_at), "MMM d, yyyy"),
-      })),
-    },
-    releaseNotes: {
-      title: "Release Notes Details",
-      data: details.releaseNotes?.map((note) => ({
-        label: note.title,
-        info: `Version: ${note.version}`,
-        date: format(new Date(note.created_at), "MMM d, yyyy"),
-      })),
-    },
-    newUsers: {
-      title: "New Users (Last 30 Days)",
-      data: details.newUsers?.map((user) => ({
-        label: user.full_name || "Unnamed User",
-        info: `Email: ${user.email || "N/A"} | Type: ${user.user_type || "N/A"}`,
-        date: format(new Date(user.created_at), "MMM d, yyyy"),
-      })),
-    },
-    monthlySubUsers: {
-      title: "Monthly Subscription Users",
-      data: details.monthlySubUsers?.map((user) => ({
-        label: user.full_name || "Unnamed User",
-        info: `Email: ${user.email || "N/A"}`,
-        date: `Joined: ${format(new Date(user.created_at), "MMM d, yyyy")}`,
-      })),
-    },
-    yearlySubUsers: {
-      title: "Yearly Subscription Users",
-      data: details.yearlySubUsers?.map((user) => ({
-        label: user.full_name || "Unnamed User",
-        info: `Email: ${user.email || "N/A"}`,
-        date: `Joined: ${format(new Date(user.created_at), "MMM d, yyyy")}`,
-      })),
-    },
-    alphaTesters: {
-      title: "Active Alpha Testers",
-      data: details.alphaTesters?.map((tester) => ({
-        label: tester.profiles?.full_name || "Unnamed Tester",
-        info: `Email: ${tester.profiles?.email || "N/A"}`,
-        date: format(new Date(tester.created_at), "MMM d, yyyy"),
-      })),
-    },
-    promoters: {
-      title: "Active Promoters",
-      data: details.promoters?.map((promoter) => ({
-        label: promoter.profiles?.full_name || "Unnamed Promoter",
-        info: `Email: ${promoter.profiles?.email || "N/A"}`,
-        date: format(new Date(promoter.created_at), "MMM d, yyyy"),
-      })),
-    },
-    messageFeedback: {
-      title: "Message Feedback",
-      data: details.messageFeedback?.map((feedback) => ({
-        label: feedback.messages?.content?.substring(0, 100) + "..." || "Message Content",
-        info: `From: ${feedback.user?.full_name || feedback.user?.email || "N/A"}`,
-        date: format(new Date(feedback.created_at), "MMM d, yyyy"),
-        rating: feedback.rating,
-        isIncorrect: feedback.is_incorrect,
-      })),
-    },
+  switch (metric) {
+    case "messageFeedback":
+      return {
+        title: "Message Feedback",
+        content: (
+          <div className="space-y-4">
+            {feedbackData?.map((feedback) => (
+              <div key={feedback.id} className="bg-secondary p-4 rounded-lg space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium">
+                      {feedback.profiles?.full_name || feedback.profiles?.email || 'Anonymous'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(feedback.created_at), 'PPp')}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(feedback.id)}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="bg-background p-3 rounded text-sm">
+                  <p className="font-medium">Message:</p>
+                  <p className="text-muted-foreground">{feedback.messages?.content}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Feedback:</p>
+                  <p className="text-sm text-muted-foreground">{feedback.feedback_text || 'No feedback text provided'}</p>
+                </div>
+                <div className="flex gap-2">
+                  {feedback.rating && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                      Rating: {feedback.rating}/5
+                    </span>
+                  )}
+                  {feedback.is_incorrect && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-destructive/10 text-destructive">
+                      Marked as Incorrect
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+      };
+    case "alphaTesters":
+      return {
+        title: "Alpha Testers",
+        content: <p>Alpha testers content goes here.</p>,
+      };
+    case "promoters":
+      return {
+        title: "Promoters",
+        content: <p>Promoters content goes here.</p>,
+      };
+    case "users":
+      return {
+        title: "Total Users",
+        content: <p>Total users content goes here.</p>,
+      };
+    case "activeUsers":
+      return {
+        title: "Active Users (30d)",
+        content: <p>Active users content goes here.</p>,
+      };
+    case "notifications":
+      return {
+        title: "Notifications Sent",
+        content: <p>Notifications content goes here.</p>,
+      };
+    case "releaseNotes":
+      return {
+        title: "Release Notes",
+        content: <p>Release notes content goes here.</p>,
+      };
+    case "newUsers":
+      return {
+        title: "New Users (30d)",
+        content: <p>New users content goes here.</p>,
+      };
+    case "monthlySubUsers":
+      return {
+        title: "Monthly Subscribers",
+        content: <p>Monthly subscribers content goes here.</p>,
+      };
+    case "yearlySubUsers":
+      return {
+        title: "Yearly Subscribers",
+        content: <p>Yearly subscribers content goes here.</p>,
+      };
+  }
+
+  return {
+    title: "Statistics",
+    content: <p>Select a metric to view details</p>,
   };
-
-  return content[selectedMetric as keyof typeof content];
 };
