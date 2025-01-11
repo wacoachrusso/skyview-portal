@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "@/components/routing/AppRoutes";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -18,23 +19,22 @@ function App() {
   const showConsentBanner = showCookieConsent && !showDisclaimer;
 
   return (
-    <ThemeProvider>
-      <AppRoutes />
-      <Toaster />
-      
-      {showConsentBanner && (
-        <ConsentBanner 
-          onAccept={() => handleCookieConsent("all")}
-          onReject={() => handleCookieConsent("essential")}
+    <BrowserRouter>
+      <ThemeProvider>
+        <AppRoutes />
+        <Toaster />
+        
+        {showConsentBanner && (
+          <ConsentBanner />
+        )}
+        
+        <DisclaimerDialog
+          open={showDisclaimer}
+          onAccept={() => handleDisclaimerConsent(true)}
+          onReject={() => handleDisclaimerConsent(false)}
         />
-      )}
-      
-      <DisclaimerDialog
-        open={showDisclaimer}
-        onAccept={() => handleDisclaimerConsent(true)}
-        onReject={() => handleDisclaimerConsent(false)}
-      />
-    </ThemeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

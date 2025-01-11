@@ -7,11 +7,11 @@ export const useConsents = () => {
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuthState();
+  const { userEmail } = useAuthState();
 
   useEffect(() => {
     const checkConsents = async () => {
-      if (!user) {
+      if (!userEmail) {
         // For non-authenticated users, check localStorage
         const hasAcceptedCookies = localStorage.getItem("cookie-consent");
         const hasAcceptedDisclaimer = localStorage.getItem("disclaimer-consent");
@@ -22,32 +22,48 @@ export const useConsents = () => {
       }
 
       // For authenticated users, check database
-      const { data: cookieConsent } = await supabase
-        .from("cookie_consents")
-        .select("*")
-        .eq("user_id", user.id)
+      const { data: user } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", userEmail)
         .single();
 
-      const { data: disclaimerConsent } = await supabase
-        .from("disclaimer_consents")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      if (user) {
+        const { data: cookieConsent } = await supabase
+          .from("cookie_consents")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
 
-      if (!cookieConsent) setShowCookieConsent(true);
-      if (!disclaimerConsent) setShowDisclaimer(true);
+        const { data: disclaimerConsent } = await supabase
+          .from("disclaimer_consents")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (!cookieConsent) setShowCookieConsent(true);
+        if (!disclaimerConsent) setShowDisclaimer(true);
+      }
     };
 
     checkConsents();
-  }, [user]);
+  }, [userEmail]);
 
   const handleCookieConsent = async (preferences: "essential" | "analytics" | "marketing" | "all" | "none") => {
-    if (user) {
-      await supabase.from("cookie_consents").upsert({
-        user_id: user.id,
-        preferences,
-        updated_at: new Date().toISOString()
-      });
+    if (userEmail) {
+      const { data: user } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", userEmail)
+        .single();
+
+      if (user) {
+        await supabase.from("cookie_consents").upsert({
+          user_id: user.id,
+          preferences,
+          updated_at: new Date().toISOString()
+        });
+      }
     } else {
       localStorage.setItem("cookie-consent", preferences);
     }
@@ -60,12 +76,20 @@ export const useConsents = () => {
   };
 
   const handleDisclaimerConsent = async (accepted: boolean) => {
-    if (user) {
-      await supabase.from("disclaimer_consents").upsert({
-        user_id: user.id,
-        status: accepted ? "accepted" : "rejected",
-        has_seen_chat_disclaimer: true
-      });
+    if (userEmail) {
+      const { data: user } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", userEmail)
+        .single();
+
+      if (user) {
+        await supabase.from("disclaimer_consents").upsert({
+          user_id: user.id,
+          status: accepted ? "accepted" : "rejected",
+          has_seen_chat_disclaimer: true
+        });
+      }
     } else {
       localStorage.setItem("disclaimer-consent", accepted ? "accepted" : "rejected");
     }
