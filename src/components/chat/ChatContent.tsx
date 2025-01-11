@@ -78,25 +78,30 @@ export function ChatContent({
   // Store messages in localStorage when they change
   useEffect(() => {
     if (messages.length > 0) {
-      try {
-        setStoredMessages(messages);
-        console.log('Stored messages for offline access:', messages.length);
-      } catch (error) {
-        console.error('Error storing messages:', error);
-      }
+      console.log('Storing new messages:', messages.length);
+      setStoredMessages(messages);
     }
   }, [messages, setStoredMessages]);
+
+  // Log when offline status changes
+  useEffect(() => {
+    console.log('Offline status changed:', isOffline);
+    console.log('Available stored messages:', storedMessages.length);
+  }, [isOffline, storedMessages]);
+
+  const displayMessages = isOffline ? storedMessages : messages;
+  const showWelcomeMessage = !isLoading && displayMessages.length === 0;
 
   return (
     <div className="flex flex-col h-full">
       <ChatHeader onNewChat={onNewChat || (() => {})} />
       {isOffline && <OfflineAlert offlineError={offlineError || loadError} />}
       <div className="flex-1 overflow-y-auto">
-        {messages.length === 0 && storedMessages.length === 0 ? (
+        {showWelcomeMessage ? (
           <WelcomeMessage />
         ) : (
           <ChatList
-            messages={isOffline ? storedMessages : messages}
+            messages={displayMessages}
             currentUserId={currentUserId || ''}
             isLoading={isLoading}
             onCopyMessage={handleCopyMessage}
