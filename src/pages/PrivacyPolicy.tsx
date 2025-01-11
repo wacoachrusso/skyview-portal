@@ -135,7 +135,11 @@ const PrivacyPolicy = () => {
                   <p>
                     If you have any questions about this Privacy Policy or our privacy practices, please contact us at:
                   </p>
-                  <p className="font-medium">privacy@skyguide.com</p>
+                  <p className="font-medium">
+                    <a href="mailto:support@skyguide.site" className="text-brand-gold hover:underline">
+                      support@skyguide.site
+                    </a>
+                  </p>
                   <p>
                     We are committed to addressing any concerns you may have about our data practices and 
                     will respond to your inquiry promptly.
