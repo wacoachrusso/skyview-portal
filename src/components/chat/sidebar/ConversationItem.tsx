@@ -44,22 +44,23 @@ export function ConversationItem({
 
       if (messagesError) throw messagesError;
 
-      // Create a chat export object
-      const chatExport = {
-        conversation,
-        messages,
-        exportedAt: new Date().toISOString()
-      };
+      // Format the chat content in a readable text format
+      let textContent = `Chat: ${conversation.title}\n`;
+      textContent += `Date: ${format(new Date(conversation.created_at), 'MMMM d, yyyy')}\n\n`;
+      textContent += `${'-'.repeat(50)}\n\n`;
 
-      // Convert to JSON string
-      const fileContent = JSON.stringify(chatExport, null, 2);
+      messages?.forEach((message) => {
+        const timestamp = format(new Date(message.created_at), 'h:mm a');
+        const role = message.role === 'assistant' ? 'AI' : 'You';
+        textContent += `[${timestamp}] ${role}:\n${message.content}\n\n`;
+      });
       
       // Create blob and download link
-      const blob = new Blob([fileContent], { type: 'application/json' });
+      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `chat-${conversation.title}-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      link.download = `chat-${conversation.title}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
       
       // Trigger download
       document.body.appendChild(link);
