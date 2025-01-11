@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -31,6 +32,15 @@ export const UsersTable = ({
   setSelectedUser,
   setUserToDelete,
 }: UsersTableProps) => {
+  const getSubscriptionBadge = (plan: string | null) => {
+    if (!plan || plan === 'free') return (
+      <Badge variant="destructive">Never Subscribed</Badge>
+    );
+    return (
+      <Badge variant="default">{plan}</Badge>
+    );
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -38,10 +48,12 @@ export const UsersTable = ({
           <TableRow>
             <TableHead>Full Name</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>User Type</TableHead>
+            <TableHead>Job Title</TableHead>
+            <TableHead>Airline</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Query Count</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Subscription</TableHead>
             <TableHead>Admin Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -52,12 +64,16 @@ export const UsersTable = ({
               <TableCell>{user.full_name || "N/A"}</TableCell>
               <TableCell>{user.email || "N/A"}</TableCell>
               <TableCell>{user.user_type || "N/A"}</TableCell>
+              <TableCell>{user.airline || "N/A"}</TableCell>
               <TableCell>
                 {format(new Date(user.created_at), "MMM d, yyyy")}
               </TableCell>
               <TableCell>{user.query_count || 0}</TableCell>
               <TableCell>
                 <UserStatusBadge status={user.account_status || "active"} />
+              </TableCell>
+              <TableCell>
+                {getSubscriptionBadge(user.subscription_plan)}
               </TableCell>
               <TableCell>
                 <Switch
