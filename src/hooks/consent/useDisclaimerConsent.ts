@@ -16,20 +16,26 @@ export const useDisclaimerConsent = (userEmail: string | null) => {
         return;
       }
 
-      const { data: user } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", userEmail)
-        .single();
+      try {
+        const { data: user } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", userEmail)
+          .maybeSingle();
 
-      if (user) {
-        const { data: disclaimerConsent } = await supabase
-          .from("disclaimer_consents")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+        if (user) {
+          const { data: disclaimerConsent } = await supabase
+            .from("disclaimer_consents")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
 
-        if (!disclaimerConsent) setShowDisclaimer(true);
+          if (!disclaimerConsent) setShowDisclaimer(true);
+        }
+      } catch (error) {
+        console.error("Error checking disclaimer consent:", error);
+        // Show disclaimer if there's an error checking consent
+        setShowDisclaimer(true);
       }
     };
 
@@ -40,18 +46,28 @@ export const useDisclaimerConsent = (userEmail: string | null) => {
     console.log("Handling disclaimer consent:", accepted);
     
     if (userEmail) {
-      const { data: user } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", userEmail)
-        .single();
+      try {
+        const { data: user } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", userEmail)
+          .maybeSingle();
 
-      if (user) {
-        await supabase.from("disclaimer_consents").upsert({
-          user_id: user.id,
-          status: accepted ? "accepted" : "rejected",
-          has_seen_chat_disclaimer: true
+        if (user) {
+          await supabase.from("disclaimer_consents").upsert({
+            user_id: user.id,
+            status: accepted ? "accepted" : "rejected",
+            has_seen_chat_disclaimer: true
+          });
+        }
+      } catch (error) {
+        console.error("Error saving disclaimer consent:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save disclaimer response. Please try again.",
         });
+        return;
       }
     } else {
       localStorage.setItem("disclaimer-consent", accepted ? "accepted" : "rejected");

@@ -16,20 +16,26 @@ export const useCookieConsent = (userEmail: string | null) => {
         return;
       }
 
-      const { data: user } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", userEmail)
-        .single();
+      try {
+        const { data: user } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", userEmail)
+          .maybeSingle();
 
-      if (user) {
-        const { data: cookieConsent } = await supabase
-          .from("cookie_consents")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+        if (user) {
+          const { data: cookieConsent } = await supabase
+            .from("cookie_consents")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
 
-        if (!cookieConsent) setShowCookieConsent(true);
+          if (!cookieConsent) setShowCookieConsent(true);
+        }
+      } catch (error) {
+        console.error("Error checking cookie consent:", error);
+        // Show consent banner if there's an error checking consent
+        setShowCookieConsent(true);
       }
     };
 
@@ -40,18 +46,28 @@ export const useCookieConsent = (userEmail: string | null) => {
     console.log("Handling cookie consent:", preferences);
     
     if (userEmail) {
-      const { data: user } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", userEmail)
-        .single();
+      try {
+        const { data: user } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", userEmail)
+          .maybeSingle();
 
-      if (user) {
-        await supabase.from("cookie_consents").upsert({
-          user_id: user.id,
-          preferences,
-          updated_at: new Date().toISOString()
+        if (user) {
+          await supabase.from("cookie_consents").upsert({
+            user_id: user.id,
+            preferences,
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.error("Error saving cookie consent:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save cookie preferences. Please try again.",
         });
+        return;
       }
     } else {
       localStorage.setItem("cookie-consent", preferences);
