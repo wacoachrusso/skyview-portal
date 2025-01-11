@@ -3,7 +3,7 @@ import { ChatList } from "./ChatList";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -29,10 +29,15 @@ export function ChatContent({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isOffline, offlineError } = useOfflineStatus();
-  const { storedMessages } = useMessageStorage(messages);
+  const { storedMessages, setStoredMessages } = useMessageStorage(messages);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
+    toast({
+      title: "Copied to clipboard",
+      duration: 2000
+    });
   };
 
   // Check for free trial status after each message
@@ -41,23 +46,27 @@ export function ChatContent({
       if (!currentUserId || isOffline) return;
 
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('subscription_plan, query_count')
           .eq('id', currentUserId)
           .single();
+
+        if (error) throw error;
 
         if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
           console.log('Free trial ended, logging out user');
           await supabase.auth.signOut();
           toast({
             title: "Free Trial Ended",
-            description: "Please select a subscription plan to continue."
+            description: "Please select a subscription plan to continue.",
+            variant: "destructive"
           });
           navigate('/?scrollTo=pricing-section');
         }
       } catch (error) {
         console.error('Error checking trial status:', error);
+        setLoadError('Failed to check subscription status');
       }
     };
 
@@ -66,10 +75,22 @@ export function ChatContent({
     }
   }, [messages, currentUserId, navigate, toast, isOffline]);
 
+  // Store messages in localStorage when they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      try {
+        setStoredMessages(messages);
+        console.log('Stored messages for offline access:', messages.length);
+      } catch (error) {
+        console.error('Error storing messages:', error);
+      }
+    }
+  }, [messages, setStoredMessages]);
+
   return (
     <div className="flex flex-col h-full">
       <ChatHeader onNewChat={onNewChat || (() => {})} />
-      {isOffline && <OfflineAlert offlineError={offlineError} />}
+      {isOffline && <OfflineAlert offlineError={offlineError || loadError} />}
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 && storedMessages.length === 0 ? (
           <WelcomeMessage />
