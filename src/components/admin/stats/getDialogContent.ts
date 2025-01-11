@@ -10,6 +10,7 @@ interface StatsDetails {
   yearlySubUsers?: any[];
   alphaTesters?: any[];
   promoters?: any[];
+  messageFeedback?: any[];
 }
 
 export const getDialogContent = (details: StatsDetails | undefined, selectedMetric: string | null) => {
@@ -76,7 +77,6 @@ export const getDialogContent = (details: StatsDetails | undefined, selectedMetr
         date: `Joined: ${format(new Date(user.created_at), "MMM d, yyyy")}`,
       })),
     },
-    
     alphaTesters: {
       title: "Active Alpha Testers",
       data: details.alphaTesters?.map((tester) => ({
@@ -91,6 +91,16 @@ export const getDialogContent = (details: StatsDetails | undefined, selectedMetr
         label: promoter.profiles?.full_name || "Unnamed Promoter",
         info: `Email: ${promoter.profiles?.email || "N/A"}`,
         date: format(new Date(promoter.created_at), "MMM d, yyyy"),
+      })),
+    },
+    messageFeedback: {
+      title: "Message Feedback",
+      data: details.messageFeedback?.map((feedback) => ({
+        label: feedback.messages?.content?.substring(0, 100) + "..." || "Message Content",
+        info: `From: ${feedback.profiles?.full_name || "Anonymous"}`,
+        date: format(new Date(feedback.created_at), "MMM d, yyyy"),
+        rating: feedback.rating,
+        isIncorrect: feedback.is_incorrect,
       })),
     },
   };
