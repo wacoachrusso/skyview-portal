@@ -29,26 +29,6 @@ export const useAuthStateHandler = () => {
 
         // Create a new session
         await createNewSession(session.user.id);
-        
-        // Only attempt re-authentication for Google users
-        if (session.user.app_metadata.provider === 'google') {
-          console.log("Re-authenticating Google user...");
-          const { error: reAuthError } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              queryParams: {
-                access_type: 'offline',
-                prompt: 'consent',
-              },
-              redirectTo: `${window.location.origin}/auth/callback`
-            }
-          });
-
-          if (reAuthError) {
-            console.error("Error re-authenticating:", reAuthError);
-            throw reAuthError;
-          }
-        }
 
         // Check for active sessions
         const { data: activeSessions } = await supabase

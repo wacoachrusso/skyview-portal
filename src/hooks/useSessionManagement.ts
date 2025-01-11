@@ -9,51 +9,6 @@ export const useSessionManagement = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Subscribe to session invalidation events
-  useEffect(() => {
-    const setupSessionListener = async () => {
-      const currentToken = localStorage.getItem('session_token');
-      if (!currentToken) return;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      console.log('Setting up session invalidation listener for user:', session.user.id);
-      
-      return supabase
-        .channel('session-invalidation')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'sessions',
-            filter: `user_id=eq.${session.user.id}`
-          },
-          async (payload) => {
-            if (payload.new.status === 'invalidated' && 
-                payload.new.session_token === currentToken) {
-              console.log('Session invalidated by another login');
-              await handleSessionInvalidation("Your session was ended because you logged in on another device");
-            }
-          }
-        )
-        .subscribe();
-    };
-
-    let subscription: any;
-    setupSessionListener().then(sub => {
-      subscription = sub;
-    });
-
-    return () => {
-      if (subscription) {
-        console.log('Cleaning up session invalidation listener');
-        subscription.unsubscribe();
-      }
-    };
-  }, [navigate, toast]);
-
   const handleSessionInvalidation = async (message: string) => {
     console.log('Handling session invalidation:', message);
     
@@ -73,11 +28,6 @@ export const useSessionManagement = () => {
       });
     } catch (error) {
       console.error('Error during forced signout:', error);
-      toast({
-        variant: "default",
-        title: "Session Ended",
-        description: message
-      });
     }
     
     navigate('/login', { replace: true });
@@ -87,7 +37,7 @@ export const useSessionManagement = () => {
     try {
       console.log('Creating new session for user:', userId);
       
-      // First invalidate any existing sessions using RPC function
+      // First invalidate any existing sessions
       const { error: invalidateError } = await supabase
         .rpc('invalidate_other_sessions', {
           p_user_id: userId,
@@ -101,7 +51,6 @@ export const useSessionManagement = () => {
 
       // Create new session token
       const sessionToken = crypto.randomUUID();
-      const refreshToken = crypto.randomUUID();
 
       // Get device info
       const { data: deviceInfo } = await fetch('https://api.ipify.org?format=json')
@@ -113,7 +62,6 @@ export const useSessionManagement = () => {
         .insert([{
           user_id: userId,
           session_token: sessionToken,
-          refresh_token: refreshToken,
           device_info: deviceInfo,
           ip_address: deviceInfo?.ip,
           status: 'active'
@@ -129,9 +77,12 @@ export const useSessionManagement = () => {
       // Store session token
       localStorage.setItem('session_token', sessionToken);
       
-      // Store refresh token in both localStorage and secure cookie
-      localStorage.setItem('supabase.refresh-token', refreshToken);
-      document.cookie = `sb-refresh-token=${refreshToken}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
+      // Ensure refresh token is stored in both localStorage and secure cookie
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (authSession?.refresh_token) {
+        localStorage.setItem('supabase.refresh-token', authSession.refresh_token);
+        document.cookie = `sb-refresh-token=${authSession.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
+      }
 
       console.log('New session created successfully:', session);
       return session;
@@ -149,7 +100,14 @@ export const useSessionManagement = () => {
   const initializeSession = async () => {
     try {
       console.log("Initializing session");
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error getting session:", error);
+        setIsLoading(false);
+        navigate('/login');
+        return;
+      }
       
       if (!session) {
         console.log("No active session found");
