@@ -21,7 +21,7 @@ export const NotificationManager = () => {
         description: "Notification sent successfully to all devices",
       });
       setShowNewNotificationDialog(false);
-      refetchNotifications();
+      await refetchNotifications();
     }
   };
 
@@ -29,6 +29,10 @@ export const NotificationManager = () => {
     console.log("Deleting notification:", id);
     const success = await deleteNotification(id);
     if (success) {
+      toast({
+        title: "Success",
+        description: "Notification deleted successfully",
+      });
       await refetchNotifications();
     }
   };

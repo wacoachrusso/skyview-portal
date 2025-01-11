@@ -44,7 +44,7 @@ export const useNotifications = () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, email, push_notifications")
-        .neq('account_status', 'deleted'); // Don't include deleted profiles
+        .neq('account_status', 'deleted');
       if (error) throw error;
       return data;
     },
@@ -68,10 +68,6 @@ export const useNotifications = () => {
         return false;
       }
 
-      toast({
-        title: "Success",
-        description: "Notification deleted successfully",
-      });
       await queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
       return true;
     } catch (error) {
@@ -143,10 +139,9 @@ export const useNotifications = () => {
 
       if (notificationsToInsert.length > 0) {
         console.log("Inserting notifications:", notificationsToInsert);
-        const { data: insertedNotifications, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from("notifications")
-          .insert(notificationsToInsert)
-          .select();
+          .insert(notificationsToInsert);
 
         if (insertError) {
           console.error("Error inserting notifications:", insertError);
@@ -157,35 +152,31 @@ export const useNotifications = () => {
         for (const profile of usersToNotify) {
           if (profile.push_subscription) {
             try {
-              const notificationOptions = {
-                body: notification.message,
-                icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-                badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
-                tag: notification.type,
-                data: {
-                  url: '/release-notes',
-                  type: notification.type,
-                  id: insertedNotifications?.[0]?.id
-                },
-                renotify: true,
-                requireInteraction: true,
-              };
-
-              await sendPushNotification(notification.title, notificationOptions);
+              await sendPushNotification(
+                notification.title,
+                {
+                  body: notification.message,
+                  icon: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+                  badge: "/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png",
+                  tag: notification.type,
+                  data: {
+                    url: '/dashboard',
+                    type: notification.type
+                  },
+                  renotify: true,
+                  requireInteraction: true,
+                }
+              );
             } catch (error) {
               console.error("Error sending push notification to user:", profile.id, error);
             }
           }
         }
+
+        await queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+        return true;
       }
 
-      // Invalidate queries to trigger a refresh
-      queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
-      
-      toast({
-        title: "Success",
-        description: "Notification sent successfully",
-      });
       return true;
     } catch (error) {
       console.error("Error sending notification:", error);
