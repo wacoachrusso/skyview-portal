@@ -72,7 +72,7 @@ export const useNotifications = () => {
         title: "Success",
         description: "Notification deleted successfully",
       });
-      await refetch();
+      await queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
       return true;
     } catch (error) {
       console.error("Error deleting notification:", error);

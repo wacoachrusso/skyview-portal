@@ -26,7 +26,11 @@ export const NotificationManager = () => {
   };
 
   const handleDeleteNotification = async (id: string) => {
-    await deleteNotification(id);
+    console.log("Deleting notification:", id);
+    const success = await deleteNotification(id);
+    if (success) {
+      await refetchNotifications();
+    }
   };
 
   return (
