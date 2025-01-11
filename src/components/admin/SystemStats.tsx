@@ -10,6 +10,7 @@ export const SystemStats = () => {
   const [selectedMetric, setSelectedMetric] = useState<MetricType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { stats, refetch } = useMetricsData();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Set up real-time updates
   useRealtimeUpdates(refetch);
@@ -19,15 +20,33 @@ export const SystemStats = () => {
     setIsDialogOpen(true);
   };
 
-  const dialogContent = getDialogContent(stats?.details, selectedMetric);
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeleting(true);
+      const { error } = await supabase
+        .from('message_feedback')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      refetch();
+    } catch (error) {
+      console.error('Error deleting feedback:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const dialogContent = getDialogContent(stats?.details, selectedMetric, handleDelete, isDeleting);
 
   return (
     <>
       <MetricsGrid onMetricClick={handleMetricClick} />
       <StatsDialog
         isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        content={dialogContent}
+        onClose={() => setIsDialogOpen(false)}
+        selectedMetric={selectedMetric}
+        onRefresh={refetch}
       />
     </>
   );

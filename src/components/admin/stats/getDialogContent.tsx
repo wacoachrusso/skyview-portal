@@ -4,12 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { ReactNode } from "react";
+
+interface DialogContent {
+  title: string;
+  content: ReactNode;
+}
 
 export const getDialogContent = (
   metric: MetricType | null,
   onDelete: (id: string) => Promise<void>,
   isDeleting: boolean
-) => {
+): DialogContent => {
   const { data: feedbackData } = useQuery({
     queryKey: ["messageFeedback"],
     queryFn: async () => {
