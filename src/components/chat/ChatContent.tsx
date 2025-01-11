@@ -3,12 +3,13 @@ import { ChatList } from "./ChatList";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { OfflineAlert } from "./OfflineAlert";
+import { useOfflineStatus } from "@/hooks/useOfflineStatus";
+import { useMessageStorage } from "@/hooks/useMessageStorage";
 
 interface ChatContentProps {
   messages: Message[];
@@ -27,79 +28,12 @@ export function ChatContent({
 }: ChatContentProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [hasInitializedChat, setHasInitializedChat] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [offlineError, setOfflineError] = useState<string | null>(null);
-  const [storedMessages, setStoredMessages] = useState<Message[]>([]);
+  const { isOffline, offlineError } = useOfflineStatus();
+  const { storedMessages } = useMessageStorage(messages);
 
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
   };
-
-  // Monitor online/offline status
-  useEffect(() => {
-    const handleOnline = () => {
-      console.log('App is online');
-      setIsOffline(false);
-      setOfflineError(null);
-      
-      // Try to sync stored messages when coming back online
-      const stored = localStorage.getItem('current-chat-messages');
-      if (stored) {
-        console.log('Found stored messages to sync');
-        try {
-          const parsedMessages = JSON.parse(stored);
-          setStoredMessages(parsedMessages);
-        } catch (error) {
-          console.error('Error parsing stored messages:', error);
-        }
-      }
-    };
-    
-    const handleOffline = () => {
-      console.log('App is offline');
-      setIsOffline(true);
-      // Load stored messages when going offline
-      const stored = localStorage.getItem('current-chat-messages');
-      if (stored) {
-        try {
-          const parsedMessages = JSON.parse(stored);
-          setStoredMessages(parsedMessages);
-          console.log('Loaded stored messages for offline use:', parsedMessages.length);
-        } catch (error) {
-          console.error('Error loading stored messages:', error);
-          setOfflineError('Unable to load stored messages');
-        }
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // Initial offline check
-    if (!navigator.onLine) {
-      handleOffline();
-    }
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Store messages in localStorage whenever they change
-  useEffect(() => {
-    if (messages.length > 0) {
-      console.log('Storing messages in chat history:', messages.length, 'messages');
-      try {
-        localStorage.setItem('current-chat-messages', JSON.stringify(messages));
-        console.log('Stored current chat messages in localStorage');
-      } catch (error) {
-        console.error('Error storing messages in localStorage:', error);
-        setOfflineError('Unable to store messages for offline access');
-      }
-    }
-  }, [messages]);
 
   // Check for free trial status after each message
   useEffect(() => {
@@ -124,29 +58,18 @@ export function ChatContent({
         }
       } catch (error) {
         console.error('Error checking trial status:', error);
-        if (!navigator.onLine) {
-          setOfflineError('Unable to verify subscription status while offline');
-        }
       }
     };
 
     if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
       checkFreeTrialStatus();
     }
-  }, [messages, currentUserId, navigate, toast]);
+  }, [messages, currentUserId, navigate, toast, isOffline]);
 
   return (
     <div className="flex flex-col h-full">
       <ChatHeader onNewChat={onNewChat || (() => {})} />
-      {isOffline && (
-        <Alert variant="destructive" className="mb-4 mx-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            You are currently offline. You can view your previous conversations, but new messages cannot be sent.
-            {offlineError && <div className="mt-2 text-sm">{offlineError}</div>}
-          </AlertDescription>
-        </Alert>
-      )}
+      {isOffline && <OfflineAlert offlineError={offlineError} />}
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 && storedMessages.length === 0 ? (
           <WelcomeMessage />
