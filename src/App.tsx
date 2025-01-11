@@ -9,8 +9,8 @@ function App() {
   const { showDisclaimer, handleDisclaimerAccept, handleDisclaimerReject } = useAuthState();
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Router>
+    <Router>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <DisclaimerDialog 
           open={showDisclaimer}
           onAccept={handleDisclaimerAccept}
@@ -18,8 +18,8 @@ function App() {
         />
         <AppRoutes />
         <Toaster />
-      </Router>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 
