@@ -1,6 +1,6 @@
 import { Conversation } from "@/types/chat";
 import { format } from "date-fns";
-import { MessageSquare, Trash2, Eye, EyeOff } from "lucide-react";
+import { MessageSquare, Trash2, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +38,7 @@ export function ConversationItem({
       title: isOffline ? "Chat removed from offline storage" : "Chat saved for offline access",
       description: isOffline 
         ? "This chat will no longer be available offline" 
-        : "This chat will be available when you're offline",
+        : "This chat has been downloaded for offline access",
       duration: 2000
     });
   };
@@ -95,11 +95,11 @@ export function ConversationItem({
                 className="h-6 w-6 p-0.5"
                 onClick={handleToggleOffline}
               >
-                {isOffline ? (
-                  <EyeOff className="h-4 w-4 text-brand-gold hover:text-brand-gold/80" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400 hover:text-white" />
-                )}
+                <ArrowDown className={`h-4 w-4 ${
+                  isOffline 
+                    ? "text-brand-gold" 
+                    : "text-gray-400 hover:text-white"
+                }`} />
               </Button>
             </div>
           </div>
