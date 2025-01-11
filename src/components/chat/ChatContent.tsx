@@ -3,7 +3,7 @@ import { ChatList } from "./ChatList";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,7 @@ export function ChatContent({
 }: ChatContentProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [hasInitializedChat, setHasInitializedChat] = useState(false);
 
   const handleCopyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
@@ -75,19 +76,28 @@ export function ChatContent({
 
   // Load stored messages when component mounts
   useEffect(() => {
-    try {
-      const storedMessages = localStorage.getItem('current-chat-messages');
-      if (storedMessages) {
-        const parsedMessages = JSON.parse(storedMessages);
-        console.log('Loaded stored messages:', parsedMessages.length, 'messages');
-        if (messages.length === 0) {
-          onSendMessage(''); // This will trigger a reload of the conversation
+    const initializeChat = async () => {
+      if (hasInitializedChat || !currentUserId) return;
+
+      console.log('Initializing chat for user:', currentUserId);
+      try {
+        const storedMessages = localStorage.getItem('current-chat-messages');
+        if (storedMessages) {
+          const parsedMessages = JSON.parse(storedMessages);
+          console.log('Found stored messages:', parsedMessages.length);
+          if (messages.length === 0 && parsedMessages.length > 0) {
+            console.log('Loading stored conversation');
+            await onSendMessage(''); // This will trigger a reload of the conversation
+          }
         }
+        setHasInitializedChat(true);
+      } catch (error) {
+        console.error('Error initializing chat:', error);
       }
-    } catch (error) {
-      console.error('Error loading stored messages:', error);
-    }
-  }, []);
+    };
+
+    initializeChat();
+  }, [currentUserId, messages.length, onSendMessage, hasInitializedChat]);
 
   return (
     <div className="flex flex-col h-full">
