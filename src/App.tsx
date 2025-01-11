@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { useConsents } from "@/hooks/useConsents";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
-import { SessionCheck } from "@/components/chat/settings/SessionCheck";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Create a client with specific configuration
@@ -45,7 +44,6 @@ function AppContent() {
 
   return (
     <ThemeProvider>
-      <SessionCheck />
       <AppRoutes />
       <Toaster />
       
