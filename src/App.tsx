@@ -8,17 +8,20 @@ import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 import { SessionCheck } from "@/components/chat/settings/SessionCheck";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// Create a client
+// Create a client with specific configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5000,
       retry: 1,
+      staleTime: 5000,
+      refetchOnWindowFocus: false,
     },
   },
 });
 
 function App() {
+  console.log('Rendering App component');
+  
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -29,6 +32,8 @@ function App() {
 }
 
 function AppContent() {
+  console.log('Rendering AppContent');
+  
   const { 
     showCookieConsent, 
     showDisclaimer, 

@@ -17,24 +17,38 @@ export const useDisclaimerConsent = (userEmail: string | null) => {
       }
 
       try {
-        const { data: user } = await supabase
+        const { data: user, error: userError } = await supabase
           .from("profiles")
           .select("id")
           .eq("email", userEmail)
           .maybeSingle();
 
+        if (userError) {
+          console.error("Error fetching user profile:", userError);
+          setShowDisclaimer(true);
+          return;
+        }
+
         if (user) {
-          const { data: disclaimerConsent } = await supabase
+          const { data: disclaimerConsent, error: consentError } = await supabase
             .from("disclaimer_consents")
             .select("*")
             .eq("user_id", user.id)
             .maybeSingle();
 
-          if (!disclaimerConsent) setShowDisclaimer(true);
+          if (consentError) {
+            console.error("Error fetching disclaimer consent:", consentError);
+            setShowDisclaimer(true);
+            return;
+          }
+
+          if (!disclaimerConsent) {
+            console.log("No disclaimer consent found, showing dialog");
+            setShowDisclaimer(true);
+          }
         }
       } catch (error) {
         console.error("Error checking disclaimer consent:", error);
-        // Show disclaimer if there's an error checking consent
         setShowDisclaimer(true);
       }
     };
@@ -47,18 +61,28 @@ export const useDisclaimerConsent = (userEmail: string | null) => {
     
     if (userEmail) {
       try {
-        const { data: user } = await supabase
+        const { data: user, error: userError } = await supabase
           .from("profiles")
           .select("id")
           .eq("email", userEmail)
           .maybeSingle();
 
+        if (userError) {
+          throw userError;
+        }
+
         if (user) {
-          await supabase.from("disclaimer_consents").upsert({
-            user_id: user.id,
-            status: accepted ? "accepted" : "rejected",
-            has_seen_chat_disclaimer: true
-          });
+          const { error: upsertError } = await supabase
+            .from("disclaimer_consents")
+            .upsert({
+              user_id: user.id,
+              status: accepted ? "accepted" : "rejected",
+              has_seen_chat_disclaimer: true
+            });
+
+          if (upsertError) {
+            throw upsertError;
+          }
         }
       } catch (error) {
         console.error("Error saving disclaimer consent:", error);
