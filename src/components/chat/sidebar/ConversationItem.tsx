@@ -89,7 +89,8 @@ export function ConversationItem({
       window.URL.revokeObjectURL(url);
 
       // Also save for offline access
-      onToggleOffline(e, conversation.id);
+      const mockEvent = new MouseEvent('click');
+      onToggleOffline(mockEvent, conversation.id);
       
       // Show device-specific toast message
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
