@@ -7,33 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Generate unsubscribe link
-const generateUnsubscribeLink = async (email: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(email + Deno.env.get("RESEND_WEBHOOK_SECRET"));
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
-  return `${new URL(Deno.env.get('SUPABASE_URL') || '').origin}/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
-};
-
-// Generate email footer
-const getEmailFooter = async (email: string): Promise<string> => {
-  const unsubscribeLink = await generateUnsubscribeLink(email);
-  
-  return `
-    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
-      <p>SkyGuide™ - Your Aviation Career Partner</p>
-      <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
-      <p style="margin-top: 20px;">
-        <a href="${unsubscribeLink}" style="color: #666; text-decoration: underline;">
-          Unsubscribe from these emails
-        </a>
-      </p>
-    </div>
-  `;
-};
+interface EmailRequest {
+  email: string;
+  name: string;
+  confirmationUrl: string;
+}
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -41,11 +19,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log("Starting confirmation email process");
+    console.log("Starting signup confirmation email process");
     
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY is not set");
-      throw new Error("Missing RESEND_API_KEY");
+      throw new Error("Missing RESEND_API_KEY configuration");
     }
 
     const { email, name, confirmationUrl } = await req.json();
@@ -55,8 +33,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Missing required fields");
     }
 
-    const emailFooter = await getEmailFooter(email);
     console.log("Sending confirmation email to:", email);
+    console.log("Confirmation URL:", confirmationUrl);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -93,7 +71,11 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p style="color: #666; font-size: 14px;">If you didn't create a SkyGuide™ account, you can safely ignore this email.</p>
               
-              ${emailFooter}
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+                <p>SkyGuide™ - Your Aviation Assistant</p>
+                <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+                <p>Need help? <a href="mailto:support@skyguide.site" style="color: #666; text-decoration: underline;">Contact Support</a></p>
+              </div>
             </body>
           </html>
         `,

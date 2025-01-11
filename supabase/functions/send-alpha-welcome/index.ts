@@ -83,11 +83,11 @@ const handler = async (req: Request): Promise<Response> => {
             
             <p>Your first feedback request will arrive in about a week. Please take some time to explore the platform and note any thoughts or suggestions you have.</p>
             
-            <p>If you have any questions or run into any problems, you can reply directly to this email.</p>
-            
-            <p>Thank you for being part of our journey!</p>
-            
-            <p>Best regards,<br>The SkyGuide Team</p>
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+              <p>SkyGuide™ - Your Aviation Career Partner</p>
+              <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+              <p>Need help? <a href="mailto:support@skyguide.site" style="color: #666; text-decoration: underline;">Contact Support</a></p>
+            </div>
           </div>
         `,
       }),

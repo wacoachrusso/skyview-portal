@@ -71,9 +71,11 @@ const handler = async (req: Request): Promise<Response> => {
               <li>💫 Premium features</li>
             </ul>
             
-            <p>Questions about our plans? Reply to this email and we'll help you choose the best option for your needs.</p>
-            
-            <p>Best regards,<br>The SkyGuide Team</p>
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+              <p>SkyGuide™ - Your Aviation Career Partner</p>
+              <p>© ${new Date().getFullYear()} SkyGuide. All rights reserved.</p>
+              <p>Need help? <a href="mailto:support@skyguide.site" style="color: #666; text-decoration: underline;">Contact Support</a></p>
+            </div>
           </div>
         `,
       }),
