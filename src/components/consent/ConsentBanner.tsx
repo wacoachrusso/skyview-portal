@@ -1,16 +1,34 @@
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
-interface ConsentBannerProps {
-  onAccept: (preferences: "essential" | "analytics" | "marketing" | "all" | "none") => void;
-}
-
-export const ConsentBanner = ({ onAccept }: ConsentBannerProps) => {
+export const ConsentBanner = () => {
+  const [showBanner, setShowBanner] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const hasConsented = localStorage.getItem("privacy-consent");
+    if (!hasConsented) {
+      setShowBanner(true);
+    }
+  }, []);
+
+  const handleAccept = () => {
+    localStorage.setItem("privacy-consent", "true");
+    setShowBanner(false);
+    toast({
+      title: "Consent Saved",
+      description: "Your privacy preferences have been saved.",
+    });
+  };
 
   const handleViewPolicy = () => {
     navigate("/privacy-policy");
   };
+
+  if (!showBanner) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 shadow-lg z-50">
@@ -34,7 +52,7 @@ export const ConsentBanner = ({ onAccept }: ConsentBannerProps) => {
             Learn More
           </Button>
           <Button
-            onClick={() => onAccept("all")}
+            onClick={handleAccept}
             className="bg-brand-gold hover:bg-brand-gold/90 text-black"
           >
             Accept
