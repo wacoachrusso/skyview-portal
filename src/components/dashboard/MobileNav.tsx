@@ -1,67 +1,63 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { LogOut, User, MessageSquare, Menu } from "lucide-react";
-import { NotificationBell } from "@/components/shared/NotificationBell";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Settings,
+  MessageSquare,
+  FileText,
+  Bell,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 
-interface MobileNavProps {
-  isAccountPage: boolean;
-  onSignOut: () => Promise<void>;
-}
+export const MobileNav = () => {
+  const { profile } = useUserProfile();
 
-export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
   return (
-    <div className="flex md:hidden items-center space-x-3">
-      <div className="flex items-center space-x-2">
-        <NotificationBell />
-        <Button 
-          asChild
-          variant="ghost"
-          size="sm"
-          className="text-foreground/70 hover:text-foreground"
+    <nav className="md:hidden flex flex-col gap-2">
+      <Link
+        to="/dashboard"
+        className="flex items-center gap-2 p-2 hover:bg-accent rounded-lg"
+      >
+        <FileText className="h-5 w-5" />
+        <span>Dashboard</span>
+      </Link>
+      <Link
+        to="/chat"
+        className="flex items-center gap-2 p-2 hover:bg-accent rounded-lg"
+      >
+        <MessageSquare className="h-5 w-5" />
+        <span>Chat</span>
+      </Link>
+      <Link
+        to="/account"
+        className="flex items-center gap-2 p-2 hover:bg-accent rounded-lg"
+      >
+        <User className="h-5 w-5" />
+        <span>Account</span>
+      </Link>
+      <Link
+        to="/settings"
+        className="flex items-center gap-2 p-2 hover:bg-accent rounded-lg"
+      >
+        <Settings className="h-5 w-5" />
+        <span>Settings</span>
+      </Link>
+      <Link
+        to="/release-notes"
+        className="flex items-center gap-2 p-2 hover:bg-accent rounded-lg"
+      >
+        <Bell className="h-5 w-5" />
+        <span>Release Notes</span>
+      </Link>
+      {profile?.is_admin && (
+        <Link
+          to="/admin"
+          className="flex items-center gap-2 p-2 hover:bg-accent rounded-lg text-blue-600 dark:text-blue-400"
         >
-          <Link to="/chat">
-            <MessageSquare className="h-5 w-5" />
-          </Link>
-        </Button>
-      </div>
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="text-foreground/70 hover:text-foreground"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="end" 
-          className="w-56 bg-background/95 backdrop-blur-sm border border-border"
-        >
-          {!isAccountPage && (
-            <DropdownMenuItem asChild>
-              <Link to="/account" className="flex items-center">
-                <User className="mr-2 h-4 w-4" />
-                Account
-              </Link>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem 
-            className="text-destructive focus:text-destructive"
-            onClick={onSignOut}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+          <ShieldCheck className="h-5 w-5" />
+          <span>Admin Panel</span>
+        </Link>
+      )}
+    </nav>
   );
 };
