@@ -17,35 +17,29 @@ export const useDisclaimerConsent = (userEmail: string | null) => {
       }
 
       try {
-        const { data: user, error: userError } = await supabase
+        const { data: user } = await supabase
           .from("profiles")
           .select("id")
           .eq("email", userEmail)
           .maybeSingle();
 
-        if (userError) {
-          console.error("Error fetching user profile:", userError);
-          setShowDisclaimer(true);
+        if (!user) {
+          console.error("No profile found for user");
           return;
         }
 
-        if (user) {
-          const { data: disclaimerConsent, error: consentError } = await supabase
-            .from("disclaimer_consents")
-            .select("*")
-            .eq("user_id", user.id)
-            .maybeSingle();
+        const { data: disclaimerConsent } = await supabase
+          .from("disclaimer_consents")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-          if (consentError) {
-            console.error("Error fetching disclaimer consent:", consentError);
-            setShowDisclaimer(true);
-            return;
-          }
-
-          if (!disclaimerConsent) {
-            console.log("No disclaimer consent found, showing dialog");
-            setShowDisclaimer(true);
-          }
+        if (!disclaimerConsent) {
+          console.log("No disclaimer consent found, showing dialog");
+          setShowDisclaimer(true);
+        } else {
+          console.log("Existing disclaimer consent found:", disclaimerConsent);
+          setShowDisclaimer(false);
         }
       } catch (error) {
         console.error("Error checking disclaimer consent:", error);
@@ -61,28 +55,26 @@ export const useDisclaimerConsent = (userEmail: string | null) => {
     
     if (userEmail) {
       try {
-        const { data: user, error: userError } = await supabase
+        const { data: user } = await supabase
           .from("profiles")
           .select("id")
           .eq("email", userEmail)
           .maybeSingle();
 
-        if (userError) {
-          throw userError;
+        if (!user) {
+          throw new Error("User profile not found");
         }
 
-        if (user) {
-          const { error: upsertError } = await supabase
-            .from("disclaimer_consents")
-            .upsert({
-              user_id: user.id,
-              status: accepted ? "accepted" : "rejected",
-              has_seen_chat_disclaimer: true
-            });
+        const { error: upsertError } = await supabase
+          .from("disclaimer_consents")
+          .upsert({
+            user_id: user.id,
+            status: accepted ? "accepted" : "rejected",
+            has_seen_chat_disclaimer: true
+          });
 
-          if (upsertError) {
-            throw upsertError;
-          }
+        if (upsertError) {
+          throw upsertError;
         }
       } catch (error) {
         console.error("Error saving disclaimer consent:", error);

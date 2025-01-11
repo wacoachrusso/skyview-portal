@@ -17,35 +17,29 @@ export const useCookieConsent = (userEmail: string | null) => {
       }
 
       try {
-        const { data: user, error: userError } = await supabase
+        const { data: user } = await supabase
           .from("profiles")
           .select("id")
           .eq("email", userEmail)
           .maybeSingle();
 
-        if (userError) {
-          console.error("Error fetching user profile:", userError);
-          setShowCookieConsent(true);
+        if (!user) {
+          console.error("No profile found for user");
           return;
         }
 
-        if (user) {
-          const { data: cookieConsent, error: consentError } = await supabase
-            .from("cookie_consents")
-            .select("*")
-            .eq("user_id", user.id)
-            .maybeSingle();
+        const { data: cookieConsent } = await supabase
+          .from("cookie_consents")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-          if (consentError) {
-            console.error("Error fetching cookie consent:", consentError);
-            setShowCookieConsent(true);
-            return;
-          }
-
-          if (!cookieConsent) {
-            console.log("No cookie consent found, showing banner");
-            setShowCookieConsent(true);
-          }
+        if (!cookieConsent) {
+          console.log("No cookie consent found, showing banner");
+          setShowCookieConsent(true);
+        } else {
+          console.log("Existing cookie consent found:", cookieConsent);
+          setShowCookieConsent(false);
         }
       } catch (error) {
         console.error("Error checking cookie consent:", error);
@@ -61,28 +55,26 @@ export const useCookieConsent = (userEmail: string | null) => {
     
     if (userEmail) {
       try {
-        const { data: user, error: userError } = await supabase
+        const { data: user } = await supabase
           .from("profiles")
           .select("id")
           .eq("email", userEmail)
           .maybeSingle();
 
-        if (userError) {
-          throw userError;
+        if (!user) {
+          throw new Error("User profile not found");
         }
 
-        if (user) {
-          const { error: upsertError } = await supabase
-            .from("cookie_consents")
-            .upsert({
-              user_id: user.id,
-              preferences,
-              updated_at: new Date().toISOString()
-            });
+        const { error: upsertError } = await supabase
+          .from("cookie_consents")
+          .upsert({
+            user_id: user.id,
+            preferences,
+            updated_at: new Date().toISOString()
+          });
 
-          if (upsertError) {
-            throw upsertError;
-          }
+        if (upsertError) {
+          throw upsertError;
         }
       } catch (error) {
         console.error("Error saving cookie consent:", error);
