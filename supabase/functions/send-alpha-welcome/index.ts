@@ -54,6 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
         from: isPromoter 
           ? "SkyGuide Promoter Program <promoters@skyguide.site>"
           : "SkyGuide Alpha Tester Program <alpha@skyguide.site>",
+        reply_to: isPromoter ? "promoters@skyguide.site" : "alpha@skyguide.site",
         to: [email],
         subject: isPromoter ? "🌟 Welcome to the SkyGuide Promoter Program!" : "Welcome to the SkyGuide Alpha Testing Program!",
         html: `

@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
         },
         body: JSON.stringify({
           from: "SkyGuide Promoter Program <promoters@skyguide.site>",
-          reply_to: "skyguide32@gmail.com",
+          reply_to: "promoters@skyguide.site",
           to: [promoter.email],
           subject: "🌟 Weekly SkyGuide Promoter Update & Feedback Request",
           html: emailContent,

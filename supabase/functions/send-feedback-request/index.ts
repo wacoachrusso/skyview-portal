@@ -36,8 +36,8 @@ const handler = async (req: Request): Promise<Response> => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "SkyGuide Feedback <feedback@skyguide.site>",
-          reply_to: "skyguide32@gmail.com",
+          from: "SkyGuide Alpha Program <alpha@skyguide.site>",
+          reply_to: "alpha@skyguide.site",
           to: [tester.email],
           subject: "Your Weekly SkyGuide Feedback Request",
           html: `
