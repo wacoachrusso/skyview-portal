@@ -279,13 +279,18 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_text: string | null
+          action_url: string | null
           created_at: string
+          expires_at: string | null
           id: string
           is_read: boolean | null
           message: string
+          metadata: Json | null
           notification_type:
             | Database["public"]["Enums"]["notification_type"]
             | null
+          priority: string | null
           profile_id: string
           release_note_id: string | null
           title: string
@@ -293,13 +298,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          action_text?: string | null
+          action_url?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_read?: boolean | null
           message: string
+          metadata?: Json | null
           notification_type?:
             | Database["public"]["Enums"]["notification_type"]
             | null
+          priority?: string | null
           profile_id: string
           release_note_id?: string | null
           title: string
@@ -307,13 +317,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          action_text?: string | null
+          action_url?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_read?: boolean | null
           message?: string
+          metadata?: Json | null
           notification_type?:
             | Database["public"]["Enums"]["notification_type"]
             | null
+          priority?: string | null
           profile_id?: string
           release_note_id?: string | null
           title?: string
