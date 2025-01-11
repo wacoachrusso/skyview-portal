@@ -29,10 +29,10 @@ export const NotificationBell = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg"
+          className="w-80 bg-background border border-border shadow-lg"
         >
           {notifications?.length === 0 ? (
-            <DropdownMenuItem className="text-center text-gray-500 dark:text-gray-400">
+            <DropdownMenuItem className="text-center text-muted-foreground">
               No notifications
             </DropdownMenuItem>
           ) : (
