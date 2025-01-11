@@ -8,6 +8,7 @@ const retryLoadComponent = (fn: () => Promise<any>, retriesLeft = 3): Promise<an
       .catch((error) => {
         console.warn(`Error loading component, retries left: ${retriesLeft}`, error);
         if (retriesLeft === 0) {
+          console.error('Failed to load component after all retries:', error);
           reject(error);
           return;
         }
@@ -36,10 +37,11 @@ export const Settings = lazy(() => retryLoadComponent(() => import("@/pages/Sett
 export const Dashboard = lazy(() => retryLoadComponent(() => import("@/pages/Dashboard")));
 export const AdminDashboard = lazy(() => {
   console.log('Loading AdminDashboard component');
-  return retryLoadComponent(() => import("@/pages/AdminDashboard")).catch(error => {
-    console.error('Failed to load AdminDashboard:', error);
-    throw error;
-  });
+  return retryLoadComponent(() => import("@/pages/AdminDashboard"))
+    .catch(error => {
+      console.error('Failed to load AdminDashboard:', error);
+      throw error;
+    });
 });
 export const About = lazy(() => retryLoadComponent(() => import("@/pages/About")));
 export const ReleaseNotes = lazy(() => retryLoadComponent(() => import("@/pages/ReleaseNotes")));
