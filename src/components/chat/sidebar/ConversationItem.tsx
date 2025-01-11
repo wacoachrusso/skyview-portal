@@ -4,6 +4,7 @@ import { MessageSquare, Trash2, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -32,15 +33,59 @@ export function ConversationItem({
 
   const handleToggleOffline = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleOffline(e, conversation.id);
     
-    toast({
-      title: isOffline ? "Chat removed from offline storage" : "Chat saved for offline access",
-      description: isOffline 
-        ? "This chat will no longer be available offline" 
-        : "This chat has been downloaded for offline access",
-      duration: 2000
-    });
+    try {
+      // Fetch messages for the conversation
+      const { data: messages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversation.id)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) throw messagesError;
+
+      // Create a chat export object
+      const chatExport = {
+        conversation,
+        messages,
+        exportedAt: new Date().toISOString()
+      };
+
+      // Convert to JSON string
+      const fileContent = JSON.stringify(chatExport, null, 2);
+      
+      // Create blob and download link
+      const blob = new Blob([fileContent], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `chat-${conversation.title}-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      // Also save for offline access
+      onToggleOffline(e, conversation.id);
+      
+      toast({
+        title: "Chat downloaded successfully",
+        description: "The chat has been saved to your device and is available offline",
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('Error downloading chat:', error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the chat. Please try again.",
+        variant: "destructive",
+        duration: 2000
+      });
+    }
   };
 
   return (
