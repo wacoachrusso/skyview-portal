@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,13 +25,9 @@ export function MobileMenu({
   return (
     <div className="md:hidden flex items-center gap-2">
       {isLoggedIn && !isLoading && (
-        <AuthButtons 
-          isLoading={isLoading} 
-          isLoggedIn={isLoggedIn} 
-          scrollToPricing={scrollToPricing}
-          isMobile={true}
-          showChatOnly={true}
-        />
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+        </div>
       )}
       <DropdownMenu 
         open={isMobileMenuOpen} 
