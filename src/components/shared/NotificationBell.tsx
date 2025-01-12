@@ -21,7 +21,12 @@ export const NotificationBell = () => {
     handleNotificationClick,
   } = useNotificationState();
 
-  console.log('Notification bell state:', { open, unreadCount, notificationsCount: notifications?.length });
+  console.log('Rendering NotificationBell with state:', { 
+    open, 
+    unreadCount, 
+    notificationsCount: notifications?.length,
+    notifications 
+  });
 
   return (
     <>
@@ -31,10 +36,11 @@ export const NotificationBell = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-[280px] md:w-[320px] bg-background/95 backdrop-blur-sm border border-border"
+          className="w-[280px] md:w-[320px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+          sideOffset={5}
         >
           {!notifications || notifications.length === 0 ? (
-            <DropdownMenuItem className="text-center text-muted-foreground">
+            <DropdownMenuItem disabled className="text-center text-muted-foreground">
               No notifications
             </DropdownMenuItem>
           ) : (
