@@ -9,12 +9,15 @@ interface NotificationBellButtonProps {
 
 export const NotificationBellButton = forwardRef<HTMLButtonElement, NotificationBellButtonProps>(
   ({ unreadCount }, ref) => {
+    console.log('Rendering NotificationBellButton with unreadCount:', unreadCount);
+    
     return (
       <Button 
         ref={ref} 
         variant="ghost" 
         size="icon"
         className="relative w-8 h-8 md:w-9 md:h-9"
+        type="button"
       >
         <Bell className="h-4 w-4 md:h-5 md:w-5" />
         {unreadCount > 0 && (
