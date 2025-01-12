@@ -28,9 +28,14 @@ export const NotificationBell = () => {
     notifications 
   });
 
+  const handleOpenChange = (isOpen: boolean) => {
+    console.log('Dropdown open state changing to:', isOpen);
+    setOpen(isOpen);
+  };
+
   return (
     <>
-      <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenu open={open} onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger asChild>
           <NotificationBellButton unreadCount={unreadCount} />
         </DropdownMenuTrigger>
@@ -38,6 +43,7 @@ export const NotificationBell = () => {
           align="end" 
           className="w-[280px] md:w-[320px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
           sideOffset={5}
+          forceMount
         >
           {!notifications || notifications.length === 0 ? (
             <DropdownMenuItem disabled className="text-center text-muted-foreground">

@@ -16,7 +16,7 @@ export const NotificationBellButton = forwardRef<HTMLButtonElement, Notification
         ref={ref} 
         variant="ghost" 
         size="icon"
-        className="relative w-8 h-8 md:w-9 md:h-9 hover:bg-accent"
+        className="relative w-8 h-8 md:w-9 md:h-9 hover:bg-accent focus-visible:ring-1 focus-visible:ring-ring"
         type="button"
         aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
       >
