@@ -22,6 +22,15 @@ export const NotificationTable = ({
   onViewDetails,
   onDelete,
 }: NotificationTableProps) => {
+  const getRecipientDisplay = (notification: any) => {
+    if (notification.profile_id === "all") {
+      return "All Users";
+    }
+    const profile = notification.profiles;
+    if (!profile) return "N/A";
+    return `${profile.full_name || "Unnamed User"} (${profile.email || "No email"})`;
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -43,9 +52,7 @@ export const NotificationTable = ({
               </TableCell>
               <TableCell>{notification.title}</TableCell>
               <TableCell>
-                {notification.profile_id === "all" 
-                  ? "All Users"
-                  : `${(notification.profiles as any)?.full_name || "N/A"} (${(notification.profiles as any)?.email || "No email"})`}
+                {getRecipientDisplay(notification)}
               </TableCell>
               <TableCell>
                 {format(new Date(notification.created_at), "MMM d, yyyy HH:mm")}
