@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, MessageSquare } from "lucide-react";
+import { LogOut, User, MessageSquare, Accessibility } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 
 interface DesktopNavProps {
@@ -23,6 +23,15 @@ export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
             <MessageSquare className="mr-2 h-4 w-4" />
             <span>Ask SkyGuide</span>
           </Link>
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="text-white hover:bg-brand-gold hover:text-black"
+          aria-label="Accessibility options"
+        >
+          <Accessibility className="h-4 w-4 sm:mr-2" />
+          <span className="hidden lg:inline">Accessibility</span>
         </Button>
       </div>
       {!isAccountPage && (
