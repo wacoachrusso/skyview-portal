@@ -35,7 +35,7 @@ export const NotificationBell = () => {
 
   return (
     <>
-      <DropdownMenu modal={false}>
+      <DropdownMenu open={open} onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger asChild>
           <NotificationBellButton unreadCount={unreadCount} />
         </DropdownMenuTrigger>
@@ -43,7 +43,6 @@ export const NotificationBell = () => {
           align="end" 
           className="w-[280px] md:w-[320px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
           sideOffset={5}
-          forceMount
         >
           {!notifications || notifications.length === 0 ? (
             <DropdownMenuItem disabled className="text-center text-muted-foreground">
