@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationSoundUpload } from "./NotificationSoundUpload";
 
 export function NotificationPreferences() {
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -102,6 +103,8 @@ export function NotificationPreferences() {
             disabled={loading}
           />
         </div>
+
+        {pushNotifications && <NotificationSoundUpload />}
       </div>
     </div>
   );
