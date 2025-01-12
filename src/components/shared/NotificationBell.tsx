@@ -35,7 +35,7 @@ export const NotificationBell = () => {
 
   return (
     <>
-      <DropdownMenu open={open} onOpenChange={handleOpenChange}>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <NotificationBellButton unreadCount={unreadCount} />
         </DropdownMenuTrigger>
