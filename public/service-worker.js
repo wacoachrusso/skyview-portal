@@ -10,11 +10,12 @@ self.addEventListener('push', function(event) {
       icon: data.icon || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       badge: data.badge || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       vibrate: [200, 100, 200],
-      sound: data.sound || 'https://xnlzqsoujwsffoxhhybk.supabase.co/storage/v1/object/public/audio/notification-sound.mp3',
+      silent: false, // Ensure sound is not muted
       data: {
         ...data.data,
         url: data.url || '/release-notes',
-        notificationId: data.id
+        notificationId: data.id,
+        sound: data.sound || customNotificationSound // Pass sound URL in data
       },
       actions: [
         {
@@ -27,8 +28,14 @@ self.addEventListener('push', function(event) {
       requireInteraction: true
     };
     
+    // Play the sound when showing notification
+    const soundUrl = data.sound || customNotificationSound;
+    const audio = new Audio(soundUrl);
     event.waitUntil(
-      self.registration.showNotification(data.title, options)
+      Promise.all([
+        self.registration.showNotification(data.title, options),
+        audio.play().catch(error => console.log('Error playing sound:', error))
+      ])
     );
   }
 });
