@@ -10,7 +10,7 @@ self.addEventListener('push', function(event) {
       icon: data.icon || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       badge: data.badge || '/lovable-uploads/017a86c8-ed21-4240-9134-bef047180bf2.png',
       vibrate: [200, 100, 200],
-      sound: data.sound || '/notification-sound.mp3',
+      sound: data.sound || 'https://xnlzqsoujwsffoxhhybk.supabase.co/storage/v1/object/public/audio/notification-sound.mp3',
       data: {
         ...data.data,
         url: data.url || '/release-notes',
@@ -33,7 +33,7 @@ self.addEventListener('push', function(event) {
   }
 });
 
-let customNotificationSound = '/notification-sound.mp3';
+let customNotificationSound = 'https://xnlzqsoujwsffoxhhybk.supabase.co/storage/v1/object/public/audio/notification-sound.mp3';
 
 self.addEventListener('message', function(event) {
   if (event.data && event.data.type === 'UPDATE_NOTIFICATION_SOUND') {
