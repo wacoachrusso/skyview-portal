@@ -42,8 +42,18 @@ export const useLoginForm = () => {
     });
   };
 
-  const handleLoginSuccess = async (userId: string) => {
-    await createNewSession(userId);
+  const handleLoginSuccess = async (session: any) => {
+    // Store refresh token immediately after successful login
+    if (session.refresh_token) {
+      console.log('Setting refresh token after login');
+      localStorage.setItem('sb-refresh-token', session.refresh_token);
+      
+      // Set cookie with proper attributes
+      const sevenDays = 7 * 24 * 60 * 60;
+      document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${sevenDays}`;
+    }
+
+    await createNewSession(session.user.id);
     
     if (formData.rememberMe) {
       console.log('Setting persistent session...');
@@ -157,7 +167,7 @@ export const useLoginForm = () => {
         return;
       }
 
-      await handleLoginSuccess(data.session.user.id);
+      await handleLoginSuccess(data.session);
       await resetLoginAttempts(formData.email);
       await handleProfileRedirect(data.session.user.id);
 
