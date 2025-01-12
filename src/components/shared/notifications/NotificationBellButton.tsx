@@ -10,12 +10,17 @@ interface NotificationBellButtonProps {
 export const NotificationBellButton = forwardRef<HTMLButtonElement, NotificationBellButtonProps>(
   ({ unreadCount }, ref) => {
     return (
-      <Button ref={ref} variant="ghost" className="relative">
-        <Bell className="h-5 w-5" />
+      <Button 
+        ref={ref} 
+        variant="ghost" 
+        size="icon"
+        className="relative w-8 h-8 md:w-9 md:h-9"
+      >
+        <Bell className="h-4 w-4 md:h-5 md:w-5" />
         {unreadCount > 0 && (
           <Badge
             variant="destructive"
-            className="absolute -top-2 -right-2 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
+            className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full p-0 flex items-center justify-center text-[10px] md:text-xs"
           >
             {unreadCount}
           </Badge>
