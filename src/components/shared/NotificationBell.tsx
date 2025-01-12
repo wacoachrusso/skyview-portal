@@ -37,7 +37,9 @@ export const NotificationBell = () => {
     <>
       <DropdownMenu open={open} onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger asChild>
-          <NotificationBellButton unreadCount={unreadCount} />
+          <div className="inline-flex">
+            <NotificationBellButton unreadCount={unreadCount} />
+          </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
