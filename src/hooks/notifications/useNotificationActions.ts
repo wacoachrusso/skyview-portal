@@ -116,9 +116,13 @@ export const useNotificationActions = () => {
           throw insertError;
         }
 
-        // Play notification sound
-        const audio = new Audio('/notification-sound.mp3');
-        await audio.play();
+        // Try to play notification sound, but don't block if it fails
+        try {
+          const audio = new Audio('/notification-sound.mp3');
+          await audio.play();
+        } catch (error) {
+          console.warn("Could not play notification sound:", error);
+        }
 
         for (const profile of usersToNotify) {
           if (profile.push_subscription) {
