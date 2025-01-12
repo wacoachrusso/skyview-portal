@@ -15,7 +15,7 @@ export function Hero() {
   };
 
   return (
-    <div className="relative bg-hero-gradient py-8 sm:py-16 overflow-hidden" role="banner">
+    <section className="relative min-h-screen bg-hero-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner">
       {/* Dynamic gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-brand-navy via-brand-navy/90 to-brand-navy/80 animate-gradient" />
       <div className="absolute inset-0 bg-[url('/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png')] opacity-5 bg-repeat animate-slide" aria-hidden="true" />
@@ -91,6 +91,6 @@ export function Hero() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </section>
   );
 }
