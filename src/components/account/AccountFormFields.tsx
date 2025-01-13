@@ -30,6 +30,7 @@ const airlines = [
 
 // Assistant ID mapping
 const UNITED_FA_ASSISTANT_ID = "asst_YdZtVHPSq6TIYKRkKcOqtwzn";
+const AMERICAN_FA_ASSISTANT_ID = "asst_xpkEzhLUt4Qn6uzRzSxAekGh";
 
 export const AccountFormFields = ({
   isEditing,
@@ -48,25 +49,45 @@ export const AccountFormFields = ({
     
     handleInputChange(syntheticEvent);
 
-    // If United Airlines Flight Attendant is selected, update the assistant_id
-    if (field === 'airline' && value.toLowerCase() === 'united airlines' && 
-        formData.user_type.toLowerCase() === 'flight attendant') {
-      const assistantEvent = {
-        target: {
-          name: 'assistant_id',
-          value: UNITED_FA_ASSISTANT_ID
-        }
-      } as React.ChangeEvent<HTMLInputElement>;
-      handleInputChange(assistantEvent);
-    } else if (field === 'user_type' && value.toLowerCase() === 'flight attendant' && 
-               formData.airline.toLowerCase() === 'united airlines') {
-      const assistantEvent = {
-        target: {
-          name: 'assistant_id',
-          value: UNITED_FA_ASSISTANT_ID
-        }
-      } as React.ChangeEvent<HTMLInputElement>;
-      handleInputChange(assistantEvent);
+    // Handle assistant ID updates based on airline and job title combinations
+    if (field === 'airline') {
+      if (value.toLowerCase() === 'united airlines' && 
+          formData.user_type.toLowerCase() === 'flight attendant') {
+        const assistantEvent = {
+          target: {
+            name: 'assistant_id',
+            value: UNITED_FA_ASSISTANT_ID
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        handleInputChange(assistantEvent);
+      } else if (value.toLowerCase() === 'american airlines' && 
+                formData.user_type.toLowerCase() === 'flight attendant') {
+        const assistantEvent = {
+          target: {
+            name: 'assistant_id',
+            value: AMERICAN_FA_ASSISTANT_ID
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        handleInputChange(assistantEvent);
+      }
+    } else if (field === 'user_type' && value.toLowerCase() === 'flight attendant') {
+      if (formData.airline.toLowerCase() === 'united airlines') {
+        const assistantEvent = {
+          target: {
+            name: 'assistant_id',
+            value: UNITED_FA_ASSISTANT_ID
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        handleInputChange(assistantEvent);
+      } else if (formData.airline.toLowerCase() === 'american airlines') {
+        const assistantEvent = {
+          target: {
+            name: 'assistant_id',
+            value: AMERICAN_FA_ASSISTANT_ID
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        handleInputChange(assistantEvent);
+      }
     }
   };
 
