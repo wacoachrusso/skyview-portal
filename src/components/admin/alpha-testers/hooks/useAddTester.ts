@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 import { generatePassword } from "../utils/passwordUtils";
 
 interface AddTesterFormData {
@@ -33,15 +32,20 @@ export const useAddTester = (onSuccess: () => void) => {
     }
   };
 
-  const checkExistingUser = async (email: string): Promise<User | null> => {
-    const { data: userList, error: userCheckError } = await supabase.auth.admin.listUsers();
-    
-    if (userCheckError) {
-      console.error("Error checking existing user:", userCheckError);
+  const checkExistingUser = async (email: string) => {
+    // Instead of using admin API, check profiles table
+    const { data: existingProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('email', email)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows returned
+      console.error("Error checking existing profile:", profileError);
       throw new Error("Failed to verify user status");
     }
 
-    return (userList?.users as User[])?.find(user => user.email === email) || null;
+    return existingProfile;
   };
 
   const createAuthUser = async (data: AddTesterFormData) => {
@@ -70,11 +74,16 @@ export const useAddTester = (onSuccess: () => void) => {
   };
 
   const checkExistingTester = async (email: string) => {
-    const { data: existingTester } = await supabase
+    const { data: existingTester, error } = await supabase
       .from('alpha_testers')
       .select('id, status')
       .eq('email', email)
       .maybeSingle();
+
+    if (error) {
+      console.error("Error checking existing tester:", error);
+      throw error;
+    }
 
     if (existingTester) {
       throw new Error("This user is already registered as an alpha tester");
@@ -131,10 +140,10 @@ export const useAddTester = (onSuccess: () => void) => {
       }
 
       await verifyAdminStatus(session.user.id);
-      const existingUser = await checkExistingUser(data.email);
+      const existingProfile = await checkExistingUser(data.email);
       await checkExistingTester(data.email);
 
-      const userId = existingUser ? existingUser.id : (await createAuthUser(data)).id;
+      const userId = existingProfile ? existingProfile.id : (await createAuthUser(data)).id;
       await createAlphaTester(data, userId);
       
       const emailSent = await sendWelcomeEmail(data);
