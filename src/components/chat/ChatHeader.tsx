@@ -18,7 +18,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
   const { handleSignOut } = useAuthManagement();
 
   return (
-    <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-top">
       <div className="flex items-center space-x-4">
         {showBackButton && (
           <Button

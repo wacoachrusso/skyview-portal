@@ -100,51 +100,21 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
-}
 
-.nav-link {
-  @apply px-4 py-2 text-base font-medium text-gray-300 hover:text-white transition-colors;
-}
-
-.card-hover {
-  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-gold/5;
-}
-
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes slide {
-  from { transform: translateY(0); }
-  to { transform: translateY(-100%); }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 15s ease infinite;
-}
-
-.animate-slide {
-  animation: slide 60s linear infinite;
-}
-
-/* Responsive typography */
-@screen sm {
-  html {
-    font-size: 16px;
+  /* Safe area utilities */
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top), 16px);
   }
-}
 
-@screen md {
-  html {
-    font-size: 16.5px;
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
   }
-}
 
-@screen lg {
-  html {
-    font-size: 17px;
+  .safe-left {
+    padding-left: max(env(safe-area-inset-left), 16px);
+  }
+
+  .safe-right {
+    padding-right: max(env(safe-area-inset-right), 16px);
   }
 }
