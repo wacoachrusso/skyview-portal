@@ -1,9 +1,7 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, MessageSquare } from "lucide-react";
+import { Menu } from "lucide-react";
 import { ChatSidebar } from "../ChatSidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { NotificationBell } from "@/components/shared/NotificationBell";
-import { Button } from "@/components/ui/button";
 
 interface ChatLayoutProps {
   children: React.ReactNode;
@@ -35,23 +33,12 @@ export function ChatLayout({
       <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
         {isMobile && (
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-            <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
-              <NotificationBell />
-              <Button 
-                asChild
-                variant="ghost"
-                size="sm"
-                className="text-foreground/70 hover:text-foreground"
-              >
-                <MessageSquare className="h-5 w-5" />
-              </Button>
-              <SheetTrigger asChild>
-                <button className="p-2 hover:bg-accent/50 rounded-lg">
-                  <Menu className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </SheetTrigger>
-            </div>
-            <SheetContent side="right" className="p-0 w-[280px] bg-background border-l border-border">
+            <SheetTrigger asChild>
+              <button className="p-2 hover:bg-accent/50 rounded-lg absolute top-2 left-2 z-10">
+                <Menu className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-[280px] bg-background border-r border-border">
               <ChatSidebar 
                 onSelectConversation={(id) => {
                   onSelectConversation(id);
