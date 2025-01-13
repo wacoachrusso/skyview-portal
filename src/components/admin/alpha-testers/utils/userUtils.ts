@@ -37,7 +37,14 @@ export const checkExistingProfile = async (email: string) => {
 export const createAuthUser = async (email: string, password: string, fullName: string) => {
   console.log("Creating new auth user...");
   try {
-    // Use regular signup instead of admin.createUser
+    // Store the current admin session token
+    const { data: { session: adminSession } } = await supabase.auth.getSession();
+    if (!adminSession) {
+      throw new Error("No admin session found");
+    }
+    const adminAccessToken = adminSession.access_token;
+
+    // Create new user
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -58,20 +65,27 @@ export const createAuthUser = async (email: string, password: string, fullName: 
       throw new Error("Failed to create auth user");
     }
 
-    // Sign out after creating the user since we don't want to be logged in as them
+    // Immediately sign out the new user
     await supabase.auth.signOut();
 
-    // Get the current admin session back
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error("Error getting admin session:", sessionError);
-      throw sessionError;
+    // Restore admin session
+    const { error: setSessionError } = await supabase.auth.setSession({
+      access_token: adminAccessToken,
+      refresh_token: adminSession.refresh_token,
+    });
+
+    if (setSessionError) {
+      console.error("Error restoring admin session:", setSessionError);
+      throw new Error("Failed to restore admin session");
     }
 
-    if (!session) {
-      throw new Error("Lost admin session");
+    // Verify admin session was restored
+    const { data: { session: restoredSession } } = await supabase.auth.getSession();
+    if (!restoredSession) {
+      throw new Error("Failed to verify restored admin session");
     }
 
+    console.log("Successfully created user and restored admin session");
     return authData.user;
   } catch (error) {
     console.error("Error in createAuthUser:", error);
