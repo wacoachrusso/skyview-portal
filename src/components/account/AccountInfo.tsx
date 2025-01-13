@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ChangePasswordForm } from "@/components/auth/password-reset/ChangePasswordForm";
 import { AccountFormFields } from "./AccountFormFields";
 import { EmailDisplay } from "./EmailDisplay";
-import { ExternalLink } from "lucide-react";
 
 interface AccountInfoProps {
   userEmail: string | null;
@@ -150,20 +149,8 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
               Please change your temporary password to continue using your account.
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="text-gray-600">
-                You can change your password at any time to keep your account secure.
-              </div>
-              <div className="text-sm text-gray-500 flex items-center gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Need help? Contact us at{" "}
-                <a 
-                  href="mailto:alpha@skyguide.site" 
-                  className="text-brand-navy hover:underline"
-                >
-                  alpha@skyguide.site
-                </a>
-              </div>
+            <div className="text-gray-600 mb-4">
+              You can change your password at any time to keep your account secure.
             </div>
           )}
           <ChangePasswordForm />
