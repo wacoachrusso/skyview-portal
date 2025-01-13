@@ -16,7 +16,7 @@ type SupportedRole = "flight attendant";
 // Type for the assistant configuration
 interface AssistantConfig {
   airline: SupportedAirline;
-  role: SupportedRole;
+  role?: SupportedRole | undefined;
 }
 
 // Error class for unsupported configurations
@@ -37,7 +37,8 @@ const normalizeAirline = (airline: string): SupportedAirline => {
 };
 
 // Function to validate and normalize role
-const normalizeRole = (role: string): SupportedRole => {
+const normalizeRole = (role: string | undefined): SupportedRole | undefined => {
+  if (!role) return undefined;
   const normalized = role.toLowerCase().trim();
   if (normalized !== "flight attendant") {
     throw new UnsupportedConfigError(`Unsupported role: ${role}`);
