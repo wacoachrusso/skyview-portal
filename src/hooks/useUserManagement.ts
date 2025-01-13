@@ -13,12 +13,6 @@ export const useUserManagement = (): UseUserManagementReturn => {
   const { updatingUser, toggleAdminStatus, updateAccountStatus } = useUserActions(refetch);
   const { isDeleting, handleDeleteUser } = useUserDeletion(refetch);
 
-  // Log current users and their admin status
-  console.log('Current users with admin status:', users?.map(u => ({
-    email: u.email,
-    isAdmin: u.is_admin
-  })));
-
   return {
     users,
     updatingUser,

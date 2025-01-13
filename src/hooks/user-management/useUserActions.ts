@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
+import { handleUserDeletion } from "@/utils/userDeletion";
 
 export const useUserActions = (refetch: () => Promise<any>) => {
   const { toast } = useToast();
@@ -14,40 +15,26 @@ export const useUserActions = (refetch: () => Promise<any>) => {
     }
 
     try {
-      console.log("Toggling admin status for user:", userId, "Current status:", currentStatus);
+      console.log("Toggling admin status for user:", userId);
       setUpdatingUser(userId);
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({ is_admin: !currentStatus })
-        .eq("id", userId)
-        .select()
-        .maybeSingle();
+        .eq("id", userId);
 
-      if (error) {
-        console.error("Error updating user admin status:", error);
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error("User not found after update");
-      }
-
-      console.log("Admin status update response:", data);
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: `User admin status ${!currentStatus ? 'enabled' : 'disabled'} successfully`,
+        description: "User admin status updated successfully",
       });
-
-      // Immediately refetch to update the UI
       await refetch();
     } catch (error) {
       console.error("Error updating user admin status:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update user admin status",
+        description: "Failed to update user admin status",
       });
     } finally {
       setUpdatingUser(null);
@@ -63,18 +50,12 @@ export const useUserActions = (refetch: () => Promise<any>) => {
       console.log(`Updating account status to ${status} for user:`, userId);
       setUpdatingUser(userId);
 
-      const { data, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from("profiles")
         .update({ account_status: status })
-        .eq("id", userId)
-        .select()
-        .maybeSingle();
+        .eq("id", userId);
 
       if (updateError) throw updateError;
-
-      if (!data) {
-        throw new Error("User not found after update");
-      }
 
       // Send email notification
       const { error: emailError } = await supabase.functions.invoke(
@@ -109,7 +90,7 @@ export const useUserActions = (refetch: () => Promise<any>) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : `Failed to ${status} user account`,
+        description: `Failed to ${status} user account`,
       });
     } finally {
       setUpdatingUser(null);
