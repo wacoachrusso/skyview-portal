@@ -4,8 +4,8 @@ import { Trash2, ArrowDown } from "lucide-react";
 interface ConversationActionsProps {
   isOffline: boolean;
   downloadInProgress: boolean;
-  onDelete: (e: React.MouseEvent) => void;
-  onToggleOffline: (e: React.MouseEvent) => void;
+  onDelete: (e: React.MouseEvent | React.TouchEvent) => void;
+  onToggleOffline: (e: React.MouseEvent | React.TouchEvent) => void;
 }
 
 export function ConversationActions({
@@ -14,21 +14,35 @@ export function ConversationActions({
   onDelete,
   onToggleOffline
 }: ConversationActionsProps) {
+  const handleDelete = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete(e);
+  };
+
+  const handleToggleOffline = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onToggleOffline(e);
+  };
+
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 p-0.5"
-        onClick={onDelete}
+        className="h-6 w-6 p-0.5 touch-manipulation"
+        onClick={handleDelete}
+        onTouchEnd={handleDelete}
       >
         <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 p-0.5"
-        onClick={onToggleOffline}
+        className="h-6 w-6 p-0.5 touch-manipulation"
+        onClick={handleToggleOffline}
+        onTouchEnd={handleToggleOffline}
         disabled={downloadInProgress}
       >
         <ArrowDown className={`h-4 w-4 ${

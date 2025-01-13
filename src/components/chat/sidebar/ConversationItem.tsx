@@ -12,8 +12,8 @@ interface ConversationItemProps {
   isSelected: boolean;
   isOffline: boolean;
   onSelect: (conversationId: string) => void;
-  onDelete: (e: React.MouseEvent, conversationId: string) => void;
-  onToggleOffline: (e: React.MouseEvent, conversationId: string) => void;
+  onDelete: (e: React.MouseEvent | React.TouchEvent, conversationId: string) => void;
+  onToggleOffline: (e: React.MouseEvent | React.TouchEvent, conversationId: string) => void;
   showCheckbox?: boolean;
   isChecked?: boolean;
   onCheckChange?: (checked: boolean) => void;
@@ -50,7 +50,7 @@ export function ConversationItem({
     }
   };
 
-  const handleToggleOffline = async (e: React.MouseEvent) => {
+  const handleToggleOffline = async (e: React.MouseEvent | React.TouchEvent) => {
     console.log('Toggle offline clicked');
     e.preventDefault();
     e.stopPropagation();
@@ -87,12 +87,6 @@ export function ConversationItem({
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onDelete(e, conversation.id);
-  };
-
   return (
     <>
       <div
@@ -125,7 +119,7 @@ export function ConversationItem({
               downloadedAt={conversation.downloaded_at}
               isOffline={isOffline}
               downloadInProgress={downloadInProgress}
-              onDelete={handleDelete}
+              onDelete={(e) => onDelete(e, conversation.id)}
               onToggleOffline={handleToggleOffline}
             />
           </div>
