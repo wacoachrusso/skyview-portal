@@ -33,18 +33,19 @@ export const useAddTester = (onSuccess: () => void) => {
   };
 
   const checkExistingUser = async (email: string) => {
-    // Instead of using admin API, check profiles table
+    console.log("Checking for existing profile with email:", email);
     const { data: existingProfile, error: profileError } = await supabase
       .from('profiles')
       .select('id, email')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
-    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows returned
+    if (profileError) {
       console.error("Error checking existing profile:", profileError);
       throw new Error("Failed to verify user status");
     }
 
+    console.log("Existing profile check result:", existingProfile);
     return existingProfile;
   };
 
