@@ -22,11 +22,15 @@ export const useUserActions = (refetch: () => Promise<any>) => {
         .update({ is_admin: !currentStatus })
         .eq("id", userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error updating user admin status:", error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error("User not found after update");
       }
 
       console.log("Admin status update response:", data);
