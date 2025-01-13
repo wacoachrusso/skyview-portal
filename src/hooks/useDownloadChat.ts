@@ -48,14 +48,14 @@ export function useDownloadChat() {
           throw updateError;
         }
 
-        // Create download URL
+        // Create download URL and handle download
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         
         // Set link properties
         link.href = url;
         link.download = filename;
-        link.target = '_blank'; // Important for iOS
+        link.target = '_blank';
         link.rel = 'noopener noreferrer';
         
         // Add to DOM, click, and remove
@@ -66,9 +66,13 @@ export function useDownloadChat() {
         setTimeout(() => {
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
+          setDownloadInProgress(false);
         }, 100);
 
-        setDownloadInProgress(false);
+        // Force a page refresh after successful download
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
         
         toast({
           title: "Chat downloaded successfully",

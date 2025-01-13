@@ -15,9 +15,9 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 30, // 30 minutes
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: true, // Changed to true to keep data fresh
-      refetchOnMount: true, // Added to ensure data loads on component mount
-      refetchOnReconnect: true, // Added to refetch when reconnecting
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      refetchOnReconnect: true,
     },
   },
 });
@@ -31,21 +31,31 @@ function App() {
     // Add listener for online/offline status
     const handleOnline = () => {
       console.log('Application is online');
-      queryClient.invalidateQueries(); // Refetch all queries when coming back online
+      queryClient.invalidateQueries();
     };
 
     const handleOffline = () => {
       console.log('Application is offline');
     };
 
+    // Add listener for visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Page became visible, refreshing data');
+        queryClient.invalidateQueries();
+      }
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Clean up event listeners
     return () => {
       console.log('App component unmounted');
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
