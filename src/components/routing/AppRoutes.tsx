@@ -15,7 +15,6 @@ export function AppRoutes() {
       <Route path="/reset-password" element={<LazyRoutes.ResetPassword />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
-      <Route path="/complete-profile" element={<LazyRoutes.CompleteProfile />} />
       
       {/* Protected routes */}
       <Route path="/chat" element={<LazyRoutes.Chat />} />
