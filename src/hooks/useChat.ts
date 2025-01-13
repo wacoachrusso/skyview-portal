@@ -34,7 +34,7 @@ export function useChat() {
     setMessages([]);
     setCurrentConversationId(null);
     setIsLoading(false);
-  }, []);
+  }, [setMessages, setCurrentConversationId]);
 
   const startNewChat = useCallback(async () => {
     console.log('Starting new chat');
@@ -133,14 +133,14 @@ export function useChat() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentConversationId]);
+  }, [currentConversationId, setMessages]);
 
   // Load messages when conversation changes
   useEffect(() => {
     if (currentConversationId) {
       loadMessages(currentConversationId);
     }
-  }, [currentConversationId]);
+  }, [currentConversationId, loadMessages]);
 
   return {
     messages,
