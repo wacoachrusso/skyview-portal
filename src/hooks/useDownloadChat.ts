@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useDownloadChat() {
   const [downloadInProgress, setDownloadInProgress] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const downloadChat = async (conversationId: string, title: string) => {
     console.log('Starting chat download for conversation:', conversationId);
@@ -52,13 +54,11 @@ export function useDownloadChat() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         
-        // Set link properties
         link.href = url;
         link.download = filename;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         
-        // Add to DOM, click, and remove
         document.body.appendChild(link);
         link.click();
         
@@ -69,15 +69,13 @@ export function useDownloadChat() {
           setDownloadInProgress(false);
         }, 100);
 
-        // Force a page refresh after successful download
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        // Quietly refresh the data in the background
+        await queryClient.invalidateQueries({ queryKey: ['conversations'] });
         
         toast({
           title: "Chat downloaded successfully",
           description: "Your chat has been saved to your device.",
-          duration: 3000
+          duration: 2000
         });
 
         console.log('Chat download completed successfully');
@@ -91,7 +89,7 @@ export function useDownloadChat() {
           title: "Download failed",
           description: "There was an error downloading the chat. Please try again.",
           variant: "destructive",
-          duration: 3000
+          duration: 2000
         });
         
         throw downloadError;
@@ -105,7 +103,7 @@ export function useDownloadChat() {
         title: "Download failed",
         description: "There was an error downloading the chat. Please try again.",
         variant: "destructive",
-        duration: 3000
+        duration: 2000
       });
       return false;
     }

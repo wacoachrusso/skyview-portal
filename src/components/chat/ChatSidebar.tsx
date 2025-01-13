@@ -5,6 +5,7 @@ import { SearchBar } from "./sidebar/SearchBar";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { ChatLimitWarning } from "./sidebar/ChatLimitWarning";
 import { useConversations } from "./sidebar/hooks/useConversations";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ChatSidebarProps {
   currentConversationId: string | null;
@@ -14,10 +15,23 @@ interface ChatSidebarProps {
 export function ChatSidebar({ currentConversationId, onSelectConversation }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { conversations, deleteConversation, deleteAllConversations, CHAT_LIMIT_WARNING } = useConversations();
+  const queryClient = useQueryClient();
 
   const handleSelectConversation = async (conversationId: string) => {
     console.log('Selecting conversation:', conversationId);
     onSelectConversation(conversationId);
+  };
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    await deleteConversation(conversationId);
+    // Quietly refresh the conversations list in the background
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  };
+
+  const handleDeleteAll = async () => {
+    await deleteAllConversations();
+    // Quietly refresh the conversations list in the background
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
   };
 
   const filteredConversations = conversations.filter((conversation) =>
@@ -26,7 +40,7 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
 
   return (
     <div className="w-64 sm:w-80 bg-[#1A1F2C] border-r border-white/10 flex flex-col h-full">
-      <SidebarHeader onDeleteAll={deleteAllConversations} />
+      <SidebarHeader onDeleteAll={handleDeleteAll} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
       {conversations.length >= CHAT_LIMIT_WARNING && (
         <ChatLimitWarning conversationCount={conversations.length} />
@@ -36,7 +50,7 @@ export function ChatSidebar({ currentConversationId, onSelectConversation }: Cha
           conversations={filteredConversations}
           currentConversationId={currentConversationId}
           onSelectConversation={handleSelectConversation}
-          onDeleteConversation={deleteConversation}
+          onDeleteConversation={handleDeleteConversation}
         />
       </div>
     </div>
