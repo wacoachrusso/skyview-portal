@@ -8,21 +8,16 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
   return (
-    <div>
-      <div className="p-3 sm:p-4 border-b border-white/10 bg-[#1E1E2E]">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
-          <Input
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="Search conversations..."
-            className="pl-8 sm:pl-10 text-sm sm:text-base bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
-          />
-        </div>
+    <div className="p-3 sm:p-4 border-b border-white/10 bg-[#1E1E2E]">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Search conversations..."
+          className="pl-8 sm:pl-10 text-sm sm:text-base bg-[#2A2F3C] border-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20"
+        />
       </div>
-      <p className="text-xs text-muted-foreground/70 text-center mt-1 px-2">
-        SkyGuide can make mistakes. Check important info.
-      </p>
     </div>
   );
 }

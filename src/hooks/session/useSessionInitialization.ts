@@ -28,20 +28,16 @@ export const useSessionInitialization = () => {
         return;
       }
 
-      // Store refresh token in localStorage and cookie with proper expiration
+      // Ensure refresh token is properly stored
       if (session.refresh_token) {
-        console.log("Storing refresh token");
-        localStorage.setItem('sb-refresh-token', session.refresh_token);
-        
-        // Set refresh token cookie with secure attributes and proper expiration
-        const sevenDays = 7 * 24 * 60 * 60;
-        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${sevenDays}`;
+        localStorage.setItem('supabase.refresh-token', session.refresh_token);
+        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`;
       }
 
       // Get current session token
       const sessionToken = localStorage.getItem('session_token');
       if (!sessionToken) {
-        console.log('No session token found, creating new session');
+        // Create a new session if none exists
         await createNewSession(session.user.id);
       } else {
         // Validate existing session
@@ -53,8 +49,6 @@ export const useSessionInitialization = () => {
         if (!isValid) {
           console.log('Session token invalid, creating new session');
           await createNewSession(session.user.id);
-        } else {
-          console.log('Session token valid');
         }
       }
 
