@@ -27,15 +27,10 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
         >
           {mainContent}
         </ReactMarkdown>
-        {reference ? (
+        {reference && (
           <div className="mt-4 pt-4 border-t border-white/10">
             <p className="text-sm text-blue-400 font-medium">Reference:</p>
             <p className="text-sm text-gray-400 whitespace-pre-wrap">{reference}</p>
-          </div>
-        ) : (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-sm text-yellow-400 font-medium">Note:</p>
-            <p className="text-sm text-gray-400">No specific contract reference available for this query.</p>
           </div>
         )}
       </div>
@@ -46,14 +41,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
     <p className="text-sm sm:text-base">{message.content}</p>
   ) : (
     <div className="text-sm sm:text-base min-h-[20px]">
-      <TypeAnimation
-        sequence={[message.content]}
-        wrapper="div"
-        cursor={false}
-        repeat={0}
-        speed={90}
-        className="whitespace-pre-wrap"
-      />
+      {formatContent(message.content)}
     </div>
   );
 }
