@@ -1,6 +1,7 @@
-import { Menu } from "lucide-react";
+import { Menu, MessageSquare } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,13 @@ export function MobileMenu({
     <div className="md:hidden flex items-center gap-2">
       {isLoggedIn && !isLoading && (
         <div className="flex items-center gap-2">
+          <Link 
+            to="/chat"
+            className="p-2 text-foreground hover:bg-accent rounded-md transition-colors"
+            aria-label="Open chat"
+          >
+            <MessageSquare className="h-5 w-5" />
+          </Link>
           <NotificationBell />
         </div>
       )}
