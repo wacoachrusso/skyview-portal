@@ -14,42 +14,68 @@ export const useAddTester = (onSuccess: () => void) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const verifyAdminStatus = async (userId: string) => {
-    const { data: adminProfile, error: adminError } = await supabase
+  const verifyAdminStatus = async () => {
+    console.log("Verifying admin status...");
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user?.id) {
+      throw new Error("No active session found");
+    }
+
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('is_admin')
-      .eq('id', userId)
+      .eq('id', session.user.id)
       .single();
 
-    if (adminError) {
-      console.error("Error checking admin status:", adminError);
+    if (profileError) {
+      console.error("Error checking admin status:", profileError);
       throw new Error("Failed to verify admin privileges");
     }
 
-    if (!adminProfile?.is_admin) {
-      console.error("User is not an admin");
+    if (!profile?.is_admin) {
       throw new Error("Only administrators can add testers");
     }
+
+    return session.user.id;
   };
 
-  const checkExistingUser = async (email: string) => {
+  const checkExistingProfile = async (email: string) => {
     console.log("Checking for existing profile with email:", email);
-    const { data: existingProfile, error: profileError } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('id, email')
       .eq('email', email)
       .maybeSingle();
 
-    if (profileError) {
-      console.error("Error checking existing profile:", profileError);
+    if (error) {
+      console.error("Error checking existing profile:", error);
       throw new Error("Failed to verify user status");
     }
 
-    console.log("Existing profile check result:", existingProfile);
-    return existingProfile;
+    return profile;
+  };
+
+  const checkExistingTester = async (email: string) => {
+    console.log("Checking for existing tester with email:", email);
+    const { data: tester, error } = await supabase
+      .from('alpha_testers')
+      .select('id, status')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error checking existing tester:", error);
+      throw error;
+    }
+
+    if (tester) {
+      throw new Error("This user is already registered as an alpha tester");
+    }
   };
 
   const createAuthUser = async (data: AddTesterFormData) => {
+    console.log("Creating new auth user...");
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -74,24 +100,8 @@ export const useAddTester = (onSuccess: () => void) => {
     return authData.user;
   };
 
-  const checkExistingTester = async (email: string) => {
-    const { data: existingTester, error } = await supabase
-      .from('alpha_testers')
-      .select('id, status')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error checking existing tester:", error);
-      throw error;
-    }
-
-    if (existingTester) {
-      throw new Error("This user is already registered as an alpha tester");
-    }
-  };
-
   const createAlphaTester = async (data: AddTesterFormData, userId: string) => {
+    console.log("Creating alpha tester record...");
     const { error: testerError } = await supabase
       .from("alpha_testers")
       .insert({
@@ -131,22 +141,24 @@ export const useAddTester = (onSuccess: () => void) => {
   const addTester = async (data: AddTesterFormData) => {
     try {
       setIsSubmitting(true);
-      console.log("Adding new tester:", data);
+      console.log("Starting add tester process...");
 
-      // Get the current session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        console.error("No active session found");
-        throw new Error("Please sign in again to add testers");
-      }
+      // First verify admin status
+      await verifyAdminStatus();
 
-      await verifyAdminStatus(session.user.id);
-      const existingProfile = await checkExistingUser(data.email);
+      // Check if user already exists as tester
       await checkExistingTester(data.email);
 
+      // Check if profile exists
+      const existingProfile = await checkExistingProfile(data.email);
+      
+      // Create or get user ID
       const userId = existingProfile ? existingProfile.id : (await createAuthUser(data)).id;
+      
+      // Create alpha tester record
       await createAlphaTester(data, userId);
       
+      // Send welcome email
       const emailSent = await sendWelcomeEmail(data);
       
       if (emailSent) {
