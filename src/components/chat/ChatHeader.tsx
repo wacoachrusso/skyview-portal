@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut } from "lucide-react";
+import { ArrowLeft, Plus, LayoutDashboard, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
-import { useContractHandler } from "@/hooks/useContractHandler";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { ContractUpload } from "./ContractUpload";
 
@@ -15,7 +14,6 @@ interface ChatHeaderProps {
 export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHeaderProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { handleContractClick } = useContractHandler();
   const { handleSignOut } = useAuthManagement();
 
   return (
