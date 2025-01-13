@@ -9,7 +9,7 @@ export function Hero() {
         <h1 className="text-5xl font-bold">Welcome to SkyGuide</h1>
         <p className="mt-4 text-lg">Your trusted companion for contract interpretation.</p>
         <div className="mt-8">
-          <Button variant="primary">Get Started</Button>
+          <Button variant="default">Get Started</Button>
         </div>
         <TypeAnimation
           sequence={[
@@ -23,7 +23,7 @@ export function Hero() {
           wrapper="h2"
           cursor={true}
           repeat={Infinity}
-         className="mt-4 text-2xl"
+          className="mt-4 text-2xl"
         />
       </div>
       <div className="absolute inset-0 bg-glow-gradient pointer-events-none" aria-hidden="true" />
