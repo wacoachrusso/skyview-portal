@@ -122,10 +122,10 @@ export const AccountFormFields = ({
             value={formData.user_type.toLowerCase()}
             onValueChange={(value) => handleSelectChange(value, 'user_type')}
           >
-            <SelectTrigger className="col-span-2 bg-white border-gray-300">
+            <SelectTrigger className="col-span-2 bg-gray-50 border-gray-300">
               <SelectValue placeholder="Select Job Title" />
             </SelectTrigger>
-            <SelectContent className="bg-white border-gray-300 shadow-lg z-50">
+            <SelectContent className="bg-gray-50 border-gray-300 shadow-lg z-50">
               {jobTitles.map((title) => (
                 <SelectItem 
                   key={title} 
@@ -153,10 +153,10 @@ export const AccountFormFields = ({
             value={formData.airline.toLowerCase()}
             onValueChange={(value) => handleSelectChange(value, 'airline')}
           >
-            <SelectTrigger className="col-span-2 bg-white border-gray-300">
+            <SelectTrigger className="col-span-2 bg-gray-50 border-gray-300">
               <SelectValue placeholder="Select Airline" />
             </SelectTrigger>
-            <SelectContent className="bg-white border-gray-300 shadow-lg z-50">
+            <SelectContent className="bg-gray-50 border-gray-300 shadow-lg z-50">
               {airlines.map((airline) => (
                 <SelectItem 
                   key={airline} 
