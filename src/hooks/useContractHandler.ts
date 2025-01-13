@@ -26,68 +26,71 @@ export const useContractHandler = () => {
       return;
     }
 
-    // Format the airline name and job type in various ways
-    const airline = userProfile.airline.toLowerCase();
-    const jobType = userProfile.user_type.toLowerCase();
-    const airlineUnderscored = airline.replace(/\s+/g, '_');
-    const airlineNoSpace = airline.replace(/\s+/g, '');
-    const jobTypeUnderscored = jobType.replace(/\s+/g, '_');
+    // Standardize the filename format
+    const airline = userProfile.airline.toLowerCase().trim();
+    const jobType = userProfile.user_type.toLowerCase().trim();
     
-    // Try different possible filenames
-    const fileNames = [
-      `${airlineUnderscored}_${jobTypeUnderscored}.pdf`,
-      `${airline}_${jobType}.pdf`,
-      `${airlineNoSpace}_${jobTypeUnderscored}.pdf`,
-      `${airlineUnderscored}_${jobType}.pdf`,
-      `${airline.replace(/airlines?/i, '')}_${jobType}.pdf`.trim(),
-      `${airlineNoSpace}${jobType}.pdf`
-    ];
+    // Create a single standardized filename
+    const fileName = `${airline.replace(/\s+/g, '_')}_${jobType.replace(/\s+/g, '_')}.pdf`;
+    
+    console.log("Attempting to fetch contract:", fileName);
 
-    console.log("Attempting to fetch contract with possible filenames:", fileNames);
-
-    let signedUrl = null;
-    let error = null;
-
-    // Try each filename until we find one that works
-    for (const fileName of fileNames) {
-      console.log("Trying filename:", fileName);
-      
-      const { data, error: fetchError } = await supabase.storage
+    try {
+      const { data, error } = await supabase.storage
         .from('contracts')
         .createSignedUrl(fileName, 300);
 
-      if (data && !fetchError) {
-        console.log("Successfully found contract with filename:", fileName);
-        signedUrl = data.signedUrl;
-        break;
-      }
-      error = fetchError;
-      console.log("Failed to fetch with filename:", fileName, "Error:", fetchError);
-    }
+      if (error) {
+        console.error('Error fetching contract:', error);
+        
+        // Provide more specific error message based on error type
+        if (error.message.includes('Object not found')) {
+          toast({
+            title: "Contract Not Found",
+            description: `No contract found for ${userProfile.airline} ${userProfile.user_type}. Please contact support.`,
+            variant: "destructive"
+          });
+          return;
+        }
 
-    if (!signedUrl) {
-      console.error('Error fetching contract:', error);
-      
+        toast({
+          title: "Contract Unavailable",
+          description: "Unable to access the contract. Please try again later.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!data?.signedUrl) {
+        console.error('No signed URL received');
+        toast({
+          title: "Error",
+          description: "Unable to generate contract download link. Please try again later.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log("Contract URL generated:", { url: data.signedUrl, isMobile });
+
+      if (isMobile) {
+        // For iOS/mobile devices, try to force download behavior
+        const link = document.createElement('a');
+        link.href = data.signedUrl;
+        link.target = '_self'; // Force same window
+        link.rel = 'noopener noreferrer';
+        link.click();
+      } else {
+        // For desktop, open in new tab
+        window.open(data.signedUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error handling contract click:', error);
       toast({
-        title: "Contract Not Found",
-        description: "Unable to locate the contract file. Please contact support and provide your airline and job title.",
+        title: "Error",
+        description: "Unable to access the contract. Please try again later.",
         variant: "destructive"
       });
-      return;
-    }
-
-    console.log("Contract URL generated:", { url: signedUrl, isMobile });
-
-    if (isMobile) {
-      // For iOS/mobile devices, try to force download behavior
-      const link = document.createElement('a');
-      link.href = signedUrl;
-      link.target = '_self'; // Force same window
-      link.rel = 'noopener noreferrer';
-      link.click();
-    } else {
-      // For desktop, open in new tab
-      window.open(signedUrl, '_blank');
     }
   };
 
