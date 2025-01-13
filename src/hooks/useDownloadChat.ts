@@ -58,13 +58,13 @@ export function useDownloadChat() {
         link.target = '_blank'; // Important for iOS
         link.rel = 'noopener noreferrer';
         
-        // Trigger download
+        // Add to DOM, click, and remove
         document.body.appendChild(link);
         link.click();
         
         // Clean up
-        document.body.removeChild(link);
         setTimeout(() => {
+          document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
         }, 100);
 
@@ -82,6 +82,14 @@ export function useDownloadChat() {
       } catch (downloadError) {
         console.error('Error during file download:', downloadError);
         setDownloadInProgress(false);
+        
+        toast({
+          title: "Download failed",
+          description: "There was an error downloading the chat. Please try again.",
+          variant: "destructive",
+          duration: 3000
+        });
+        
         throw downloadError;
       }
 

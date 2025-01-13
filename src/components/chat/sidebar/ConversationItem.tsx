@@ -51,27 +51,39 @@ export function ConversationItem({
   };
 
   const handleToggleOffline = async (e: React.MouseEvent) => {
+    console.log('Toggle offline clicked');
     e.preventDefault();
     e.stopPropagation();
     
     if (isOffline) {
+      console.log('Removing from offline storage');
       onToggleOffline(e, conversation.id);
       return;
     }
 
+    console.log('Showing download permission dialog');
     setShowPermissionDialog(true);
   };
 
   const handleDownloadConfirmed = async () => {
+    console.log('Download confirmed, starting download process');
     setShowPermissionDialog(false);
-    const success = await downloadChat(conversation.id, conversation.title);
     
-    if (success) {
-      const mockEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-      }) as unknown as React.MouseEvent;
-      onToggleOffline(mockEvent, conversation.id);
+    try {
+      const success = await downloadChat(conversation.id, conversation.title);
+      console.log('Download result:', success);
+      
+      if (success) {
+        console.log('Download successful, updating offline status');
+        const mockEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        }) as unknown as React.MouseEvent;
+        onToggleOffline(mockEvent, conversation.id);
+      }
+    } catch (error) {
+      console.error('Error during download:', error);
     }
   };
 
