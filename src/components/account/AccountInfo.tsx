@@ -29,29 +29,34 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
   });
 
   useEffect(() => {
-    const checkAlphaTester = async () => {
+    const checkUserStatus = async () => {
       if (!profile?.id) return;
 
-      console.log('Checking alpha tester status for profile:', profile.id);
+      console.log('Checking alpha tester and promoter status for profile:', profile.id);
+      
+      // Check if user is an alpha tester or promoter
       const { data: alphaTester, error } = await supabase
         .from('alpha_testers')
-        .select('temporary_password')
+        .select('temporary_password, is_promoter')
         .eq('profile_id', profile.id)
         .maybeSingle();
 
       if (error) {
-        console.error('Error checking alpha tester status:', error);
+        console.error('Error checking user status:', error);
         return;
       }
 
-      console.log('Alpha tester data:', alphaTester);
-      if (alphaTester?.temporary_password) {
+      console.log('User status data:', alphaTester);
+      
+      // Show password change form if they have a temporary password or are a promoter
+      if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
         console.log('Setting shouldShowPasswordChange to true');
         setShouldShowPasswordChange(true);
+        setIsEditing(true); // Automatically enable profile editing
       }
     };
 
-    checkAlphaTester();
+    checkUserStatus();
   }, [profile?.id]);
 
   // Check if required fields are filled
@@ -132,21 +137,21 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
         </CardContent>
       </Card>
 
-      <Card className="bg-white/95 shadow-xl border-2 border-brand-navy">
-        <CardHeader>
-          <CardTitle className="text-brand-navy">
-            Change Your Password
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-gray-600 mb-4">
-            {shouldShowPasswordChange 
-              ? "Please change your temporary password to continue using your account."
-              : "You can change your password at any time using the form below."}
-          </div>
-          <ChangePasswordForm />
-        </CardContent>
-      </Card>
+      {shouldShowPasswordChange && (
+        <Card className="bg-white/95 shadow-xl border-2 border-brand-navy">
+          <CardHeader>
+            <CardTitle className="text-brand-navy">
+              Change Your Password
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-gray-600 mb-4">
+              Please change your temporary password to continue using your account.
+            </div>
+            <ChangePasswordForm />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
