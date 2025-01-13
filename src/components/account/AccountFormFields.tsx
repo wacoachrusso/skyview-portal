@@ -28,6 +28,9 @@ const airlines = [
   "Other"
 ];
 
+// Assistant ID mapping
+const UNITED_FA_ASSISTANT_ID = "asst_YdZtVHPSq6TIYKRkKcOqtwzn";
+
 export const AccountFormFields = ({
   isEditing,
   formData,
@@ -44,6 +47,27 @@ export const AccountFormFields = ({
     } as React.ChangeEvent<HTMLInputElement>;
     
     handleInputChange(syntheticEvent);
+
+    // If United Airlines Flight Attendant is selected, update the assistant_id
+    if (field === 'airline' && value.toLowerCase() === 'united airlines' && 
+        formData.user_type.toLowerCase() === 'flight attendant') {
+      const assistantEvent = {
+        target: {
+          name: 'assistant_id',
+          value: UNITED_FA_ASSISTANT_ID
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+      handleInputChange(assistantEvent);
+    } else if (field === 'user_type' && value.toLowerCase() === 'flight attendant' && 
+               formData.airline.toLowerCase() === 'united airlines') {
+      const assistantEvent = {
+        target: {
+          name: 'assistant_id',
+          value: UNITED_FA_ASSISTANT_ID
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+      handleInputChange(assistantEvent);
+    }
   };
 
   return (
