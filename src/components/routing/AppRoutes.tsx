@@ -1,4 +1,4 @@
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useEffect } from "react";
 import { AuthCallback } from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -6,10 +6,19 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 export function AppRoutes() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('Route changed to:', location.pathname);
-  }, [location]);
+    
+    // Force a clean navigation when leaving the chat page
+    const fromChat = location.state?.fromChat;
+    if (fromChat) {
+      const newPath = location.pathname;
+      // Remove the state and re-navigate
+      navigate(newPath, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
