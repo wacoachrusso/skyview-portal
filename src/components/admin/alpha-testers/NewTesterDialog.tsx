@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TesterFormFields } from "./components/TesterFormFields";
 import { generatePassword } from "./utils/passwordUtils";
+import { User } from "@supabase/supabase-js";
 
 interface NewTesterDialogProps {
   open: boolean;
@@ -77,7 +78,7 @@ export const NewTesterDialog = ({
         throw new Error("Failed to verify user status");
       }
 
-      const existingUser = userList.users.find(user => user.email === data.email);
+      const existingUser = (userList?.users as User[])?.find(user => user.email === data.email);
       let userId;
 
       if (existingUser) {
