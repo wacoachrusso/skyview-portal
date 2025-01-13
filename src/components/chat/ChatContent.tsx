@@ -3,7 +3,7 @@ import { ChatList } from "./ChatList";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -32,48 +32,50 @@ export function ChatContent({
   const { storedMessages, setStoredMessages } = useMessageStorage(messages);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const handleCopyMessage = (content: string) => {
+  const handleCopyMessage = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
     toast({
       title: "Copied to clipboard",
       duration: 2000
     });
-  };
+  }, [toast]);
+
+  // Memoize the check free trial function to prevent unnecessary recreations
+  const checkFreeTrialStatus = useCallback(async () => {
+    if (!currentUserId || isOffline) return;
+
+    try {
+      console.log('Checking free trial status for user:', currentUserId);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('subscription_plan, query_count')
+        .eq('id', currentUserId)
+        .single();
+
+      if (error) throw error;
+
+      if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+        console.log('Free trial ended, logging out user');
+        await supabase.auth.signOut();
+        toast({
+          title: "Free Trial Ended",
+          description: "Please select a subscription plan to continue.",
+          variant: "destructive"
+        });
+        navigate('/?scrollTo=pricing-section');
+      }
+    } catch (error) {
+      console.error('Error checking trial status:', error);
+      setLoadError('Failed to check subscription status');
+    }
+  }, [currentUserId, isOffline, navigate, toast]);
 
   // Check for free trial status after each message
   useEffect(() => {
-    const checkFreeTrialStatus = async () => {
-      if (!currentUserId || isOffline) return;
-
-      try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('subscription_plan, query_count')
-          .eq('id', currentUserId)
-          .single();
-
-        if (error) throw error;
-
-        if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
-          console.log('Free trial ended, logging out user');
-          await supabase.auth.signOut();
-          toast({
-            title: "Free Trial Ended",
-            description: "Please select a subscription plan to continue.",
-            variant: "destructive"
-          });
-          navigate('/?scrollTo=pricing-section');
-        }
-      } catch (error) {
-        console.error('Error checking trial status:', error);
-        setLoadError('Failed to check subscription status');
-      }
-    };
-
     if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
       checkFreeTrialStatus();
     }
-  }, [messages, currentUserId, navigate, toast, isOffline]);
+  }, [messages, checkFreeTrialStatus]);
 
   // Store messages in localStorage when they change
   useEffect(() => {
@@ -89,7 +91,11 @@ export function ChatContent({
     console.log('Available stored messages:', storedMessages.length);
   }, [isOffline, storedMessages]);
 
-  const displayMessages = isOffline ? storedMessages : messages;
+  // Memoize the display messages to prevent unnecessary recalculations
+  const displayMessages = useMemo(() => 
+    isOffline ? storedMessages : messages
+  , [isOffline, storedMessages, messages]);
+
   const showWelcomeMessage = !isLoading && displayMessages.length === 0;
 
   return (
