@@ -69,22 +69,20 @@ export const NewTesterDialog = ({
         throw new Error("Only administrators can add testers");
       }
 
-      // Check if user already exists in auth system
-      const { data: { users }, error: userCheckError } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: data.email
-        }
-      });
-
+      // Check if user exists in auth system
+      const { data: userList, error: userCheckError } = await supabase.auth.admin.listUsers();
+      
       if (userCheckError) {
         console.error("Error checking existing user:", userCheckError);
         throw new Error("Failed to verify user status");
       }
 
+      const existingUser = userList.users.find(user => user.email === data.email);
       let userId;
-      if (users && users.length > 0) {
+
+      if (existingUser) {
         // User exists, use their ID
-        userId = users[0].id;
+        userId = existingUser.id;
         console.log("Using existing user:", userId);
       } else {
         // Create new user
