@@ -36,7 +36,7 @@ export function ChatContent({
     navigator.clipboard.writeText(content);
     toast({
       title: "Copied to clipboard",
-      duration: 2000
+      duration: 1000 // Reduced from 2000 to 1000ms
     });
   };
 
