@@ -2,7 +2,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
-import { handleUserDeletion } from "@/utils/userDeletion";
 
 export const useUserActions = (refetch: () => Promise<any>) => {
   const { toast } = useToast();
@@ -15,19 +14,29 @@ export const useUserActions = (refetch: () => Promise<any>) => {
     }
 
     try {
-      console.log("Toggling admin status for user:", userId);
+      console.log("Toggling admin status for user:", userId, "Current status:", currentStatus);
       setUpdatingUser(userId);
-      const { error } = await supabase
+      
+      const { data, error } = await supabase
         .from("profiles")
         .update({ is_admin: !currentStatus })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating user admin status:", error);
+        throw error;
+      }
+
+      console.log("Admin status update response:", data);
 
       toast({
         title: "Success",
-        description: "User admin status updated successfully",
+        description: `User admin status ${!currentStatus ? 'enabled' : 'disabled'} successfully`,
       });
+
+      // Immediately refetch to update the UI
       await refetch();
     } catch (error) {
       console.error("Error updating user admin status:", error);
