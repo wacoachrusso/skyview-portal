@@ -33,27 +33,32 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t border-border/50">
-      <div className="relative flex items-center">
-        <Textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={disabled ? "Chat unavailable while offline" : "Ask about your contract..."}
-          className="min-h-[60px] w-full pr-24 resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
-          disabled={isLoading || disabled}
-        />
-        <div className="absolute right-2 flex items-center gap-2">
-          <MicButton 
-            onRecognized={setMessage} 
+    <div className="flex flex-col">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-border/50">
+        <div className="relative flex items-center">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={disabled ? "Chat unavailable while offline" : "Ask about your contract..."}
+            className="min-h-[60px] w-full pr-24 resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
             disabled={isLoading || disabled}
           />
-          <SendButton 
-            isLoading={isLoading} 
-            disabled={!message.trim() || disabled}
-          />
+          <div className="absolute right-2 flex items-center gap-2">
+            <MicButton 
+              onRecognized={setMessage} 
+              disabled={isLoading || disabled}
+            />
+            <SendButton 
+              isLoading={isLoading} 
+              disabled={!message.trim() || disabled}
+            />
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+      <p className="text-xs text-muted-foreground/70 text-center mb-2 px-2">
+        SkyGuide can make mistakes. Check important info.
+      </p>
+    </div>
   );
 }
