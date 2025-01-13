@@ -38,9 +38,12 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent multiple submissions
     setLoading(true);
 
     try {
+      console.log('Starting password update process');
+      
       // Validate new password
       const validation = validatePassword(newPassword);
       if (!validation.isValid) {
@@ -54,6 +57,7 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
           title: "Invalid Password",
           description: `Password requirements not met: ${unmetRequirements}`
         });
+        setLoading(false);
         return;
       }
 
@@ -64,28 +68,37 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
           title: "Passwords Don't Match",
           description: "Please make sure both passwords are identical"
         });
+        setLoading(false);
         return;
       }
 
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("No authenticated user found");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error(userError?.message || "No authenticated user found");
       }
 
+      console.log('Updating password for user:', user.id);
+
       // Update password
-      const { error } = await supabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      console.log('Password updated successfully');
 
       // Get user profile for the name
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', user.id)
         .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
 
       // Send confirmation email
       console.log('Sending password change confirmation email');
@@ -98,6 +111,7 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
 
       if (emailError) {
         console.error('Error sending confirmation email:', emailError);
+        // Don't throw here, as password change was successful
       }
 
       toast({
@@ -119,7 +133,7 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update password. Please try again."
+        description: error instanceof Error ? error.message : "Failed to update password. Please try again."
       });
     } finally {
       setLoading(false);
@@ -141,12 +155,14 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter your new password"
               required
+              disabled={loading}
               className="w-full pr-10"
             />
             <button
               type="button"
               onClick={() => setShowNewPassword(!showNewPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              disabled={loading}
             >
               {showNewPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -185,6 +201,7 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your new password"
               required
+              disabled={loading}
               className={`w-full pr-10 ${
                 confirmPassword && newPassword !== confirmPassword ? 'border-red-500' : ''
               }`}
@@ -193,6 +210,7 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              disabled={loading}
             >
               {showConfirmPassword ? (
                 <EyeOff className="h-4 w-4" />
