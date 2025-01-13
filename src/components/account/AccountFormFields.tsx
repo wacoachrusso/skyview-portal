@@ -125,12 +125,12 @@ export const AccountFormFields = ({
             <SelectTrigger className="col-span-2 bg-gray-50 border-gray-300">
               <SelectValue placeholder="Select Job Title" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-50 border-gray-300 shadow-lg z-50">
+            <SelectContent className="bg-card border-gray-700 shadow-lg z-50">
               {jobTitles.map((title) => (
                 <SelectItem 
                   key={title} 
                   value={title.toLowerCase()}
-                  className="hover:bg-gray-100 text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                  className="hover:bg-gray-800 text-white focus:bg-gray-800 focus:text-white"
                 >
                   {title}
                 </SelectItem>
@@ -156,12 +156,12 @@ export const AccountFormFields = ({
             <SelectTrigger className="col-span-2 bg-gray-50 border-gray-300">
               <SelectValue placeholder="Select Airline" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-50 border-gray-300 shadow-lg z-50">
+            <SelectContent className="bg-card border-gray-700 shadow-lg z-50">
               {airlines.map((airline) => (
                 <SelectItem 
                   key={airline} 
                   value={airline.toLowerCase()}
-                  className="hover:bg-gray-100 text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                  className="hover:bg-gray-800 text-white focus:bg-gray-800 focus:text-white"
                 >
                   {airline}
                 </SelectItem>
