@@ -40,8 +40,8 @@ export function AppRoutes() {
   return (
     <Suspense 
       fallback={
-        <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-          <LoadingSpinner size="lg" />
+        <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all">
+          <LoadingSpinner size="lg" className="h-12 w-12" />
         </div>
       }
     >
