@@ -14,11 +14,11 @@ interface AccountInfoProps {
   showPasswordChange?: boolean;
 }
 
-export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: AccountInfoProps) => {
+export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: AccountInfoProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [shouldShowPasswordChange, setShouldShowPasswordChange] = useState(showPasswordChange);
+  const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     user_type: profile?.user_type || '',
@@ -50,8 +50,8 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
       
       // Show password change form if they have a temporary password or are a promoter
       if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
-        console.log('Setting shouldShowPasswordChange to true');
-        setShouldShowPasswordChange(true);
+        console.log('Setting password change as required');
+        setIsPasswordChangeRequired(true);
         setIsEditing(true); // Automatically enable profile editing
       }
     };
@@ -137,21 +137,25 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
         </CardContent>
       </Card>
 
-      {shouldShowPasswordChange && (
-        <Card className="bg-white/95 shadow-xl border-2 border-brand-navy">
-          <CardHeader>
-            <CardTitle className="text-brand-navy">
-              Change Your Password
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card className={`bg-white/95 shadow-xl ${isPasswordChangeRequired ? 'border-2 border-brand-navy' : ''}`}>
+        <CardHeader>
+          <CardTitle className="text-brand-navy">
+            Change Your Password
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isPasswordChangeRequired ? (
             <div className="text-gray-600 mb-4">
               Please change your temporary password to continue using your account.
             </div>
-            <ChangePasswordForm />
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="text-gray-600 mb-4">
+              You can change your password at any time to keep your account secure.
+            </div>
+          )}
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
     </div>
   );
 };
