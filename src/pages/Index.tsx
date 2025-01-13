@@ -75,22 +75,16 @@ export default function Index() {
       <Footer />
       <ReleaseNotePopup />
 
-      <Sheet 
-        open={showIOSPrompt} 
-        onOpenChange={handleClosePrompt}
-        role="dialog"
-        aria-labelledby="ios-prompt-title"
-        aria-describedby="ios-prompt-description"
-      >
+      <Sheet open={showIOSPrompt} onOpenChange={handleClosePrompt}>
         <SheetContent side="bottom" className="h-[40vh]">
           <SheetHeader>
-            <SheetTitle id="ios-prompt-title" className="text-xl font-bold">
+            <SheetTitle id="ios-prompt-title">
               Install SkyGuide App
             </SheetTitle>
-            <SheetDescription id="ios-prompt-description" className="text-base">
+            <SheetDescription id="ios-prompt-description">
               <div className="space-y-4">
                 <p>Install SkyGuide on your iOS device for the best experience:</p>
-                <ol className="list-decimal pl-5 space-y-2" role="list">
+                <ol className="list-decimal pl-5 space-y-2">
                   <li>
                     Tap the Share button{" "}
                     <span 
