@@ -102,22 +102,6 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
 
   return (
     <div className="space-y-6">
-      {shouldShowPasswordChange && (
-        <Card className="bg-white/95 shadow-xl border-2 border-brand-navy">
-          <CardHeader>
-            <CardTitle className="text-brand-navy">
-              Change Your Password
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-gray-600 mb-4">
-              Please change your temporary password to continue using your account.
-            </div>
-            <ChangePasswordForm />
-          </CardContent>
-        </Card>
-      )}
-
       <Card className="bg-white/95 shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-brand-navy">Account Information</CardTitle>
@@ -142,6 +126,22 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
             handleInputChange={handleInputChange}
             profile={profile}
           />
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white/95 shadow-xl border-2 border-brand-navy">
+        <CardHeader>
+          <CardTitle className="text-brand-navy">
+            Change Your Password
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-gray-600 mb-4">
+            {shouldShowPasswordChange 
+              ? "Please change your temporary password to continue using your account."
+              : "You can change your password at any time using the form below."}
+          </div>
+          <ChangePasswordForm />
         </CardContent>
       </Card>
     </div>
