@@ -11,17 +11,40 @@ export function AppRoutes() {
   useEffect(() => {
     console.log('Route changed to:', location.pathname);
     
-    // Force a clean navigation when leaving the chat page
-    const fromChat = location.state?.fromChat;
-    if (fromChat) {
-      const newPath = location.pathname;
-      // Remove the state and re-navigate
-      navigate(newPath, { replace: true, state: {} });
-    }
+    // Clear any lingering state when navigating
+    const cleanupNavigation = () => {
+      console.log('Cleaning up navigation state');
+      // Remove any lingering state
+      if (location.state) {
+        const newPath = location.pathname;
+        navigate(newPath, { replace: true, state: {} });
+      }
+    };
+
+    cleanupNavigation();
+
+    // Add listener for navigation errors
+    const handleNavigationError = (event: ErrorEvent) => {
+      console.error('Navigation error:', event.error);
+      // Force a clean reload if navigation fails
+      window.location.href = location.pathname;
+    };
+
+    window.addEventListener('error', handleNavigationError);
+
+    return () => {
+      window.removeEventListener('error', handleNavigationError);
+    };
   }, [location, navigate]);
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense 
+      fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+          <LoadingSpinner />
+        </div>
+      }
+    >
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LazyRoutes.Index />} />

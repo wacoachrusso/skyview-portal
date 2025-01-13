@@ -46,8 +46,18 @@ function App() {
       }
     };
 
+    // Add listener for unhandled errors
+    const handleError = (event: ErrorEvent) => {
+      console.error('Unhandled error:', event.error);
+      // Prevent infinite error loops
+      if (!event.error?.message?.includes('Loading chunk')) {
+        window.location.reload();
+      }
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('error', handleError);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Clean up event listeners
@@ -55,6 +65,7 @@ function App() {
       console.log('App component unmounted');
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('error', handleError);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
