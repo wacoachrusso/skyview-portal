@@ -67,12 +67,38 @@ export const ChangePasswordForm = ({ onSuccess }: ChangePasswordFormProps) => {
         return;
       }
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("No authenticated user found");
+      }
+
       // Update password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) throw error;
+
+      // Get user profile for the name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      // Send confirmation email
+      console.log('Sending password change confirmation email');
+      const { error: emailError } = await supabase.functions.invoke('send-password-change-confirmation', {
+        body: { 
+          email: user.email,
+          name: profile?.full_name
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+      }
 
       toast({
         title: "Password Updated",
