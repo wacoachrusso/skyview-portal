@@ -11,7 +11,11 @@ export const useContractHandler = () => {
   const handleContractClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    console.log("Contract click handler initiated", { isMobile, userProfile });
+    console.log("Contract click handler initiated", { 
+      userProfile,
+      airline: userProfile?.airline,
+      userType: userProfile?.user_type
+    });
     
     if (!userProfile?.airline || !userProfile?.user_type) {
       toast({
@@ -22,15 +26,21 @@ export const useContractHandler = () => {
       return;
     }
 
-    // Format the airline name by removing spaces and converting to lowercase
-    const formattedAirline = userProfile.airline.toLowerCase().replace(/\s+/g, '_');
-    const formattedJobType = userProfile.user_type.toLowerCase().replace(/\s+/g, '_');
+    // Format the airline name and job type in various ways
+    const airline = userProfile.airline.toLowerCase();
+    const jobType = userProfile.user_type.toLowerCase();
+    const airlineUnderscored = airline.replace(/\s+/g, '_');
+    const airlineNoSpace = airline.replace(/\s+/g, '');
+    const jobTypeUnderscored = jobType.replace(/\s+/g, '_');
     
     // Try different possible filenames
     const fileNames = [
-      `${formattedAirline}_${formattedJobType}.pdf`,
-      `${userProfile.airline.toLowerCase()}_${userProfile.user_type.toLowerCase()}.pdf`,
-      `${formattedAirline.replace(/_/g, '')}_${formattedJobType}.pdf`
+      `${airlineUnderscored}_${jobTypeUnderscored}.pdf`,
+      `${airline}_${jobType}.pdf`,
+      `${airlineNoSpace}_${jobTypeUnderscored}.pdf`,
+      `${airlineUnderscored}_${jobType}.pdf`,
+      `${airline.replace(/airlines?/i, '')}_${jobType}.pdf`.trim(),
+      `${airlineNoSpace}${jobType}.pdf`
     ];
 
     console.log("Attempting to fetch contract with possible filenames:", fileNames);
@@ -40,15 +50,19 @@ export const useContractHandler = () => {
 
     // Try each filename until we find one that works
     for (const fileName of fileNames) {
+      console.log("Trying filename:", fileName);
+      
       const { data, error: fetchError } = await supabase.storage
         .from('contracts')
         .createSignedUrl(fileName, 300);
 
       if (data && !fetchError) {
+        console.log("Successfully found contract with filename:", fileName);
         signedUrl = data.signedUrl;
         break;
       }
       error = fetchError;
+      console.log("Failed to fetch with filename:", fileName, "Error:", fetchError);
     }
 
     if (!signedUrl) {
@@ -56,7 +70,7 @@ export const useContractHandler = () => {
       
       toast({
         title: "Contract Not Found",
-        description: `No contract found for ${userProfile.airline} ${userProfile.user_type}. Please contact support.`,
+        description: "Unable to locate the contract file. Please contact support and provide your airline and job title.",
         variant: "destructive"
       });
       return;
