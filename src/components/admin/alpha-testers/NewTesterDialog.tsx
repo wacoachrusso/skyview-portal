@@ -69,26 +69,58 @@ export const NewTesterDialog = ({
         throw new Error("Only administrators can add testers");
       }
 
-      // Create the new user account using signUp
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-            subscription_plan: 'alpha'
-          },
-          emailRedirectTo: `${window.location.origin}/login`
+      // Check if user already exists in auth system
+      const { data: { users }, error: userCheckError } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: data.email
         }
       });
 
-      if (authError) {
-        console.error("Error creating auth user:", authError);
-        throw authError;
+      if (userCheckError) {
+        console.error("Error checking existing user:", userCheckError);
+        throw new Error("Failed to verify user status");
       }
 
-      if (!authData.user) {
-        throw new Error("Failed to create user account");
+      let userId;
+      if (users && users.length > 0) {
+        // User exists, use their ID
+        userId = users[0].id;
+        console.log("Using existing user:", userId);
+      } else {
+        // Create new user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              full_name: data.fullName,
+              subscription_plan: 'alpha'
+            },
+            emailRedirectTo: `${window.location.origin}/login`
+          }
+        });
+
+        if (authError) {
+          console.error("Error creating auth user:", authError);
+          throw authError;
+        }
+
+        if (!authData.user) {
+          throw new Error("Failed to create user account");
+        }
+
+        userId = authData.user.id;
+      }
+
+      // Check if user is already an alpha tester
+      const { data: existingTester } = await supabase
+        .from('alpha_testers')
+        .select('id, status')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (existingTester) {
+        throw new Error("This user is already registered as an alpha tester");
       }
 
       // Insert alpha tester record
@@ -98,7 +130,7 @@ export const NewTesterDialog = ({
           email: data.email,
           full_name: data.fullName,
           temporary_password: data.password,
-          profile_id: authData.user.id,
+          profile_id: userId,
           status: 'active',
           is_promoter: data.isPromoter
         });
