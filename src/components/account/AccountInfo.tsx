@@ -30,13 +30,21 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
     const checkAlphaTester = async () => {
       if (!profile?.id) return;
 
-      const { data: alphaTester } = await supabase
+      console.log('Checking alpha tester status for profile:', profile.id);
+      const { data: alphaTester, error } = await supabase
         .from('alpha_testers')
         .select('temporary_password')
         .eq('profile_id', profile.id)
         .maybeSingle();
 
+      if (error) {
+        console.error('Error checking alpha tester status:', error);
+        return;
+      }
+
+      console.log('Alpha tester data:', alphaTester);
       if (alphaTester?.temporary_password) {
+        console.log('Setting shouldShowPasswordChange to true');
         setShouldShowPasswordChange(true);
       }
     };
@@ -79,11 +87,16 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
   return (
     <div className="space-y-6">
       {shouldShowPasswordChange && (
-        <Card className="bg-white/95 shadow-xl">
+        <Card className="bg-white/95 shadow-xl border-2 border-brand-navy">
           <CardHeader>
-            <CardTitle className="text-brand-navy">Change Password</CardTitle>
+            <CardTitle className="text-brand-navy">
+              Change Your Password
+            </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="text-gray-600 mb-4">
+              Please change your temporary password to continue using your account.
+            </div>
             <ChangePasswordForm />
           </CardContent>
         </Card>
