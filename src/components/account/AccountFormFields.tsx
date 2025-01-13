@@ -130,7 +130,7 @@ export const AccountFormFields = ({
                 <SelectItem 
                   key={title} 
                   value={title.toLowerCase()}
-                  className="hover:bg-brand-purple/10 text-gray-900 focus:bg-brand-purple/10 focus:text-gray-900"
+                  className="hover:bg-gray-100 text-gray-900 focus:bg-gray-100 focus:text-gray-900"
                 >
                   {title}
                 </SelectItem>
@@ -161,7 +161,7 @@ export const AccountFormFields = ({
                 <SelectItem 
                   key={airline} 
                   value={airline.toLowerCase()}
-                  className="hover:bg-brand-purple/10 text-gray-900 focus:bg-brand-purple/10 focus:text-gray-900"
+                  className="hover:bg-gray-100 text-gray-900 focus:bg-gray-100 focus:text-gray-900"
                 >
                   {airline}
                 </SelectItem>
