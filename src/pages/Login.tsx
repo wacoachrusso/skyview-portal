@@ -15,8 +15,22 @@ const Login = () => {
         console.log('Session check result:', session ? 'User logged in' : 'No session');
         
         if (session) {
-          console.log('User already logged in:', session.user.id);
-          // Check if profile is complete
+          console.log('User logged in:', session.user.id);
+          
+          // Check if user is an alpha tester with temporary password
+          const { data: alphaTester } = await supabase
+            .from('alpha_testers')
+            .select('temporary_password, profile_id')
+            .eq('profile_id', session.user.id)
+            .single();
+
+          if (alphaTester?.temporary_password) {
+            console.log('Alpha tester with temporary password, redirecting to account page');
+            navigate('/account');
+            return;
+          }
+
+          // Check if profile is complete for regular users
           const { data: profile } = await supabase
             .from('profiles')
             .select('user_type, airline')
@@ -27,8 +41,8 @@ const Login = () => {
             console.log('Profile complete, redirecting to dashboard');
             navigate('/dashboard');
           } else {
-            console.log('Profile incomplete, redirecting to complete-profile');
-            navigate('/complete-profile');
+            console.log('Profile incomplete, redirecting to account page');
+            navigate('/account');
           }
         } else {
           console.log('No active session, showing login form');
