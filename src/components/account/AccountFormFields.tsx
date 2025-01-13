@@ -28,20 +28,28 @@ export const AccountFormFields = ({
       const currentUserType = field === 'user_type' ? value : formData.user_type;
 
       console.log('Updating assistant ID for:', { currentAirline, currentUserType });
-      const assistantId = getAssistantId({ 
-        airline: currentAirline.toLowerCase(),
-        role: currentUserType.toLowerCase()
-      });
+      
+      try {
+        // Only attempt to get assistant ID if both values are present
+        if (currentAirline && currentUserType) {
+          const assistantId = getAssistantId({ 
+            airline: currentAirline.toLowerCase() as "american airlines" | "united airlines",
+            role: currentUserType.toLowerCase() === "flight attendant" ? "flight attendant" : undefined
+          });
 
-      if (assistantId) {
-        console.log('Setting new assistant ID:', assistantId);
-        const assistantEvent = {
-          target: {
-            name: 'assistant_id',
-            value: assistantId
+          if (assistantId) {
+            console.log('Setting new assistant ID:', assistantId);
+            const assistantEvent = {
+              target: {
+                name: 'assistant_id',
+                value: assistantId
+              }
+            } as React.ChangeEvent<HTMLInputElement>;
+            handleInputChange(assistantEvent);
           }
-        } as React.ChangeEvent<HTMLInputElement>;
-        handleInputChange(assistantEvent);
+        }
+      } catch (error) {
+        console.error('Error getting assistant ID:', error);
       }
     }
   };
