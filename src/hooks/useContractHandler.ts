@@ -26,12 +26,10 @@ export const useContractHandler = () => {
       return;
     }
 
-    // Standardize the filename format
-    const airline = userProfile.airline.toLowerCase().trim();
-    const jobType = userProfile.user_type.toLowerCase().trim();
-    
-    // Create a single standardized filename
-    const fileName = `${airline.replace(/\s+/g, '_')}_${jobType.replace(/\s+/g, '_')}.pdf`;
+    // Map to exact filenames based on airline
+    const fileName = userProfile.airline.toLowerCase().includes('united') 
+      ? 'united_airlines_flight_attendant.pdf'
+      : 'american_airlines_flight_attendan.pdf';
     
     console.log("Attempting to fetch contract:", fileName);
 
