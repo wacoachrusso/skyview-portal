@@ -16,7 +16,7 @@ export const LoadingSpinner = ({ size = "md", className }: LoadingSpinnerProps) 
     <div className="flex items-center justify-center">
       <svg
         className={cn(
-          "animate-spin text-brand-purple",
+          "animate-spin text-brand-purple/50",
           sizeClasses[size],
           className
         )}
