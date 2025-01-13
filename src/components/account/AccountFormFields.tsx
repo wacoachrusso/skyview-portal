@@ -36,6 +36,8 @@ export const AccountFormFields = ({
   profile,
 }: AccountFormFieldsProps) => {
   const handleSelectChange = (value: string, field: string) => {
+    console.log('Select change:', { field, value });
+    
     // Create a synthetic event to match the existing handleInputChange
     const syntheticEvent = {
       target: {
@@ -51,9 +53,11 @@ export const AccountFormFields = ({
       const currentAirline = field === 'airline' ? value : formData.airline;
       const currentUserType = field === 'user_type' ? value : formData.user_type;
 
+      console.log('Updating assistant ID for:', { currentAirline, currentUserType });
       const assistantId = getAssistantId(currentAirline, currentUserType);
 
       if (assistantId) {
+        console.log('Setting new assistant ID:', assistantId);
         const assistantEvent = {
           target: {
             name: 'assistant_id',
