@@ -5,10 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
 import { useMessageOperations } from "./useMessageOperations";
 import { useUserProfile } from "./useUserProfile";
+import { useAssistantId } from "@/components/account/form-fields/AssistantIdHandler";
 
 export function useChat() {
   const { toast } = useToast();
   const { currentUserId, userProfile } = useUserProfile();
+  const { data: assistantId, error: assistantError } = useAssistantId();
   const { 
     currentConversationId, 
     createNewConversation, 
@@ -47,6 +49,17 @@ export function useChat() {
       });
       return;
     }
+
+    if (assistantError) {
+      console.error('Assistant ID error:', assistantError);
+      toast({
+        title: "Configuration Error",
+        description: "Your airline or role configuration is not supported.",
+        variant: "destructive",
+        duration: 3000
+      });
+      return;
+    }
     
     setIsLoading(true);
     
@@ -63,7 +76,8 @@ export function useChat() {
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
           content,
-          subscriptionPlan: userProfile?.subscription_plan || 'free'
+          subscriptionPlan: userProfile?.subscription_plan || 'free',
+          assistantId // Pass the dynamically assigned assistant ID
         }
       });
 
@@ -84,12 +98,6 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const startNewChat = async () => {
-    console.log('Starting new chat session...');
-    setMessages([]);
-    setCurrentConversationId(null);
   };
 
   useEffect(() => {
