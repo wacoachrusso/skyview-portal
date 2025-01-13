@@ -50,40 +50,25 @@ export const AccountFormFields = ({
     handleInputChange(syntheticEvent);
 
     // Handle assistant ID updates based on airline and job title combinations
-    if (field === 'airline') {
-      if (value.toLowerCase() === 'united airlines' && 
-          formData.user_type.toLowerCase() === 'flight attendant') {
-        const assistantEvent = {
-          target: {
-            name: 'assistant_id',
-            value: UNITED_FA_ASSISTANT_ID
-          }
-        } as React.ChangeEvent<HTMLInputElement>;
-        handleInputChange(assistantEvent);
-      } else if (value.toLowerCase() === 'american airlines' && 
-                formData.user_type.toLowerCase() === 'flight attendant') {
-        const assistantEvent = {
-          target: {
-            name: 'assistant_id',
-            value: AMERICAN_FA_ASSISTANT_ID
-          }
-        } as React.ChangeEvent<HTMLInputElement>;
-        handleInputChange(assistantEvent);
+    if (field === 'airline' || field === 'user_type') {
+      const currentAirline = field === 'airline' ? value : formData.airline;
+      const currentUserType = field === 'user_type' ? value : formData.user_type;
+
+      let assistantId = null;
+      
+      if (currentUserType.toLowerCase() === 'flight attendant') {
+        if (currentAirline.toLowerCase() === 'american airlines') {
+          assistantId = AMERICAN_FA_ASSISTANT_ID;
+        } else if (currentAirline.toLowerCase() === 'united airlines') {
+          assistantId = UNITED_FA_ASSISTANT_ID;
+        }
       }
-    } else if (field === 'user_type' && value.toLowerCase() === 'flight attendant') {
-      if (formData.airline.toLowerCase() === 'united airlines') {
+
+      if (assistantId) {
         const assistantEvent = {
           target: {
             name: 'assistant_id',
-            value: UNITED_FA_ASSISTANT_ID
-          }
-        } as React.ChangeEvent<HTMLInputElement>;
-        handleInputChange(assistantEvent);
-      } else if (formData.airline.toLowerCase() === 'american airlines') {
-        const assistantEvent = {
-          target: {
-            name: 'assistant_id',
-            value: AMERICAN_FA_ASSISTANT_ID
+            value: assistantId
           }
         } as React.ChangeEvent<HTMLInputElement>;
         handleInputChange(assistantEvent);

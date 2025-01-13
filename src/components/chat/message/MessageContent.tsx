@@ -15,18 +15,17 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
 
     return (
       <div className="space-y-4">
-        <ReactMarkdown
-          components={{
-            p: ({ children }) => <p className="mb-2">{children}</p>,
-            strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-            em: ({ children }) => <em className="italic">{children}</em>,
-            ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
-            ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
-            li: ({ children }) => <li className="pl-2">{children}</li>,
-          }}
-        >
-          {mainContent}
-        </ReactMarkdown>
+        {isCurrentUser ? (
+          <p className="text-sm sm:text-base">{mainContent}</p>
+        ) : (
+          <TypeAnimation
+            sequence={[mainContent]}
+            wrapper="div"
+            speed={70}
+            cursor={false}
+            className="text-sm sm:text-base"
+          />
+        )}
         {reference && (
           <div className="mt-4 pt-4 border-t border-white/10">
             <p className="text-sm text-blue-400 font-medium">Reference:</p>
@@ -37,9 +36,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
     );
   };
 
-  return isCurrentUser ? (
-    <p className="text-sm sm:text-base">{message.content}</p>
-  ) : (
+  return (
     <div className="text-sm sm:text-base min-h-[20px]">
       {formatContent(message.content)}
     </div>
