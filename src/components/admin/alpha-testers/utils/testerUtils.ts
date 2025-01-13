@@ -16,6 +16,25 @@ export const createAlphaTester = async ({
   isPromoter
 }: CreateTesterData) => {
   console.log("Creating alpha tester record...");
+  
+  // First verify the current user is an admin
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user?.id) {
+    throw new Error("No active session found");
+  }
+
+  const { data: adminProfile, error: profileError } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', session.user.id)
+    .single();
+
+  if (profileError || !adminProfile?.is_admin) {
+    console.error("Error verifying admin status:", profileError);
+    throw new Error("Only administrators can add testers");
+  }
+
+  // Create alpha tester record
   const { error: testerError } = await supabase
     .from("alpha_testers")
     .insert({
