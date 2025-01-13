@@ -16,23 +16,6 @@ export const createAlphaTester = async ({
   isPromoter
 }: CreateTesterData) => {
   console.log("Creating alpha tester record...");
-  
-  // First verify the current user is an admin
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user?.id) {
-    throw new Error("No active session found");
-  }
-
-  const { data: adminProfile, error: profileError } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', session.user.id)
-    .single();
-
-  if (profileError || !adminProfile?.is_admin) {
-    console.error("Error verifying admin status:", profileError);
-    throw new Error("Only administrators can add testers");
-  }
 
   // Create alpha tester record
   const { error: testerError } = await supabase
@@ -59,16 +42,21 @@ export const sendWelcomeEmail = async (data: {
   isPromoter: boolean;
 }) => {
   console.log("Sending welcome email to new tester");
-  const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
-    body: { 
-      ...data,
-      loginUrl: `${window.location.origin}/login`,
-    },
-  });
+  try {
+    const { error: emailError } = await supabase.functions.invoke("send-alpha-welcome", {
+      body: { 
+        ...data,
+        loginUrl: `${window.location.origin}/login`,
+      },
+    });
 
-  if (emailError) {
-    console.error("Error sending welcome email:", emailError);
+    if (emailError) {
+      console.error("Error sending welcome email:", emailError);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Failed to send welcome email:", error);
     return false;
   }
-  return true;
 };
