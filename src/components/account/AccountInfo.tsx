@@ -56,7 +56,10 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
 
   // Check if required fields are filled
   const isProfileComplete = () => {
-    return formData.full_name && formData.user_type && formData.airline;
+    return formData.full_name && 
+           formData.user_type && 
+           formData.airline && 
+           formData.employee_id;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +75,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
       toast({
         variant: "destructive",
         title: "Required Fields Missing",
-        description: "Please fill out your full name, user type, and airline.",
+        description: "Please fill out your full name, job title, airline, and employee ID.",
       });
       return;
     }

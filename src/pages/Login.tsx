@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log('Login page mounted');
@@ -24,19 +26,37 @@ const Login = () => {
             .eq('profile_id', session.user.id)
             .single();
 
-          if (alphaTester?.temporary_password) {
-            console.log('Alpha tester with temporary password, redirecting to account page');
-            navigate('/account');
-            return;
-          }
-
-          // Check if profile is complete for regular users
+          // Get user profile
           const { data: profile } = await supabase
             .from('profiles')
-            .select('user_type, airline')
+            .select('full_name, user_type, airline, employee_id')
             .eq('id', session.user.id)
             .single();
 
+          if (alphaTester?.temporary_password) {
+            console.log('Alpha tester with temporary password, redirecting to account page');
+            navigate('/account');
+            toast({
+              title: "Profile Update Required",
+              description: "Please complete your profile and change your temporary password to continue.",
+              duration: 10000,
+            });
+            return;
+          }
+
+          // Check if profile is incomplete for alpha testers/promoters
+          if (alphaTester && (!profile?.full_name || !profile?.user_type || !profile?.airline || !profile?.employee_id)) {
+            console.log('Alpha tester with incomplete profile, redirecting to account page');
+            navigate('/account');
+            toast({
+              title: "Profile Update Required",
+              description: "Please complete your profile information to continue.",
+              duration: 10000,
+            });
+            return;
+          }
+
+          // Regular user flow
           if (profile?.user_type && profile?.airline) {
             console.log('Profile complete, redirecting to dashboard');
             navigate('/dashboard');
@@ -44,8 +64,6 @@ const Login = () => {
             console.log('Profile incomplete, redirecting to account page');
             navigate('/account');
           }
-        } else {
-          console.log('No active session, showing login form');
         }
       } catch (error) {
         console.error('Error checking user session:', error);
@@ -53,7 +71,7 @@ const Login = () => {
     };
     
     checkUser();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   return (
     <div className="min-h-screen bg-[#1A1F2C] flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">

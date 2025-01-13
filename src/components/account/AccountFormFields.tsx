@@ -22,11 +22,11 @@ export const AccountFormFields = ({
 }: AccountFormFieldsProps) => {
   const fields = [
     { name: "full_name", label: "Full Name", required: true },
-    { name: "user_type", label: "User Type", required: true },
+    { name: "user_type", label: "Job Title", required: true },
     { name: "airline", label: "Airline", required: true },
+    { name: "employee_id", label: "Employee ID", required: true },
     { name: "address", label: "Address", optional: true },
     { name: "phone_number", label: "Phone Number", optional: true },
-    { name: "employee_id", label: "Employee ID", optional: true },
   ];
 
   return (
