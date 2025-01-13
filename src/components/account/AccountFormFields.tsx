@@ -122,12 +122,16 @@ export const AccountFormFields = ({
             value={formData.user_type.toLowerCase()}
             onValueChange={(value) => handleSelectChange(value, 'user_type')}
           >
-            <SelectTrigger className="col-span-2">
+            <SelectTrigger className="col-span-2 bg-white border-gray-300">
               <SelectValue placeholder="Select Job Title" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white border-gray-300 shadow-lg z-50">
               {jobTitles.map((title) => (
-                <SelectItem key={title} value={title.toLowerCase()}>
+                <SelectItem 
+                  key={title} 
+                  value={title.toLowerCase()}
+                  className="hover:bg-brand-purple/10 text-gray-900 focus:bg-brand-purple/10 focus:text-gray-900"
+                >
                   {title}
                 </SelectItem>
               ))}
@@ -149,12 +153,16 @@ export const AccountFormFields = ({
             value={formData.airline.toLowerCase()}
             onValueChange={(value) => handleSelectChange(value, 'airline')}
           >
-            <SelectTrigger className="col-span-2">
+            <SelectTrigger className="col-span-2 bg-white border-gray-300">
               <SelectValue placeholder="Select Airline" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white border-gray-300 shadow-lg z-50">
               {airlines.map((airline) => (
-                <SelectItem key={airline} value={airline.toLowerCase()}>
+                <SelectItem 
+                  key={airline} 
+                  value={airline.toLowerCase()}
+                  className="hover:bg-brand-purple/10 text-gray-900 focus:bg-brand-purple/10 focus:text-gray-900"
+                >
                   {airline}
                 </SelectItem>
               ))}
