@@ -36,6 +36,15 @@ export function useChat() {
     setIsLoading(false);
   }, []);
 
+  const startNewChat = useCallback(async () => {
+    console.log('Starting new chat');
+    cleanup();
+    const newConversationId = await createNewConversation(currentUserId!);
+    if (newConversationId) {
+      setCurrentConversationId(newConversationId);
+    }
+  }, [currentUserId, cleanup, createNewConversation, setCurrentConversationId]);
+
   const sendMessage = async (content: string) => {
     console.log('Sending message:', { content, conversationId: currentConversationId });
     
@@ -77,7 +86,7 @@ export function useChat() {
         body: { 
           content,
           subscriptionPlan: userProfile?.subscription_plan || 'free',
-          assistantId // Pass the dynamically assigned assistant ID
+          assistantId
         }
       });
 

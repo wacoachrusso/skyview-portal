@@ -28,7 +28,10 @@ export const AccountFormFields = ({
       const currentUserType = field === 'user_type' ? value : formData.user_type;
 
       console.log('Updating assistant ID for:', { currentAirline, currentUserType });
-      const assistantId = getAssistantId(currentAirline, currentUserType);
+      const assistantId = getAssistantId({ 
+        airline: currentAirline.toLowerCase(),
+        role: currentUserType.toLowerCase()
+      });
 
       if (assistantId) {
         console.log('Setting new assistant ID:', assistantId);
