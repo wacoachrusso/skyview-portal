@@ -32,8 +32,10 @@ export const AccountFormFields = ({
       try {
         // Only attempt to get assistant ID if both values are present
         if (currentAirline && currentUserType) {
+          // Type assertion to ensure airline is of type SupportedAirline
+          const normalizedAirline = currentAirline.toLowerCase() as "american airlines" | "united airlines";
           const assistantId = getAssistantId({ 
-            airline: currentAirline.toLowerCase(),
+            airline: normalizedAirline,
             role: currentUserType.toLowerCase() === "flight attendant" ? "flight attendant" : undefined
           });
 
