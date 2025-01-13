@@ -16,7 +16,6 @@ interface NotificationRequest {
 const handler = async (req: Request): Promise<Response> => {
   console.log("Processing notification email request");
   
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -32,7 +31,8 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SkyGuide Notifications <skyguide32@gmail.com>",
+        from: "SkyGuide Notifications <alpha@skyguide.site>",
+        reply_to: "alpha@skyguide.site",
         to: [to],
         subject: subject,
         html: `
@@ -42,7 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
               ${message}
             </div>
             <p style="color: #666; font-size: 14px;">
-              This is an automated message from SkyGuide. Please do not reply to this email.
+              This is an automated message from SkyGuide. Please reply to alpha@skyguide.site for support.
             </p>
           </div>
         `,
