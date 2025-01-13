@@ -96,9 +96,11 @@
   /* Navigation bar specific styles */
   nav.fixed-nav {
     padding-top: max(env(safe-area-inset-top), 16px);
+    padding-bottom: 16px;
     background-color: rgba(26, 54, 93, 0.95);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   /* Safe area utilities */
@@ -116,5 +118,10 @@
 
   .safe-right {
     padding-right: max(env(safe-area-inset-right), 16px);
+  }
+
+  /* Hero section adjustment */
+  .hero-section {
+    padding-top: calc(env(safe-area-inset-top) + 64px);
   }
 }
