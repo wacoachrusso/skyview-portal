@@ -19,5 +19,8 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         />
       </div>
     </div>
+    <p className="text-xs text-muted-foreground/70 text-center mt-1 px-2">
+      SkyGuide can make mistakes. Check important info.
+    </p>
   );
 }
