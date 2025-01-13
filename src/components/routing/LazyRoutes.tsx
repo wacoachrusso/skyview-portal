@@ -42,3 +42,4 @@ export const Refunds = lazy(() => retryLoadComponent(() => import("@/pages/Refun
 export const ForgotPassword = lazy(() => retryLoadComponent(() => import("@/pages/ForgotPassword")));
 export const ResetPassword = lazy(() => retryLoadComponent(() => import("@/pages/ResetPassword")));
 export const HelpCenter = lazy(() => retryLoadComponent(() => import("@/pages/HelpCenter")));
+export const CompleteProfile = lazy(() => retryLoadComponent(() => import("@/pages/CompleteProfile")));
