@@ -2,43 +2,41 @@ import { useState, useEffect } from "react";
 import { Conversation } from "@/types/chat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useConversations() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const CHAT_LIMIT_WARNING = 25;
 
-  const loadConversations = async () => {
-    console.log('Loading conversations...');
+  const fetchConversations = async () => {
+    console.log('Fetching conversations...');
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
       .order('last_message_at', { ascending: false });
 
     if (error) {
-      console.error('Error loading conversations:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load conversations.",
-        variant: "destructive",
-      });
-      return;
+      console.error('Error fetching conversations:', error);
+      throw error;
     }
 
-    setConversations(data);
-    console.log('Loaded conversations:', data.length);
-
-    if (data.length >= CHAT_LIMIT_WARNING) {
-      toast({
-        title: "Chat History Notice",
-        description: "You have quite a few chats saved. Consider deleting old ones to keep things organized.",
-        duration: 5000,
-      });
-    }
+    console.log('Fetched conversations:', data?.length);
+    return data || [];
   };
+
+  const { data: conversations = [], error, isLoading } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: fetchConversations,
+    retry: 2,
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const deleteConversation = async (conversationId: string) => {
     try {
+      console.log('Deleting conversation:', conversationId);
+      
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
@@ -53,19 +51,20 @@ export function useConversations() {
 
       if (conversationError) throw conversationError;
 
-      setConversations(prev => prev.filter(convo => convo.id !== conversationId));
-      
       toast({
         title: "Success",
         description: "Conversation deleted successfully",
       });
 
-      console.log('Conversation deleted:', conversationId);
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      console.log('Conversation deleted successfully');
+      
     } catch (error) {
       console.error('Error deleting conversation:', error);
       toast({
         title: "Error",
-        description: "Failed to delete conversation.",
+        description: "Failed to delete conversation. Please try again.",
         variant: "destructive",
       });
     }
@@ -73,6 +72,7 @@ export function useConversations() {
 
   const deleteAllConversations = async () => {
     try {
+      console.log('Fetching all conversations for deletion');
       const { data: userConversations, error: fetchError } = await supabase
         .from('conversations')
         .select('id');
@@ -89,6 +89,7 @@ export function useConversations() {
 
       const conversationIds = userConversations.map(conv => conv.id);
 
+      console.log('Deleting messages for conversations:', conversationIds.length);
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
@@ -96,6 +97,7 @@ export function useConversations() {
 
       if (messagesError) throw messagesError;
 
+      console.log('Deleting conversations');
       const { error: conversationsError } = await supabase
         .from('conversations')
         .delete()
@@ -103,56 +105,38 @@ export function useConversations() {
 
       if (conversationsError) throw conversationsError;
 
-      setConversations([]);
-      
       toast({
         title: "Success",
         description: "All conversations deleted successfully",
       });
 
-      console.log('All conversations deleted');
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      console.log('All conversations deleted successfully');
+      
     } catch (error) {
       console.error('Error deleting all conversations:', error);
       toast({
         title: "Error",
-        description: "Failed to delete all conversations.",
+        description: "Failed to delete all conversations. Please try again.",
         variant: "destructive",
       });
     }
   };
 
+  // Log when error status changes
   useEffect(() => {
-    loadConversations();
-  }, []);
-
-  useEffect(() => {
-    console.log('Setting up real-time subscription for conversations...');
-    const channel = supabase
-      .channel('conversations_channel')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations'
-        },
-        (payload) => {
-          console.log('Conversation change detected:', payload);
-          loadConversations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up conversations subscription');
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    if (error) {
+      console.error('Conversations loading error:', error);
+    }
+  }, [error]);
 
   return {
     conversations,
     deleteConversation,
     deleteAllConversations,
-    CHAT_LIMIT_WARNING
+    CHAT_LIMIT_WARNING,
+    error,
+    isLoading
   };
 }

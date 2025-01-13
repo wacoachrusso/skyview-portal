@@ -11,6 +11,7 @@ interface ConversationListProps {
   currentConversationId: string | null;
   onSelectConversation: (conversationId: string) => void;
   onDeleteConversation: (conversationId: string) => void;
+  isLoading?: boolean;
 }
 
 export function ConversationList({
@@ -18,6 +19,7 @@ export function ConversationList({
   currentConversationId,
   onSelectConversation,
   onDeleteConversation,
+  isLoading
 }: ConversationListProps) {
   const { 
     offlineConversations, 
@@ -66,20 +68,34 @@ export function ConversationList({
       />
       <ScrollArea className="flex-1">
         <div className="flex flex-col py-2">
-          {conversations.map((conversation) => (
-            <ConversationItem
-              key={conversation.id}
-              conversation={conversation}
-              isSelected={conversation.id === currentConversationId}
-              isOffline={offlineConversations.includes(conversation.id)}
-              onSelect={handleSelect}
-              onDelete={handleDelete}
-              onToggleOffline={handleToggleOffline}
-              showCheckbox={selectedConversations.length > 0}
-              isChecked={selectedConversations.includes(conversation.id)}
-              onCheckChange={(checked) => handleCheckboxChange(conversation.id, checked)}
-            />
-          ))}
+          {isLoading ? (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-pulse space-y-2 w-full">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-12 bg-white/5 rounded-lg" />
+                ))}
+              </div>
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center p-4 text-gray-400">
+              No conversations yet
+            </div>
+          ) : (
+            conversations.map((conversation) => (
+              <ConversationItem
+                key={conversation.id}
+                conversation={conversation}
+                isSelected={conversation.id === currentConversationId}
+                isOffline={offlineConversations.includes(conversation.id)}
+                onSelect={handleSelect}
+                onDelete={handleDelete}
+                onToggleOffline={handleToggleOffline}
+                showCheckbox={selectedConversations.length > 0}
+                isChecked={selectedConversations.includes(conversation.id)}
+                onCheckChange={(checked) => handleCheckboxChange(conversation.id, checked)}
+              />
+            ))
+          )}
         </div>
       </ScrollArea>
     </div>
