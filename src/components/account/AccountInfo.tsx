@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ interface AccountInfoProps {
 }
 
 export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: AccountInfoProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [shouldShowPasswordChange, setShouldShowPasswordChange] = useState(showPasswordChange);
@@ -52,6 +54,11 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
     checkAlphaTester();
   }, [profile?.id]);
 
+  // Check if required fields are filled
+  const isProfileComplete = () => {
+    return formData.full_name && formData.user_type && formData.airline;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -61,6 +68,15 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
   };
 
   const handleSubmit = async () => {
+    if (!isProfileComplete()) {
+      toast({
+        variant: "destructive",
+        title: "Required Fields Missing",
+        description: "Please fill out your full name, user type, and airline.",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('profiles')

@@ -21,9 +21,9 @@ export const AccountFormFields = ({
   profile,
 }: AccountFormFieldsProps) => {
   const fields = [
-    { name: "full_name", label: "Full Name" },
-    { name: "user_type", label: "User Type" },
-    { name: "airline", label: "Airline" },
+    { name: "full_name", label: "Full Name", required: true },
+    { name: "user_type", label: "User Type", required: true },
+    { name: "airline", label: "Airline", required: true },
     { name: "address", label: "Address", optional: true },
     { name: "phone_number", label: "Phone Number", optional: true },
     { name: "employee_id", label: "Employee ID", optional: true },
@@ -33,18 +33,21 @@ export const AccountFormFields = ({
     <div className="grid gap-4">
       {fields.map((field) => (
         <div key={field.name} className="grid grid-cols-3 items-center gap-4">
-          <span className="font-medium text-brand-navy">{field.label}:</span>
+          <span className="font-medium text-brand-navy">
+            {field.label}{field.required && <span className="text-red-500 ml-1">*</span>}:
+          </span>
           {isEditing ? (
             <Input
               name={field.name}
               value={formData[field.name as keyof typeof formData]}
               onChange={handleInputChange}
-              className="col-span-2"
-              placeholder={field.optional ? "Optional" : undefined}
+              className={`col-span-2 ${field.required ? 'border-gray-300' : ''}`}
+              placeholder={field.optional ? "Optional" : "Required"}
+              required={field.required}
             />
           ) : (
             <span className="col-span-2 text-gray-700">
-              {profile?.[field.name] || 'Not set'}
+              {profile?.[field.name] || (field.required ? 'Required' : 'Not set')}
             </span>
           )}
         </div>
