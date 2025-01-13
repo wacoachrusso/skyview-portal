@@ -17,19 +17,17 @@ interface MobileNavProps {
 export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
   return (
     <div className="flex md:hidden items-center space-x-3">
-      <div className="flex items-center space-x-2">
-        <NotificationBell />
-        <Button 
-          asChild
-          variant="ghost"
-          size="sm"
-          className="text-foreground/70 hover:text-foreground"
-        >
-          <Link to="/chat">
-            <MessageSquare className="h-5 w-5" />
-          </Link>
-        </Button>
-      </div>
+      <NotificationBell />
+      <Button 
+        asChild
+        variant="ghost"
+        size="sm"
+        className="text-foreground/70 hover:text-foreground"
+      >
+        <Link to="/chat">
+          <MessageSquare className="h-5 w-5" />
+        </Link>
+      </Button>
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
