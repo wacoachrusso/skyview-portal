@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AccountFormFieldsProps {
   isEditing: boolean;
@@ -14,44 +15,170 @@ interface AccountFormFieldsProps {
   profile: any;
 }
 
+const jobTitles = [
+  "Flight Attendant",
+  "Pilot"
+];
+
+const airlines = [
+  "United Airlines",
+  "American Airlines",
+  "Delta Air Lines",
+  "Southwest Airlines",
+  "Other"
+];
+
 export const AccountFormFields = ({
   isEditing,
   formData,
   handleInputChange,
   profile,
 }: AccountFormFieldsProps) => {
-  const fields = [
-    { name: "full_name", label: "Full Name", required: true },
-    { name: "user_type", label: "Job Title", required: true },
-    { name: "airline", label: "Airline", required: true },
-    { name: "employee_id", label: "Employee ID", required: true },
-    { name: "address", label: "Address", optional: true },
-    { name: "phone_number", label: "Phone Number", optional: true },
-  ];
+  const handleSelectChange = (value: string, field: string) => {
+    // Create a synthetic event to match the existing handleInputChange
+    const syntheticEvent = {
+      target: {
+        name: field,
+        value: value
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+  };
 
   return (
     <div className="grid gap-4">
-      {fields.map((field) => (
-        <div key={field.name} className="grid grid-cols-3 items-center gap-4">
-          <span className="font-medium text-brand-navy">
-            {field.label}{field.required && <span className="text-red-500 ml-1">*</span>}:
+      <div className="grid grid-cols-3 items-center gap-4">
+        <span className="font-medium text-brand-navy">
+          Full Name<span className="text-red-500 ml-1">*</span>:
+        </span>
+        {isEditing ? (
+          <Input
+            name="full_name"
+            value={formData.full_name}
+            onChange={handleInputChange}
+            className="col-span-2 border-gray-300"
+            placeholder="Required"
+            required
+          />
+        ) : (
+          <span className="col-span-2 text-gray-700">
+            {profile?.full_name || 'Required'}
           </span>
-          {isEditing ? (
-            <Input
-              name={field.name}
-              value={formData[field.name as keyof typeof formData]}
-              onChange={handleInputChange}
-              className={`col-span-2 ${field.required ? 'border-gray-300' : ''}`}
-              placeholder={field.optional ? "Optional" : "Required"}
-              required={field.required}
-            />
-          ) : (
-            <span className="col-span-2 text-gray-700">
-              {profile?.[field.name] || (field.required ? 'Required' : 'Not set')}
-            </span>
-          )}
-        </div>
-      ))}
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 items-center gap-4">
+        <span className="font-medium text-brand-navy">
+          Job Title<span className="text-red-500 ml-1">*</span>:
+        </span>
+        {isEditing ? (
+          <Select
+            value={formData.user_type.toLowerCase()}
+            onValueChange={(value) => handleSelectChange(value, 'user_type')}
+          >
+            <SelectTrigger className="col-span-2">
+              <SelectValue placeholder="Select Job Title" />
+            </SelectTrigger>
+            <SelectContent>
+              {jobTitles.map((title) => (
+                <SelectItem key={title} value={title.toLowerCase()}>
+                  {title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="col-span-2 text-gray-700">
+            {profile?.user_type || 'Required'}
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 items-center gap-4">
+        <span className="font-medium text-brand-navy">
+          Airline<span className="text-red-500 ml-1">*</span>:
+        </span>
+        {isEditing ? (
+          <Select
+            value={formData.airline.toLowerCase()}
+            onValueChange={(value) => handleSelectChange(value, 'airline')}
+          >
+            <SelectTrigger className="col-span-2">
+              <SelectValue placeholder="Select Airline" />
+            </SelectTrigger>
+            <SelectContent>
+              {airlines.map((airline) => (
+                <SelectItem key={airline} value={airline.toLowerCase()}>
+                  {airline}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="col-span-2 text-gray-700">
+            {profile?.airline || 'Required'}
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 items-center gap-4">
+        <span className="font-medium text-brand-navy">
+          Employee ID<span className="text-red-500 ml-1">*</span>:
+        </span>
+        {isEditing ? (
+          <Input
+            name="employee_id"
+            value={formData.employee_id}
+            onChange={handleInputChange}
+            className="col-span-2 border-gray-300"
+            placeholder="Required"
+            required
+          />
+        ) : (
+          <span className="col-span-2 text-gray-700">
+            {profile?.employee_id || 'Required'}
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 items-center gap-4">
+        <span className="font-medium text-brand-navy">
+          Address:
+        </span>
+        {isEditing ? (
+          <Input
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            className="col-span-2"
+            placeholder="Optional"
+          />
+        ) : (
+          <span className="col-span-2 text-gray-700">
+            {profile?.address || 'Not set'}
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 items-center gap-4">
+        <span className="font-medium text-brand-navy">
+          Phone Number:
+        </span>
+        {isEditing ? (
+          <Input
+            name="phone_number"
+            value={formData.phone_number}
+            onChange={handleInputChange}
+            className="col-span-2"
+            placeholder="Optional"
+          />
+        ) : (
+          <span className="col-span-2 text-gray-700">
+            {profile?.phone_number || 'Not set'}
+          </span>
+        )}
+      </div>
     </div>
   );
 };
