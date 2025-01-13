@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ interface AccountInfoProps {
 export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: AccountInfoProps) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [shouldShowPasswordChange, setShouldShowPasswordChange] = useState(showPasswordChange);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     user_type: profile?.user_type || '',
@@ -24,6 +25,24 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
     phone_number: profile?.phone_number || '',
     employee_id: profile?.employee_id || '',
   });
+
+  useEffect(() => {
+    const checkAlphaTester = async () => {
+      if (!profile?.id) return;
+
+      const { data: alphaTester } = await supabase
+        .from('alpha_testers')
+        .select('temporary_password')
+        .eq('profile_id', profile.id)
+        .maybeSingle();
+
+      if (alphaTester?.temporary_password) {
+        setShouldShowPasswordChange(true);
+      }
+    };
+
+    checkAlphaTester();
+  }, [profile?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -59,7 +78,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = false }: 
 
   return (
     <div className="space-y-6">
-      {showPasswordChange && (
+      {shouldShowPasswordChange && (
         <Card className="bg-white/95 shadow-xl">
           <CardHeader>
             <CardTitle className="text-brand-navy">Change Password</CardTitle>

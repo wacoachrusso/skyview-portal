@@ -17,7 +17,7 @@ const Login = () => {
         if (session) {
           console.log('User logged in:', session.user.id);
           
-          // Check if user is an alpha tester with temporary password
+          // Check if user is an alpha tester or promoter
           const { data: alphaTester } = await supabase
             .from('alpha_testers')
             .select('temporary_password, profile_id')
