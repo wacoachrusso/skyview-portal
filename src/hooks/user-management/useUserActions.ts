@@ -47,7 +47,7 @@ export const useUserActions = (refetch: () => Promise<any>) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update user admin status",
+        description: error instanceof Error ? error.message : "Failed to update user admin status",
       });
     } finally {
       setUpdatingUser(null);
@@ -63,12 +63,18 @@ export const useUserActions = (refetch: () => Promise<any>) => {
       console.log(`Updating account status to ${status} for user:`, userId);
       setUpdatingUser(userId);
 
-      const { error: updateError } = await supabase
+      const { data, error: updateError } = await supabase
         .from("profiles")
         .update({ account_status: status })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select()
+        .maybeSingle();
 
       if (updateError) throw updateError;
+
+      if (!data) {
+        throw new Error("User not found after update");
+      }
 
       // Send email notification
       const { error: emailError } = await supabase.functions.invoke(
@@ -103,7 +109,7 @@ export const useUserActions = (refetch: () => Promise<any>) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to ${status} user account`,
+        description: error instanceof Error ? error.message : `Failed to ${status} user account`,
       });
     } finally {
       setUpdatingUser(null);
