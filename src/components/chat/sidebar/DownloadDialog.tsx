@@ -16,38 +16,40 @@ export function DownloadDialog({ open, onOpenChange, onConfirm }: DownloadDialog
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Download Chat for Offline Use</DialogTitle>
-          <DialogDescription>
-            This will download a copy of the chat to your device and make it available offline. The chat will be saved as a text file.
-            
-            {isIOS && (
-              <div className="mt-2 space-y-2">
-                <p>On iOS devices:</p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>The chat will be downloaded to the Files app under Downloads or Documents folder.</li>
-                  <li>You can open the file in the Notes app to keep it easily accessible:</li>
-                  <ol className="list-decimal pl-4 mt-1 space-y-1">
-                    <li>Tap the downloaded file in Files</li>
+          <DialogDescription className="space-y-4">
+            {isIOS ? (
+              <>
+                <p className="font-medium text-lg">iOS Instructions:</p>
+                <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg space-y-2">
+                  <p>1. After tapping Download, the chat will be saved to your Files app</p>
+                  <p>2. To keep it easily accessible:</p>
+                  <ul className="list-disc pl-6 space-y-1">
+                    <li>Open the Files app</li>
+                    <li>Go to Downloads or Documents folder</li>
+                    <li>Find and tap the downloaded chat file</li>
                     <li>Tap the Share button (square with arrow)</li>
                     <li>Select "Notes" from the share options</li>
-                    <li>The chat will be saved as a new note for offline viewing</li>
-                  </ol>
-                </ul>
-              </div>
-            )}
-            
-            {isAndroid && (
-              <div className="mt-2 space-y-2">
-                <p>On Android devices:</p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>The chat will be saved to your Downloads folder</li>
-                  <li>You can access it through:</li>
-                  <ol className="list-decimal pl-4 mt-1 space-y-1">
+                  </ul>
+                  <p className="text-sm italic mt-2">
+                    Tip: Save to Notes app for quick offline access
+                  </p>
+                </div>
+              </>
+            ) : isAndroid ? (
+              <>
+                <p className="font-medium text-lg">Android Instructions:</p>
+                <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
+                  <p>The chat will be saved to your Downloads folder.</p>
+                  <p>Access it through:</p>
+                  <ul className="list-disc pl-6 mt-2">
                     <li>Your device's Files app</li>
                     <li>The Downloads folder</li>
                     <li>Or your preferred file manager app</li>
-                  </ol>
-                </ul>
-              </div>
+                  </ul>
+                </div>
+              </>
+            ) : (
+              <p>The chat will be downloaded to your device's default download location.</p>
             )}
           </DialogDescription>
         </DialogHeader>
