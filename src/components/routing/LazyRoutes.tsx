@@ -18,27 +18,32 @@ const retryLoadComponent = (fn: () => Promise<any>, retriesLeft = 3): Promise<an
   });
 };
 
-// Lazy load components with retry
-export const Index = lazy(() => {
-  console.log('Loading Index component');
-  return retryLoadComponent(() => import("@/pages/Index"));
-});
+// Enhanced lazy loading with better error handling and logging
+const enhancedLazy = (importFn: () => Promise<any>, componentName: string) => {
+  return lazy(() => {
+    console.log(`Loading ${componentName} component`);
+    return retryLoadComponent(() => 
+      importFn().catch(error => {
+        console.error(`Failed to load ${componentName}:`, error);
+        throw error;
+      })
+    );
+  });
+};
 
-export const Login = lazy(() => {
-  console.log('Loading Login component');
-  return retryLoadComponent(() => import("@/pages/Login"));
-});
-
-export const SignUp = lazy(() => retryLoadComponent(() => import("@/pages/SignUp")));
-export const Chat = lazy(() => retryLoadComponent(() => import("@/pages/Chat")));
-export const Account = lazy(() => retryLoadComponent(() => import("@/pages/Account")));
-export const Settings = lazy(() => retryLoadComponent(() => import("@/pages/Settings")));
-export const Dashboard = lazy(() => retryLoadComponent(() => import("@/pages/Dashboard")));
-export const AdminDashboard = lazy(() => retryLoadComponent(() => import("@/pages/AdminDashboard")));
-export const About = lazy(() => retryLoadComponent(() => import("@/pages/About")));
-export const ReleaseNotes = lazy(() => retryLoadComponent(() => import("@/pages/ReleaseNotes")));
-export const PrivacyPolicy = lazy(() => retryLoadComponent(() => import("@/pages/PrivacyPolicy")));
-export const Refunds = lazy(() => retryLoadComponent(() => import("@/pages/Refunds")));
-export const ForgotPassword = lazy(() => retryLoadComponent(() => import("@/pages/ForgotPassword")));
-export const ResetPassword = lazy(() => retryLoadComponent(() => import("@/pages/ResetPassword")));
-export const HelpCenter = lazy(() => retryLoadComponent(() => import("@/pages/HelpCenter")));
+// Lazy load components with enhanced logging
+export const Index = enhancedLazy(() => import("@/pages/Index"), "Index");
+export const Login = enhancedLazy(() => import("@/pages/Login"), "Login");
+export const SignUp = enhancedLazy(() => import("@/pages/SignUp"), "SignUp");
+export const Chat = enhancedLazy(() => import("@/pages/Chat"), "Chat");
+export const Account = enhancedLazy(() => import("@/pages/Account"), "Account");
+export const Settings = enhancedLazy(() => import("@/pages/Settings"), "Settings");
+export const Dashboard = enhancedLazy(() => import("@/pages/Dashboard"), "Dashboard");
+export const AdminDashboard = enhancedLazy(() => import("@/pages/AdminDashboard"), "AdminDashboard");
+export const About = enhancedLazy(() => import("@/pages/About"), "About");
+export const ReleaseNotes = enhancedLazy(() => import("@/pages/ReleaseNotes"), "ReleaseNotes");
+export const PrivacyPolicy = enhancedLazy(() => import("@/pages/PrivacyPolicy"), "PrivacyPolicy");
+export const Refunds = enhancedLazy(() => import("@/pages/Refunds"), "Refunds");
+export const ForgotPassword = enhancedLazy(() => import("@/pages/ForgotPassword"), "ForgotPassword");
+export const ResetPassword = enhancedLazy(() => import("@/pages/ResetPassword"), "ResetPassword");
+export const HelpCenter = enhancedLazy(() => import("@/pages/HelpCenter"), "HelpCenter");
