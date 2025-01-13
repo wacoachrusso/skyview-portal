@@ -1,33 +1,7 @@
-import { SelectField } from "./form-fields/SelectField";
-import { InputField } from "./form-fields/InputField";
 import { getAssistantId } from "./form-fields/AssistantIdHandler";
-
-interface AccountFormFieldsProps {
-  isEditing: boolean;
-  formData: {
-    full_name: string;
-    user_type: string;
-    airline: string;
-    address: string;
-    phone_number: string;
-    employee_id: string;
-  };
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  profile: any;
-}
-
-const jobTitles = [
-  "Flight Attendant",
-  "Pilot"
-];
-
-const airlines = [
-  "United Airlines",
-  "American Airlines",
-  "Delta Air Lines",
-  "Southwest Airlines",
-  "Other"
-];
+import { PersonalInfoSection } from "./form-sections/PersonalInfoSection";
+import { WorkInfoSection } from "./form-sections/WorkInfoSection";
+import { AccountFormFieldsProps } from "./types/accountTypes";
 
 export const AccountFormFields = ({
   isEditing,
@@ -71,66 +45,18 @@ export const AccountFormFields = ({
 
   return (
     <div className="grid gap-4">
-      <InputField
-        label="Full Name"
-        name="full_name"
-        value={formData.full_name}
-        onChange={handleInputChange}
-        required
+      <PersonalInfoSection
         isEditing={isEditing}
-        displayValue={profile?.full_name}
-        placeholder="Required"
+        formData={formData}
+        handleInputChange={handleInputChange}
+        profile={profile}
       />
-
-      <SelectField
-        label="Job Title"
-        name="user_type"
-        value={formData.user_type}
-        options={jobTitles}
-        onChange={handleSelectChange}
-        required
+      <WorkInfoSection
         isEditing={isEditing}
-        displayValue={profile?.user_type}
-      />
-
-      <SelectField
-        label="Airline"
-        name="airline"
-        value={formData.airline}
-        options={airlines}
-        onChange={handleSelectChange}
-        required
-        isEditing={isEditing}
-        displayValue={profile?.airline}
-      />
-
-      <InputField
-        label="Employee ID"
-        name="employee_id"
-        value={formData.employee_id}
-        onChange={handleInputChange}
-        required
-        isEditing={isEditing}
-        displayValue={profile?.employee_id}
-        placeholder="Required"
-      />
-
-      <InputField
-        label="Address"
-        name="address"
-        value={formData.address}
-        onChange={handleInputChange}
-        isEditing={isEditing}
-        displayValue={profile?.address}
-      />
-
-      <InputField
-        label="Phone Number"
-        name="phone_number"
-        value={formData.phone_number}
-        onChange={handleInputChange}
-        isEditing={isEditing}
-        displayValue={profile?.phone_number}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleSelectChange={handleSelectChange}
+        profile={profile}
       />
     </div>
   );
