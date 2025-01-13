@@ -5,29 +5,28 @@ import { useAuthState } from '@/hooks/useAuthState';
 import './App.css';
 
 function App() {
-  const { user } = useAuthState();
+  const { userEmail } = useAuthState();
 
   useEffect(() => {
     // Set user information in Sentry when available
-    if (user) {
+    if (userEmail) {
       Sentry.setUser({
-        id: user.id,
-        email: user.email,
+        email: userEmail,
       });
     } else {
       // Clear user data when logged out
       Sentry.setUser(null);
     }
-  }, [user]);
+  }, [userEmail]);
 
   // Add performance monitoring
   useEffect(() => {
-    const transaction = Sentry.startTransaction({
+    const transaction = Sentry.startSpan({
       name: "App Load",
     });
 
     return () => {
-      transaction.finish();
+      transaction?.finish();
     };
   }, []);
 

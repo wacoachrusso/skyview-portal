@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/browser";
+import { Replay } from "@sentry/replay";
 import App from './App'
 import './index.css'
 import { ThemeProvider } from './components/theme-provider'
@@ -12,11 +14,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 Sentry.init({
   dsn: "YOUR-SENTRY-DSN", // You'll need to provide this
   integrations: [
-    new Sentry.BrowserTracing({
+    new BrowserTracing({
       // Set sampling rate for performance monitoring
       tracePropagationTargets: ["localhost", /^https:\/\/yourdomain\.com/],
     }),
-    new Sentry.Replay(),
+    new Replay(),
   ],
   // Performance Monitoring
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
@@ -31,13 +33,14 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      // Add Sentry error reporting to React Query
-      onError: (error) => {
-        Sentry.captureException(error, {
-          tags: {
-            source: 'react-query',
-          },
-        });
+      meta: {
+        errorHandler: (error: Error) => {
+          Sentry.captureException(error, {
+            tags: {
+              source: 'react-query',
+            },
+          });
+        },
       },
     },
   },
@@ -49,7 +52,7 @@ const SentryErrorBoundary = Sentry.ErrorBoundary;
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <SentryErrorBoundary
-      fallback={({ error }) => (
+      fallback={({ error }: { error: Error }) => (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
           <div className="text-center">
             <h1 className="mb-4 text-2xl font-bold text-foreground">Something went wrong</h1>
