@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoggedInButtonsProps {
   isMobile?: boolean;
@@ -10,6 +12,45 @@ interface LoggedInButtonsProps {
 }
 
 export function LoggedInButtons({ isMobile = false, showChatOnly = false, handleLogout }: LoggedInButtonsProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleDashboardClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('Dashboard button clicked');
+    
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Session error:', error);
+        toast({
+          variant: "destructive",
+          title: "Session Error",
+          description: "Please try logging in again",
+        });
+        return;
+      }
+
+      if (!session) {
+        console.log('No active session, redirecting to login');
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      console.log('Valid session found, navigating to dashboard');
+      navigate('/dashboard', { replace: true });
+      
+    } catch (error) {
+      console.error('Error navigating to dashboard:', error);
+      toast({
+        variant: "destructive",
+        title: "Navigation Error",
+        description: "Unable to access dashboard. Please try again.",
+      });
+    }
+  };
+
   if (showChatOnly) {
     return (
       <Button 
@@ -42,14 +83,12 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
       </Button>
       
       <Button
-        asChild
+        onClick={handleDashboardClick}
         size="sm"
         variant={isMobile ? "ghost" : "default"}
         className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
       >
-        <Link to="/dashboard">
-          Dashboard
-        </Link>
+        Dashboard
       </Button>
 
       <Button 
