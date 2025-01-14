@@ -18,12 +18,37 @@ export function NavbarContainer() {
     const checkAuth = async () => {
       try {
         console.log('Checking auth state in Navbar');
-        setIsLoading(true); // Ensure loading state is set
-        const { data: { session } } = await supabase.auth.getSession();
+        setIsLoading(true);
+
+        // First clear any stale session data
+        const currentSession = localStorage.getItem('supabase.auth.token');
+        if (!currentSession) {
+          console.log('No session found in storage');
+          if (mounted) {
+            setIsLoggedIn(false);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // Try to refresh the session first
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error('Error refreshing session:', refreshError);
+          throw refreshError;
+        }
+
+        // Get current session after refresh
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
+          throw sessionError;
+        }
         
         if (mounted) {
           if (session?.user) {
-            console.log('User is logged in:', session.user.email);
+            console.log('Valid session found for user:', session.user.email);
             setIsLoggedIn(true);
           } else {
             console.log('No active session found');
@@ -36,23 +61,29 @@ export function NavbarContainer() {
         if (mounted) {
           setIsLoggedIn(false);
           setIsLoading(false);
+          localStorage.removeItem('supabase.auth.token');
         }
       }
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event);
       if (mounted) {
-        setIsLoading(true); // Set loading when auth state changes
+        setIsLoading(true);
+        
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in:', session.user.email);
           setIsLoggedIn(true);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
+        } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          console.log('User signed out or deleted');
           setIsLoggedIn(false);
+          localStorage.removeItem('supabase.auth.token');
         }
+        
         setIsLoading(false);
       }
     });
@@ -74,13 +105,17 @@ export function NavbarContainer() {
   const handleLogoClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    setIsLoggedIn(!!session);
-    setIsLoading(false);
-    
-    navigate('/', { replace: true });
-    setIsMobileMenuOpen(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+      setIsLoading(false);
+      navigate('/', { replace: true });
+      setIsMobileMenuOpen(false);
+    } catch (error) {
+      console.error('Error checking session:', error);
+      setIsLoggedIn(false);
+      setIsLoading(false);
+    }
   };
 
   return (
