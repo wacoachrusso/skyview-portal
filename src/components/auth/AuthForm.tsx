@@ -36,8 +36,11 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       fullName: formData.fullName,
       jobTitle: formData.jobTitle,
       airline: formData.airline,
-      plan: finalSelectedPlan
+      plan: finalSelectedPlan,
+      priceId: statePriceId
     });
+    
+    // Pass both the selected plan and priceId to the signup handler
     handleSignupSubmit(formData, finalSelectedPlan, statePriceId);
   };
 

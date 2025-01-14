@@ -33,7 +33,8 @@ export const useSignup = () => {
         fullName: formData.fullName,
         jobTitle: formData.jobTitle,
         airline: formData.airline,
-        plan: selectedPlan 
+        plan: selectedPlan,
+        priceId: priceId
       });
 
       // Check if there's a matching assistant for this user's role
@@ -63,7 +64,7 @@ export const useSignup = () => {
       console.log('Found matching assistant:', assistant);
 
       // For paid plans, handle Stripe checkout
-      if (selectedPlan !== 'free' && priceId) {
+      if (selectedPlan !== 'free') {
         console.log('Starting paid plan signup process:', { plan: selectedPlan, priceId });
         
         // Store signup data for after payment
@@ -78,6 +79,10 @@ export const useSignup = () => {
         });
 
         // Create and redirect to checkout
+        if (!priceId) {
+          throw new Error('Price ID is required for paid plans');
+        }
+
         const checkoutUrl = await createStripeCheckoutSession({
           priceId,
           email: formData.email,
@@ -85,8 +90,9 @@ export const useSignup = () => {
 
         if (checkoutUrl) {
           window.location.href = checkoutUrl;
+          return;
         }
-        return;
+        throw new Error('Failed to create checkout session');
       }
 
       // Handle free plan signup

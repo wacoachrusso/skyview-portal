@@ -57,8 +57,12 @@ export const AuthCallback = () => {
         if (!profile) return;
 
         // Always handle paid plan subscription first
-        if (await handleSelectedPlan(selectedPlan, { navigate, toast })) {
-          return;
+        if (selectedPlan && selectedPlan !== 'free') {
+          console.log('Handling paid plan subscription');
+          const success = await handleSelectedPlan(selectedPlan, { navigate, toast });
+          if (success) {
+            return; // Stop here as user will be redirected to Stripe
+          }
         }
 
         // Check if account is locked
@@ -75,7 +79,7 @@ export const AuthCallback = () => {
 
         // Enforce subscription requirement
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log('No valid subscription plan found, redirecting to pricing');
+          console.log('No valid subscription found, redirecting to pricing');
           await supabase.auth.signOut();
           toast({
             title: "Subscription Required",
