@@ -29,6 +29,13 @@ export const AuthFormSubmit = ({
       if (isSignUp) {
         const csrfToken = crypto.randomUUID();
         localStorage.setItem('auth_state', csrfToken);
+        
+        // Store selected plan if present
+        const planFromUrl = new URLSearchParams(window.location.search).get('plan');
+        const finalPlan = planFromUrl || selectedPlan;
+        if (finalPlan) {
+          localStorage.setItem('selected_plan', finalPlan);
+        }
       }
 
       // Check for existing sessions and clear them
@@ -41,6 +48,7 @@ export const AuthFormSubmit = ({
       localStorage.removeItem('supabase.auth.token');
       
       if (isSignUp) {
+        console.log('Starting signup process with plan:', selectedPlan);
         const success = await handleSignUp(formData, selectedPlan);
         if (success) {
           navigate("/login");
