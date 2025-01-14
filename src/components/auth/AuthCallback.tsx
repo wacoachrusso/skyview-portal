@@ -56,15 +56,6 @@ export const AuthCallback = () => {
         const profile = await checkUserProfile(session.user.id, { navigate, toast });
         if (!profile) return;
 
-        // Always handle paid plan subscription first
-        if (selectedPlan && selectedPlan !== 'free') {
-          console.log('Handling paid plan subscription');
-          const success = await handleSelectedPlan(selectedPlan, { navigate, toast });
-          if (success) {
-            return; // Stop here as user will be redirected to Stripe
-          }
-        }
-
         // Check if account is locked
         if (profile.login_attempts >= 5) {
           await supabase.auth.signOut();
@@ -77,7 +68,23 @@ export const AuthCallback = () => {
           return;
         }
 
-        // Enforce subscription requirement
+        // IMPORTANT: Check if user selected a paid plan but hasn't paid yet
+        if (selectedPlan && selectedPlan !== 'free') {
+          console.log('User selected paid plan, redirecting to payment');
+          const success = await handleSelectedPlan(selectedPlan, { navigate, toast });
+          if (!success) {
+            // If payment setup fails, sign out and redirect to pricing
+            await supabase.auth.signOut();
+            toast({
+              title: "Payment Required",
+              description: "Please complete your subscription payment to continue."
+            });
+            navigate('/?scrollTo=pricing-section');
+          }
+          return;
+        }
+
+        // For free plan users, check if they have a valid subscription
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
           console.log('No valid subscription found, redirecting to pricing');
           await supabase.auth.signOut();
@@ -92,10 +99,7 @@ export const AuthCallback = () => {
         // Reset login attempts on successful auth
         await supabase
           .from('profiles')
-          .update({ 
-            login_attempts: 0,
-            last_login: new Date().toISOString()
-          })
+          .update({ login_attempts: 0 })
           .eq('id', profile.id);
 
         console.log("=== Auth Callback Flow Complete ===");
