@@ -11,6 +11,10 @@ export const AuthCallback = () => {
   const { toast } = useToast();
   const { createNewSession } = useSessionManagement();
   const provider = searchParams.get("provider");
+  
+  // Get the selected plan from URL params
+  const selectedPlan = searchParams.get('selectedPlan');
+  const priceId = searchParams.get('priceId');
 
   if (provider === "google") {
     return <GoogleAuthHandler />;
@@ -20,6 +24,8 @@ export const AuthCallback = () => {
     const handleAuthCallback = async () => {
       try {
         console.log("Handling auth callback...");
+        console.log("Selected plan:", selectedPlan);
+        console.log("Price ID:", priceId);
         
         // Check for CSRF token if present in state
         const state = searchParams.get('state');
@@ -46,7 +52,7 @@ export const AuthCallback = () => {
           throw new Error("Failed to create new session");
         }
 
-        // Check if user exists in profiles with additional security checks
+        // Check if user exists in profiles
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*, sessions!inner(*)')
@@ -63,6 +69,40 @@ export const AuthCallback = () => {
           });
           navigate('/?scrollTo=pricing-section');
           return;
+        }
+
+        // Handle paid plan subscription
+        if (selectedPlan && selectedPlan !== 'free' && priceId) {
+          console.log('Creating checkout session for paid plan...');
+          try {
+            const { data, error: checkoutError } = await supabase.functions.invoke(
+              'create-checkout-session',
+              {
+                body: {
+                  priceId,
+                  email: session.user.email,
+                  userId: session.user.id
+                }
+              }
+            );
+
+            if (checkoutError) throw checkoutError;
+            if (!data?.url) throw new Error('No checkout URL received');
+
+            console.log('Redirecting to Stripe checkout:', data.url);
+            window.location.href = data.url;
+            return;
+          } catch (error) {
+            console.error('Error creating checkout session:', error);
+            toast({
+              variant: "destructive",
+              title: "Payment Error",
+              description: "Failed to setup payment. Please try again."
+            });
+            await supabase.auth.signOut();
+            navigate('/?scrollTo=pricing-section');
+            return;
+          }
         }
 
         // Check if account is locked
@@ -117,7 +157,7 @@ export const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast, createNewSession, searchParams]);
+  }, [navigate, toast, createNewSession, searchParams, selectedPlan, priceId]);
 
   return null;
 };
