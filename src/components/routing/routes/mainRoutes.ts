@@ -11,6 +11,3 @@ export const PrivacyPolicy = enhancedLazy(() =>
 
 export const HelpCenter = enhancedLazy(() => 
   retryLoadComponent(() => import("@/pages/HelpCenter")), "HelpCenter");
-
-export const NotFound = enhancedLazy(() => 
-  retryLoadComponent(() => import("@/pages/NotFound")), "NotFound");
