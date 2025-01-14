@@ -78,8 +78,8 @@ export function NavbarContainer() {
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in:', session.user.email);
           setIsLoggedIn(true);
-        } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-          console.log('User signed out or deleted');
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
           setIsLoggedIn(false);
           localStorage.removeItem('supabase.auth.token');
         }
