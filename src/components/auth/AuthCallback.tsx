@@ -6,6 +6,14 @@ import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { checkSession, checkUserProfile } from "@/utils/authCallbackUtils";
 import { handleSelectedPlan } from "@/utils/authCallbackHandlers";
+import {
+  validateCsrfToken,
+  handleAuthenticationError,
+  handlePaymentRequired,
+  handleSubscriptionRequired,
+  handleAccountLocked,
+  handleSuccessfulAuth
+} from "@/utils/auth/sessionUtils";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -28,67 +36,49 @@ export const AuthCallback = () => {
         console.log("Selected plan:", selectedPlan);
         console.log("Price ID:", priceId);
         
-        // Check for CSRF token if present in state
+        // Validate CSRF token
         const state = searchParams.get('state');
         const storedState = localStorage.getItem('auth_state');
-        if (state && storedState && state !== storedState) {
-          console.error("Invalid state parameter");
+        if (!validateCsrfToken(state, storedState)) {
           throw new Error("Invalid state parameter");
         }
-
-        // Clear stored state
         localStorage.removeItem('auth_state');
 
-        // IMPORTANT: Check for selected plan FIRST before proceeding with auth
+        // Handle paid plan selection first
         if (selectedPlan && selectedPlan !== 'free') {
           console.log('Paid plan selected, redirecting to payment before completing auth');
           const success = await handleSelectedPlan(selectedPlan, { navigate, toast });
           if (!success) {
-            await supabase.auth.signOut();
-            toast({
-              title: "Payment Required",
-              description: "Please complete your subscription payment to continue."
-            });
-            navigate('/?scrollTo=pricing-section');
+            await handlePaymentRequired({ navigate, toast });
             return;
           }
           return;
         }
 
+        // Check session validity
         const session = await checkSession({ navigate, toast });
         if (!session) return;
 
         console.log("Valid session found for user:", session.user.email);
 
-        // Get user profile
+        // Verify user profile
         const profile = await checkUserProfile(session.user.id, { navigate, toast });
         if (!profile) return;
 
-        // Check if account is locked
+        // Check account lock status
         if (profile.login_attempts >= 5) {
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Account Locked",
-            description: "Too many login attempts. Please reset your password."
-          });
-          navigate('/login');
+          await handleAccountLocked({ navigate, toast });
           return;
         }
 
         // Verify subscription status
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
           console.log('No valid subscription found, redirecting to pricing');
-          await supabase.auth.signOut();
-          toast({
-            title: "Subscription Required",
-            description: "Please select a subscription plan to continue."
-          });
-          navigate('/?scrollTo=pricing-section');
+          await handleSubscriptionRequired({ navigate, toast });
           return;
         }
 
-        // Only create new session if all checks pass
+        // Create new session after all checks pass
         console.log("Creating new session and invalidating others...");
         const newSession = await createNewSession(session.user.id);
         
@@ -96,28 +86,18 @@ export const AuthCallback = () => {
           throw new Error("Failed to create new session");
         }
 
-        // Reset login attempts on successful auth
+        // Reset login attempts
         await supabase
           .from('profiles')
           .update({ login_attempts: 0 })
           .eq('id', profile.id);
 
         console.log("=== Auth Callback Flow Complete ===");
-        toast({
-          title: "Welcome back!",
-          description: "You've been successfully signed in."
-        });
-        navigate('/dashboard');
+        await handleSuccessfulAuth(session, { navigate, toast });
 
       } catch (error) {
         console.error("Error in auth callback:", error);
-        await supabase.auth.signOut();
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "Please try logging in again."
-        });
-        navigate('/login');
+        await handleAuthenticationError({ navigate, toast });
       }
     };
 
