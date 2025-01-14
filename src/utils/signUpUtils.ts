@@ -19,7 +19,14 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
   });
 
   try {
-    // First attempt the signup
+    // First check if this is a paid plan - if so, redirect to pricing
+    if (selectedPlan !== 'free') {
+      console.log('Paid plan selected, redirecting to pricing');
+      window.location.href = '/?scrollTo=pricing-section';
+      return false;
+    }
+
+    // Only proceed with signup for free plan
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
@@ -28,7 +35,7 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
           full_name: formData.fullName,
           user_type: formData.jobTitle,
           airline: formData.airline,
-          subscription_plan: selectedPlan,
+          subscription_plan: 'free',
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`
       },
