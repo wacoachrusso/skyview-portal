@@ -21,7 +21,7 @@ export const useSignup = () => {
 
   const handleSignupSubmit = async (
     formData: SignupFormData, 
-    selectedPlan: string, 
+    selectedPlan: string,
     priceId?: string
   ) => {
     if (loading) return;
@@ -63,8 +63,8 @@ export const useSignup = () => {
       console.log('Found matching assistant:', assistant);
 
       // For paid plans, handle Stripe checkout
-      if (selectedPlan !== 'free' && priceId) {
-        console.log('Starting paid plan signup process:', { plan: selectedPlan, priceId });
+      if (selectedPlan !== 'free') {
+        console.log('Starting paid plan signup process:', { plan: selectedPlan });
         
         // Store signup data for after payment
         storePendingSignup({
@@ -77,16 +77,17 @@ export const useSignup = () => {
           assistantId: assistant.assistant_id
         });
 
-        // Create and redirect to checkout
+        // Create and redirect to checkout using the SkyGuide Final price ID
         const checkoutUrl = await createStripeCheckoutSession({
-          priceId,
+          priceId: 'price_1OvCxbBVQhUMwRGDQYkKFXpz', // SkyGuide Final price ID
           email: formData.email,
         });
 
         if (checkoutUrl) {
           window.location.href = checkoutUrl;
+          return;
         }
-        return;
+        throw new Error('Failed to create checkout session');
       }
 
       // Handle free plan signup
