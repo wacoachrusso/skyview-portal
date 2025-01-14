@@ -46,9 +46,8 @@ serve(async (req) => {
     // Parse request body
     const { priceId, mode } = await req.json();
     
-    if (!priceId) {
-      throw new Error('Price ID is required');
-    }
+    // Use the SkyGuide Final price ID if none is provided
+    const finalPriceId = priceId || 'price_1OvCxbBVQhUMwRGDQYkKFXpz';
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
@@ -69,7 +68,7 @@ serve(async (req) => {
       const subscriptions = await stripe.subscriptions.list({
         customer: customerId,
         status: 'active',
-        price: priceId,
+        price: finalPriceId,
         limit: 1
       });
 
@@ -84,7 +83,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: priceId,
+          price: finalPriceId,
           quantity: 1,
         },
       ],
