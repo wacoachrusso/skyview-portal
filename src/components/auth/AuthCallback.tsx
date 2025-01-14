@@ -63,24 +63,7 @@ export const AuthCallback = () => {
           .eq('account_status', 'active')
           .single();
 
-        if (profileError || !profile) {
-          console.log('No profile found, redirecting to signup');
-          await supabase.auth.signOut();
-          toast({
-            title: "Welcome to SkyGuide!",
-            description: "Please select a subscription plan to get started."
-          });
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        console.log("Profile found:", {
-          subscription: profile.subscription_plan,
-          selectedPlan,
-          priceId
-        });
-
-        // Handle paid plan subscription
+        // Handle paid plan subscription first before profile check
         if (selectedPlan && selectedPlan !== 'free' && priceId) {
           console.log('Creating checkout session for paid plan...');
           try {
@@ -112,6 +95,17 @@ export const AuthCallback = () => {
             navigate('/?scrollTo=pricing-section');
             return;
           }
+        }
+
+        if (profileError || !profile) {
+          console.log('No profile found, redirecting to signup');
+          await supabase.auth.signOut();
+          toast({
+            title: "Welcome to SkyGuide!",
+            description: "Please select a subscription plan to get started."
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
         }
 
         // Check if account is locked

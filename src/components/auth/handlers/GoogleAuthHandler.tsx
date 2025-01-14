@@ -37,7 +37,7 @@ export const GoogleAuthHandler = () => {
 
         console.log('Session found for user:', session.user.email);
 
-        // Handle paid plan subscription
+        // Handle paid plan subscription first
         if (selectedPlan && selectedPlan !== 'free' && priceId) {
           console.log('Creating checkout session for paid plan...');
           try {
