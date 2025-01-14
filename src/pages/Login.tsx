@@ -20,28 +20,18 @@ const Login = () => {
           console.log('User logged in:', session.user.id);
           
           // Check if user is an alpha tester or promoter
-          const { data: alphaTester, error: alphaError } = await supabase
+          const { data: alphaTester } = await supabase
             .from('alpha_testers')
             .select('temporary_password, profile_id')
             .eq('profile_id', session.user.id)
-            .maybeSingle();
-
-          if (alphaError) {
-            console.error('Error checking alpha tester status:', alphaError);
-            return;
-          }
+            .single();
 
           // Get user profile
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile } = await supabase
             .from('profiles')
             .select('full_name, user_type, airline, employee_id')
             .eq('id', session.user.id)
             .single();
-
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            return;
-          }
 
           if (alphaTester?.temporary_password) {
             console.log('Alpha tester with temporary password, redirecting to account page');

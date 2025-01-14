@@ -58,6 +58,7 @@ export function useMessageOperations(currentUserId: string | null, currentConver
       return;
     }
 
+    // Ensure the role is properly typed when setting messages
     const typedMessages = messagesData?.map(msg => ({
       ...msg,
       role: msg.role as 'user' | 'assistant'

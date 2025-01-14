@@ -8,8 +8,6 @@ export const usePricingHandler = () => {
 
   const handlePlanSelection = async (plan: any) => {
     try {
-      console.log('Starting plan selection process for:', plan);
-      
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -36,8 +34,7 @@ export const usePricingHandler = () => {
       }
 
       if (!plan.priceId) {
-        console.log('No priceId provided, redirecting to signup');
-        navigate('/signup');
+        window.location.href = '/signup';
         return;
       }
 
@@ -52,29 +49,36 @@ export const usePricingHandler = () => {
         email: userEmail
       });
 
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: {
+      // Get current session token
+      const sessionToken = localStorage.getItem('session_token');
+      if (!sessionToken) {
+        throw new Error('No session token found');
+      }
+
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: JSON.stringify({
           priceId: plan.priceId,
-          mode: plan.mode
-        },
+          mode: plan.mode,
+          sessionToken
+        }),
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      console.log('Checkout session response:', data);
+      console.log('Checkout session response:', response);
 
-      if (error) {
-        console.error('Error creating checkout session:', error);
-        throw error;
+      if (response.error) {
+        throw new Error(response.error.message);
       }
 
-      if (data?.url) {
-        window.location.href = data.url;
+      const { data: { url } } = response;
+      
+      if (url) {
+        window.location.href = url;
       } else {
         throw new Error('No checkout URL received');
       }
-      
     } catch (error) {
       console.error('Error:', error);
       toast({

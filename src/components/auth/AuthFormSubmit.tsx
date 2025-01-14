@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { handleSignIn } from "@/utils/signInUtils";
 import { handleSignUp, SignUpData } from "@/utils/signUpUtils";
-import { supabase } from "@/integrations/supabase/client";
 
 interface AuthFormSubmitProps {
   formData: SignUpData;
@@ -25,30 +24,7 @@ export const AuthFormSubmit = ({
     setLoading(true);
 
     try {
-      // Generate and store CSRF token for auth flow
       if (isSignUp) {
-        const csrfToken = crypto.randomUUID();
-        localStorage.setItem('auth_state', csrfToken);
-        
-        // Store selected plan if present
-        const planFromUrl = new URLSearchParams(window.location.search).get('plan');
-        const finalPlan = planFromUrl || selectedPlan;
-        if (finalPlan) {
-          localStorage.setItem('selected_plan', finalPlan);
-        }
-      }
-
-      // Check for existing sessions and clear them
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await supabase.auth.signOut();
-      }
-
-      // Clear any sensitive data from localStorage
-      localStorage.removeItem('supabase.auth.token');
-      
-      if (isSignUp) {
-        console.log('Starting signup process with plan:', selectedPlan);
         const success = await handleSignUp(formData, selectedPlan);
         if (success) {
           navigate("/login");
@@ -59,8 +35,6 @@ export const AuthFormSubmit = ({
           navigate("/dashboard");
         }
       }
-    } catch (error) {
-      console.error("Auth error:", error);
     } finally {
       setLoading(false);
     }

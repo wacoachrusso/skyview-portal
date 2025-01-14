@@ -5,12 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
 import { useMessageOperations } from "./useMessageOperations";
 import { useUserProfile } from "./useUserProfile";
-import { useAssistantId } from "@/components/account/form-fields/AssistantIdHandler";
 
 export function useChat() {
   const { toast } = useToast();
   const { currentUserId, userProfile } = useUserProfile();
-  const { data: assistantId, error: assistantError } = useAssistantId();
   const { 
     currentConversationId, 
     createNewConversation, 
@@ -34,16 +32,7 @@ export function useChat() {
     setMessages([]);
     setCurrentConversationId(null);
     setIsLoading(false);
-  }, [setMessages, setCurrentConversationId]);
-
-  const startNewChat = useCallback(async () => {
-    console.log('Starting new chat');
-    cleanup();
-    const newConversationId = await createNewConversation(currentUserId!);
-    if (newConversationId) {
-      setCurrentConversationId(newConversationId);
-    }
-  }, [currentUserId, cleanup, createNewConversation, setCurrentConversationId]);
+  }, []);
 
   const sendMessage = async (content: string) => {
     console.log('Sending message:', { content, conversationId: currentConversationId });
@@ -55,17 +44,6 @@ export function useChat() {
         description: "Unable to send message. Please try refreshing the page.",
         variant: "destructive",
         duration: 2000
-      });
-      return;
-    }
-
-    if (assistantError) {
-      console.error('Assistant ID error:', assistantError);
-      toast({
-        title: "Configuration Error",
-        description: "Your airline or role configuration is not supported.",
-        variant: "destructive",
-        duration: 3000
       });
       return;
     }
@@ -85,8 +63,7 @@ export function useChat() {
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
           content,
-          subscriptionPlan: userProfile?.subscription_plan || 'free',
-          assistantId
+          subscriptionPlan: userProfile?.subscription_plan || 'free'
         }
       });
 
@@ -107,6 +84,12 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const startNewChat = async () => {
+    console.log('Starting new chat session...');
+    setMessages([]);
+    setCurrentConversationId(null);
   };
 
   useEffect(() => {
@@ -133,14 +116,14 @@ export function useChat() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentConversationId, setMessages]);
+  }, [currentConversationId]);
 
   // Load messages when conversation changes
   useEffect(() => {
     if (currentConversationId) {
       loadMessages(currentConversationId);
     }
-  }, [currentConversationId, loadMessages]);
+  }, [currentConversationId]);
 
   return {
     messages,

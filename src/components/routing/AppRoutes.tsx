@@ -1,5 +1,5 @@
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { AuthCallback } from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -11,8 +11,10 @@ export function AppRoutes() {
   useEffect(() => {
     console.log('Route changed to:', location.pathname);
     
+    // Clear any lingering state when navigating
     const cleanupNavigation = () => {
       console.log('Cleaning up navigation state');
+      // Remove any lingering state
       if (location.state) {
         const newPath = location.pathname;
         navigate(newPath, { replace: true, state: {} });
@@ -21,8 +23,10 @@ export function AppRoutes() {
 
     cleanupNavigation();
 
+    // Add listener for navigation errors
     const handleNavigationError = (event: ErrorEvent) => {
       console.error('Navigation error:', event.error);
+      // Force a clean reload if navigation fails
       window.location.href = location.pathname;
     };
 
@@ -34,7 +38,13 @@ export function AppRoutes() {
   }, [location, navigate]);
 
   return (
-    <LazyRoutes.LazyLoadWrapper>
+    <Suspense 
+      fallback={
+        <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all">
+          <LoadingSpinner size="lg" className="h-12 w-12" />
+        </div>
+      }
+    >
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LazyRoutes.Index />} />
@@ -55,7 +65,10 @@ export function AppRoutes() {
         <Route path="/admin" element={<LazyRoutes.AdminDashboard />} />
         <Route path="/release-notes" element={<LazyRoutes.ReleaseNotes />} />
         <Route path="/refunds" element={<LazyRoutes.Refunds />} />
+        
+        {/* Redirect any unknown routes to dashboard */}
+        <Route path="*" element={<LazyRoutes.Dashboard />} />
       </Routes>
-    </LazyRoutes.LazyLoadWrapper>
+    </Suspense>
   );
 }

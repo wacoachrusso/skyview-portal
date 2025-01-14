@@ -1,66 +1,72 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { checkSession, checkUserProfile } from "@/utils/authCallbackUtils";
-import { handleSelectedPlan } from "@/utils/authCallbackHandlers";
 
 export const GoogleAuthHandler = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
-  const selectedPlan = searchParams.get('selectedPlan');
-  const priceId = searchParams.get('priceId');
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      console.log('=== Google Auth Flow Start ===');
-      console.log('Selected plan:', selectedPlan);
-      console.log('Price ID:', priceId);
+      console.log('Handling Google auth callback');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      try {
-        const session = await checkSession({ navigate, toast });
-        if (!session) return;
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        toast({
+          title: "Welcome to SkyGuide!",
+          description: "Please select a subscription plan to get started."
+        });
+        navigate('/?scrollTo=pricing-section');
+        return;
+      }
 
-        console.log('Session found for user:', session.user.email);
+      if (!session?.user) {
+        console.log('No session found');
+        navigate('/login');
+        return;
+      }
 
-        // Check if user has a profile
-        const profile = await checkUserProfile(session.user.id, { navigate, toast });
-        if (!profile) return;
+      // Check if user has a profile and subscription
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
 
-        // Always handle paid plan subscription first
-        if (await handleSelectedPlan(selectedPlan, { navigate, toast })) {
-          return;
-        }
+      if (profileError || !profile) {
+        console.log('No profile found, redirecting to pricing');
+        await supabase.auth.signOut();
+        toast({
+          title: "Welcome to SkyGuide!",
+          description: "Please select a subscription plan to get started."
+        });
+        navigate('/?scrollTo=pricing-section');
+        return;
+      }
 
-        // Enforce subscription requirement
-        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log('No valid subscription found, redirecting to pricing');
+      // Check if account is active and has valid subscription
+      if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+        // Check if free trial is exhausted
+        if (profile.query_count >= 1) {
+          console.log('Free trial exhausted, redirecting to pricing');
           await supabase.auth.signOut();
           toast({
-            title: "Subscription Required",
+            title: "Free Trial Ended",
             description: "Please select a subscription plan to continue."
           });
           navigate('/?scrollTo=pricing-section');
           return;
         }
-
-        console.log('=== Google Auth Flow Complete ===');
-        navigate('/dashboard');
-      } catch (error) {
-        console.error('Error in Google auth callback:', error);
-        await supabase.auth.signOut();
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "Please try again."
-        });
-        navigate('/login');
       }
+
+      console.log('Auth callback successful, redirecting to dashboard');
+      navigate('/dashboard');
     };
 
     handleAuthCallback();
-  }, [navigate, toast, selectedPlan, priceId]);
+  }, [navigate, toast]);
 
   return null;
 };

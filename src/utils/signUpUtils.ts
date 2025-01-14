@@ -19,15 +19,6 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
   });
 
   try {
-    // Generate CSRF token for auth flow
-    const csrfToken = crypto.randomUUID();
-    localStorage.setItem('auth_state', csrfToken);
-    
-    // Store selected plan in localStorage for auth callback
-    if (selectedPlan && selectedPlan !== 'free') {
-      localStorage.setItem('selected_plan', selectedPlan);
-    }
-
     // First attempt the signup
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: formData.email,
@@ -37,9 +28,9 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
           full_name: formData.fullName,
           user_type: formData.jobTitle,
           airline: formData.airline,
-          subscription_plan: 'pending', // Mark as pending until payment is completed
+          subscription_plan: selectedPlan,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?selectedPlan=${selectedPlan}`
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       },
     });
 
@@ -62,7 +53,7 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
         body: { 
           email: formData.email,
           name: formData.fullName,
-          confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}&selectedPlan=${selectedPlan}`
+          confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(formData.email)}`
         }
       });
 
@@ -79,6 +70,7 @@ export const handleSignUp = async (formData: SignUpData, selectedPlan: string = 
       return true;
     } catch (emailError) {
       console.error("Failed to send confirmation email:", emailError);
+      // Even if email fails, account was created
       toast({
         variant: "destructive",
         title: "Partial success",

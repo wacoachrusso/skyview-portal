@@ -28,30 +28,17 @@ export const AccountFormFields = ({
       const currentUserType = field === 'user_type' ? value : formData.user_type;
 
       console.log('Updating assistant ID for:', { currentAirline, currentUserType });
-      
-      try {
-        // Only attempt to get assistant ID if both values are present
-        if (currentAirline && currentUserType) {
-          // Type assertion to ensure airline is of type SupportedAirline
-          const normalizedAirline = currentAirline.toLowerCase() as "american airlines" | "united airlines";
-          const assistantId = getAssistantId({ 
-            airline: normalizedAirline,
-            role: currentUserType.toLowerCase() === "flight attendant" ? "flight attendant" : undefined
-          });
+      const assistantId = getAssistantId(currentAirline, currentUserType);
 
-          if (assistantId) {
-            console.log('Setting new assistant ID:', assistantId);
-            const assistantEvent = {
-              target: {
-                name: 'assistant_id',
-                value: assistantId
-              }
-            } as React.ChangeEvent<HTMLInputElement>;
-            handleInputChange(assistantEvent);
+      if (assistantId) {
+        console.log('Setting new assistant ID:', assistantId);
+        const assistantEvent = {
+          target: {
+            name: 'assistant_id',
+            value: assistantId
           }
-        }
-      } catch (error) {
-        console.error('Error getting assistant ID:', error);
+        } as React.ChangeEvent<HTMLInputElement>;
+        handleInputChange(assistantEvent);
       }
     }
   };

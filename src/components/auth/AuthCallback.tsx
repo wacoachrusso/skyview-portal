@@ -4,14 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
-import {
-  validateCsrfToken,
-  handleAuthenticationError,
-  handlePaymentRequired,
-  handleSubscriptionRequired,
-  handleAccountLocked,
-  handleSuccessfulAuth
-} from "@/utils/auth/sessionUtils";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -19,8 +11,6 @@ export const AuthCallback = () => {
   const { toast } = useToast();
   const { createNewSession } = useSessionManagement();
   const provider = searchParams.get("provider");
-  
-  const selectedPlan = searchParams.get('selectedPlan') || localStorage.getItem('selected_plan');
 
   if (provider === "google") {
     return <GoogleAuthHandler />;
@@ -29,81 +19,71 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("=== Auth Callback Flow Start ===");
-        console.log("Selected plan:", selectedPlan);
+        console.log("Handling auth callback...");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        // Validate CSRF token
-        const state = searchParams.get('state');
-        const storedState = localStorage.getItem('auth_state');
-        if (!validateCsrfToken(state, storedState)) {
-          throw new Error("Invalid state parameter");
-        }
-        localStorage.removeItem('auth_state');
-        localStorage.removeItem('selected_plan');
-
-        // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error("No session found");
+        if (sessionError || !session) {
+          console.error("Session error:", sessionError);
+          throw new Error("Invalid session");
         }
 
-        // Get user profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) {
-          console.error("Profile error:", profileError);
-          throw new Error("Failed to fetch user profile");
-        }
-
-        // Check account lock status
-        if (profile.login_attempts >= 5) {
-          await handleAccountLocked({ navigate, toast });
-          return;
-        }
-
-        // If this is a paid plan signup, redirect to payment first
-        if (selectedPlan && selectedPlan !== 'free') {
-          console.log('Paid plan selected, redirecting to payment');
-          await handlePaymentRequired({ navigate, toast });
-          return;
-        }
-
-        // Verify subscription status for paid plans
-        if (!profile.subscription_plan || profile.subscription_plan === 'pending') {
-          console.log('No valid subscription found, redirecting to pricing');
-          await handleSubscriptionRequired({ navigate, toast });
-          return;
-        }
-
-        // Create new session after all checks pass
-        console.log("Creating new session...");
+        // Create a new session and invalidate others
+        console.log("Creating new session and invalidating others...");
         const newSession = await createNewSession(session.user.id);
         
         if (!newSession) {
           throw new Error("Failed to create new session");
         }
 
-        // Reset login attempts
-        await supabase
+        // Check if user exists in profiles
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .update({ login_attempts: 0 })
-          .eq('id', profile.id);
+          .select('*')
+          .eq('email', session.user.email)
+          .single();
 
-        console.log("=== Auth Callback Flow Complete ===");
-        await handleSuccessfulAuth(session, { navigate, toast });
+        if (profileError || !profile) {
+          console.log('No profile found, redirecting to signup');
+          await supabase.auth.signOut();
+          toast({
+            title: "Welcome to SkyGuide!",
+            description: "Please select a subscription plan to get started."
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
+        }
+
+        // Check if profile has subscription
+        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+          console.log('No subscription plan, redirecting to pricing');
+          await supabase.auth.signOut();
+          toast({
+            title: "Welcome Back!",
+            description: "Please select a subscription plan to continue."
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
+        }
+
+        // All good, redirect to dashboard
+        toast({
+          title: "Welcome back!",
+          description: "You've been successfully signed in. Any other active sessions have been ended."
+        });
+        navigate('/dashboard');
 
       } catch (error) {
         console.error("Error in auth callback:", error);
-        await handleAuthenticationError({ navigate, toast });
+        toast({
+          title: "Welcome to SkyGuide!",
+          description: "Please select a subscription plan to get started."
+        });
+        navigate('/?scrollTo=pricing-section');
       }
     };
 
     handleAuthCallback();
-  }, [navigate, toast, createNewSession, searchParams, selectedPlan]);
+  }, [navigate, toast, createNewSession]);
 
   return null;
 };
