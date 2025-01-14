@@ -24,18 +24,18 @@ export const GoogleAuthHandler = () => {
 
         console.log('Session found for user:', session.user.email);
 
-        // Handle paid plan subscription first
+        // Check if user has a profile
+        const profile = await checkUserProfile(session.user.id, { navigate, toast });
+        if (!profile) return;
+
+        // Always handle paid plan subscription first
         if (await handleSelectedPlan(selectedPlan, { navigate, toast })) {
           return;
         }
 
-        // Check if user has a profile and subscription
-        const profile = await checkUserProfile(session.user.id, { navigate, toast });
-        if (!profile) return;
-
-        // Enforce subscription requirement - only allow access with valid paid subscription
+        // Enforce subscription requirement
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log('No valid subscription plan found, redirecting to pricing');
+          console.log('No valid subscription found, redirecting to pricing');
           await supabase.auth.signOut();
           toast({
             title: "Subscription Required",
@@ -46,7 +46,6 @@ export const GoogleAuthHandler = () => {
         }
 
         console.log('=== Google Auth Flow Complete ===');
-        console.log('Auth callback successful, redirecting to dashboard');
         navigate('/dashboard');
       } catch (error) {
         console.error('Error in Google auth callback:', error);

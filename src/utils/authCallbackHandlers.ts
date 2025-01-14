@@ -33,60 +33,59 @@ export const handleProfileRedirect = async (
   selectedPlan: string | null,
   { navigate, toast }: AuthCallbackProps
 ) => {
-  if (!profile.user_type || !profile.airline) {
-    console.log('Profile incomplete, redirecting to complete profile');
-    navigate('/complete-profile');
-    return;
-  }
-
-  if (profile.subscription_plan === 'free') {
-    console.log('Free plan user, redirecting to dashboard');
+  // Always check subscription status first
+  if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+    console.log('No valid subscription found, redirecting to pricing');
+    await supabase.auth.signOut();
     toast({
-      title: "Login Successful",
-      description: "You've been signed in. Any other active sessions have been signed out for security."
+      title: "Subscription Required",
+      description: "Please select a subscription plan to continue."
     });
-    navigate('/dashboard');
+    navigate('/?scrollTo=pricing-section');
     return;
   }
 
-  // Handle paid plan checkout
-  console.log('Paid plan user, redirecting to checkout');
-  const priceId = profile.subscription_plan === 'monthly'
-    ? 'price_1QcfUFA8w17QmjsPe9KXKFpT'
-    : 'price_1QcfWYA8w17QmjsPZ22koqjj';
-
-  try {
-    await handleStripeCheckout(priceId);
-  } catch (error) {
-    throw new Error('Failed to create checkout session');
-  }
+  // If they have a valid subscription, proceed to dashboard
+  console.log('Valid subscription found, redirecting to dashboard');
+  toast({
+    title: "Welcome back!",
+    description: "You've been successfully signed in."
+  });
+  navigate('/dashboard');
 };
 
 export const handleSelectedPlan = async (
   selectedPlan: string | null,
   { navigate, toast }: AuthCallbackProps
 ) => {
-  if (selectedPlan && selectedPlan !== 'free') {
-    const priceId = selectedPlan.toLowerCase() === 'monthly' 
-      ? 'price_1QcfUFA8w17QmjsPe9KXKFpT' 
-      : 'price_1QcfWYA8w17QmjsPZ22koqjj';
+  if (!selectedPlan) return false;
 
-    try {
+  console.log('Handling selected plan:', selectedPlan);
+
+  try {
+    if (selectedPlan.toLowerCase() !== 'free') {
+      const priceId = selectedPlan.toLowerCase() === 'monthly' 
+        ? 'price_1QcfUFA8w17QmjsPe9KXKFpT' 
+        : 'price_1QcfWYA8w17QmjsPZ22koqjj';
+
+      // Always redirect to Stripe checkout for paid plans
       const success = await handleStripeCheckout(priceId);
       if (!success) {
-        throw new Error('No checkout URL received');
+        throw new Error('Failed to create checkout session');
       }
       return true;
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to process payment. Please try again.",
-      });
-      navigate('/dashboard');
-      return true;
     }
+    return false;
+  } catch (error) {
+    console.error('Error handling selected plan:', error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to process subscription. Please try again.",
+    });
+    // Sign out and redirect to pricing on error
+    await supabase.auth.signOut();
+    navigate('/?scrollTo=pricing-section');
+    return true;
   }
-  return false;
 };

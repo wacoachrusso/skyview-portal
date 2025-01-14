@@ -14,7 +14,6 @@ export const AuthCallback = () => {
   const { createNewSession } = useSessionManagement();
   const provider = searchParams.get("provider");
   
-  // Get the selected plan from URL params
   const selectedPlan = searchParams.get('selectedPlan');
   const priceId = searchParams.get('priceId');
 
@@ -57,7 +56,7 @@ export const AuthCallback = () => {
         const profile = await checkUserProfile(session.user.id, { navigate, toast });
         if (!profile) return;
 
-        // Always handle paid plan subscription first before profile check
+        // Always handle paid plan subscription first
         if (await handleSelectedPlan(selectedPlan, { navigate, toast })) {
           return;
         }
@@ -74,7 +73,7 @@ export const AuthCallback = () => {
           return;
         }
 
-        // Enforce subscription requirement - only allow access with valid paid subscription
+        // Enforce subscription requirement
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
           console.log('No valid subscription plan found, redirecting to pricing');
           await supabase.auth.signOut();
@@ -95,11 +94,10 @@ export const AuthCallback = () => {
           })
           .eq('id', profile.id);
 
-        // All good, redirect to dashboard
         console.log("=== Auth Callback Flow Complete ===");
         toast({
           title: "Welcome back!",
-          description: "You've been successfully signed in. Any other active sessions have been ended."
+          description: "You've been successfully signed in."
         });
         navigate('/dashboard');
 
