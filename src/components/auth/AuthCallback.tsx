@@ -39,20 +39,28 @@ export const AuthCallback = () => {
         // Clear stored state
         localStorage.removeItem('auth_state');
 
+        // IMPORTANT: Check for selected plan FIRST before proceeding with auth
+        if (selectedPlan && selectedPlan !== 'free') {
+          console.log('Paid plan selected, redirecting to payment before completing auth');
+          const success = await handleSelectedPlan(selectedPlan, { navigate, toast });
+          if (!success) {
+            await supabase.auth.signOut();
+            toast({
+              title: "Payment Required",
+              description: "Please complete your subscription payment to continue."
+            });
+            navigate('/?scrollTo=pricing-section');
+            return;
+          }
+          return;
+        }
+
         const session = await checkSession({ navigate, toast });
         if (!session) return;
 
         console.log("Valid session found for user:", session.user.email);
 
-        // Create a new session and invalidate others
-        console.log("Creating new session and invalidating others...");
-        const newSession = await createNewSession(session.user.id);
-        
-        if (!newSession) {
-          throw new Error("Failed to create new session");
-        }
-
-        // Check if user exists in profiles
+        // Get user profile
         const profile = await checkUserProfile(session.user.id, { navigate, toast });
         if (!profile) return;
 
@@ -68,23 +76,7 @@ export const AuthCallback = () => {
           return;
         }
 
-        // IMPORTANT: Check if user selected a paid plan but hasn't paid yet
-        if (selectedPlan && selectedPlan !== 'free') {
-          console.log('User selected paid plan, redirecting to payment');
-          const success = await handleSelectedPlan(selectedPlan, { navigate, toast });
-          if (!success) {
-            // If payment setup fails, sign out and redirect to pricing
-            await supabase.auth.signOut();
-            toast({
-              title: "Payment Required",
-              description: "Please complete your subscription payment to continue."
-            });
-            navigate('/?scrollTo=pricing-section');
-          }
-          return;
-        }
-
-        // For free plan users, check if they have a valid subscription
+        // Verify subscription status
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
           console.log('No valid subscription found, redirecting to pricing');
           await supabase.auth.signOut();
@@ -94,6 +86,14 @@ export const AuthCallback = () => {
           });
           navigate('/?scrollTo=pricing-section');
           return;
+        }
+
+        // Only create new session if all checks pass
+        console.log("Creating new session and invalidating others...");
+        const newSession = await createNewSession(session.user.id);
+        
+        if (!newSession) {
+          throw new Error("Failed to create new session");
         }
 
         // Reset login attempts on successful auth
