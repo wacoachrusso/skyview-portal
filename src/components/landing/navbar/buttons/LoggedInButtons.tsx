@@ -45,13 +45,7 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
       }
 
       console.log('Valid session found, navigating to dashboard');
-      
-      // Use a combination of window.location.href and navigate
-      // This ensures we both update React Router's state and force a page reload
-      navigate('/dashboard', { replace: true });
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 100);
+      window.location.href = '/dashboard';
       
     } catch (error) {
       console.error('Error navigating to dashboard:', error);
@@ -61,6 +55,11 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
         description: "Unable to access dashboard. Please try again.",
       });
     }
+  };
+
+  const handleAccountClick = () => {
+    console.log('Account button clicked');
+    window.location.href = '/account';
   };
 
   if (showChatOnly) {
@@ -83,15 +82,13 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
       {!isMobile && <NotificationBell />}
       
       <Button
-        asChild
+        onClick={handleAccountClick}
         variant={isMobile ? "ghost" : "secondary"}
         size="sm"
         className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
       >
-        <Link to="/account">
-          <User className="mr-2 h-4 w-4" />
-          Account
-        </Link>
+        <User className="mr-2 h-4 w-4" />
+        Account
       </Button>
       
       <Button
