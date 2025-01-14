@@ -55,9 +55,6 @@ export function AppRoutes() {
         <Route path="/admin" element={<LazyRoutes.AdminDashboard />} />
         <Route path="/release-notes" element={<LazyRoutes.ReleaseNotes />} />
         <Route path="/refunds" element={<LazyRoutes.Refunds />} />
-        
-        {/* 404 route */}
-        <Route path="*" element={<LazyRoutes.NotFound />} />
       </Routes>
     </LazyRoutes.LazyLoadWrapper>
   );
