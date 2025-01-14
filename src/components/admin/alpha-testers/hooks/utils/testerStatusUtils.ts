@@ -1,10 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Toast } from "@/hooks/use-toast";
+import { ToastFunction } from "@/hooks/use-toast";
 
 export const updateTesterStatus = async (
   testerId: string, 
   newStatus: "active" | "inactive" | "removed",
-  toast: Toast,
+  toast: ToastFunction,
   tester: any
 ) => {
   try {

@@ -6,13 +6,19 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 3000 // Changed from 1000000 to 3000ms (3 seconds)
+const TOAST_REMOVE_DELAY = 3000
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+}
+
+export type ToastFunction = (props: Omit<ToasterToast, "id">) => {
+  id: string
+  dismiss: () => void
+  update: (props: ToasterToast) => void
 }
 
 const actionTypes = {

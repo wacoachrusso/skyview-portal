@@ -1,9 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Toast } from "@/hooks/use-toast";
+import { ToastFunction } from "@/hooks/use-toast";
 
 export const deleteTester = async (
   testerId: string,
-  toast: Toast,
+  toast: ToastFunction,
   tester: any
 ) => {
   try {
