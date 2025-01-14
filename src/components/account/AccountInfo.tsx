@@ -34,25 +34,29 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
       console.log('Checking alpha tester and promoter status for profile:', profile.id);
       
-      // Check if user is an alpha tester or promoter
-      const { data: alphaTester, error } = await supabase
-        .from('alpha_testers')
-        .select('temporary_password, is_promoter')
-        .eq('profile_id', profile.id)
-        .maybeSingle();
+      try {
+        // Use maybeSingle() instead of single() to handle cases where no rows are found
+        const { data: alphaTester, error } = await supabase
+          .from('alpha_testers')
+          .select('temporary_password, is_promoter')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error checking user status:', error);
-        return;
-      }
+        if (error) {
+          console.error('Error checking user status:', error);
+          return;
+        }
 
-      console.log('User status data:', alphaTester);
-      
-      // Show password change form if they have a temporary password or are a promoter
-      if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
-        console.log('Setting password change as required');
-        setIsPasswordChangeRequired(true);
-        setIsEditing(true); // Automatically enable profile editing
+        console.log('User status data:', alphaTester);
+        
+        // Show password change form if they have a temporary password or are a promoter
+        if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
+          console.log('Setting password change as required');
+          setIsPasswordChangeRequired(true);
+          setIsEditing(true); // Automatically enable profile editing
+        }
+      } catch (error) {
+        console.error('Error in checkUserStatus:', error);
       }
     };
 
