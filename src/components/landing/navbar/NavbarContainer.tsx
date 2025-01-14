@@ -18,31 +18,13 @@ export function NavbarContainer() {
     const checkAuth = async () => {
       try {
         console.log('Checking auth state in Navbar');
-        setIsLoading(true);
-
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
-          throw sessionError;
-        }
+        setIsLoading(true); // Ensure loading state is set
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
           if (session?.user) {
-            console.log('Valid session found for user:', session.user.email);
+            console.log('User is logged in:', session.user.email);
             setIsLoggedIn(true);
-            
-            // Check if user should be redirected to dashboard
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('user_type, airline')
-              .eq('id', session.user.id)
-              .single();
-
-            if (profile?.user_type && profile?.airline) {
-              console.log('Complete profile found, redirecting to dashboard');
-              navigate('/dashboard', { replace: true });
-            }
           } else {
             console.log('No active session found');
             setIsLoggedIn(false);
@@ -54,43 +36,23 @@ export function NavbarContainer() {
         if (mounted) {
           setIsLoggedIn(false);
           setIsLoading(false);
-          localStorage.removeItem('supabase.auth.token');
         }
       }
     };
 
     checkAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
       if (mounted) {
-        setIsLoading(true);
-        
+        setIsLoading(true); // Set loading when auth state changes
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in:', session.user.email);
           setIsLoggedIn(true);
-          
-          // Check profile and redirect accordingly
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type, airline')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile?.user_type && profile?.airline) {
-            navigate('/dashboard', { replace: true });
-          } else {
-            navigate('/account', { replace: true });
-          }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setIsLoggedIn(false);
-          localStorage.removeItem('supabase.auth.token');
-          navigate('/', { replace: true });
         }
-        
         setIsLoading(false);
       }
     });
@@ -99,7 +61,7 @@ export function NavbarContainer() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
@@ -112,34 +74,13 @@ export function NavbarContainer() {
   const handleLogoClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-      setIsLoading(false);
-
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type, airline')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.user_type && profile?.airline) {
-          navigate('/dashboard', { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
-      } else {
-        navigate('/', { replace: true });
-      }
-      
-      setIsMobileMenuOpen(false);
-    } catch (error) {
-      console.error('Error checking session:', error);
-      setIsLoggedIn(false);
-      setIsLoading(false);
-      navigate('/', { replace: true });
-    }
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    setIsLoggedIn(!!session);
+    setIsLoading(false);
+    
+    navigate('/', { replace: true });
+    setIsMobileMenuOpen(false);
   };
 
   return (

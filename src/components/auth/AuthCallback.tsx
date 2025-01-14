@@ -27,7 +27,15 @@ export const AuthCallback = () => {
           throw new Error("Invalid session");
         }
 
-        // Check if user exists in profiles and their subscription status
+        // Create a new session and invalidate others
+        console.log("Creating new session and invalidating others...");
+        const newSession = await createNewSession(session.user.id);
+        
+        if (!newSession) {
+          throw new Error("Failed to create new session");
+        }
+
+        // Check if user exists in profiles
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -45,36 +53,16 @@ export const AuthCallback = () => {
           return;
         }
 
-        // If user selected a paid plan but hasn't completed payment, redirect to pricing
-        if (profile.subscription_plan === 'monthly' || profile.subscription_plan === 'yearly') {
-          console.log('Paid plan user detected, checking payment status...');
-          
-          // Call Stripe edge function to verify subscription
-          const { data: stripeData, error: stripeError } = await supabase.functions.invoke(
-            'check-subscription-status',
-            {
-              body: { email: session.user.email }
-            }
-          );
-
-          if (stripeError || !stripeData?.isSubscribed) {
-            console.log('No active subscription found, redirecting to pricing');
-            await supabase.auth.signOut();
-            toast({
-              title: "Payment Required",
-              description: "Please complete your subscription payment to continue."
-            });
-            navigate('/?scrollTo=pricing-section');
-            return;
-          }
-        }
-
-        // Create a new session and invalidate others
-        console.log("Creating new session and invalidating others...");
-        const newSession = await createNewSession(session.user.id);
-        
-        if (!newSession) {
-          throw new Error("Failed to create new session");
+        // Check if profile has subscription
+        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+          console.log('No subscription plan, redirecting to pricing');
+          await supabase.auth.signOut();
+          toast({
+            title: "Welcome Back!",
+            description: "Please select a subscription plan to continue."
+          });
+          navigate('/?scrollTo=pricing-section');
+          return;
         }
 
         // All good, redirect to dashboard

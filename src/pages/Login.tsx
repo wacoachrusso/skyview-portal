@@ -19,6 +19,13 @@ const Login = () => {
         if (session) {
           console.log('User logged in:', session.user.id);
           
+          // Check if user is an alpha tester or promoter
+          const { data: alphaTester } = await supabase
+            .from('alpha_testers')
+            .select('temporary_password, profile_id')
+            .eq('profile_id', session.user.id)
+            .single();
+
           // Get user profile
           const { data: profile } = await supabase
             .from('profiles')
@@ -26,18 +33,36 @@ const Login = () => {
             .eq('id', session.user.id)
             .single();
 
-          // Check if profile exists and is complete
-          if (profile?.user_type && profile?.airline) {
-            console.log('Profile complete, redirecting to dashboard');
-            navigate('/dashboard', { replace: true });
-          } else {
-            console.log('Profile incomplete, redirecting to account page');
-            navigate('/account', { replace: true });
+          if (alphaTester?.temporary_password) {
+            console.log('Alpha tester with temporary password, redirecting to account page');
+            navigate('/account');
+            toast({
+              title: "Profile Update Required",
+              description: "Please complete your profile and change your temporary password to continue.",
+              duration: 10000,
+            });
+            return;
+          }
+
+          // Check if profile is incomplete for alpha testers/promoters
+          if (alphaTester && (!profile?.full_name || !profile?.user_type || !profile?.airline || !profile?.employee_id)) {
+            console.log('Alpha tester with incomplete profile, redirecting to account page');
+            navigate('/account');
             toast({
               title: "Profile Update Required",
               description: "Please complete your profile information to continue.",
               duration: 10000,
             });
+            return;
+          }
+
+          // Regular user flow
+          if (profile?.user_type && profile?.airline) {
+            console.log('Profile complete, redirecting to dashboard');
+            navigate('/dashboard');
+          } else {
+            console.log('Profile incomplete, redirecting to account page');
+            navigate('/account');
           }
         }
       } catch (error) {

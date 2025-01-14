@@ -15,114 +15,77 @@ export function SessionCheck() {
 
   useEffect(() => {
     const setupAuth = async () => {
-      try {
-        console.log("Setting up auth and checking session...");
-        
-        // First clear any existing session data to ensure clean state
-        localStorage.removeItem('supabase.auth.token');
-        
-        // Get current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          throw sessionError;
-        }
+      console.log("Setting up auth and checking session...");
+      // Check current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log("No active session found");
+        navigate('/login');
+        return;
+      }
 
-        if (!session) {
-          console.log("No active session found");
-          navigate('/login');
-          return;
-        }
+      // Check profile and trial status
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_plan, query_count')
+        .eq('id', session.user.id)
+        .single();
 
-        // Refresh the session to ensure we have valid tokens
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-          console.error("Error refreshing session:", refreshError);
-          throw refreshError;
-        }
+      if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+        console.log('Free trial exhausted, logging out');
+        await supabase.auth.signOut();
+        toast({
+          title: "Free Trial Ended",
+          description: "Please select a subscription plan to continue."
+        });
+        navigate('/?scrollTo=pricing-section');
+        return;
+      }
 
-        // Check profile and trial status
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('subscription_plan, query_count')
-          .eq('id', session.user.id)
-          .single();
+      const currentToken = localStorage.getItem('session_token');
+      
+      // Verify session is still valid
+      const { data: sessionValid } = await supabase
+        .rpc('is_session_valid', {
+          p_session_token: currentToken
+        });
 
-        if (profileError) {
-          console.error("Profile error:", profileError);
-          throw profileError;
-        }
+      if (!sessionValid) {
+        console.log("Session invalid or superseded by another device");
+        localStorage.clear();
+        await supabase.auth.signOut();
+        toast({
+          title: "Session Ended",
+          description: "Your account has been signed in on another device."
+        });
+        navigate('/login');
+        return;
+      }
 
-        if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
-          console.log('Free trial exhausted, logging out');
+      // Set up periodic session validation
+      const validationInterval = setInterval(async () => {
+        const { data: stillValid } = await supabase
+          .rpc('is_session_valid', {
+            p_session_token: localStorage.getItem('session_token')
+          });
+
+        if (!stillValid) {
+          console.log("Session invalidated by another login");
+          clearInterval(validationInterval);
+          localStorage.clear();
           await supabase.auth.signOut();
           toast({
-            title: "Free Trial Ended",
-            description: "Please select a subscription plan to continue."
+            title: "Session Ended",
+            description: "Your account has been signed in on another device."
           });
-          navigate('/?scrollTo=pricing-section');
-          return;
+          navigate('/login');
         }
+      }, 30000); // Check every 30 seconds
 
-        const currentToken = localStorage.getItem('session_token');
-        
-        // Verify session is still valid
-        if (currentToken) {
-          const { data: sessionValid, error: validationError } = await supabase
-            .rpc('is_session_valid', {
-              p_session_token: currentToken
-            });
+      await checkCurrentSession();
+      await initializeSession();
 
-          if (validationError || !sessionValid) {
-            console.log("Session invalid or superseded by another device");
-            throw new Error("Invalid session");
-          }
-        }
-
-        // Set up periodic session validation
-        const validationInterval = setInterval(async () => {
-          try {
-            const token = localStorage.getItem('session_token');
-            if (!token) {
-              throw new Error("No session token found");
-            }
-
-            const { data: stillValid, error: validationError } = await supabase
-              .rpc('is_session_valid', {
-                p_session_token: token
-              });
-
-            if (validationError || !stillValid) {
-              throw new Error("Session invalidated");
-            }
-          } catch (error) {
-            console.error("Session validation failed:", error);
-            clearInterval(validationInterval);
-            await handleSessionError();
-          }
-        }, 30000); // Check every 30 seconds
-
-        await checkCurrentSession();
-        await initializeSession();
-
-        return () => clearInterval(validationInterval);
-
-      } catch (error) {
-        console.error("Error in auth setup:", error);
-        await handleSessionError();
-      }
-    };
-
-    const handleSessionError = async () => {
-      console.log("Handling session error, cleaning up...");
-      localStorage.clear();
-      await supabase.auth.signOut();
-      toast({
-        title: "Session Ended",
-        description: "Your session has expired. Please sign in again."
-      });
-      navigate('/login');
+      return () => clearInterval(validationInterval);
     };
 
     setupAuth();

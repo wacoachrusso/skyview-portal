@@ -30,61 +30,36 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
   useEffect(() => {
     const checkUserStatus = async () => {
-      if (!profile?.id) {
-        console.log('No profile ID found, redirecting to login');
-        navigate('/login');
+      if (!profile?.id) return;
+
+      console.log('Checking alpha tester and promoter status for profile:', profile.id);
+      
+      // Check if user is an alpha tester or promoter
+      const { data: alphaTester, error } = await supabase
+        .from('alpha_testers')
+        .select('temporary_password, is_promoter')
+        .eq('profile_id', profile.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking user status:', error);
         return;
       }
 
-      try {
-        // First verify the session is valid
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          console.error('Session error or no session:', sessionError);
-          toast({
-            variant: "destructive",
-            title: "Session Error",
-            description: "Please log in again to continue."
-          });
-          navigate('/login');
-          return;
-        }
-
-        console.log('Checking alpha tester and promoter status for profile:', profile.id);
-        
-        // Use maybeSingle() to handle cases where no rows exist
-        const { data: alphaTester, error: alphaError } = await supabase
-          .from('alpha_testers')
-          .select('temporary_password, is_promoter')
-          .eq('profile_id', profile.id)
-          .maybeSingle();
-
-        if (alphaError) {
-          console.error('Error checking alpha tester status:', alphaError);
-          return;
-        }
-
-        console.log('Alpha tester data:', alphaTester);
-        
-        if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
-          console.log('Setting password change as required');
-          setIsPasswordChangeRequired(true);
-          setIsEditing(true);
-        }
-      } catch (error) {
-        console.error('Error in checkUserStatus:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to check user status. Please try again."
-        });
+      console.log('User status data:', alphaTester);
+      
+      // Show password change form if they have a temporary password or are a promoter
+      if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
+        console.log('Setting password change as required');
+        setIsPasswordChangeRequired(true);
+        setIsEditing(true); // Automatically enable profile editing
       }
     };
 
     checkUserStatus();
-  }, [profile?.id, navigate, toast]);
+  }, [profile?.id]);
 
+  // Check if required fields are filled
   const isProfileComplete = () => {
     return formData.full_name && 
            formData.user_type && 
