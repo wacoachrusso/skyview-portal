@@ -5,13 +5,14 @@ export const DashboardLogo = () => {
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate('/', { state: { fromDashboard: true } });
+    console.log('Logo clicked, navigating to dashboard');
+    navigate('/dashboard');
   };
 
   return (
     <div className="flex items-center space-x-3">
       <a 
-        href="/"
+        href="/dashboard"
         onClick={handleLogoClick}
         className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
       >
