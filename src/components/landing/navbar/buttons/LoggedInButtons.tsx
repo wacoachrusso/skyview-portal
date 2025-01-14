@@ -4,7 +4,7 @@ import { User, LogOut } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface LoggedInButtonsProps {
   isMobile?: boolean;
@@ -16,6 +16,26 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  // Check session when component mounts
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session error on mount:', error);
+          return;
+        }
+        setSessionChecked(true);
+        console.log('Initial session check complete:', session ? 'Session exists' : 'No session');
+      } catch (error) {
+        console.error('Error checking session on mount:', error);
+      }
+    };
+
+    checkSession();
+  }, []);
 
   const handleDashboardClick = async () => {
     if (isLoading) return;
@@ -58,11 +78,53 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
     }
   };
 
-  const handleAccountClick = () => {
+  const handleAccountClick = async () => {
     if (isLoading) return;
-    console.log('Account button clicked');
-    navigate('/account');
+    
+    console.log('Account button clicked, verifying session...');
+    setIsLoading(true);
+    
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        console.log('No valid session for account access');
+        toast({
+          variant: "destructive",
+          title: "Session Error",
+          description: "Please log in again to access your account",
+        });
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      console.log('Session valid, navigating to account');
+      navigate('/account');
+    } catch (error) {
+      console.error('Error accessing account:', error);
+      toast({
+        variant: "destructive",
+        title: "Navigation Error",
+        description: "Unable to access account. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleLogoutClick = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await handleLogout();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!sessionChecked) {
+    return null; // Don't render buttons until session is checked
+  }
 
   if (showChatOnly) {
     return (
@@ -105,7 +167,7 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
       </Button>
 
       <Button 
-        onClick={handleLogout}
+        onClick={handleLogoutClick}
         size="sm"
         variant={isMobile ? "ghost" : "destructive"}
         className={`${isMobile ? 'w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10' : ''}`}
