@@ -66,8 +66,8 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<LazyRoutes.ReleaseNotes />} />
         <Route path="/refunds" element={<LazyRoutes.Refunds />} />
         
-        {/* Redirect any unknown routes to dashboard */}
-        <Route path="*" element={<LazyRoutes.Dashboard />} />
+        {/* Redirect any unknown routes to home */}
+        <Route path="*" element={<LazyRoutes.Index />} />
       </Routes>
     </Suspense>
   );
