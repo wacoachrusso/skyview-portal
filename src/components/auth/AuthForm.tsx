@@ -40,7 +40,6 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
       priceId: statePriceId
     });
     
-    // Pass both the selected plan and priceId to the signup handler
     handleSignupSubmit(formData, finalSelectedPlan, statePriceId);
   };
 

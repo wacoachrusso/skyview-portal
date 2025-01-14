@@ -4,7 +4,7 @@ import { PasswordField } from "./form-fields/PasswordField";
 import { JobTitleField } from "./form-fields/JobTitleField";
 import { AirlineField } from "./form-fields/AirlineField";
 
-interface AuthFormFieldsProps {
+export interface AuthFormFieldsProps {
   formData: {
     email: string;
     password: string;
@@ -13,9 +13,16 @@ interface AuthFormFieldsProps {
     airline: string;
   };
   setFormData: (data: any) => void;
+  showPassword: boolean;  // Added this prop to the interface
+  setShowPassword: (show: boolean) => void;  // Added this prop to the interface
 }
 
-export const AuthFormFields = ({ formData, setFormData }: AuthFormFieldsProps) => {
+export const AuthFormFields = ({ 
+  formData, 
+  setFormData, 
+  showPassword, 
+  setShowPassword 
+}: AuthFormFieldsProps) => {
   const handleInputChange = (field: string, value: string) => {
     if (field === 'jobTitle' && value === 'pilot' && formData.airline.toLowerCase() === 'american airlines') {
       setFormData({ ...formData, [field]: value, airline: '' });
@@ -54,6 +61,8 @@ export const AuthFormFields = ({ formData, setFormData }: AuthFormFieldsProps) =
       <PasswordField 
         password={formData.password}
         onChange={(value) => handleInputChange('password', value)}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
       />
 
       <JobTitleField
