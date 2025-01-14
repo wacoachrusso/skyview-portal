@@ -89,11 +89,12 @@ export const GoogleAuthHandler = () => {
           return;
         }
 
-        // Check if account is active and has valid subscription
+        // Enforce subscription requirement - only allow access with valid paid subscription
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log('No subscription plan, redirecting to pricing');
+          console.log('No valid subscription plan found, redirecting to pricing');
+          await supabase.auth.signOut();
           toast({
-            title: "Welcome!",
+            title: "Subscription Required",
             description: "Please select a subscription plan to continue."
           });
           navigate('/?scrollTo=pricing-section');

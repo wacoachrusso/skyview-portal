@@ -63,7 +63,7 @@ export const AuthCallback = () => {
           .eq('account_status', 'active')
           .single();
 
-        // Handle paid plan subscription first before profile check
+        // Always handle paid plan subscription first before profile check
         if (selectedPlan && selectedPlan !== 'free' && priceId) {
           console.log('Creating checkout session for paid plan...');
           try {
@@ -120,11 +120,12 @@ export const AuthCallback = () => {
           return;
         }
 
-        // Check if profile has subscription
+        // Enforce subscription requirement - only allow access with valid paid subscription
         if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log('No subscription plan, redirecting to pricing');
+          console.log('No valid subscription plan found, redirecting to pricing');
+          await supabase.auth.signOut();
           toast({
-            title: "Welcome!",
+            title: "Subscription Required",
             description: "Please select a subscription plan to continue."
           });
           navigate('/?scrollTo=pricing-section');
