@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
-import { checkSession, checkUserProfile } from "@/utils/authCallbackUtils";
-import { handleSelectedPlan } from "@/utils/authCallbackHandlers";
 import {
   validateCsrfToken,
   handleAuthenticationError,
@@ -22,8 +20,7 @@ export const AuthCallback = () => {
   const { createNewSession } = useSessionManagement();
   const provider = searchParams.get("provider");
   
-  const selectedPlan = searchParams.get('selectedPlan');
-  const priceId = searchParams.get('priceId');
+  const selectedPlan = searchParams.get('selectedPlan') || localStorage.getItem('selected_plan');
 
   if (provider === "google") {
     return <GoogleAuthHandler />;
@@ -34,7 +31,6 @@ export const AuthCallback = () => {
       try {
         console.log("=== Auth Callback Flow Start ===");
         console.log("Selected plan:", selectedPlan);
-        console.log("Price ID:", priceId);
         
         // Validate CSRF token
         const state = searchParams.get('state');
@@ -43,27 +39,32 @@ export const AuthCallback = () => {
           throw new Error("Invalid state parameter");
         }
         localStorage.removeItem('auth_state');
+        localStorage.removeItem('selected_plan');
 
-        // Handle paid plan selection first
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("No session found");
+        }
+
+        // If this is a paid plan signup, redirect to payment first
         if (selectedPlan && selectedPlan !== 'free') {
-          console.log('Paid plan selected, redirecting to payment before completing auth');
-          const success = await handleSelectedPlan(selectedPlan, { navigate, toast });
-          if (!success) {
-            await handlePaymentRequired({ navigate, toast });
-            return;
-          }
+          console.log('Paid plan selected, redirecting to payment');
+          await handlePaymentRequired({ navigate, toast });
           return;
         }
 
-        // Check session validity
-        const session = await checkSession({ navigate, toast });
-        if (!session) return;
+        // Get user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-        console.log("Valid session found for user:", session.user.email);
-
-        // Verify user profile
-        const profile = await checkUserProfile(session.user.id, { navigate, toast });
-        if (!profile) return;
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          throw new Error("Failed to fetch user profile");
+        }
 
         // Check account lock status
         if (profile.login_attempts >= 5) {
@@ -71,15 +72,15 @@ export const AuthCallback = () => {
           return;
         }
 
-        // Verify subscription status
-        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
+        // Verify subscription status for paid plans
+        if (!profile.subscription_plan || profile.subscription_plan === 'pending') {
           console.log('No valid subscription found, redirecting to pricing');
           await handleSubscriptionRequired({ navigate, toast });
           return;
         }
 
         // Create new session after all checks pass
-        console.log("Creating new session and invalidating others...");
+        console.log("Creating new session...");
         const newSession = await createNewSession(session.user.id);
         
         if (!newSession) {
@@ -102,7 +103,7 @@ export const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast, createNewSession, searchParams, selectedPlan, priceId]);
+  }, [navigate, toast, createNewSession, searchParams, selectedPlan]);
 
   return null;
 };
