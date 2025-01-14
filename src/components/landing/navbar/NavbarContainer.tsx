@@ -20,25 +20,6 @@ export function NavbarContainer() {
         console.log('Checking auth state in Navbar');
         setIsLoading(true);
 
-        // First clear any stale session data
-        const currentSession = localStorage.getItem('supabase.auth.token');
-        if (!currentSession) {
-          console.log('No session found in storage');
-          if (mounted) {
-            setIsLoggedIn(false);
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        // Try to refresh the session first
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-          console.error('Error refreshing session:', refreshError);
-          throw refreshError;
-        }
-
-        // Get current session after refresh
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -50,6 +31,18 @@ export function NavbarContainer() {
           if (session?.user) {
             console.log('Valid session found for user:', session.user.email);
             setIsLoggedIn(true);
+            
+            // Check if user should be redirected to dashboard
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('user_type, airline')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profile?.user_type && profile?.airline) {
+              console.log('Complete profile found, redirecting to dashboard');
+              navigate('/dashboard', { replace: true });
+            }
           } else {
             console.log('No active session found');
             setIsLoggedIn(false);
@@ -78,10 +71,24 @@ export function NavbarContainer() {
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in:', session.user.email);
           setIsLoggedIn(true);
+          
+          // Check profile and redirect accordingly
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_type, airline')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile?.user_type && profile?.airline) {
+            navigate('/dashboard', { replace: true });
+          } else {
+            navigate('/account', { replace: true });
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setIsLoggedIn(false);
           localStorage.removeItem('supabase.auth.token');
+          navigate('/', { replace: true });
         }
         
         setIsLoading(false);
@@ -92,7 +99,7 @@ export function NavbarContainer() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
@@ -109,12 +116,29 @@ export function NavbarContainer() {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
       setIsLoading(false);
-      navigate('/', { replace: true });
+
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type, airline')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.user_type && profile?.airline) {
+          navigate('/dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      } else {
+        navigate('/', { replace: true });
+      }
+      
       setIsMobileMenuOpen(false);
     } catch (error) {
       console.error('Error checking session:', error);
       setIsLoggedIn(false);
       setIsLoading(false);
+      navigate('/', { replace: true });
     }
   };
 
