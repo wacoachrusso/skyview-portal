@@ -29,12 +29,12 @@ export default {
           foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#7E69AB",
+          DEFAULT: "#0FA0CE",
           foreground: "#ffffff",
         },
         brand: {
-          purple: "#8B5CF6",
-          magenta: "#D946EF",
+          blue: "#1EAEDB",
+          skyblue: "#33C3F0",
           orange: "#F97316",
           gold: "#D4AF37",
           navy: "#1a365d",
@@ -49,7 +49,7 @@ export default {
           foreground: "#94a3b8",
         },
         accent: {
-          DEFAULT: "#7E69AB",
+          DEFAULT: "#0FA0CE",
           foreground: "#ffffff",
         },
         card: {
@@ -58,15 +58,15 @@ export default {
         },
       },
       backgroundImage: {
-        'hero-gradient': 'linear-gradient(135deg, #9b87f5 0%, #7E69AB 100%)',
+        'hero-gradient': 'linear-gradient(135deg, #33C3F0 0%, #1EAEDB 100%)',
         'card-gradient': 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
         'feature-gradient': 'linear-gradient(to right, #243949 0%, #517fa4 100%)',
-        'testimonial-gradient': 'linear-gradient(225deg, #8B5CF6 0%, #D946EF 100%)',
-        'cta-gradient': 'linear-gradient(to right, #9b87f5 0%, #7E69AB 100%)',
+        'testimonial-gradient': 'linear-gradient(225deg, #1EAEDB 0%, #33C3F0 100%)',
+        'cta-gradient': 'linear-gradient(to right, #33C3F0 0%, #1EAEDB 100%)',
         'footer-gradient': 'linear-gradient(to bottom, #1e293b 0%, #0f172a 100%)',
-        'glow-gradient': 'radial-gradient(circle at center, rgba(155,135,245,0.15) 0%, transparent 70%)',
-        'action-card': 'linear-gradient(225deg, rgba(155,135,245,0.1) 0%, rgba(126,105,171,0.1) 100%)',
-        'welcome-card': 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(217,70,239,0.1) 100%)',
+        'glow-gradient': 'radial-gradient(circle at center, rgba(30,174,219,0.15) 0%, transparent 70%)',
+        'action-card': 'linear-gradient(225deg, rgba(30,174,219,0.1) 0%, rgba(15,160,206,0.1) 100%)',
+        'welcome-card': 'linear-gradient(135deg, rgba(30,174,219,0.1) 0%, rgba(51,195,240,0.1) 100%)',
         'stats-card': 'linear-gradient(225deg, rgba(249,115,22,0.1) 0%, rgba(212,175,55,0.1) 100%)',
       },
       borderRadius: {
