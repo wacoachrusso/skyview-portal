@@ -1,6 +1,9 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PricingPlan {
   name: string;
@@ -21,6 +24,52 @@ interface PricingCardProps {
 }
 
 export function PricingCard({ plan, onSelect }: PricingCardProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handlePlanSelection = async () => {
+    try {
+      console.log('Handling plan selection:', plan);
+      
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.log('User not logged in, redirecting to signup with plan:', {
+          name: plan.name,
+          priceId: plan.priceId,
+          mode: plan.mode
+        });
+        
+        navigate('/signup', { 
+          state: { 
+            selectedPlan: plan.name.toLowerCase(),
+            priceId: plan.priceId,
+            mode: plan.mode
+          }
+        });
+        return;
+      }
+
+      if (!plan.priceId) {
+        console.log('No priceId found, redirecting to signup');
+        window.location.href = '/signup';
+        return;
+      }
+
+      console.log('Creating checkout session for plan:', plan);
+      onSelect(plan);
+      
+    } catch (error) {
+      console.error('Error selecting plan:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process plan selection. Please try again.",
+      });
+    }
+  };
+
   return (
     <Card
       className={`relative ${plan.gradient} border-2 border-white/10 backdrop-blur-sm p-6 rounded-xl transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/5 mt-6`}
@@ -54,7 +103,7 @@ export function PricingCard({ plan, onSelect }: PricingCardProps) {
       </ul>
 
       <Button 
-        onClick={() => onSelect(plan)}
+        onClick={handlePlanSelection}
         className={`w-full ${
           plan.isPopular 
             ? "bg-brand-gold hover:bg-brand-gold/90 text-brand-navy"

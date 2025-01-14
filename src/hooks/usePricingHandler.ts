@@ -8,6 +8,8 @@ export const usePricingHandler = () => {
 
   const handlePlanSelection = async (plan: any) => {
     try {
+      console.log('Starting plan selection process for:', plan);
+      
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -34,6 +36,7 @@ export const usePricingHandler = () => {
       }
 
       if (!plan.priceId) {
+        console.log('No priceId provided, redirecting to signup');
         window.location.href = '/signup';
         return;
       }
