@@ -58,6 +58,7 @@ export function AppRoutes() {
         <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
         
         {/* Protected routes */}
+        <Route path="/dashboard" element={<LazyRoutes.Dashboard />} />
         <Route path="/chat" element={<LazyRoutes.Chat />} />
         <Route path="/account" element={<LazyRoutes.Account />} />
         <Route path="/settings" element={<LazyRoutes.Settings />} />

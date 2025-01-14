@@ -46,3 +46,4 @@ export const Refunds = enhancedLazy(() => import("@/pages/Refunds"), "Refunds");
 export const ForgotPassword = enhancedLazy(() => import("@/pages/ForgotPassword"), "ForgotPassword");
 export const ResetPassword = enhancedLazy(() => import("@/pages/ResetPassword"), "ResetPassword");
 export const HelpCenter = enhancedLazy(() => import("@/pages/HelpCenter"), "HelpCenter");
+export const Dashboard = enhancedLazy(() => import("@/pages/Dashboard"), "Dashboard");
