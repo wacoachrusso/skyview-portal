@@ -38,9 +38,20 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
         return;
       }
 
+      // Disable the button immediately after click
+      const button = document.querySelector('[data-dashboard-button]') as HTMLButtonElement;
+      if (button) {
+        button.disabled = true;
+      }
+
       console.log('Valid session found, navigating to dashboard');
-      // Force a hard navigation to dashboard
-      window.location.href = '/dashboard';
+      
+      // Use a combination of window.location.href and navigate
+      // This ensures we both update React Router's state and force a page reload
+      navigate('/dashboard', { replace: true });
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 100);
       
     } catch (error) {
       console.error('Error navigating to dashboard:', error);
@@ -88,6 +99,7 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
         size="sm"
         variant={isMobile ? "ghost" : "default"}
         className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
+        data-dashboard-button
       >
         Dashboard
       </Button>
