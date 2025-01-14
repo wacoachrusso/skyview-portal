@@ -37,7 +37,7 @@ export const usePricingHandler = () => {
 
       if (!plan.priceId) {
         console.log('No priceId provided, redirecting to signup');
-        window.location.href = '/signup';
+        navigate('/signup');
         return;
       }
 
@@ -52,36 +52,29 @@ export const usePricingHandler = () => {
         email: userEmail
       });
 
-      // Get current session token
-      const sessionToken = localStorage.getItem('session_token');
-      if (!sessionToken) {
-        throw new Error('No session token found');
-      }
-
-      const response = await supabase.functions.invoke('create-checkout-session', {
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
           priceId: plan.priceId,
-          mode: plan.mode,
-          sessionToken
-        }),
+          mode: plan.mode
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      console.log('Checkout session response:', response);
+      console.log('Checkout session response:', data);
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (error) {
+        console.error('Error creating checkout session:', error);
+        throw error;
       }
 
-      const { data: { url } } = response;
-      
-      if (url) {
-        window.location.href = url;
+      if (data?.url) {
+        window.location.href = data.url;
       } else {
         throw new Error('No checkout URL received');
       }
+      
     } catch (error) {
       console.error('Error:', error);
       toast({

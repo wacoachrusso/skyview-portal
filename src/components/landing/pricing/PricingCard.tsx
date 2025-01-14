@@ -51,12 +51,6 @@ export function PricingCard({ plan, onSelect }: PricingCardProps) {
         return;
       }
 
-      if (!plan.priceId) {
-        console.log('No priceId found, redirecting to signup');
-        window.location.href = '/signup';
-        return;
-      }
-
       console.log('Creating checkout session for plan:', plan);
       onSelect(plan);
       
