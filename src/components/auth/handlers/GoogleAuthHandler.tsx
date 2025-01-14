@@ -12,7 +12,7 @@ export const GoogleAuthHandler = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      console.log('Handling Google auth callback');
+      console.log('=== Google Auth Flow Start ===');
       console.log('Selected plan:', selectedPlan);
       console.log('Price ID:', priceId);
 
@@ -34,6 +34,8 @@ export const GoogleAuthHandler = () => {
           navigate('/login');
           return;
         }
+
+        console.log('Session found for user:', session.user.email);
 
         // Handle paid plan subscription
         if (selectedPlan && selectedPlan !== 'free' && priceId) {
@@ -98,6 +100,7 @@ export const GoogleAuthHandler = () => {
           return;
         }
 
+        console.log('=== Google Auth Flow Complete ===');
         console.log('Auth callback successful, redirecting to dashboard');
         navigate('/dashboard');
       } catch (error) {

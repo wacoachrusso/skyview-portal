@@ -23,7 +23,7 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("Handling auth callback...");
+        console.log("=== Auth Callback Flow Start ===");
         console.log("Selected plan:", selectedPlan);
         console.log("Price ID:", priceId);
         
@@ -31,6 +31,7 @@ export const AuthCallback = () => {
         const state = searchParams.get('state');
         const storedState = localStorage.getItem('auth_state');
         if (state && storedState && state !== storedState) {
+          console.error("Invalid state parameter");
           throw new Error("Invalid state parameter");
         }
 
@@ -43,6 +44,8 @@ export const AuthCallback = () => {
           console.error("Session error:", sessionError);
           throw new Error("Invalid session");
         }
+
+        console.log("Valid session found for user:", session.user.email);
 
         // Create a new session and invalidate others
         console.log("Creating new session and invalidating others...");
@@ -70,6 +73,12 @@ export const AuthCallback = () => {
           navigate('/?scrollTo=pricing-section');
           return;
         }
+
+        console.log("Profile found:", {
+          subscription: profile.subscription_plan,
+          selectedPlan,
+          priceId
+        });
 
         // Handle paid plan subscription
         if (selectedPlan && selectedPlan !== 'free' && priceId) {
@@ -138,6 +147,7 @@ export const AuthCallback = () => {
           .eq('id', profile.id);
 
         // All good, redirect to dashboard
+        console.log("=== Auth Callback Flow Complete ===");
         toast({
           title: "Welcome back!",
           description: "You've been successfully signed in. Any other active sessions have been ended."
