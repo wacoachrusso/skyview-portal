@@ -56,8 +56,8 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<LazyRoutes.ReleaseNotes />} />
         <Route path="/refunds" element={<LazyRoutes.Refunds />} />
         
-        {/* Redirect any unknown routes to dashboard */}
-        <Route path="*" element={<LazyRoutes.Dashboard />} />
+        {/* 404 route */}
+        <Route path="*" element={<LazyRoutes.NotFound />} />
       </Routes>
     </LazyRoutes.LazyLoadWrapper>
   );

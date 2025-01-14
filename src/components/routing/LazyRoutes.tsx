@@ -98,5 +98,8 @@ export const ResetPassword = enhancedLazy(() =>
 export const HelpCenter = enhancedLazy(() => 
   retryLoadComponent(() => import("@/pages/HelpCenter")), "HelpCenter");
 
+export const NotFound = enhancedLazy(() => 
+  retryLoadComponent(() => import("@/pages/NotFound")), "NotFound");
+
 // Export the wrapper for use in route configuration
 export { LazyLoadWrapper };
