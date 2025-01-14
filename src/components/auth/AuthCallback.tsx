@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
+import { checkSession, checkUserProfile } from "@/utils/authCallbackUtils";
+import { handleSelectedPlan } from "@/utils/authCallbackHandlers";
 
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -38,12 +40,8 @@ export const AuthCallback = () => {
         // Clear stored state
         localStorage.removeItem('auth_state');
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          console.error("Session error:", sessionError);
-          throw new Error("Invalid session");
-        }
+        const session = await checkSession({ navigate, toast });
+        if (!session) return;
 
         console.log("Valid session found for user:", session.user.email);
 
@@ -56,55 +54,11 @@ export const AuthCallback = () => {
         }
 
         // Check if user exists in profiles
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*, sessions!inner(*)')
-          .eq('email', session.user.email)
-          .eq('account_status', 'active')
-          .single();
+        const profile = await checkUserProfile(session.user.id, { navigate, toast });
+        if (!profile) return;
 
         // Always handle paid plan subscription first before profile check
-        if (selectedPlan && selectedPlan !== 'free' && priceId) {
-          console.log('Creating checkout session for paid plan...');
-          try {
-            const { data, error: checkoutError } = await supabase.functions.invoke(
-              'create-checkout-session',
-              {
-                body: {
-                  priceId,
-                  email: session.user.email,
-                  userId: session.user.id
-                }
-              }
-            );
-
-            if (checkoutError) throw checkoutError;
-            if (!data?.url) throw new Error('No checkout URL received');
-
-            console.log('Redirecting to Stripe checkout:', data.url);
-            window.location.href = data.url;
-            return;
-          } catch (error) {
-            console.error('Error creating checkout session:', error);
-            toast({
-              variant: "destructive",
-              title: "Payment Error",
-              description: "Failed to setup payment. Please try again."
-            });
-            await supabase.auth.signOut();
-            navigate('/?scrollTo=pricing-section');
-            return;
-          }
-        }
-
-        if (profileError || !profile) {
-          console.log('No profile found, redirecting to signup');
-          await supabase.auth.signOut();
-          toast({
-            title: "Welcome to SkyGuide!",
-            description: "Please select a subscription plan to get started."
-          });
-          navigate('/?scrollTo=pricing-section');
+        if (await handleSelectedPlan(selectedPlan, { navigate, toast })) {
           return;
         }
 
