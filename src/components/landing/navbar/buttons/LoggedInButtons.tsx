@@ -15,9 +15,8 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleDashboardClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    console.log('Dashboard button clicked');
+  const handleDashboardClick = async () => {
+    console.log('Dashboard button clicked, checking session...');
     
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -29,17 +28,19 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
           title: "Session Error",
           description: "Please try logging in again",
         });
+        navigate('/login', { replace: true });
         return;
       }
 
       if (!session) {
-        console.log('No active session, redirecting to login');
+        console.log('No active session found, redirecting to login');
         navigate('/login', { replace: true });
         return;
       }
 
       console.log('Valid session found, navigating to dashboard');
-      navigate('/dashboard', { replace: true });
+      // Force a hard navigation to dashboard
+      window.location.href = '/dashboard';
       
     } catch (error) {
       console.error('Error navigating to dashboard:', error);
