@@ -8,13 +8,13 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Enable CORS
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Initialize Supabase client with service role key for admin access
+    // Initialize Supabase client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -41,14 +41,7 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    console.log('Creating checkout session for user:', user.email);
-
-    // Parse request body
-    const { priceId, mode } = await req.json();
-    
-    if (!priceId) {
-      throw new Error('Price ID is required');
-    }
+    console.log('Verifying subscription for user:', user.email);
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
@@ -56,63 +49,63 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     });
 
-    // Check if customer already exists
+    // Get customer by email
     const customers = await stripe.customers.list({
       email: user.email,
       limit: 1
     });
 
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      // Check if already subscribed
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'active',
-        price: priceId,
-        limit: 1
-      });
+    if (customers.data.length === 0) {
+      console.log('No Stripe customer found for:', user.email);
+      return new Response(
+        JSON.stringify({ hasActiveSubscription: false }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
 
-      if (subscriptions.data.length > 0) {
-        throw new Error('Already subscribed to this plan');
+    // Check for active subscriptions
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customers.data[0].id,
+      status: 'active',
+      limit: 1
+    });
+
+    const hasActiveSubscription = subscriptions.data.length > 0;
+    console.log('Subscription status for', user.email, ':', hasActiveSubscription);
+
+    // Update user profile with subscription status
+    if (hasActiveSubscription) {
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ 
+          subscription_plan: subscriptions.data[0].items.data[0].plan.nickname || 'paid',
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Error updating profile:', updateError);
       }
     }
 
-    // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: mode || 'subscription',
-      success_url: `${req.headers.get('origin')}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/?canceled=true`,
-      metadata: {
-        user_id: user.id,
-        email: user.email
-      },
-      subscription_data: {
-        metadata: {
-          user_id: user.id,
-          email: user.email
-        }
-      }
-    });
-
-    console.log('Payment session created:', session.id);
     return new Response(
-      JSON.stringify({ url: session.url }),
+      JSON.stringify({ 
+        hasActiveSubscription,
+        subscriptionDetails: hasActiveSubscription ? {
+          plan: subscriptions.data[0].items.data[0].plan.nickname,
+          status: subscriptions.data[0].status,
+          currentPeriodEnd: subscriptions.data[0].current_period_end
+        } : null
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error verifying subscription:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
