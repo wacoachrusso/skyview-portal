@@ -47,13 +47,6 @@ export const AuthCallback = () => {
           throw new Error("No session found");
         }
 
-        // If this is a paid plan signup, redirect to payment first
-        if (selectedPlan && selectedPlan !== 'free') {
-          console.log('Paid plan selected, redirecting to payment');
-          await handlePaymentRequired({ navigate, toast });
-          return;
-        }
-
         // Get user profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -69,6 +62,13 @@ export const AuthCallback = () => {
         // Check account lock status
         if (profile.login_attempts >= 5) {
           await handleAccountLocked({ navigate, toast });
+          return;
+        }
+
+        // If this is a paid plan signup, redirect to payment first
+        if (selectedPlan && selectedPlan !== 'free') {
+          console.log('Paid plan selected, redirecting to payment');
+          await handlePaymentRequired({ navigate, toast });
           return;
         }
 
