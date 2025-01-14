@@ -39,7 +39,6 @@ export const Chat = enhancedLazy(() => import("@/pages/Chat"), "Chat");
 export const Account = enhancedLazy(() => import("@/pages/Account"), "Account");
 export const Settings = enhancedLazy(() => import("@/pages/Settings"), "Settings");
 export const Dashboard = enhancedLazy(() => import("@/pages/Dashboard"), "Dashboard");
-export const AdminDashboard = enhancedLazy(() => import("@/pages/AdminDashboard"), "AdminDashboard");
 export const About = enhancedLazy(() => import("@/pages/About"), "About");
 export const ReleaseNotes = enhancedLazy(() => import("@/pages/ReleaseNotes"), "ReleaseNotes");
 export const PrivacyPolicy = enhancedLazy(() => import("@/pages/PrivacyPolicy"), "PrivacyPolicy");
