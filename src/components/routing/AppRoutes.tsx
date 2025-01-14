@@ -61,12 +61,13 @@ export function AppRoutes() {
         <Route path="/chat" element={<LazyRoutes.Chat />} />
         <Route path="/account" element={<LazyRoutes.Account />} />
         <Route path="/settings" element={<LazyRoutes.Settings />} />
-        <Route path="/admin" element={<LazyRoutes.AdminDashboard />} />
+        <Route path="/dashboard" element={<LazyRoutes.Dashboard />} />
+        <Route path="/admin/*" element={<LazyRoutes.Dashboard />} />
         <Route path="/release-notes" element={<LazyRoutes.ReleaseNotes />} />
         <Route path="/refunds" element={<LazyRoutes.Refunds />} />
         
-        {/* Redirect any unknown routes to home */}
-        <Route path="*" element={<LazyRoutes.Index />} />
+        {/* Redirect any unknown routes to dashboard */}
+        <Route path="*" element={<LazyRoutes.Dashboard />} />
       </Routes>
     </Suspense>
   );
