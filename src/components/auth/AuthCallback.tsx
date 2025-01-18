@@ -5,6 +5,16 @@ import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 
+interface PendingSignup {
+  email: string;
+  password: string;
+  full_name: string;
+  job_title: string;
+  airline: string;
+  plan: string;
+  stripe_session_id: string;
+}
+
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -36,16 +46,18 @@ export const AuthCallback = () => {
             throw new Error("Invalid checkout session");
           }
 
+          const signupData = pendingSignup as PendingSignup;
+
           // Sign up the user with their stored details
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: pendingSignup.email,
-            password: pendingSignup.password,
+            email: signupData.email,
+            password: signupData.password,
             options: {
               data: {
-                full_name: pendingSignup.full_name,
-                user_type: pendingSignup.job_title,
-                airline: pendingSignup.airline,
-                subscription_plan: pendingSignup.plan
+                full_name: signupData.full_name,
+                user_type: signupData.job_title,
+                airline: signupData.airline,
+                subscription_plan: signupData.plan
               }
             }
           });
@@ -57,8 +69,8 @@ export const AuthCallback = () => {
 
           // Sign in the user immediately after signup
           const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
-            email: pendingSignup.email,
-            password: pendingSignup.password
+            email: signupData.email,
+            password: signupData.password
           });
 
           if (signInError || !session) {

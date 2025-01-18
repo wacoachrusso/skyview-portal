@@ -33,8 +33,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_promoter?: boolean | null
-          last_feedback_at?: string
-          last_feedback_request_at?: string
+          last_feedback_at?: string | null
+          last_feedback_request_at?: string | null
           notes?: string | null
           profile_id?: string | null
           status?: Database["public"]["Enums"]["tester_status"] | null
@@ -48,8 +48,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_promoter?: boolean | null
-          last_feedback_at?: string
-          last_feedback_request_at?: string
+          last_feedback_at?: string | null
+          last_feedback_request_at?: string | null
           notes?: string | null
           profile_id?: string | null
           status?: Database["public"]["Enums"]["tester_status"] | null
@@ -221,9 +221,9 @@ export type Database = {
           feedback_text?: string | null
           id?: string
           is_incorrect?: boolean | null
-          message_id: string
+          message_id?: string
           rating?: number | null
-          user_id: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -329,11 +329,11 @@ export type Database = {
             | Database["public"]["Enums"]["notification_type"]
             | null
           priority?: string | null
-          profile_id: string
+          profile_id?: string
           release_note_id?: string | null
           title?: string
           type?: string
-          user_id: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -382,6 +382,48 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           work_group?: string
+        }
+        Relationships: []
+      }
+      pending_signups: {
+        Row: {
+          airline: string
+          assistant_id: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          full_name: string
+          id: string
+          job_title: string
+          password: string
+          plan: string
+          stripe_session_id: string
+        }
+        Insert: {
+          airline: string
+          assistant_id?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          full_name: string
+          id?: string
+          job_title: string
+          password: string
+          plan: string
+          stripe_session_id: string
+        }
+        Update: {
+          airline?: string
+          assistant_id?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          full_name?: string
+          id?: string
+          job_title?: string
+          password?: string
+          plan?: string
+          stripe_session_id?: string
         }
         Relationships: []
       }
@@ -529,8 +571,8 @@ export type Database = {
           changes?: Json | null
           created_at?: string
           id?: string
-          release_note_id: string
-          user_id: string
+          release_note_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -558,7 +600,7 @@ export type Database = {
           created_at?: string | null
           description: string
           email_template?: string | null
-          id: string
+          id?: string
           is_major?: boolean | null
           last_email_sent?: string | null
           release_date?: string | null
@@ -639,7 +681,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name: string
-          id: string
+          id?: string
           phone?: string | null
           region?: string | null
           role: string
@@ -649,7 +691,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name?: string
-          id: string
+          id?: string
           phone?: string | null
           region?: string | null
           role?: string
@@ -677,53 +719,61 @@ export type Database = {
         }
         Relationships: []
       }
-      pending_signups: {
-        Row: {
-          id: string
-          email: string
-          password: string
-          full_name: string
-          job_title: string
-          airline: string
-          plan: string
-          stripe_session_id: string
-          created_at: string
-          assistant_id: string | null
-          expires_at: string
-        }
-        Insert: {
-          id?: string
-          email: string
-          password: string
-          full_name: string
-          job_title: string
-          airline: string
-          plan: string
-          stripe_session_id: string
-          created_at?: string
-          assistant_id?: string | null
-          expires_at: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          password?: string
-          full_name?: string
-          job_title?: string
-          airline?: string
-          plan?: string
-          stripe_session_id?: string
-          created_at?: string
-          assistant_id?: string | null
-          expires_at?: string
-        }
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_cached_responses: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      delete_user_completely: {
+        Args: {
+          user_email: string
+        }
+        Returns: string
+      }
+      generate_referral_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      invalidate_other_sessions: {
+        Args: {
+          p_user_id: string
+          p_current_session_token: string
+        }
+        Returns: undefined
+      }
+      is_email_from_deleted_profile: {
+        Args: {
+          email: string
+        }
+        Returns: boolean
+      }
+      is_session_valid: {
+        Args: {
+          p_session_token: string
+        }
+        Returns: boolean
+      }
+      refresh_session: {
+        Args: {
+          p_refresh_token: string
+        }
+        Returns: {
+          session_token: string
+          expires_at: string
+        }[]
+      }
+      send_weekly_feedback_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      send_weekly_promoter_feedback: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       consent_status: "accepted" | "rejected"
@@ -752,7 +802,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never,
+    : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -764,10 +814,10 @@ export type Tables<
         PublicSchema["Views"])
     ? (PublicSchema["Tables"] &
         PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
-    : never
+        Row: infer R
+      }
+      ? R
+      : never
     : never
 
 export type TablesInsert<
