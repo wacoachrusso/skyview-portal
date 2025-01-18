@@ -69,6 +69,16 @@ export const usePricingHandler = () => {
       console.log('Checkout session response:', response);
 
       if (response.error) {
+        // Check if error is about existing subscription
+        if (response.error.message.includes('already have an active subscription')) {
+          toast({
+            title: "Subscription Active",
+            description: "You already have an active subscription. Please manage your subscription from your account page.",
+            variant: "default"
+          });
+          navigate('/account');
+          return;
+        }
         throw new Error(response.error.message);
       }
 
@@ -84,7 +94,7 @@ export const usePricingHandler = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to process payment. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to process payment. Please try again.",
       });
     }
   };
