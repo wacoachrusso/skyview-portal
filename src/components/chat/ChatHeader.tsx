@@ -17,6 +17,12 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
   const { handleContractClick } = useContractHandler();
   const { handleSignOut } = useAuthManagement();
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('Logo clicked in chat header, navigating to home');
+    navigate('/', { state: { fromDashboard: true } });
+  };
+
   return (
     <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-top">
       <div className="flex items-center space-x-4">
@@ -31,9 +37,18 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
-        <div className="flex flex-col items-start">
-          <h1 className="text-lg font-semibold text-foreground leading-none"></h1>
-        </div>
+        <a 
+          href="/"
+          onClick={handleLogoClick}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          <img 
+            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+            alt="SkyGuide Logo" 
+            className="h-7 w-auto sm:h-8"
+          />
+          <span className="text-foreground font-semibold text-sm sm:text-base">Ask SkyGuide</span>
+        </a>
       </div>
 
       <div className="flex items-center gap-2">
