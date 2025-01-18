@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { AppRoutes } from "@/components/routing/AppRoutes";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
 
 // Create a client with optimized options
@@ -21,6 +23,46 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const checkAuthAndRedirect = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log('User is logged in, current path:', location.pathname);
+        // Only redirect if on login, signup, or root path
+        if (['/login', '/signup', '/'].includes(location.pathname)) {
+          console.log('Redirecting to chat page');
+          navigate('/chat');
+        }
+      }
+    };
+
+    checkAuthAndRedirect();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      if (event === 'SIGNED_IN' && session) {
+        console.log('User signed in, redirecting to chat');
+        navigate('/chat');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, location]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <AppRoutes />
+    </div>
+  );
+}
 
 function App() {
   useEffect(() => {
@@ -81,9 +123,7 @@ function App() {
               </div>
             }
           >
-            <div className="min-h-screen bg-background">
-              <AppRoutes />
-            </div>
+            <AppContent />
           </Suspense>
           <Toaster />
         </Router>

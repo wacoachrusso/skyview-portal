@@ -47,29 +47,15 @@ export const useLoginForm = () => {
     
     if (formData.rememberMe) {
       console.log('Setting persistent session...');
-      document.cookie = `refresh_token_expires_at=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/; secure; samesite=strict`;
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 30); // 30 days
+      document.cookie = `sb-refresh-token=${localStorage.getItem('supabase.refresh-token')}; expires=${expiryDate.toUTCString()}; path=/; secure; samesite=strict`;
     }
 
     toast({
       title: "Welcome back!",
       description: "You have successfully logged in."
     });
-  };
-
-  const handleProfileRedirect = async (userId: string) => {
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('user_type, airline')
-      .eq('id', userId)
-      .single();
-
-    if (userProfile?.user_type && userProfile?.airline) {
-      console.log('Profile complete, redirecting to dashboard');
-      navigate('/dashboard');
-    } else {
-      console.log('Profile incomplete, redirecting to complete-profile');
-      navigate('/complete-profile');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,6 +85,9 @@ export const useLoginForm = () => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
         password: formData.password,
+        options: {
+          persistSession: formData.rememberMe
+        }
       });
 
       if (error) {
@@ -159,7 +148,10 @@ export const useLoginForm = () => {
 
       await handleLoginSuccess(data.session.user.id);
       await resetLoginAttempts(formData.email);
-      await handleProfileRedirect(data.session.user.id);
+      
+      // Redirect to chat page after successful login
+      console.log('Login successful, redirecting to chat page');
+      navigate('/chat');
 
     } catch (error) {
       console.error('Unexpected error during login:', error);
