@@ -17,49 +17,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client with service role key for admin access
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-    // Get user from auth header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      console.error('User error:', userError);
-      throw new Error('Unauthorized');
-    }
-
-    console.log('Found user:', user.email);
-
     // Parse request body
-    const { priceId, mode, sessionToken } = await req.json();
+    const { priceId, email, sessionToken } = await req.json();
+    console.log('Received request with:', { priceId, email });
     
-    if (!priceId) {
-      throw new Error('Price ID is required');
-    }
-
-    // Verify session token is valid
-    const { data: isValid } = await supabaseAdmin.rpc('is_session_valid', {
-      p_session_token: sessionToken
-    });
-
-    if (!isValid) {
-      throw new Error('Invalid session token');
+    if (!priceId || !email) {
+      console.error('Missing required fields:', { priceId, email });
+      throw new Error('Price ID and email are required');
     }
 
     // Initialize Stripe
@@ -68,9 +32,46 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     });
 
+    // Check if customer exists and has active subscription
+    console.log('Checking for existing customer with email:', email);
+    const existingCustomers = await stripe.customers.list({
+      email: email,
+      limit: 1
+    });
+
+    let customerId = undefined;
+    if (existingCustomers.data.length > 0) {
+      customerId = existingCustomers.data[0].id;
+      console.log('Found existing customer:', customerId);
+
+      // Check for active subscriptions
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'active',
+        price: priceId,
+        limit: 1
+      });
+
+      if (subscriptions.data.length > 0) {
+        console.log('Customer already has active subscription');
+        return new Response(
+          JSON.stringify({ error: 'You already have an active subscription' }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            },
+            status: 400,
+          },
+        );
+      }
+    }
+
     // Create Stripe checkout session
+    console.log('Creating checkout session...');
     const session = await stripe.checkout.sessions.create({
-      mode: mode || 'subscription',
+      customer: customerId,
+      customer_email: customerId ? undefined : email,
       payment_method_types: ['card'],
       line_items: [
         {
@@ -78,13 +79,15 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
+      mode: 'subscription',
       success_url: `${req.headers.get('origin')}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/?canceled=true`,
-      customer_email: user.email,
       metadata: {
-        user_id: user.id
+        email: email
       }
     });
+
+    console.log('Checkout session created successfully:', session.id);
 
     return new Response(
       JSON.stringify({ url: session.url }),
@@ -97,7 +100,7 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in create-checkout-session:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

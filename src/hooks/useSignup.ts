@@ -66,27 +66,43 @@ export const useSignup = () => {
       if (selectedPlan !== 'free' && priceId) {
         console.log('Starting paid plan signup process:', { plan: selectedPlan, priceId });
         
-        // Store signup data for after payment
-        storePendingSignup({
-          email: formData.email,
-          password: formData.password,
-          fullName: formData.fullName,
-          jobTitle: formData.jobTitle,
-          airline: formData.airline,
-          plan: selectedPlan,
-          assistantId: assistant.assistant_id
-        });
+        try {
+          // Store signup data for after payment
+          storePendingSignup({
+            email: formData.email,
+            password: formData.password,
+            fullName: formData.fullName,
+            jobTitle: formData.jobTitle,
+            airline: formData.airline,
+            plan: selectedPlan,
+            assistantId: assistant.assistant_id
+          });
 
-        // Create and redirect to checkout
-        const checkoutUrl = await createStripeCheckoutSession({
-          priceId,
-          email: formData.email,
-        });
+          // Create and redirect to checkout
+          const checkoutUrl = await createStripeCheckoutSession({
+            priceId,
+            email: formData.email,
+          });
 
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
+          if (checkoutUrl) {
+            window.location.href = checkoutUrl;
+            return;
+          } else {
+            throw new Error('Failed to create checkout session');
+          }
+        } catch (error) {
+          console.error('Error creating checkout session:', error);
+          if (error instanceof Error && error.message.includes('active subscription')) {
+            toast({
+              variant: "destructive",
+              title: "Subscription exists",
+              description: "You already have an active subscription. Please sign in to your account.",
+            });
+            navigate('/login');
+            return;
+          }
+          throw error;
         }
-        return;
       }
 
       // Handle free plan signup
