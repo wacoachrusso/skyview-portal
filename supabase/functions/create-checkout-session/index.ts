@@ -30,6 +30,8 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     });
 
+    console.log('Checking existing customer for email:', email);
+    
     // Check if customer already exists
     const existingCustomers = await stripe.customers.list({
       email: email,
@@ -39,6 +41,7 @@ serve(async (req) => {
     let customerId = undefined;
     if (existingCustomers.data.length > 0) {
       customerId = existingCustomers.data[0].id;
+      console.log('Found existing customer:', customerId);
       
       // Check if already subscribed
       const subscriptions = await stripe.subscriptions.list({
@@ -49,7 +52,14 @@ serve(async (req) => {
       });
 
       if (subscriptions.data.length > 0) {
-        throw new Error('You already have an active subscription');
+        console.log('Customer already has active subscription');
+        return new Response(
+          JSON.stringify({ error: 'You already have an active subscription' }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
       }
     }
 
