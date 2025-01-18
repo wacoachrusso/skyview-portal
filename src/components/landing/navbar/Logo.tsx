@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import { memo } from "react";
 
 interface LogoProps {
   handleLogoClick: (e: React.MouseEvent) => void;
 }
 
-export function Logo({ handleLogoClick }: LogoProps) {
+export const Logo = memo(function Logo({ handleLogoClick }: LogoProps) {
   return (
     <Link 
       to="/"
@@ -20,4 +21,4 @@ export function Logo({ handleLogoClick }: LogoProps) {
       <span className="text-foreground text-xl md:text-2xl font-bold">SkyGuide</span>
     </Link>
   );
-}
+});

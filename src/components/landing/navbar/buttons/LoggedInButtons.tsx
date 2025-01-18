@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 interface LoggedInButtonsProps {
   isMobile?: boolean;
@@ -16,17 +16,17 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDashboardClick = () => {
+  const handleDashboardClick = useCallback(() => {
     console.log('Dashboard button clicked, navigating to /chat');
     navigate('/chat');
-  };
+  }, [navigate]);
 
-  const handleAccountClick = () => {
+  const handleAccountClick = useCallback(() => {
     console.log('Account button clicked, navigating to /account');
     navigate('/account');
-  };
+  }, [navigate]);
 
-  const handleLogoutClick = async () => {
+  const handleLogoutClick = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
@@ -42,7 +42,7 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [handleLogout, isLoading, toast]);
 
   if (showChatOnly) {
     return (
