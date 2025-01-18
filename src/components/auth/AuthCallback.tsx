@@ -21,7 +21,7 @@ export const AuthCallback = () => {
   const { toast } = useToast();
   const { createNewSession } = useSessionManagement();
   const provider = searchParams.get("provider");
-  const sessionId = searchParams.get("session_id"); // Stripe checkout session ID
+  const sessionId = searchParams.get("session_id");
 
   if (provider === "google") {
     return <GoogleAuthHandler />;
@@ -30,14 +30,18 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("Starting auth callback process...");
+        console.log("Starting auth callback process with params:", {
+          sessionId,
+          provider
+        });
         
-        // If coming from Stripe checkout, handle the payment success flow
         if (sessionId) {
           console.log("Processing Stripe payment callback with session ID:", sessionId);
           
           // First check if user already exists
-          const { data: existingUser } = await supabase.auth.getUser();
+          const { data: existingUser, error: userError } = await supabase.auth.getUser();
+          console.log("Existing user check result:", { existingUser, error: userError });
+
           if (existingUser?.user) {
             console.log("User already exists and is logged in:", existingUser.user.email);
             navigate('/dashboard');
@@ -45,11 +49,14 @@ export const AuthCallback = () => {
           }
 
           // Fetch pending signup data
+          console.log("Fetching pending signup data for session:", sessionId);
           const { data: pendingSignup, error: pendingSignupError } = await supabase
             .from('pending_signups')
             .select('*')
             .eq('stripe_session_id', sessionId)
             .maybeSingle();
+
+          console.log("Pending signup query result:", { pendingSignup, error: pendingSignupError });
 
           if (pendingSignupError) {
             console.error("Error fetching pending signup:", pendingSignupError);
@@ -61,11 +68,18 @@ export const AuthCallback = () => {
             throw new Error("No signup data found. Please try again or contact support.");
           }
 
-          console.log("Found pending signup for email:", pendingSignup.email);
           const signupData = pendingSignup as PendingSignup;
+          console.log("Found pending signup for email:", signupData.email);
 
           // Create the user account
-          console.log("Creating user account for:", signupData.email);
+          console.log("Creating user account with data:", {
+            email: signupData.email,
+            fullName: signupData.full_name,
+            jobTitle: signupData.job_title,
+            airline: signupData.airline,
+            plan: signupData.plan
+          });
+
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: signupData.email,
             password: signupData.password,
@@ -79,18 +93,22 @@ export const AuthCallback = () => {
             }
           });
 
+          console.log("Signup result:", { signUpData, error: signUpError });
+
           if (signUpError) {
             console.error("Error creating user account:", signUpError);
             throw signUpError;
           }
 
           if (!signUpData?.user) {
+            console.error("No user data returned from signup");
             throw new Error("Failed to create user account");
           }
 
-          console.log("User account created, proceeding with sign in");
+          console.log("User account created successfully:", signUpData.user.id);
 
           // Sign in the user immediately
+          console.log("Attempting to sign in user:", signupData.email);
           const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
             email: signupData.email,
             password: signupData.password
@@ -104,14 +122,18 @@ export const AuthCallback = () => {
           console.log("User signed in successfully:", session.user.id);
 
           // Create a new session and invalidate others
-          console.log("Creating new session...");
+          console.log("Creating new session for user:", session.user.id);
           const newSession = await createNewSession(session.user.id);
           
           if (!newSession) {
+            console.error("Failed to create new session");
             throw new Error("Failed to create session");
           }
 
+          console.log("New session created successfully:", newSession);
+
           // Delete the pending signup
+          console.log("Cleaning up pending signup data");
           const { error: deleteError } = await supabase
             .from('pending_signups')
             .delete()
@@ -119,13 +141,14 @@ export const AuthCallback = () => {
 
           if (deleteError) {
             console.error("Error cleaning up pending signup:", deleteError);
-            // Don't throw here as user is already signed in
           }
 
           toast({
             title: "Welcome to SkyGuide!",
             description: "Your account has been created and you've been successfully signed in."
           });
+          
+          console.log("Redirecting to dashboard");
           navigate('/dashboard');
           return;
         }
@@ -164,7 +187,7 @@ export const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast, createNewSession]);
+  }, [navigate, toast, createNewSession, sessionId]);
 
   return null;
 };
