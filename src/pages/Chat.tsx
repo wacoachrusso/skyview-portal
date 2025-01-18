@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/hooks/useChat";
@@ -7,7 +7,6 @@ import { ChatContent } from "@/components/chat/ChatContent";
 
 const Chat = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { 
     currentConversationId, 
@@ -17,8 +16,7 @@ const Chat = () => {
     isLoading,
     sendMessage,
     currentUserId,
-    startNewChat,
-    cleanup 
+    startNewChat 
   } = useChat();
 
   useEffect(() => {
@@ -29,18 +27,7 @@ const Chat = () => {
       }
     };
     checkSession();
-
-    // Cleanup function for chat resources
-    return () => {
-      console.log('Cleaning up chat resources');
-      cleanup?.();
-    };
-  }, [navigate, cleanup]);
-
-  // Log navigation attempts
-  useEffect(() => {
-    console.log('Current route:', location.pathname);
-  }, [location]);
+  }, [navigate]);
 
   const handleSelectConversation = async (conversationId: string) => {
     console.log('Loading conversation:', conversationId);

@@ -21,19 +21,10 @@ export const getWelcomeEmailContent = ({
     <p>We're thrilled to have you join the SkyGuide ${isPromoter ? 'promoter' : 'alpha testing'} program!</p>
     
     <div style="${getCardStyle()}">
-      <h3 style="color: #1a1f2c; margin-top: 0;">Important First Steps</h3>
-      <ol style="color: #1a365d;">
-        <li>Log in using your credentials below</li>
-        <li>Go to your Account page immediately to change your password</li>
-        <li>Complete your profile information (required to use SkyGuide)</li>
-      </ol>
-    </div>
-
-    <div style="${getCardStyle()}">
       <h3 style="color: #1a1f2c; margin-top: 0;">Your Login Credentials</h3>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Temporary Password:</strong> ${temporaryPassword}</p>
-      <p style="color: #dc2626; font-weight: bold;">⚠️ You must change your password after logging in!</p>
+      <p style="color: #dc2626;">Please change your password after your first login!</p>
       <p><a href="${loginUrl}" style="${getButtonStyle()}">Login to SkyGuide</a></p>
     </div>
 
@@ -58,18 +49,6 @@ export const getWelcomeEmailContent = ({
         </ul>
       </div>
     `}
-
-    <div style="${getCardStyle()}">
-      <h3 style="color: #1a365d; margin-top: 0;">Required Profile Information</h3>
-      <p>To use SkyGuide, you must complete your profile with:</p>
-      <ul style="color: #1a365d;">
-        <li>Full Name</li>
-        <li>Job Title</li>
-        <li>Airline</li>
-        <li>Employee ID</li>
-      </ul>
-      <p>You can add this information in your Account page after logging in.</p>
-    </div>
 
     <p style="margin-top: 25px;">Have questions? Need help getting started? Our support team is here to help!</p>
   `;

@@ -1,7 +1,18 @@
-import { getAssistantId } from "./form-fields/AssistantIdHandler";
-import { PersonalInfoSection } from "./form-sections/PersonalInfoSection";
-import { WorkInfoSection } from "./form-sections/WorkInfoSection";
-import { AccountFormFieldsProps } from "./types/accountTypes";
+import { Input } from "@/components/ui/input";
+
+interface AccountFormFieldsProps {
+  isEditing: boolean;
+  formData: {
+    full_name: string;
+    user_type: string;
+    airline: string;
+    address: string;
+    phone_number: string;
+    employee_id: string;
+  };
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  profile: any;
+}
 
 export const AccountFormFields = ({
   isEditing,
@@ -9,55 +20,38 @@ export const AccountFormFields = ({
   handleInputChange,
   profile,
 }: AccountFormFieldsProps) => {
-  const handleSelectChange = (value: string, field: string) => {
-    console.log('Select change:', { field, value });
-    
-    // Create a synthetic event to match the existing handleInputChange
-    const syntheticEvent = {
-      target: {
-        name: field,
-        value: value
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
-
-    // Handle assistant ID updates based on airline and job title combinations
-    if (field === 'airline' || field === 'user_type') {
-      const currentAirline = field === 'airline' ? value : formData.airline;
-      const currentUserType = field === 'user_type' ? value : formData.user_type;
-
-      console.log('Updating assistant ID for:', { currentAirline, currentUserType });
-      const assistantId = getAssistantId(currentAirline, currentUserType);
-
-      if (assistantId) {
-        console.log('Setting new assistant ID:', assistantId);
-        const assistantEvent = {
-          target: {
-            name: 'assistant_id',
-            value: assistantId
-          }
-        } as React.ChangeEvent<HTMLInputElement>;
-        handleInputChange(assistantEvent);
-      }
-    }
-  };
+  const fields = [
+    { name: "full_name", label: "Full Name", required: true },
+    { name: "user_type", label: "Job Title", required: true },
+    { name: "airline", label: "Airline", required: true },
+    { name: "employee_id", label: "Employee ID", required: true },
+    { name: "address", label: "Address", optional: true },
+    { name: "phone_number", label: "Phone Number", optional: true },
+  ];
 
   return (
     <div className="grid gap-4">
-      <PersonalInfoSection
-        isEditing={isEditing}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        profile={profile}
-      />
-      <WorkInfoSection
-        isEditing={isEditing}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleSelectChange={handleSelectChange}
-        profile={profile}
-      />
+      {fields.map((field) => (
+        <div key={field.name} className="grid grid-cols-3 items-center gap-4">
+          <span className="font-medium text-brand-navy">
+            {field.label}{field.required && <span className="text-red-500 ml-1">*</span>}:
+          </span>
+          {isEditing ? (
+            <Input
+              name={field.name}
+              value={formData[field.name as keyof typeof formData]}
+              onChange={handleInputChange}
+              className={`col-span-2 ${field.required ? 'border-gray-300' : ''}`}
+              placeholder={field.optional ? "Optional" : "Required"}
+              required={field.required}
+            />
+          ) : (
+            <span className="col-span-2 text-gray-700">
+              {profile?.[field.name] || (field.required ? 'Required' : 'Not set')}
+            </span>
+          )}
+        </div>
+      ))}
     </div>
   );
 };

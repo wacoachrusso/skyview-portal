@@ -14,7 +14,7 @@ export function LoggedOutButtons({ isMobile = false, scrollToPricing }: LoggedOu
         asChild 
         variant={isMobile ? "ghost" : "secondary"}
         size="sm"
-        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:bg-brand-gold hover:text-black transition-colors'}`}
+        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
       >
         <Link to="/login">
           <LogIn className="mr-2 h-4 w-4" />
@@ -26,7 +26,7 @@ export function LoggedOutButtons({ isMobile = false, scrollToPricing }: LoggedOu
         onClick={scrollToPricing}
         size="sm"
         variant={isMobile ? "ghost" : "default"}
-        className={`${isMobile ? 'w-full justify-start' : 'bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors'}`}
+        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
       >
         Sign Up
       </Button>

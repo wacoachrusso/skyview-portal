@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { useToast } from "@/hooks/use-toast";
-import { useState, useCallback } from "react";
 
 interface LoggedInButtonsProps {
   isMobile?: boolean;
@@ -12,38 +10,6 @@ interface LoggedInButtonsProps {
 }
 
 export function LoggedInButtons({ isMobile = false, showChatOnly = false, handleLogout }: LoggedInButtonsProps) {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleDashboardClick = useCallback(() => {
-    console.log('Dashboard button clicked, navigating to /chat');
-    navigate('/chat');
-  }, [navigate]);
-
-  const handleAccountClick = useCallback(() => {
-    console.log('Account button clicked, navigating to /account');
-    navigate('/account');
-  }, [navigate]);
-
-  const handleLogoutClick = useCallback(async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    try {
-      await handleLogout();
-      console.log('Logout successful');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to log out. Please try again."
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [handleLogout, isLoading, toast]);
-
   if (showChatOnly) {
     return (
       <Button 
@@ -64,32 +30,33 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
       {!isMobile && <NotificationBell />}
       
       <Button
-        onClick={handleAccountClick}
+        asChild
         variant={isMobile ? "ghost" : "secondary"}
         size="sm"
         className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
-        disabled={isLoading}
       >
-        <User className="mr-2 h-4 w-4" />
-        Account
+        <Link to="/account">
+          <User className="mr-2 h-4 w-4" />
+          Account
+        </Link>
       </Button>
       
       <Button
-        onClick={handleDashboardClick}
+        asChild
         size="sm"
         variant={isMobile ? "ghost" : "default"}
         className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
-        disabled={isLoading}
       >
-        Dashboard
+        <Link to="/dashboard">
+          Dashboard
+        </Link>
       </Button>
 
       <Button 
-        onClick={handleLogoutClick}
+        onClick={handleLogout}
         size="sm"
         variant={isMobile ? "ghost" : "destructive"}
         className={`${isMobile ? 'w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10' : ''}`}
-        disabled={isLoading}
       >
         <LogOut className="mr-2 h-4 w-4" />
         Logout

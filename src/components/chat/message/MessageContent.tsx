@@ -15,30 +15,45 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
 
     return (
       <div className="space-y-4">
-        {isCurrentUser ? (
-          <p className="text-sm sm:text-base leading-relaxed">{mainContent}</p>
-        ) : (
-          <TypeAnimation
-            sequence={[mainContent]}
-            wrapper="div"
-            speed={90} // Increased speed (lower number = faster)
-            cursor={false}
-            className="text-sm sm:text-base leading-relaxed whitespace-pre-line"
-          />
-        )}
-        {reference && (
+        <ReactMarkdown
+          components={{
+            p: ({ children }) => <p className="mb-2">{children}</p>,
+            strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+            em: ({ children }) => <em className="italic">{children}</em>,
+            ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
+            ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
+            li: ({ children }) => <li className="pl-2">{children}</li>,
+          }}
+        >
+          {mainContent}
+        </ReactMarkdown>
+        {reference ? (
           <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-sm text-blue-400 font-medium mb-1">Reference:</p>
-            <p className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed">{reference}</p>
+            <p className="text-sm text-blue-400 font-medium">Reference:</p>
+            <p className="text-sm text-gray-400 whitespace-pre-wrap">{reference}</p>
+          </div>
+        ) : (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-sm text-yellow-400 font-medium">Note:</p>
+            <p className="text-sm text-gray-400">No specific contract reference available for this query.</p>
           </div>
         )}
       </div>
     );
   };
 
-  return (
+  return isCurrentUser ? (
+    <p className="text-sm sm:text-base">{message.content}</p>
+  ) : (
     <div className="text-sm sm:text-base min-h-[20px]">
-      {formatContent(message.content)}
+      <TypeAnimation
+        sequence={[message.content]}
+        wrapper="div"
+        cursor={false}
+        repeat={0}
+        speed={90}
+        className="whitespace-pre-wrap"
+      />
     </div>
   );
 }

@@ -11,11 +11,7 @@ export const useContractHandler = () => {
   const handleContractClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    console.log("Contract click handler initiated", { 
-      userProfile,
-      airline: userProfile?.airline,
-      userType: userProfile?.user_type
-    });
+    console.log("Contract click handler initiated", { isMobile, userProfile });
     
     if (!userProfile?.airline || !userProfile?.user_type) {
       toast({
@@ -26,22 +22,20 @@ export const useContractHandler = () => {
       return;
     }
 
-    // Map to exact filenames based on airline
-    const fileName = userProfile.airline.toLowerCase().includes('united') 
-      ? 'united_airlines_flight_attendant.pdf'
-      : 'american_airlines_flight_attendan.pdf';
+    const formattedAirline = userProfile.airline.toLowerCase().replace(/\s+/g, '_');
+    const formattedJobType = userProfile.user_type.toLowerCase().replace(/\s+/g, '_');
+    const fileName = `${formattedAirline}_${formattedJobType}.pdf`;
     
     console.log("Attempting to fetch contract:", fileName);
 
     try {
       const { data, error } = await supabase.storage
         .from('contracts')
-        .createSignedUrl(fileName, 300);
+        .createSignedUrl(fileName, 300); // Increased to 5 minutes
 
       if (error) {
         console.error('Error fetching contract:', error);
         
-        // Provide more specific error message based on error type
         if (error.message.includes('Object not found')) {
           toast({
             title: "Contract Not Found",
@@ -54,16 +48,6 @@ export const useContractHandler = () => {
         toast({
           title: "Contract Unavailable",
           description: "Unable to access the contract. Please try again later.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (!data?.signedUrl) {
-        console.error('No signed URL received');
-        toast({
-          title: "Error",
-          description: "Unable to generate contract download link. Please try again later.",
           variant: "destructive"
         });
         return;

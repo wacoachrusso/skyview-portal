@@ -1,11 +1,10 @@
 import { BrowserRouter as Router } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { AppContent } from "@/components/app/AppContent";
-import { AppEventHandlers } from "@/components/app/AppEventHandlers";
+import { AppRoutes } from "@/components/routing/AppRoutes";
 import "./App.css";
 
 // Create a client with optimized options
@@ -24,20 +23,57 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  useEffect(() => {
+    console.log('App component mounted');
+    console.log('Current route:', window.location.pathname);
+    console.log('Environment:', import.meta.env.MODE);
+    
+    // Add listener for online/offline status
+    const handleOnline = () => {
+      console.log('Application is online');
+      queryClient.invalidateQueries();
+    };
+
+    const handleOffline = () => {
+      console.log('Application is offline');
+    };
+
+    // Add listener for visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Page became visible, refreshing data');
+        queryClient.invalidateQueries();
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Clean up event listeners
+    return () => {
+      console.log('App component unmounted');
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
           <Suspense 
             fallback={
-              <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all">
-                <LoadingSpinner size="lg" className="h-12 w-12" />
+              <div className="flex h-screen w-full items-center justify-center bg-background">
+                <LoadingSpinner />
               </div>
             }
           >
-            <AppContent />
+            <div className="min-h-screen bg-background">
+              <AppRoutes />
+            </div>
           </Suspense>
-          <AppEventHandlers queryClient={queryClient} />
           <Toaster />
         </Router>
       </ThemeProvider>

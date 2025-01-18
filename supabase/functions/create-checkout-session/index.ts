@@ -4,24 +4,62 @@ import { Stripe } from 'https://esm.sh/stripe@12.0.0';
 
 console.log("Hello from Create Checkout Session!");
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 serve(async (req) => {
   // Enable CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      }
+    });
   }
 
   try {
+    // Initialize Supabase client with service role key for admin access
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    // Get user from auth header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user) {
+      console.error('User error:', userError);
+      throw new Error('Unauthorized');
+    }
+
+    console.log('Found user:', user.email);
+
     // Parse request body
-    const { priceId, mode, email } = await req.json();
+    const { priceId, mode, sessionToken } = await req.json();
     
     if (!priceId) {
       throw new Error('Price ID is required');
+    }
+
+    // Verify session token is valid
+    const { data: isValid } = await supabaseAdmin.rpc('is_session_valid', {
+      p_session_token: sessionToken
+    });
+
+    if (!isValid) {
+      throw new Error('Invalid session token');
     }
 
     // Initialize Stripe
@@ -30,43 +68,8 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     });
 
-    console.log('Checking existing customer for email:', email);
-    
-    // Check if customer already exists
-    const existingCustomers = await stripe.customers.list({
-      email: email,
-      limit: 1,
-    });
-
-    let customerId = undefined;
-    if (existingCustomers.data.length > 0) {
-      customerId = existingCustomers.data[0].id;
-      console.log('Found existing customer:', customerId);
-      
-      // Check if already subscribed
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'active',
-        price: priceId,
-        limit: 1,
-      });
-
-      if (subscriptions.data.length > 0) {
-        console.log('Customer already has active subscription');
-        return new Response(
-          JSON.stringify({ error: 'You already have an active subscription' }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          }
-        );
-      }
-    }
-
-    console.log('Creating checkout session...');
+    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : email,
       mode: mode || 'subscription',
       payment_method_types: ['card'],
       line_items: [
@@ -77,27 +80,33 @@ serve(async (req) => {
       ],
       success_url: `${req.headers.get('origin')}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/?canceled=true`,
+      customer_email: user.email,
       metadata: {
-        email: email,
+        user_id: user.id
       }
     });
 
-    console.log('Checkout session created:', session.id);
     return new Response(
       JSON.stringify({ url: session.url }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
         status: 200,
-      }
+      },
     );
   } catch (error) {
     console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
         status: 400,
-      }
+      },
     );
   }
 });

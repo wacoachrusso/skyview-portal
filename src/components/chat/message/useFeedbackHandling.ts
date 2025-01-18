@@ -11,26 +11,14 @@ export function useFeedbackHandling(messageId: string, isCurrentUser: boolean) {
     const fetchFeedback = async () => {
       if (isCurrentUser) return;
       
-      console.log('Fetching feedback for message:', messageId);
-      
-      try {
-        const { data, error } = await supabase
-          .from('message_feedback')
-          .select('*')
-          .eq('message_id', messageId)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from('message_feedback')
+        .select('*')
+        .eq('message_id', messageId)
+        .single();
 
-        if (error) {
-          console.error('Error fetching feedback:', error);
-          return;
-        }
-
-        if (data) {
-          console.log('Found feedback:', data);
-          setFeedback(data);
-        }
-      } catch (error) {
-        console.error('Error in fetchFeedback:', error);
+      if (!error && data) {
+        setFeedback(data);
       }
     };
 
@@ -41,8 +29,6 @@ export function useFeedbackHandling(messageId: string, isCurrentUser: boolean) {
     if (isCurrentUser) return;
     
     setIsSubmittingFeedback(true);
-    console.log('Submitting feedback:', { messageId, rating, isIncorrect, feedbackText });
-
     try {
       const { data, error } = await supabase
         .from('message_feedback')
@@ -65,8 +51,6 @@ export function useFeedbackHandling(messageId: string, isCurrentUser: boolean) {
           : "Thank you for your feedback!",
         variant: isIncorrect ? "destructive" : "default",
       });
-
-      console.log('Feedback submitted successfully');
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({

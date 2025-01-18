@@ -1,10 +1,10 @@
-import { useState, useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
 import { useMessageOperations } from "./useMessageOperations";
 import { useUserProfile } from "./useUserProfile";
+import { Message } from "@/types/chat";
 
 export function useChat() {
   const { toast } = useToast();
@@ -26,13 +26,6 @@ export function useChat() {
     insertAIMessage,
     loadMessages
   } = useMessageOperations(currentUserId, currentConversationId);
-
-  const cleanup = useCallback(() => {
-    console.log('Cleaning up chat state');
-    setMessages([]);
-    setCurrentConversationId(null);
-    setIsLoading(false);
-  }, []);
 
   const sendMessage = async (content: string) => {
     console.log('Sending message:', { content, conversationId: currentConversationId });
@@ -127,13 +120,14 @@ export function useChat() {
 
   return {
     messages,
+    currentUserId,
     isLoading,
     sendMessage,
-    currentUserId,
+    createNewConversation,
     currentConversationId,
-    setCurrentConversationId,
     loadConversation,
-    startNewChat,
-    cleanup
+    setCurrentConversationId,
+    userProfile,
+    startNewChat
   };
 }
