@@ -30,32 +30,42 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("Handling auth callback...");
+        console.log("Starting auth callback process...");
         
         // If coming from Stripe checkout, handle the payment success flow
         if (sessionId) {
-          console.log("Processing successful Stripe payment with session ID:", sessionId);
+          console.log("Processing Stripe payment callback with session ID:", sessionId);
+          
+          // First check if user already exists
+          const { data: existingUser } = await supabase.auth.getUser();
+          if (existingUser?.user) {
+            console.log("User already exists and is logged in:", existingUser.user.email);
+            navigate('/dashboard');
+            return;
+          }
+
+          // Fetch pending signup data
           const { data: pendingSignup, error: pendingSignupError } = await supabase
             .from('pending_signups')
             .select('*')
             .eq('stripe_session_id', sessionId)
-            .single();
+            .maybeSingle();
 
           if (pendingSignupError) {
             console.error("Error fetching pending signup:", pendingSignupError);
-            throw new Error("Failed to fetch pending signup data");
+            throw new Error("Failed to fetch signup data. Please contact support.");
           }
 
           if (!pendingSignup) {
             console.error("No pending signup found for session:", sessionId);
-            throw new Error("No pending signup found for this session");
+            throw new Error("No signup data found. Please try again or contact support.");
           }
 
-          console.log("Found pending signup:", pendingSignup);
+          console.log("Found pending signup for email:", pendingSignup.email);
           const signupData = pendingSignup as PendingSignup;
 
-          // Sign up the user with their stored details
-          console.log("Attempting to create user account for:", signupData.email);
+          // Create the user account
+          console.log("Creating user account for:", signupData.email);
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: signupData.email,
             password: signupData.password,
@@ -70,13 +80,17 @@ export const AuthCallback = () => {
           });
 
           if (signUpError) {
-            console.error("Error signing up user:", signUpError);
+            console.error("Error creating user account:", signUpError);
             throw signUpError;
           }
 
-          console.log("User account created successfully, attempting immediate sign in");
+          if (!signUpData?.user) {
+            throw new Error("Failed to create user account");
+          }
 
-          // Sign in the user immediately after signup
+          console.log("User account created, proceeding with sign in");
+
+          // Sign in the user immediately
           const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
             email: signupData.email,
             password: signupData.password
@@ -84,17 +98,17 @@ export const AuthCallback = () => {
 
           if (signInError || !session) {
             console.error("Error signing in user:", signInError);
-            throw new Error("Failed to sign in after payment");
+            throw new Error("Failed to sign in after account creation");
           }
 
           console.log("User signed in successfully:", session.user.id);
 
           // Create a new session and invalidate others
-          console.log("Creating new session and invalidating others...");
+          console.log("Creating new session...");
           const newSession = await createNewSession(session.user.id);
           
           if (!newSession) {
-            throw new Error("Failed to create new session");
+            throw new Error("Failed to create session");
           }
 
           // Delete the pending signup
@@ -104,8 +118,8 @@ export const AuthCallback = () => {
             .eq('stripe_session_id', sessionId);
 
           if (deleteError) {
-            console.error("Error deleting pending signup:", deleteError);
-            // Don't throw here, as the user is already signed in
+            console.error("Error cleaning up pending signup:", deleteError);
+            // Don't throw here as user is already signed in
           }
 
           toast({
@@ -125,47 +139,16 @@ export const AuthCallback = () => {
         }
 
         // Create a new session and invalidate others
-        console.log("Creating new session and invalidating others...");
+        console.log("Creating new session...");
         const newSession = await createNewSession(session.user.id);
         
         if (!newSession) {
-          throw new Error("Failed to create new session");
+          throw new Error("Failed to create session");
         }
 
-        // Check if user exists in profiles
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', session.user.email)
-          .single();
-
-        if (profileError || !profile) {
-          console.log('No profile found, redirecting to signup');
-          await supabase.auth.signOut();
-          toast({
-            title: "Welcome to SkyGuide!",
-            description: "Please select a subscription plan to get started."
-          });
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        // Check if profile has subscription
-        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log('No subscription plan, redirecting to pricing');
-          await supabase.auth.signOut();
-          toast({
-            title: "Welcome Back!",
-            description: "Please select a subscription plan to continue."
-          });
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        // All good, redirect to dashboard
         toast({
           title: "Welcome back!",
-          description: "You've been successfully signed in. Any other active sessions have been ended."
+          description: "You've been successfully signed in."
         });
         navigate('/dashboard');
 
@@ -174,7 +157,7 @@ export const AuthCallback = () => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message || "An unexpected error occurred. Please try again."
+          description: error.message || "An unexpected error occurred. Please try again or contact support."
         });
         navigate('/login');
       }
