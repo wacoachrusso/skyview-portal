@@ -34,21 +34,28 @@ export const AuthCallback = () => {
         
         // If coming from Stripe checkout, handle the payment success flow
         if (sessionId) {
-          console.log("Processing successful Stripe payment...");
+          console.log("Processing successful Stripe payment with session ID:", sessionId);
           const { data: pendingSignup, error: pendingSignupError } = await supabase
             .from('pending_signups')
             .select('*')
             .eq('stripe_session_id', sessionId)
             .single();
 
-          if (pendingSignupError || !pendingSignup) {
-            console.error("No pending signup found for session:", sessionId);
-            throw new Error("Invalid checkout session");
+          if (pendingSignupError) {
+            console.error("Error fetching pending signup:", pendingSignupError);
+            throw new Error("Failed to fetch pending signup data");
           }
 
+          if (!pendingSignup) {
+            console.error("No pending signup found for session:", sessionId);
+            throw new Error("No pending signup found for this session");
+          }
+
+          console.log("Found pending signup:", pendingSignup);
           const signupData = pendingSignup as PendingSignup;
 
           // Sign up the user with their stored details
+          console.log("Attempting to create user account for:", signupData.email);
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: signupData.email,
             password: signupData.password,
@@ -67,6 +74,8 @@ export const AuthCallback = () => {
             throw signUpError;
           }
 
+          console.log("User account created successfully, attempting immediate sign in");
+
           // Sign in the user immediately after signup
           const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
             email: signupData.email,
@@ -78,6 +87,8 @@ export const AuthCallback = () => {
             throw new Error("Failed to sign in after payment");
           }
 
+          console.log("User signed in successfully:", session.user.id);
+
           // Create a new session and invalidate others
           console.log("Creating new session and invalidating others...");
           const newSession = await createNewSession(session.user.id);
@@ -87,10 +98,15 @@ export const AuthCallback = () => {
           }
 
           // Delete the pending signup
-          await supabase
+          const { error: deleteError } = await supabase
             .from('pending_signups')
             .delete()
             .eq('stripe_session_id', sessionId);
+
+          if (deleteError) {
+            console.error("Error deleting pending signup:", deleteError);
+            // Don't throw here, as the user is already signed in
+          }
 
           toast({
             title: "Welcome to SkyGuide!",
@@ -158,7 +174,7 @@ export const AuthCallback = () => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "An unexpected error occurred. Please try again."
+          description: error.message || "An unexpected error occurred. Please try again."
         });
         navigate('/login');
       }
