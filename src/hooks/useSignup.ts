@@ -85,9 +85,11 @@ export const useSignup = () => {
           });
 
           if (checkoutUrl) {
+            console.log('Redirecting to checkout URL:', checkoutUrl);
             window.location.href = checkoutUrl;
             return;
           } else {
+            console.error('No checkout URL received');
             throw new Error('Failed to create checkout session');
           }
         } catch (error) {
@@ -106,17 +108,22 @@ export const useSignup = () => {
       }
 
       // Handle free plan signup
+      console.log('Proceeding with free plan signup');
       const signupResult = await handleFreeSignup({
         ...formData,
         assistantId: assistant.assistant_id
       });
       
       if (signupResult) {
+        console.log('Free signup successful');
         toast({
           title: "Account created",
           description: "Please check your email to verify your account.",
         });
         navigate('/login');
+      } else {
+        console.error('Free signup failed without throwing an error');
+        throw new Error('Signup failed. Please try again.');
       }
 
     } catch (error) {
