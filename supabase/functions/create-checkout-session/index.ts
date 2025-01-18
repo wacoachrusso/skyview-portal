@@ -1,77 +1,41 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Stripe } from 'https://esm.sh/stripe@12.0.0';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import Stripe from 'https://esm.sh/stripe@12.18.0?target=deno'
 
-console.log("Hello from Create Checkout Session!");
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+})
 
 serve(async (req) => {
-  // Enable CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      }
-    });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Parse request body
-    const { priceId, email, sessionToken } = await req.json();
-    console.log('Received request with:', { priceId, email });
+    console.log('Received request to create checkout session')
+    
+    const { priceId, email, mode = 'subscription' } = await req.json()
     
     if (!priceId || !email) {
-      console.error('Missing required fields:', { priceId, email });
-      throw new Error('Price ID and email are required');
+      console.error('Missing required parameters:', { priceId, email })
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-      httpClient: Stripe.createFetchHttpClient(),
-    });
+    console.log('Creating checkout session for:', { email, priceId, mode })
 
-    // Check if customer exists and has active subscription
-    console.log('Checking for existing customer with email:', email);
-    const existingCustomers = await stripe.customers.list({
-      email: email,
-      limit: 1
-    });
-
-    let customerId = undefined;
-    if (existingCustomers.data.length > 0) {
-      customerId = existingCustomers.data[0].id;
-      console.log('Found existing customer:', customerId);
-
-      // Check for active subscriptions
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'active',
-        price: priceId,
-        limit: 1
-      });
-
-      if (subscriptions.data.length > 0) {
-        console.log('Customer already has active subscription');
-        return new Response(
-          JSON.stringify({ error: 'You already have an active subscription' }),
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-            },
-            status: 400,
-          },
-        );
-      }
-    }
-
-    // Create Stripe checkout session
-    console.log('Creating checkout session...');
+    // Create a new checkout session
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : email,
+      mode,
       payment_method_types: ['card'],
       line_items: [
         {
@@ -79,37 +43,44 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/?canceled=true`,
+      success_url: `${req.headers.get('origin')}/signup?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get('origin')}/signup`,
+      customer_email: email,
       metadata: {
-        email: email
-      }
-    });
+        email: email,
+      },
+    })
 
-    console.log('Checkout session created successfully:', session.id);
+    console.log('Successfully created checkout session:', session.id)
 
     return new Response(
       JSON.stringify({ url: session.url }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        status: 200,
-      },
-    );
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+
   } catch (error) {
-    console.error('Error in create-checkout-session:', error);
+    console.error('Error creating checkout session:', error)
+    
+    // Check if it's a Stripe error
+    if (error instanceof Stripe.errors.StripeError) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { 
+          status: error.statusCode || 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        status: 400,
-      },
-    );
+      JSON.stringify({ error: 'Internal server error' }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
-});
+})
