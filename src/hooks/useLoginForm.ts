@@ -86,7 +86,9 @@ export const useLoginForm = () => {
         email: formData.email.trim(),
         password: formData.password,
         options: {
-          persistSession: formData.rememberMe
+          data: {
+            persistSession: formData.rememberMe
+          }
         }
       });
 
