@@ -34,8 +34,9 @@ function AppContent() {
       
       if (session) {
         console.log('User is logged in, current path:', location.pathname);
-        // Only redirect if on login, signup, or root path
-        if (['/login', '/signup', '/'].includes(location.pathname)) {
+        // Only redirect if on login, signup, or root path AND not coming from dashboard
+        if (['/login', '/signup'].includes(location.pathname) || 
+            (location.pathname === '/' && !location.state?.fromDashboard)) {
           console.log('Redirecting to chat page');
           navigate('/chat');
         }
