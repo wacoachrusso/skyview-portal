@@ -25,13 +25,13 @@ export const AuthCallback = () => {
         // If coming from Stripe checkout, handle the payment success flow
         if (sessionId) {
           console.log("Processing successful Stripe payment...");
-          const { data: pendingSignup } = await supabase
+          const { data: pendingSignup, error: pendingSignupError } = await supabase
             .from('pending_signups')
             .select('*')
             .eq('stripe_session_id', sessionId)
             .single();
 
-          if (!pendingSignup) {
+          if (pendingSignupError || !pendingSignup) {
             console.error("No pending signup found for session:", sessionId);
             throw new Error("Invalid checkout session");
           }
