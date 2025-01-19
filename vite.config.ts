@@ -22,6 +22,10 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       headers: {
         'Access-Control-Allow-Origin': '*',
+      },
+      hmr: {
+        protocol: 'ws',
+        host: 'localhost'
       }
     },
     preview: {
@@ -35,7 +39,7 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
       rollupOptions: {
         onwarn(warning, warn) {
-          console.warn('Build warning:', warning);
+          console.log('Build warning:', warning);
           warn(warning);
         },
       },
