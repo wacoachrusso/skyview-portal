@@ -54,7 +54,7 @@ export function useChat() {
       const userMessage = await insertUserMessage(content, conversationId);
       console.log('User message inserted:', userMessage);
 
-      // Add the user message to the local state immediately, ensuring correct typing
+      // Add the user message to the local state immediately
       setMessages(prev => [...prev, {
         ...userMessage,
         role: 'user' as const
@@ -78,18 +78,19 @@ export function useChat() {
       }
       
       console.log('Received AI response:', data.response);
-      const aiMessage = await insertAIMessage(data.response, conversationId);
+      await insertAIMessage(data.response, conversationId);
       
-      // Add the AI message to the local state immediately
-      setMessages(prev => [...prev, {
-        ...aiMessage,
+      // Add the AI message to the local state
+      const newAiMessage: Message = {
         content: data.response,
-        role: 'assistant' as const,
+        role: 'assistant',
         conversation_id: conversationId,
         created_at: new Date().toISOString(),
         id: crypto.randomUUID(),
         user_id: null
-      }]);
+      };
+      
+      setMessages(prev => [...prev, newAiMessage]);
 
       console.log('AI message inserted successfully');
 
