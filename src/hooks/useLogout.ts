@@ -8,7 +8,7 @@ export const useLogout = () => {
 
   const handleLogout = async () => {
     try {
-      console.log("Starting manual logout process...");
+      console.log("Starting logout process...");
       
       // Get current session first
       const { data: { session } } = await supabase.auth.getSession();
@@ -34,17 +34,13 @@ export const useLogout = () => {
       console.log("Clearing local storage...");
       localStorage.clear();
       
-      // Sign out from Supabase (globally)
-      console.log("Signing out from Supabase...");
-      const { error } = await supabase.auth.signOut({ 
-        scope: 'global' 
-      });
+      // Sign out from Supabase (locally first)
+      console.log("Signing out locally...");
+      await supabase.auth.signOut({ scope: 'local' });
       
-      if (error) {
-        console.error("Error during signOut:", error);
-        navigate("/login", { replace: true });
-        return;
-      }
+      // Then attempt global sign out
+      console.log("Attempting global sign out...");
+      await supabase.auth.signOut({ scope: 'global' });
 
       console.log("Logout successful, redirecting to login page...");
       
