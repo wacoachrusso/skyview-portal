@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
@@ -11,6 +11,7 @@ export function NavbarContainer() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     let mounted = true;
@@ -18,7 +19,7 @@ export function NavbarContainer() {
     const checkAuth = async () => {
       try {
         console.log('Checking auth state in Navbar');
-        setIsLoading(true); // Ensure loading state is set
+        setIsLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
@@ -45,7 +46,7 @@ export function NavbarContainer() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
       if (mounted) {
-        setIsLoading(true); // Set loading when auth state changes
+        setIsLoading(true);
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in:', session.user.email);
           setIsLoggedIn(true);
@@ -62,6 +63,16 @@ export function NavbarContainer() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Add effect to recheck auth when location changes
+  useEffect(() => {
+    const checkAuthOnRouteChange = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+    
+    checkAuthOnRouteChange();
+  }, [location.pathname]);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
