@@ -447,7 +447,9 @@ export type Database = {
           push_notifications: boolean | null
           push_subscription: Json | null
           query_count: number | null
+          stripe_customer_id: string | null
           subscription_plan: string | null
+          subscription_status: string | null
           two_factor_backup_codes: string[] | null
           two_factor_enabled: boolean | null
           user_type: string | null
@@ -471,7 +473,9 @@ export type Database = {
           push_notifications?: boolean | null
           push_subscription?: Json | null
           query_count?: number | null
+          stripe_customer_id?: string | null
           subscription_plan?: string | null
+          subscription_status?: string | null
           two_factor_backup_codes?: string[] | null
           two_factor_enabled?: boolean | null
           user_type?: string | null
@@ -495,7 +499,9 @@ export type Database = {
           push_notifications?: boolean | null
           push_subscription?: Json | null
           query_count?: number | null
+          stripe_customer_id?: string | null
           subscription_plan?: string | null
+          subscription_status?: string | null
           two_factor_backup_codes?: string[] | null
           two_factor_enabled?: boolean | null
           user_type?: string | null

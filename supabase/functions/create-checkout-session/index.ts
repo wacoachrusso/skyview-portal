@@ -1,6 +1,6 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import Stripe from 'https://esm.sh/stripe@12.18.0?target=deno'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
+import Stripe from "https://esm.sh/stripe@12.18.0?target=deno"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,19 +33,45 @@ serve(async (req) => {
 
     console.log('Creating checkout session for:', { email, priceId, mode })
 
+    // First check if this customer already exists
+    const customers = await stripe.customers.list({
+      email: email,
+      limit: 1
+    })
+
+    let customerId = undefined
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id
+      // Check if already subscribed to this price
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customers.data[0].id,
+        status: 'active',
+        price: priceId,
+        limit: 1
+      })
+
+      if (subscriptions.data.length > 0) {
+        console.error('Customer already subscribed:', email)
+        return new Response(
+          JSON.stringify({ error: 'Already subscribed to this plan' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
     // Create a new checkout session
     const session = await stripe.checkout.sessions.create({
-      mode,
-      payment_method_types: ['card'],
+      customer: customerId,
+      customer_email: customerId ? undefined : email,
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
-      success_url: `${req.headers.get('origin')}/signup?session_id={CHECKOUT_SESSION_ID}`,
+      mode,
+      success_url: `${req.headers.get('origin')}/auth/callback?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/signup`,
-      customer_email: email,
       metadata: {
         email: email,
       },
@@ -63,20 +89,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error creating checkout session:', error)
-    
-    // Check if it's a Stripe error
-    if (error instanceof Stripe.errors.StripeError) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { 
-          status: error.statusCode || 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

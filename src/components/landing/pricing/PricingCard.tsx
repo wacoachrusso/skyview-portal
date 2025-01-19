@@ -1,68 +1,150 @@
-import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-
-interface PricingPlan {
-  name: string;
-  price: string;
-  period?: string;
-  description: string;
-  features: string[];
-  buttonText: string;
-  gradient: string;
-  isPopular?: boolean;
-  priceId: string | null;
-  mode: string | null;
-}
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PricingCardProps {
-  plan: PricingPlan;
-  onSelect: (plan: PricingPlan) => void;
+  name: string;
+  price: string;
+  description: string;
+  features: string[];
+  priceId: string;
+  mode?: 'subscription' | 'payment';
+  popular?: boolean;
 }
 
-export function PricingCard({ plan, onSelect }: PricingCardProps) {
+export const PricingCard = ({ 
+  name, 
+  price, 
+  description, 
+  features, 
+  priceId,
+  mode = 'subscription',
+  popular = false 
+}: PricingCardProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handlePlanSelection = async () => {
+    try {
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication error');
+      }
+      
+      if (!session) {
+        console.log('User not logged in, redirecting to signup with plan:', {
+          name: name.toLowerCase(),
+          priceId,
+          mode
+        });
+        
+        navigate('/signup', { 
+          state: { 
+            selectedPlan: name.toLowerCase(),
+            priceId,
+            mode
+          }
+        });
+        return;
+      }
+
+      const userEmail = session.user.email;
+      if (!userEmail) {
+        throw new Error('User email not found');
+      }
+
+      console.log('Making request to create-checkout-session with:', {
+        priceId,
+        mode,
+        email: userEmail
+      });
+
+      // Get current session token
+      const sessionToken = localStorage.getItem('session_token');
+      if (!sessionToken) {
+        throw new Error('No session token found');
+      }
+
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: JSON.stringify({
+          priceId,
+          mode,
+          email: userEmail,
+          sessionToken
+        }),
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      console.log('Checkout session response:', response);
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const { data: { url } } = response;
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process payment. Please try again.",
+      });
+    }
+  };
+
   return (
-    <Card
-      className={`relative ${plan.gradient} border-2 border-white/10 backdrop-blur-sm p-6 rounded-xl transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/5 mt-6`}
-    >
-      {plan.isPopular && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-auto whitespace-nowrap">
-          <span className="bg-brand-gold text-brand-navy px-6 py-1 rounded-full text-sm font-semibold">
-            Most Popular
-          </span>
-        </div>
-      )}
-
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
-        <div className="flex items-baseline justify-center gap-1">
-          <span className="text-4xl font-bold text-white">{plan.price}</span>
-          {plan.period && (
-            <span className="text-gray-400">{plan.period}</span>
+    <Card className={`w-full max-w-sm mx-auto ${popular ? 'border-brand-gold shadow-xl' : 'border-gray-200'}`}>
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center">
+          {name}
+          {popular && (
+            <span className="ml-2 inline-block px-2 py-1 text-xs font-semibold text-black bg-brand-gold rounded-full">
+              Popular
+            </span>
           )}
+        </CardTitle>
+        <div className="text-center">
+          <span className="text-4xl font-bold">{price}</span>
+          {mode === 'subscription' && <span className="text-gray-500 ml-1">/month</span>}
         </div>
-        <p className="text-gray-400 mt-2">{plan.description}</p>
-      </div>
-
-      <ul className="space-y-4 mb-8">
-        {plan.features.map((feature) => (
-          <li key={feature} className="flex items-start gap-3">
-            <Check className="h-5 w-5 text-brand-gold shrink-0 mt-0.5" />
-            <span className="text-gray-300">{feature}</span>
-          </li>
-        ))}
-      </ul>
-
-      <Button 
-        onClick={() => onSelect(plan)}
-        className={`w-full ${
-          plan.isPopular 
-            ? "bg-brand-gold hover:bg-brand-gold/90 text-brand-navy"
-            : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
-        } font-semibold`}
-      >
-        {plan.buttonText}
-      </Button>
+        <p className="text-center text-gray-500 mt-2">{description}</p>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-3">
+          {features.map((feature, index) => (
+            <li key={index} className="flex items-center">
+              <Check className="h-5 w-5 text-brand-gold mr-2" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+      <CardFooter>
+        <Button
+          onClick={handlePlanSelection}
+          className={`w-full ${
+            popular
+              ? 'bg-brand-gold hover:bg-brand-gold/90 text-black'
+              : 'bg-brand-navy hover:bg-brand-navy/90 text-white'
+          }`}
+        >
+          Get Started
+        </Button>
+      </CardFooter>
     </Card>
   );
-}
+};
