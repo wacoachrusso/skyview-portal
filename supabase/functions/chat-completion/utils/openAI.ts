@@ -32,7 +32,7 @@ export async function addMessageToThread(threadId: string, content: string) {
     },
     body: JSON.stringify({
       role: 'user',
-      content: `${content}\n\nYou MUST ALWAYS include a specific section and page number from the contract that supports your answer, formatted exactly like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If there is no specific reference available for this query, you must explicitly state that and explain why in the reference section. Remember that you can only answer questions about the contract - for any other topics, inform the user that you can only discuss contract-related matters.`
+      content: `${content}\n\nYou MUST ALWAYS provide a specific section and page number from the contract in your response. Format it EXACTLY as: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If you cannot find a specific reference for the query, you MUST respond with: "I cannot answer this question without a specific contract reference. Please ask about a specific section of the contract." Do not provide general responses without contract references.`
     })
   });
 
@@ -56,7 +56,7 @@ export async function runAssistant(threadId: string) {
     },
     body: JSON.stringify({
       assistant_id: assistantId,
-      instructions: "You MUST ALWAYS provide answers based on the contract content and MUST include a reference section with the specific section and page number that supports your answer. Format ALL references as [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for a query, you MUST clearly explain why in the reference section and suggest the user to rephrase their question to focus on contract-related matters. Never provide answers without proper contract references. If a user asks about non-contract matters, politely redirect them to focus on contract-related questions only."
+      instructions: "You are a contract expert that MUST ALWAYS provide specific contract references. Every response MUST include [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If you cannot find a specific reference, respond with: 'I cannot answer this question without a specific contract reference. Please ask about a specific section of the contract.' Never provide general responses or explanations without exact contract references. If a user asks about non-contract matters, inform them that you can only discuss specific contract sections."
     })
   });
 

@@ -1,8 +1,12 @@
 export function cleanResponse(response: string): string {
-  // Ensure there's a reference section
-  if (!response.includes('[REF]')) {
-    return response + '\n\n[REF]Note: This response requires clarification. Please rephrase your question to focus on specific contract sections.[/REF]';
+  // Check if response has a proper reference with section and page number
+  const hasProperReference = /\[REF\]Section \d+(\.\d+)?.*?, Page \d+:.*?\[\/REF\]/i.test(response);
+  
+  if (!hasProperReference) {
+    console.error('Response missing proper contract reference:', response);
+    throw new Error('INVALID_REFERENCE: Response must include specific contract section and page number');
   }
+  
   return response;
 }
 
