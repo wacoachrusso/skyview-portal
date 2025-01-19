@@ -45,6 +45,11 @@ export function ChatContent({
     }
   }, [onNewChat, setStoredMessages]);
 
+  const handleSendMessage = useCallback(async (content: string) => {
+    console.log('Sending message in ChatContent:', content);
+    await onSendMessage(content);
+  }, [onSendMessage]);
+
   // Check for free trial status after each message
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
@@ -83,7 +88,7 @@ export function ChatContent({
       />
       <div className="flex-shrink-0">
         <ChatInput 
-          onSendMessage={onSendMessage} 
+          onSendMessage={handleSendMessage} 
           isLoading={isLoading}
           disabled={isOffline} 
         />
