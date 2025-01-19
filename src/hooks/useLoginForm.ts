@@ -43,32 +43,47 @@ export const useLoginForm = () => {
   };
 
   const handleLoginSuccess = async (userId: string) => {
-    await createNewSession(userId);
-    
-    if (formData.rememberMe) {
-      console.log('Setting persistent session...');
-      document.cookie = `refresh_token_expires_at=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/; secure; samesite=strict`;
-    }
+    try {
+      console.log('Creating new session for user:', userId);
+      await createNewSession(userId);
+      
+      if (formData.rememberMe) {
+        console.log('Setting persistent session...');
+        const refreshToken = localStorage.getItem('supabase.refresh-token');
+        if (refreshToken) {
+          document.cookie = `sb-refresh-token=${refreshToken}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`;
+        }
+      }
 
-    toast({
-      title: "Welcome back!",
-      description: "You have successfully logged in."
-    });
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in."
+      });
+    } catch (error) {
+      console.error('Error in handleLoginSuccess:', error);
+      throw error;
+    }
   };
 
   const handleProfileRedirect = async (userId: string) => {
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('user_type, airline')
-      .eq('id', userId)
-      .single();
+    try {
+      console.log('Checking user profile for redirect');
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('user_type, airline')
+        .eq('id', userId)
+        .single();
 
-    if (userProfile?.user_type && userProfile?.airline) {
-      console.log('Profile complete, redirecting to dashboard');
-      navigate('/dashboard');
-    } else {
-      console.log('Profile incomplete, redirecting to complete-profile');
-      navigate('/complete-profile');
+      if (userProfile?.user_type && userProfile?.airline) {
+        console.log('Profile complete, redirecting to dashboard');
+        navigate('/dashboard');
+      } else {
+        console.log('Profile incomplete, redirecting to complete-profile');
+        navigate('/complete-profile');
+      }
+    } catch (error) {
+      console.error('Error in handleProfileRedirect:', error);
+      throw error;
     }
   };
 
@@ -77,9 +92,12 @@ export const useLoginForm = () => {
     if (loading) return;
     
     setLoading(true);
+    console.log('Starting login process...');
 
     try {
-      console.log('Starting login process...');
+      // Clear any existing session data
+      localStorage.removeItem('session_token');
+      await supabase.auth.signOut();
       
       const profileData = await checkExistingProfile(formData.email);
 
@@ -96,6 +114,7 @@ export const useLoginForm = () => {
         }
       }
 
+      console.log('Attempting to sign in user:', formData.email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
         password: formData.password,
@@ -157,6 +176,7 @@ export const useLoginForm = () => {
         return;
       }
 
+      console.log('Login successful, handling post-login actions');
       await handleLoginSuccess(data.session.user.id);
       await resetLoginAttempts(formData.email);
       await handleProfileRedirect(data.session.user.id);
