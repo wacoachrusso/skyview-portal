@@ -44,6 +44,7 @@ export function useChat() {
     try {
       setIsLoading(true);
       
+      // Ensure we have a conversation ID
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
@@ -52,6 +53,9 @@ export function useChat() {
       console.log('Inserting user message into conversation:', conversationId);
       const userMessage = await insertUserMessage(content, conversationId);
       console.log('User message inserted:', userMessage);
+
+      // Add the user message to the local state immediately
+      setMessages(prev => [...prev, userMessage]);
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
@@ -91,6 +95,7 @@ export function useChat() {
     console.log('Starting new chat session...');
     setMessages([]);
     setCurrentConversationId(null);
+    setIsLoading(false);
   };
 
   useEffect(() => {
