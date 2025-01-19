@@ -41,9 +41,9 @@ export function useChat() {
       return;
     }
     
-    setIsLoading(true);
-    
     try {
+      setIsLoading(true);
+      
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
@@ -60,7 +60,15 @@ export function useChat() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from chat-completion:', error);
+        throw error;
+      }
+
+      if (!data || !data.response) {
+        console.error('Invalid response from chat-completion:', data);
+        throw new Error('Invalid response from AI');
+      }
       
       console.log('Received AI response, inserting message');
       await insertAIMessage(data.response, conversationId);
