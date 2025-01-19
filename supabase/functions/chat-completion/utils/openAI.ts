@@ -32,7 +32,7 @@ export async function addMessageToThread(threadId: string, content: string) {
     },
     body: JSON.stringify({
       role: 'user',
-      content: `${content}\n\nPlease include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section.`
+      content: `${content}\n\nYou MUST ALWAYS include a specific section and page number from the contract that supports your answer, formatted exactly like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If there is no specific reference available for this query, you must explicitly state that and explain why in the reference section. Remember that you can only answer questions about the contract - for any other topics, inform the user that you can only discuss contract-related matters.`
     })
   });
 
@@ -56,7 +56,7 @@ export async function runAssistant(threadId: string) {
     },
     body: JSON.stringify({
       assistant_id: assistantId,
-      instructions: "Always provide answers based on the contract content. Every response must include a reference section with the specific section and page number from the contract that supports your answer. Format references as [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for a query, clearly state this in the reference section."
+      instructions: "You MUST ALWAYS provide answers based on the contract content and MUST include a reference section with the specific section and page number that supports your answer. Format ALL references as [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for a query, you MUST clearly explain why in the reference section and suggest the user to rephrase their question to focus on contract-related matters. Never provide answers without proper contract references. If a user asks about non-contract matters, politely redirect them to focus on contract-related questions only."
     })
   });
 

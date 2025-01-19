@@ -1,17 +1,27 @@
-export function cleanResponse(text: string): string {
-  return text
-    .replace(/【.*?】/g, '')
-    .replace(/\[\d+:\d+†.*?\]/g, '')
-    .trim();
+export function cleanResponse(response: string): string {
+  // Ensure there's a reference section
+  if (!response.includes('[REF]')) {
+    return response + '\n\n[REF]Note: This response requires clarification. Please rephrase your question to focus on specific contract sections.[/REF]';
+  }
+  return response;
 }
 
 export function containsNonContractContent(content: string): boolean {
+  // List of keywords that might indicate non-contract questions
   const nonContractKeywords = [
-    'weather', 'stocks', 'recipe', 'movie', 'game', 'sports',
-    'cryptocurrency', 'dating', 'shopping', 'entertainment'
+    'weather',
+    'restaurant',
+    'movie',
+    'sports',
+    'game',
+    'recipe',
+    'cook',
+    'personal',
+    'relationship',
+    'dating',
+    'entertainment'
   ];
 
-  return nonContractKeywords.some(keyword => 
-    content.toLowerCase().includes(keyword)
-  );
+  const contentLower = content.toLowerCase();
+  return nonContractKeywords.some(keyword => contentLower.includes(keyword));
 }
