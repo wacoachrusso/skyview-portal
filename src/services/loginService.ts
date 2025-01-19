@@ -7,7 +7,7 @@ export const checkExistingProfile = async (email: string) => {
     .from('profiles')
     .select('id, login_attempts, account_status')
     .eq('email', email.trim())
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error checking profile:', error);
