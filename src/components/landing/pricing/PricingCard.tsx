@@ -13,6 +13,7 @@ interface PricingCardProps {
   priceId: string;
   mode?: 'subscription' | 'payment';
   popular?: boolean;
+  onSelect?: () => Promise<void>;
 }
 
 export const PricingCard = ({ 
@@ -22,12 +23,18 @@ export const PricingCard = ({
   features, 
   priceId,
   mode = 'subscription',
-  popular = false 
+  popular = false,
+  onSelect 
 }: PricingCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handlePlanSelection = async () => {
+    if (onSelect) {
+      await onSelect();
+      return;
+    }
+
     try {
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
