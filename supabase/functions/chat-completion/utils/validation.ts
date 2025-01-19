@@ -7,7 +7,10 @@ export function cleanResponse(response: string): string {
     throw new Error('INVALID_REFERENCE: Response must include specific contract section and page number');
   }
   
-  return response;
+  // Remove [REF] and [/REF] tags while keeping the content
+  const cleanedResponse = response.replace(/\[REF\](.*?)\[\/REF\]/g, '$1');
+  
+  return cleanedResponse;
 }
 
 export function containsNonContractContent(content: string): boolean {
