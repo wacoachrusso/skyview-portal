@@ -32,7 +32,8 @@ export const AuthCallback = () => {
       try {
         console.log("Starting auth callback process with params:", {
           sessionId,
-          provider
+          provider,
+          hasSearchParams: searchParams.toString()
         });
         
         if (sessionId) {
@@ -40,7 +41,11 @@ export const AuthCallback = () => {
           
           // First check if user already exists
           const { data: existingUser, error: userError } = await supabase.auth.getUser();
-          console.log("Existing user check result:", { existingUser, error: userError });
+          console.log("Existing user check result:", { 
+            hasUser: !!existingUser?.user,
+            email: existingUser?.user?.email,
+            error: userError 
+          });
 
           if (existingUser?.user) {
             console.log("User already exists and is logged in:", existingUser.user.email);
@@ -48,15 +53,35 @@ export const AuthCallback = () => {
             return;
           }
 
-          // Fetch pending signup data
-          console.log("Fetching pending signup data for session:", sessionId);
-          const { data: pendingSignup, error: pendingSignupError } = await supabase
-            .from('pending_signups')
-            .select('*')
-            .eq('stripe_session_id', sessionId)
-            .maybeSingle();
+          // Fetch pending signup data with retry logic
+          let pendingSignup = null;
+          let pendingSignupError = null;
+          
+          for (let i = 0; i < 3; i++) {
+            console.log(`Attempt ${i + 1}: Fetching pending signup data for session:`, sessionId);
+            const result = await supabase
+              .from('pending_signups')
+              .select('*')
+              .eq('stripe_session_id', sessionId)
+              .maybeSingle();
+            
+            if (result.data) {
+              pendingSignup = result.data;
+              break;
+            }
+            
+            pendingSignupError = result.error;
+            if (i < 2) {
+              console.log("Retrying pending signup fetch in 1 second...");
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
 
-          console.log("Pending signup query result:", { pendingSignup, error: pendingSignupError });
+          console.log("Final pending signup query result:", { 
+            hasPendingSignup: !!pendingSignup,
+            pendingSignupEmail: pendingSignup?.email,
+            error: pendingSignupError 
+          });
 
           if (pendingSignupError) {
             console.error("Error fetching pending signup:", pendingSignupError);
@@ -65,7 +90,13 @@ export const AuthCallback = () => {
 
           if (!pendingSignup) {
             console.error("No pending signup found for session:", sessionId);
-            throw new Error("No signup data found. Please try again or contact support.");
+            toast({
+              variant: "destructive",
+              title: "Signup Error",
+              description: "Your signup data was not found. Please try signing up again or contact support if the issue persists."
+            });
+            navigate('/?scrollTo=pricing-section');
+            return;
           }
 
           const signupData = pendingSignup as PendingSignup;
@@ -93,7 +124,11 @@ export const AuthCallback = () => {
             }
           });
 
-          console.log("Signup result:", { signUpData, error: signUpError });
+          console.log("Signup result:", { 
+            success: !!signUpData?.user,
+            userId: signUpData?.user?.id,
+            error: signUpError 
+          });
 
           if (signUpError) {
             console.error("Error creating user account:", signUpError);
@@ -182,7 +217,7 @@ export const AuthCallback = () => {
           title: "Error",
           description: error.message || "An unexpected error occurred. Please try again or contact support."
         });
-        navigate('/login');
+        navigate('/?scrollTo=pricing-section');
       }
     };
 
