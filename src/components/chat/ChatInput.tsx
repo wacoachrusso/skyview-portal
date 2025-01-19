@@ -47,10 +47,10 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={disabled ? "Chat unavailable while offline" : "Ask about your contract..."}
-            className="min-h-[60px] w-full pr-32 resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
+            className="min-h-[60px] w-full pr-[120px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
             disabled={isLoading || disabled}
           />
-          <div className="absolute right-2 flex items-center gap-2">
+          <div className="absolute right-2 flex items-center space-x-1 h-full pr-1">
             <Button
               type="button"
               size="icon"

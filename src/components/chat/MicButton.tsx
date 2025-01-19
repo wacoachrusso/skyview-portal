@@ -17,6 +17,7 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptRef = useRef<string>("");
 
   const resetSilenceTimeout = () => {
     if (silenceTimeoutRef.current) {
@@ -41,7 +42,7 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognitionInstance = new SpeechRecognition();
-        recognitionInstance.continuous = true;
+        recognitionInstance.continuous = false; // Changed to false to prevent duplicates
         recognitionInstance.interimResults = true;
         recognitionInstance.lang = 'en-US';
 
@@ -52,7 +53,13 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
             .join(' ');
           
           console.log('Speech recognition result:', transcript);
-          onRecognized(transcript);
+          
+          // Only update if the transcript has changed
+          if (transcript !== transcriptRef.current) {
+            transcriptRef.current = transcript;
+            onRecognized(transcript);
+          }
+          
           startSilenceDetection();
         };
 
@@ -66,6 +73,7 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
           console.log('Speech recognition ended');
           setIsListening(false);
           resetSilenceTimeout();
+          transcriptRef.current = ""; // Reset transcript reference
         };
 
         setRecognition(recognitionInstance);
@@ -94,6 +102,7 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
     } else {
       console.log('Starting speech recognition');
       try {
+        transcriptRef.current = ""; // Reset transcript reference
         recognition.start();
         setIsListening(true);
         startSilenceDetection();
