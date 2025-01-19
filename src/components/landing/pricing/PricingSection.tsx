@@ -17,8 +17,13 @@ export function PricingSection() {
           {plans.map((plan) => (
             <PricingCard
               key={plan.name}
-              plan={plan}
-              onSelect={handlePlanSelection}
+              name={plan.name}
+              price={plan.price}
+              description={plan.description}
+              features={plan.features}
+              priceId={plan.priceId}
+              mode={plan.mode}
+              popular={plan.isPopular}
             />
           ))}
         </div>
