@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendButton } from "./SendButton";
 import { MicButton } from "./MicButton";
+import { ImagePlus } from "lucide-react";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => Promise<void>;
@@ -32,6 +33,11 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     }
   };
 
+  const handleImageUpload = () => {
+    // TODO: Implement image upload functionality
+    console.log('Image upload clicked');
+  };
+
   return (
     <div className="flex flex-col">
       <form onSubmit={handleSubmit} className="p-4 border-t border-border/50">
@@ -41,10 +47,21 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={disabled ? "Chat unavailable while offline" : "Ask about your contract..."}
-            className="min-h-[60px] w-full pr-24 resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
+            className="min-h-[60px] w-full pr-32 resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
             disabled={isLoading || disabled}
           />
           <div className="absolute right-2 flex items-center gap-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/10 transition-colors"
+              onClick={handleImageUpload}
+              disabled={isLoading || disabled}
+              aria-label="Upload image"
+            >
+              <ImagePlus className="h-5 w-5" />
+            </Button>
             <MicButton 
               onRecognized={setMessage} 
               disabled={isLoading || disabled}

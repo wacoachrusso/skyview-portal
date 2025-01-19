@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface MicButtonProps {
   onRecognized: (text: string) => void;
@@ -16,56 +16,61 @@ interface MicButtonProps {
 export function MicButton({ onRecognized, disabled }: MicButtonProps) {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [currentTranscript, setCurrentTranscript] = useState("");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-        
-        recognition.onresult = (event) => {
+        const recognitionInstance = new SpeechRecognition();
+        recognitionInstance.continuous = true;
+        recognitionInstance.interimResults = true;
+        recognitionInstance.lang = 'en-US';
+
+        recognitionInstance.onresult = (event) => {
           const transcript = Array.from(event.results)
             .map(result => result[0])
             .map(result => result.transcript)
-            .join('');
+            .join(' ');
           
-          // Only update if the transcript has changed
-          if (transcript !== currentTranscript) {
-            setCurrentTranscript(transcript);
-            onRecognized(transcript);
-          }
+          console.log('Speech recognition result:', transcript);
+          onRecognized(transcript);
         };
 
-        recognition.onerror = (event) => {
+        recognitionInstance.onerror = (event) => {
           console.error('Speech recognition error:', event.error);
           setIsListening(false);
         };
 
-        recognition.onend = () => {
+        recognitionInstance.onend = () => {
+          console.log('Speech recognition ended');
           setIsListening(false);
-          setCurrentTranscript(""); // Reset transcript when recognition ends
         };
 
-        setRecognition(recognition);
+        setRecognition(recognitionInstance);
       }
     }
-  }, [onRecognized, currentTranscript]);
+  }, [onRecognized]);
 
-  const toggleListening = () => {
-    if (!recognition) return;
+  const toggleListening = useCallback(() => {
+    if (!recognition) {
+      console.log('Speech recognition not available');
+      return;
+    }
 
     if (isListening) {
+      console.log('Stopping speech recognition');
       recognition.stop();
-      setCurrentTranscript(""); // Reset transcript when stopping
+      setIsListening(false);
     } else {
-      recognition.start();
-      setIsListening(true);
+      console.log('Starting speech recognition');
+      try {
+        recognition.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+      }
     }
-  };
+  }, [recognition, isListening]);
 
   return (
     <TooltipProvider>
