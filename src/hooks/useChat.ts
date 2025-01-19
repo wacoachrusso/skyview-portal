@@ -54,8 +54,11 @@ export function useChat() {
       const userMessage = await insertUserMessage(content, conversationId);
       console.log('User message inserted:', userMessage);
 
-      // Add the user message to the local state immediately
-      setMessages(prev => [...prev, userMessage]);
+      // Add the user message to the local state immediately, ensuring correct typing
+      setMessages(prev => [...prev, {
+        ...userMessage,
+        role: 'user' as const // Explicitly type the role
+      }]);
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
