@@ -57,7 +57,7 @@ export function useChat() {
       // Add the user message to the local state immediately, ensuring correct typing
       setMessages(prev => [...prev, {
         ...userMessage,
-        role: 'user' as const // Explicitly type the role
+        role: 'user' as const
       }]);
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
@@ -77,8 +77,20 @@ export function useChat() {
         throw new Error('Invalid response from AI');
       }
       
-      console.log('Received AI response, inserting message');
-      await insertAIMessage(data.response, conversationId);
+      console.log('Received AI response:', data.response);
+      const aiMessage = await insertAIMessage(data.response, conversationId);
+      
+      // Add the AI message to the local state immediately
+      setMessages(prev => [...prev, {
+        ...aiMessage,
+        content: data.response,
+        role: 'assistant' as const,
+        conversation_id: conversationId,
+        created_at: new Date().toISOString(),
+        id: crypto.randomUUID(),
+        user_id: null
+      }]);
+
       console.log('AI message inserted successfully');
 
     } catch (error) {
