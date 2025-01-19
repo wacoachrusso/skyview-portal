@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface MicButtonProps {
   onRecognized: (text: string) => void;
@@ -16,6 +16,25 @@ interface MicButtonProps {
 export function MicButton({ onRecognized, disabled }: MicButtonProps) {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetSilenceTimeout = () => {
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
+  };
+
+  const startSilenceDetection = () => {
+    resetSilenceTimeout();
+    silenceTimeoutRef.current = setTimeout(() => {
+      console.log('Silence detected, stopping recognition');
+      if (recognition && isListening) {
+        recognition.stop();
+        setIsListening(false);
+      }
+    }, 1500); // Stop after 1.5 seconds of silence
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -34,21 +53,31 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
           
           console.log('Speech recognition result:', transcript);
           onRecognized(transcript);
+          startSilenceDetection();
         };
 
         recognitionInstance.onerror = (event) => {
           console.error('Speech recognition error:', event.error);
           setIsListening(false);
+          resetSilenceTimeout();
         };
 
         recognitionInstance.onend = () => {
           console.log('Speech recognition ended');
           setIsListening(false);
+          resetSilenceTimeout();
         };
 
         setRecognition(recognitionInstance);
       }
     }
+
+    return () => {
+      resetSilenceTimeout();
+      if (recognition && isListening) {
+        recognition.stop();
+      }
+    };
   }, [onRecognized]);
 
   const toggleListening = useCallback(() => {
@@ -61,11 +90,13 @@ export function MicButton({ onRecognized, disabled }: MicButtonProps) {
       console.log('Stopping speech recognition');
       recognition.stop();
       setIsListening(false);
+      resetSilenceTimeout();
     } else {
       console.log('Starting speech recognition');
       try {
         recognition.start();
         setIsListening(true);
+        startSilenceDetection();
       } catch (error) {
         console.error('Error starting speech recognition:', error);
       }
