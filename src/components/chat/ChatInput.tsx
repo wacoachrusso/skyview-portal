@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendButton } from "./SendButton";
 import { MicButton } from "./MicButton";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,15 +15,21 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isLoading || disabled) return;
+    if ((!message.trim() && !uploadedImageUrl) || isLoading || disabled) return;
 
     try {
-      await onSendMessage(message.trim());
+      const finalMessage = uploadedImageUrl 
+        ? `${message}\n\n![Uploaded Image](${uploadedImageUrl})`
+        : message.trim();
+
+      await onSendMessage(finalMessage);
       setMessage("");
+      setUploadedImageUrl(null);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -81,14 +87,12 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
           .from('contracts')
           .getPublicUrl(filePath);
 
-        // Send message with image
-        await onSendMessage(`![Uploaded Image](${publicUrl})`);
+        setUploadedImageUrl(publicUrl);
         
         toast({
           title: "Success",
-          description: "Image uploaded successfully",
+          description: "Image uploaded successfully. You can now type your message.",
         });
-
       };
 
       input.click();
@@ -102,9 +106,31 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     }
   };
 
+  const removeUploadedImage = () => {
+    setUploadedImageUrl(null);
+  };
+
   return (
     <div className="flex flex-col">
       <form onSubmit={handleSubmit} className="p-4 border-t border-border/50">
+        {uploadedImageUrl && (
+          <div className="mb-2 relative inline-block">
+            <img 
+              src={uploadedImageUrl} 
+              alt="Upload preview" 
+              className="h-20 rounded-md"
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background/80 hover:bg-background"
+              onClick={removeUploadedImage}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
         <div className="relative flex items-center">
           <Textarea
             value={message}
@@ -121,7 +147,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
               variant="ghost"
               className="text-white hover:bg-white/10 transition-colors"
               onClick={handleImageUpload}
-              disabled={isLoading || disabled}
+              disabled={isLoading || disabled || uploadedImageUrl !== null}
               aria-label="Upload image"
             >
               <ImagePlus className="h-5 w-5" />
@@ -132,7 +158,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
             />
             <SendButton 
               isLoading={isLoading} 
-              disabled={!message.trim() || disabled}
+              disabled={(!message.trim() && !uploadedImageUrl) || disabled}
             />
           </div>
         </div>
