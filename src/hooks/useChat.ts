@@ -41,10 +41,9 @@ export function useChat() {
       return;
     }
     
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-      
-      // Ensure we have a conversation ID
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
@@ -54,12 +53,6 @@ export function useChat() {
       const userMessage = await insertUserMessage(content, conversationId);
       console.log('User message inserted:', userMessage);
 
-      // Add the user message to the local state immediately
-      setMessages(prev => [...prev, {
-        ...userMessage,
-        role: 'user' as const
-      }]);
-
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
           content,
@@ -67,31 +60,10 @@ export function useChat() {
         }
       });
 
-      if (error) {
-        console.error('Error from chat-completion:', error);
-        throw error;
-      }
-
-      if (!data || !data.response) {
-        console.error('Invalid response from chat-completion:', data);
-        throw new Error('Invalid response from AI');
-      }
+      if (error) throw error;
       
-      console.log('Received AI response:', data.response);
+      console.log('Received AI response, inserting message');
       await insertAIMessage(data.response, conversationId);
-      
-      // Add the AI message to the local state
-      const newAiMessage: Message = {
-        content: data.response,
-        role: 'assistant',
-        conversation_id: conversationId,
-        created_at: new Date().toISOString(),
-        id: crypto.randomUUID(),
-        user_id: null
-      };
-      
-      setMessages(prev => [...prev, newAiMessage]);
-
       console.log('AI message inserted successfully');
 
     } catch (error) {
@@ -111,7 +83,6 @@ export function useChat() {
     console.log('Starting new chat session...');
     setMessages([]);
     setCurrentConversationId(null);
-    setIsLoading(false);
   };
 
   useEffect(() => {

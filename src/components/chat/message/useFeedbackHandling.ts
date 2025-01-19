@@ -11,20 +11,13 @@ export function useFeedbackHandling(messageId: string, isCurrentUser: boolean) {
     const fetchFeedback = async () => {
       if (isCurrentUser) return;
       
-      console.log('Fetching feedback for message:', messageId);
       const { data, error } = await supabase
         .from('message_feedback')
         .select('*')
         .eq('message_id', messageId)
-        .maybeSingle();
+        .single();
 
-      if (error) {
-        console.error('Error fetching feedback:', error);
-        return;
-      }
-
-      if (data) {
-        console.log('Feedback found:', data);
+      if (!error && data) {
         setFeedback(data);
       }
     };
@@ -37,7 +30,6 @@ export function useFeedbackHandling(messageId: string, isCurrentUser: boolean) {
     
     setIsSubmittingFeedback(true);
     try {
-      console.log('Submitting feedback:', { messageId, rating, isIncorrect, feedbackText });
       const { data, error } = await supabase
         .from('message_feedback')
         .upsert({
@@ -50,9 +42,7 @@ export function useFeedbackHandling(messageId: string, isCurrentUser: boolean) {
 
       if (error) throw error;
 
-      const newFeedback = { rating, is_incorrect: isIncorrect, feedback_text: feedbackText };
-      console.log('Feedback submitted successfully:', newFeedback);
-      setFeedback(newFeedback);
+      setFeedback({ rating, is_incorrect: isIncorrect, feedback_text: feedbackText });
       
       toast({
         title: isIncorrect ? "Message Flagged" : "Feedback submitted",

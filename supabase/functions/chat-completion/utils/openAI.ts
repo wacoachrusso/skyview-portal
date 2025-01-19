@@ -32,7 +32,7 @@ export async function addMessageToThread(threadId: string, content: string) {
     },
     body: JSON.stringify({
       role: 'user',
-      content: `${content}\n\nYou MUST ALWAYS provide a specific section and page number from the contract in your response. Format it EXACTLY as: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If you cannot find a specific reference for the query, you MUST respond with: "I cannot answer this question without a specific contract reference. Please ask about a specific section of the contract." Do not provide general responses without contract references.`
+      content: `${content}\n\nPlease include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section.`
     })
   });
 
@@ -56,7 +56,7 @@ export async function runAssistant(threadId: string) {
     },
     body: JSON.stringify({
       assistant_id: assistantId,
-      instructions: "You are a contract expert that MUST ALWAYS provide specific contract references. Every response MUST include [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If you cannot find a specific reference, respond with: 'I cannot answer this question without a specific contract reference. Please ask about a specific section of the contract.' Never provide general responses or explanations without exact contract references. If a user asks about non-contract matters, inform them that you can only discuss specific contract sections."
+      instructions: "Always provide answers based on the contract content. Every response must include a reference section with the specific section and page number from the contract that supports your answer. Format references as [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for a query, clearly state this in the reference section."
     })
   });
 

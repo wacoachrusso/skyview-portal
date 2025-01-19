@@ -37,19 +37,6 @@ export function ChatContent({
     });
   }, [toast]);
 
-  const handleNewChat = useCallback(() => {
-    console.log('Starting new chat...');
-    if (onNewChat) {
-      onNewChat();
-      setStoredMessages([]);
-    }
-  }, [onNewChat, setStoredMessages]);
-
-  const handleSendMessage = useCallback(async (content: string) => {
-    console.log('Sending message in ChatContent:', content);
-    await onSendMessage(content);
-  }, [onSendMessage]);
-
   // Check for free trial status after each message
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
@@ -78,7 +65,7 @@ export function ChatContent({
 
   return (
     <div className="flex flex-col h-full">
-      <ChatHeader onNewChat={handleNewChat} />
+      <ChatHeader onNewChat={onNewChat || (() => {})} />
       {isOffline && <OfflineAlert offlineError={offlineError || loadError} />}
       <ChatContainer
         messages={displayMessages}
@@ -88,7 +75,7 @@ export function ChatContent({
       />
       <div className="flex-shrink-0">
         <ChatInput 
-          onSendMessage={handleSendMessage} 
+          onSendMessage={onSendMessage} 
           isLoading={isLoading}
           disabled={isOffline} 
         />
