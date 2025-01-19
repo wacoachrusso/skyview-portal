@@ -23,6 +23,14 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
             ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
             ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
             li: ({ children }) => <li className="pl-2">{children}</li>,
+            img: ({ src, alt }) => (
+              <img 
+                src={src} 
+                alt={alt || 'Uploaded image'} 
+                className="max-w-full h-auto rounded-lg shadow-lg my-2"
+                loading="lazy"
+              />
+            ),
           }}
         >
           {mainContent}
@@ -43,7 +51,22 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   };
 
   return isCurrentUser ? (
-    <p className="text-sm sm:text-base">{message.content}</p>
+    <div className="text-sm sm:text-base">
+      <ReactMarkdown
+        components={{
+          img: ({ src, alt }) => (
+            <img 
+              src={src} 
+              alt={alt || 'Uploaded image'} 
+              className="max-w-full h-auto rounded-lg shadow-lg my-2"
+              loading="lazy"
+            />
+          ),
+        }}
+      >
+        {message.content}
+      </ReactMarkdown>
+    </div>
   ) : (
     <div className="text-sm sm:text-base min-h-[20px]">
       <TypeAnimation
