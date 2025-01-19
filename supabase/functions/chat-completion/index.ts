@@ -115,16 +115,22 @@ serve(async (req) => {
         throw new Error('No assistant response found');
       }
 
-      return cleanResponse(assistantMessage.content[0].text.value);
+      const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
+      console.log('Assistant response:', cleanedResponse);
+      return cleanedResponse;
     };
 
     const cleanedResponse = await withRetry(processOpenAIRequest, {
       maxRetries: 3,
       initialDelay: 1000,
-      shouldRetry: (error) => !isRateLimitError(error)
+      shouldRetry: (error) => {
+        // If the error is about invalid reference, don't retry
+        if (error.message?.includes('INVALID_REFERENCE')) {
+          return false;
+        }
+        return !isRateLimitError(error);
+      }
     });
-
-    console.log('Assistant response:', cleanedResponse);
 
     // Cache the response for future use
     await cacheResponse(content, cleanedResponse);
@@ -148,6 +154,20 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in chat completion:', error);
+    
+    // If it's an invalid reference error, return it with a 400 status
+    if (error.message?.includes('INVALID_REFERENCE')) {
+      return new Response(
+        JSON.stringify({ 
+          error: error.message,
+          message: "I apologize, but I need to provide a specific contract reference to answer your question. Could you please ask about a specific section of the contract?"
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
     
     const errorMessage = error.message || 'An unexpected error occurred';
     const statusCode = error.status || 500;
