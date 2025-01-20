@@ -1,6 +1,6 @@
 import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard, Star, UserCog, MessageSquare } from "lucide-react";
-import { useAdminStats } from "@/hooks/useAdminStats";
 import { useQuery } from "@tanstack/react-query";
+import { StatsData, useAdminStats } from "@/hooks/useAdminStats";
 
 export type MetricType = 
   | "messageFeedback"
@@ -13,31 +13,6 @@ export type MetricType =
   | "newUsers"
   | "monthlySubUsers"
   | "yearlySubUsers";
-
-interface StatsData {
-  userCount: number;
-  activeUserCount: number;
-  notificationCount: number;
-  releaseNoteCount: number;
-  newUserCount: number;
-  monthlySubCount: number;
-  yearlySubCount: number;
-  alphaTestersCount: number;
-  promotersCount: number;
-  messageFeedbackCount: number;
-  details: {
-    users: any[];
-    activeUsers: any[];
-    notifications: any[];
-    releaseNotes: any[];
-    newUsers: any[];
-    monthlySubUsers: any[];
-    yearlySubUsers: any[];
-    alphaTesters: any[];
-    promoters: any[];
-    messageFeedback: any[];
-  };
-}
 
 export const useMetricsData = () => {
   const { data: stats, refetch } = useQuery<StatsData>({
