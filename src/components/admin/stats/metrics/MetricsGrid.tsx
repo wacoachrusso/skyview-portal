@@ -6,11 +6,7 @@ interface MetricsGridProps {
 }
 
 export const MetricsGrid = ({ onMetricClick }: MetricsGridProps) => {
-  const { metrics, isLoading } = useMetricsData();
-
-  if (isLoading) {
-    return <div>Loading metrics...</div>;
-  }
+  const { metrics } = useMetricsData();
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -20,7 +16,7 @@ export const MetricsGrid = ({ onMetricClick }: MetricsGridProps) => {
           title={metric.title}
           value={metric.value}
           icon={metric.icon}
-          onClick={() => onMetricClick(metric.id)}
+          onClick={() => onMetricClick(metric.id as MetricType)}
         />
       ))}
     </div>
