@@ -1,17 +1,9 @@
-import { PricingCard } from "./PricingCard";
-import { PricingHeader } from "./PricingHeader";
-import { plans } from "./pricingPlans";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { CreativePricing } from "@/components/ui/creative-pricing";
+import type { PricingTier } from "@/components/ui/creative-pricing";
 import { Pencil, Star, Sparkles } from "lucide-react";
 
 export function PricingSection() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const creativeTiers = [
+  const creativeTiers: PricingTier[] = [
     {
       name: "Free Trial",
       icon: <Pencil className="w-6 h-6" />,
@@ -71,9 +63,10 @@ export function PricingSection() {
       <div className="container mx-auto px-4 relative">
         <CreativePricing 
           tiers={creativeTiers}
-          tag="Simple Pricing"
+          tag="Simple, Transparent Pricing"
           title="Choose Your Plan"
-          description="Get instant answers to your contract questions"
+          description="Choose the perfect plan for your needs. All plans include our core features. No hidden costs."
+          paymentMethods="We accept all major credit cards, Apple Pay, Google Pay, and Amazon Pay"
         />
       </div>
     </section>
