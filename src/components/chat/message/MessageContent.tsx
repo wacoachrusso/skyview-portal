@@ -9,9 +9,8 @@ interface MessageContentProps {
 
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
   const formatContent = (content: string) => {
-    const referenceMatch = content.match(/\[REF\](.*?)\[\/REF\]/s);
-    const reference = referenceMatch ? referenceMatch[1].trim() : null;
-    const mainContent = content.replace(/\[REF\].*?\[\/REF\]/s, '').trim();
+    // Remove [REF] tags from the content
+    const cleanContent = content.replace(/\[REF\].*?\[\/REF\]/s, '').trim();
 
     return (
       <div className="space-y-4">
@@ -33,19 +32,8 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
             ),
           }}
         >
-          {mainContent}
+          {cleanContent}
         </ReactMarkdown>
-        {reference ? (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-sm text-blue-400 font-medium">Reference:</p>
-            <p className="text-sm text-gray-400 whitespace-pre-wrap">{reference}</p>
-          </div>
-        ) : (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <p className="text-sm text-yellow-400 font-medium">Note:</p>
-            <p className="text-sm text-gray-400">No specific contract reference available for this query.</p>
-          </div>
-        )}
       </div>
     );
   };

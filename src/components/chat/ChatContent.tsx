@@ -55,11 +55,18 @@ export function ChatContent({
     }
   }, [messages, setStoredMessages]);
 
-  // Log when offline status changes
+  // Redirect to pricing if trial has ended
   useEffect(() => {
-    console.log('Offline status changed:', isOffline);
-    console.log('Available stored messages:', storedMessages.length);
-  }, [isOffline, storedMessages]);
+    if (isTrialEnded) {
+      console.log('Trial ended, redirecting to pricing');
+      navigate('/?scrollTo=pricing-section');
+      toast({
+        title: "Free Trial Ended",
+        description: "Please select a subscription plan to continue using SkyGuide.",
+        duration: 5000
+      });
+    }
+  }, [isTrialEnded, navigate, toast]);
 
   // Memoize the display messages to prevent unnecessary recalculations
   const displayMessages = useMemo(() => 
@@ -98,7 +105,7 @@ export function ChatContent({
         <ChatInput 
           onSendMessage={onSendMessage} 
           isLoading={isLoading}
-          disabled={isOffline} 
+          disabled={isOffline || isTrialEnded} 
         />
       </div>
     </div>

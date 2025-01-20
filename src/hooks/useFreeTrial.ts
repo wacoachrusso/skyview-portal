@@ -23,8 +23,19 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
       if (error) throw error;
 
       if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
-        console.log('Free trial ended');
+        console.log('Free trial ended - query count:', profile.query_count);
         setIsTrialEnded(true);
+        
+        // Update the profile to prevent further queries
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ subscription_plan: 'trial_ended' })
+          .eq('id', currentUserId);
+
+        if (updateError) {
+          console.error('Error updating profile status:', updateError);
+        }
+
         toast({
           title: "Free Trial Ended",
           description: "Please select a subscription plan to continue.",
