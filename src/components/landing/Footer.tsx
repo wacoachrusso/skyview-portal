@@ -1,11 +1,40 @@
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
+import { SocialLinks } from "@/components/ui/social-links";
 
 export function Footer() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const socials = [
+    {
+      name: "Twitter",
+      icon: <Twitter className="w-5 h-5" />,
+      href: "#"
+    },
+    {
+      name: "LinkedIn",
+      icon: <Linkedin className="w-5 h-5" />,
+      href: "#"
+    },
+    {
+      name: "Facebook",
+      icon: <Facebook className="w-5 h-5" />,
+      href: "#"
+    },
+    {
+      name: "Instagram",
+      icon: <Instagram className="w-5 h-5" />,
+      href: "#"
+    },
+    {
+      name: "YouTube",
+      icon: <Youtube className="w-5 h-5" />,
+      href: "#"
+    }
+  ];
 
   return (
     <footer className="relative bg-footer-gradient text-gray-400 py-12 px-4">
@@ -41,23 +70,7 @@ export function Footer() {
           </div>
           <div>
             <h3 className="font-bold mb-4 text-white">Connect</h3>
-            <div className="flex space-x-4">
-              <a href="#" className="hover:text-white transition-colors" aria-label="Twitter">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="hover:text-white transition-colors" aria-label="LinkedIn">
-                <Linkedin className="w-5 h-5" />
-              </a>
-              <a href="#" className="hover:text-white transition-colors" aria-label="Facebook">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="hover:text-white transition-colors" aria-label="Instagram">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="hover:text-white transition-colors" aria-label="YouTube">
-                <Youtube className="w-5 h-5" />
-              </a>
-            </div>
+            <SocialLinks socials={socials} />
           </div>
         </div>
 
@@ -66,7 +79,6 @@ export function Footer() {
         </div>
       </div>
       
-      {/* Back to Top Button */}
       <Button
         onClick={scrollToTop}
         className="fixed bottom-8 right-8 rounded-full w-12 h-12 bg-brand-gold hover:bg-brand-gold/90 text-brand-navy shadow-lg hover:shadow-xl transition-all duration-300 z-50"
