@@ -39,11 +39,11 @@ export interface StatsData {
 
 export const useMetricsData = () => {
   const { toast } = useToast();
-  const adminStats = useAdminStats();
+  const fetchStats = useAdminStats();
 
   const { data, error, isLoading, refetch } = useQuery<StatsData, Error>({
     queryKey: ["admin-stats"],
-    queryFn: () => adminStats(),
+    queryFn: fetchStats,
     retry: 2,
     retryDelay: 1000,
   });
