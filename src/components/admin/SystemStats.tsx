@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 export const SystemStats = () => {
   const [selectedMetric, setSelectedMetric] = useState<MetricType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { stats, refetch, error } = useMetricsData();
+  const { stats, refetch, error, isLoading } = useMetricsData();
   const { toast } = useToast();
 
   // Set up real-time updates with error handling
@@ -42,6 +42,10 @@ export const SystemStats = () => {
       title: "Error",
       description: "Failed to load metrics data. Please refresh the page.",
     });
+  }
+
+  if (isLoading) {
+    return <div>Loading metrics...</div>;
   }
 
   const dialogContent = getDialogContent(stats?.details, selectedMetric);
