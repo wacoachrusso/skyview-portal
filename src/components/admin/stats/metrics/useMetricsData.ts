@@ -40,10 +40,9 @@ interface StatsData {
 }
 
 export const useMetricsData = () => {
-  const fetchStats = useAdminStats();
   const { data: stats, refetch } = useQuery<StatsData>({
     queryKey: ["admin-stats"],
-    queryFn: () => fetchStats()
+    queryFn: useAdminStats
   });
 
   const metrics = [
