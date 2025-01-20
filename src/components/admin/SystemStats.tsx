@@ -34,7 +34,6 @@ export const SystemStats = () => {
     setIsDialogOpen(true);
   };
 
-  // Show error state if metrics data fails to load
   if (error) {
     console.error("Error loading metrics:", error);
     return (
@@ -48,7 +47,7 @@ export const SystemStats = () => {
     return <div>Loading metrics...</div>;
   }
 
-  const dialogContent = getDialogContent(stats?.details || {}, selectedMetric);
+  const dialogContent = stats?.details ? getDialogContent(stats.details, selectedMetric) : null;
 
   return (
     <>

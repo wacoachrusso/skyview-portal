@@ -23,7 +23,7 @@ interface Metric {
   icon: LucideIcon;
 }
 
-interface StatsData {
+export interface StatsData {
   userCount: number;
   activeUserCount: number;
   notificationCount: number;
@@ -41,31 +41,31 @@ export const useMetricsData = () => {
   const { toast } = useToast();
   const adminStats = useAdminStats();
 
-  const query = useQuery<StatsData, Error>({
+  const { data, error, isLoading, refetch } = useQuery<StatsData, Error>({
     queryKey: ["admin-stats"],
-    queryFn: adminStats,
+    queryFn: () => adminStats(),
     retry: 2,
     retryDelay: 1000,
   });
 
-  const metrics: Metric[] = query.data ? [
-    { id: "users", title: "Total Users", value: query.data.userCount || 0, icon: Users },
-    { id: "activeUsers", title: "Active Users", value: query.data.activeUserCount || 0, icon: Activity },
-    { id: "notifications", title: "Active Notifications", value: query.data.notificationCount || 0, icon: Bell },
-    { id: "releaseNotes", title: "Release Notes", value: query.data.releaseNoteCount || 0, icon: FileText },
-    { id: "newUsers", title: "New Users", value: query.data.newUserCount || 0, icon: UserPlus },
-    { id: "monthlySubUsers", title: "Monthly Subscribers", value: query.data.monthlySubCount || 0, icon: CreditCard },
-    { id: "yearlySubUsers", title: "Yearly Subscribers", value: query.data.yearlySubCount || 0, icon: Calendar },
-    { id: "alphaTesters", title: "Alpha Testers", value: query.data.alphaTestersCount || 0, icon: TestTube2 },
-    { id: "promoters", title: "Active Promoters", value: query.data.promotersCount || 0, icon: Megaphone },
-    { id: "messageFeedback", title: "Message Feedback", value: query.data.messageFeedbackCount || 0, icon: MessageSquare },
+  const metrics: Metric[] = data ? [
+    { id: "users", title: "Total Users", value: data.userCount || 0, icon: Users },
+    { id: "activeUsers", title: "Active Users", value: data.activeUserCount || 0, icon: Activity },
+    { id: "notifications", title: "Active Notifications", value: data.notificationCount || 0, icon: Bell },
+    { id: "releaseNotes", title: "Release Notes", value: data.releaseNoteCount || 0, icon: FileText },
+    { id: "newUsers", title: "New Users", value: data.newUserCount || 0, icon: UserPlus },
+    { id: "monthlySubUsers", title: "Monthly Subscribers", value: data.monthlySubCount || 0, icon: CreditCard },
+    { id: "yearlySubUsers", title: "Yearly Subscribers", value: data.yearlySubCount || 0, icon: Calendar },
+    { id: "alphaTesters", title: "Alpha Testers", value: data.alphaTestersCount || 0, icon: TestTube2 },
+    { id: "promoters", title: "Active Promoters", value: data.promotersCount || 0, icon: Megaphone },
+    { id: "messageFeedback", title: "Message Feedback", value: data.messageFeedbackCount || 0, icon: MessageSquare },
   ] : [];
 
   return {
     metrics,
-    stats: query.data,
-    refetch: query.refetch,
-    error: query.error,
-    isLoading: query.isLoading
+    stats: data,
+    refetch,
+    error,
+    isLoading
   };
 };
