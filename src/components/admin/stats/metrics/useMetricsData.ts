@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminStats } from "@/hooks/useAdminStats";
-import { Users, Activity, Bell, FileText, UserPlus, CreditCard, Calendar, Flask, Megaphone, MessageSquare } from "lucide-react";
+import { Users, Activity, Bell, FileText, UserPlus, CreditCard, Calendar, TestTube2, Megaphone, MessageSquare } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type MetricType = 
@@ -23,13 +23,27 @@ interface Metric {
   icon: LucideIcon;
 }
 
+interface StatsData {
+  userCount: number;
+  activeUserCount: number;
+  notificationCount: number;
+  releaseNoteCount: number;
+  newUserCount: number;
+  monthlySubCount: number;
+  yearlySubCount: number;
+  alphaTestersCount: number;
+  promotersCount: number;
+  messageFeedbackCount: number;
+  details: Record<string, any>;
+}
+
 export const useMetricsData = () => {
   const { toast } = useToast();
   const adminStats = useAdminStats();
 
-  const query = useQuery({
+  const query = useQuery<StatsData, Error>({
     queryKey: ["admin-stats"],
-    queryFn: adminStats.queryFn,
+    queryFn: () => adminStats.queryFn(),
     retry: 2,
     retryDelay: 1000,
   });
@@ -42,7 +56,7 @@ export const useMetricsData = () => {
     { id: "newUsers", title: "New Users", value: query.data.newUserCount || 0, icon: UserPlus },
     { id: "monthlySubUsers", title: "Monthly Subscribers", value: query.data.monthlySubCount || 0, icon: CreditCard },
     { id: "yearlySubUsers", title: "Yearly Subscribers", value: query.data.yearlySubCount || 0, icon: Calendar },
-    { id: "alphaTesters", title: "Alpha Testers", value: query.data.alphaTestersCount || 0, icon: Flask },
+    { id: "alphaTesters", title: "Alpha Testers", value: query.data.alphaTestersCount || 0, icon: TestTube2 },
     { id: "promoters", title: "Active Promoters", value: query.data.promotersCount || 0, icon: Megaphone },
     { id: "messageFeedback", title: "Message Feedback", value: query.data.messageFeedbackCount || 0, icon: MessageSquare },
   ] : [];

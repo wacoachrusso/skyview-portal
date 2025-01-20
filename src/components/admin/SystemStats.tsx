@@ -48,7 +48,7 @@ export const SystemStats = () => {
     return <div>Loading metrics...</div>;
   }
 
-  const dialogContent = getDialogContent(stats?.details, selectedMetric);
+  const dialogContent = getDialogContent(stats?.details || {}, selectedMetric);
 
   return (
     <>
