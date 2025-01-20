@@ -1,73 +1,84 @@
-import { CreativePricing } from "@/components/ui/creative-pricing";
-import type { PricingTier } from "@/components/ui/creative-pricing";
-import { Pencil, Star, Sparkles } from "lucide-react";
+import { PricingCard } from "./PricingCard";
+import { PricingHeader } from "./PricingHeader";
+import { plans } from "./pricingPlans";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function PricingSection() {
-  const creativeTiers: PricingTier[] = [
-    {
-      name: "Free Trial",
-      icon: <Pencil className="w-6 h-6" />,
-      price: "Free",
-      description: "Perfect for trying out SkyGuide",
-      color: "amber",
-      features: [
-        "1 contract query",
-        "Basic contract interpretation",
-        "24/7 assistance",
-        "Mobile app access"
-      ],
-      priceId: null,
-      mode: null
-    },
-    {
-      name: "Monthly",
-      icon: <Star className="w-6 h-6" />,
-      price: "$4.99",
-      description: "Most popular for active flight crew",
-      color: "blue",
-      features: [
-        "Unlimited contract queries",
-        "Advanced interpretation",
-        "Priority support",
-        "Save answers for offline access",
-        "Download conversations for offline viewing",
-        "Premium features"
-      ],
-      popular: true,
-      priceId: "price_1QcfWYA8w17QmjsPZ22koqjj",
-      mode: "subscription" as const
-    },
-    {
-      name: "Annual",
-      icon: <Sparkles className="w-6 h-6" />,
-      price: "$49.88",
-      description: "Best value - Save $10 annually",
-      color: "purple",
-      features: [
-        "Unlimited contract queries",
-        "Advanced interpretation",
-        "Priority support",
-        "Save answers for offline access",
-        "Download conversations for offline viewing",
-        "Premium features"
-      ],
-      priceId: "price_1QcfUFA8w17QmjsPe9KXKFpT",
-      mode: "subscription" as const
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handlePlanSelection = async (plan: any) => {
+    try {
+      console.log('Plan selected:', plan);
+      
+      // Check if user is already logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.log('User not logged in, redirecting to signup with plan:', plan.name);
+        navigate('/signup', { 
+          state: { 
+            selectedPlan: plan.name.toLowerCase(),
+            priceId: plan.priceId,
+            mode: plan.mode
+          }
+        });
+        return;
+      }
+
+      // For logged-in users, create checkout session directly
+      console.log('Creating checkout session for logged-in user');
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          priceId: plan.priceId,
+          mode: plan.mode,
+          email: session.user.email
+        }
+      });
+
+      if (error) {
+        console.error('Error creating checkout session:', error);
+        throw error;
+      }
+
+      if (data?.url) {
+        console.log('Redirecting to checkout:', data.url);
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error handling plan selection:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process plan selection. Please try again."
+      });
     }
-  ];
+  };
 
   return (
     <section id="pricing-section" className="py-20 relative overflow-hidden">
       <div className="absolute inset-0 bg-hero-gradient opacity-50" />
       <div className="absolute inset-0 bg-glow-gradient opacity-30" />
+      
       <div className="container mx-auto px-4 relative">
-        <CreativePricing 
-          tiers={creativeTiers}
-          tag="Simple, Transparent Pricing"
-          title="Choose Your Plan"
-          description="Choose the perfect plan for your needs. All plans include our core features. No hidden costs."
-          paymentMethods="We accept all major credit cards, Apple Pay, Google Pay, and Amazon Pay"
-        />
+        <PricingHeader />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {plans.map((plan) => (
+            <PricingCard
+              key={plan.name}
+              name={plan.name}
+              price={plan.price}
+              description={plan.description}
+              features={plan.features}
+              priceId={plan.priceId}
+              mode={plan.mode}
+              popular={plan.isPopular}
+              onSelect={() => handlePlanSelection(plan)}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
