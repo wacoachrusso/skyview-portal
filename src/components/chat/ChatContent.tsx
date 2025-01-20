@@ -8,6 +8,8 @@ import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { useMessageStorage } from "@/hooks/useMessageStorage";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 interface ChatContentProps {
   messages: Message[];
@@ -25,9 +27,10 @@ export function ChatContent({
   onNewChat 
 }: ChatContentProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { isOffline, offlineError } = useOfflineStatus();
   const { storedMessages, setStoredMessages } = useMessageStorage(messages);
-  const { checkFreeTrialStatus, loadError } = useFreeTrial(currentUserId, isOffline);
+  const { checkFreeTrialStatus, loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
 
   const handleCopyMessage = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
@@ -62,6 +65,24 @@ export function ChatContent({
   const displayMessages = useMemo(() => 
     isOffline ? storedMessages : messages
   , [isOffline, storedMessages, messages]);
+
+  if (isTrialEnded) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertDescription>
+            Your free trial has ended. Please select a subscription plan to continue using SkyGuide.
+          </AlertDescription>
+        </Alert>
+        <button
+          onClick={() => navigate('/?scrollTo=pricing-section')}
+          className="mt-4 bg-brand-gold hover:bg-brand-gold/90 text-black px-4 py-2 rounded-md"
+        >
+          View Plans
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
