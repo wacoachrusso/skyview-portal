@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { AppRoutes } from "@/components/routing/AppRoutes";
 import "./App.css";
 
@@ -21,6 +20,17 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function LoadingFallback() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-sm text-muted-foreground">Loading application...</p>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   useEffect(() => {
@@ -63,13 +73,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
-          <Suspense 
-            fallback={
-              <div className="flex h-screen w-full items-center justify-center bg-background">
-                <LoadingSpinner />
-              </div>
-            }
-          >
+          <Suspense fallback={<LoadingFallback />}>
             <div className="min-h-screen bg-background">
               <AppRoutes />
             </div>
