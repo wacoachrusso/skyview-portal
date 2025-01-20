@@ -1,6 +1,7 @@
 import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard, Star, UserCog, MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { StatsData, useAdminStats } from "@/hooks/useAdminStats";
+import { StatsData } from "@/types/stats";
+import { useAdminStats } from "@/hooks/useAdminStats";
 
 export type MetricType = 
   | "messageFeedback"

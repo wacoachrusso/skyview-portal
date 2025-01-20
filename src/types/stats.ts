@@ -10,3 +10,17 @@ export interface StatsDetails {
   promoters: any[];
   messageFeedback: any[];
 }
+
+export interface StatsData {
+  userCount: number;
+  activeUserCount: number;
+  notificationCount: number;
+  releaseNoteCount: number;
+  newUserCount: number;
+  monthlySubCount: number;
+  yearlySubCount: number;
+  alphaTestersCount: number;
+  promotersCount: number;
+  messageFeedbackCount: number;
+  details: StatsDetails;
+}
