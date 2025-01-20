@@ -82,69 +82,113 @@ serve(async (req) => {
       );
     }
 
-    // Process the request with OpenAI using retry mechanism
-    const processOpenAIRequest = async () => {
-      console.log('Creating new thread...');
-      const thread = await createThread();
-      
-      console.log('Adding message to thread...');
-      await addMessageToThread(thread.id, content);
-      
-      console.log('Running assistant...');
-      const run = await runAssistant(thread.id);
+    // Add a lock to prevent duplicate processing
+    const lockKey = `processing_${userId}_${Date.now()}`;
+    const { data: lockExists, error: lockError } = await supabase
+      .from('cached_responses')
+      .select('id')
+      .eq('query', lockKey)
+      .single();
 
-      // Poll for completion with retries
-      let runStatus;
-      do {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        runStatus = await withRetry(() => getRunStatus(thread.id, run.id), {
-          maxRetries: 3,
-          shouldRetry: (error) => !isRateLimitError(error)
-        });
-        console.log('Run status:', runStatus.status);
-      } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
-
-      if (runStatus.status !== 'completed') {
-        throw new Error(`Run failed with status: ${runStatus.status}`);
-      }
-
-      const messages = await getMessages(thread.id);
-      const assistantMessage = messages.data.find(m => m.role === 'assistant');
-      
-      if (!assistantMessage) {
-        throw new Error('No assistant response found');
-      }
-
-      return cleanResponse(assistantMessage.content[0].text.value);
-    };
-
-    const cleanedResponse = await withRetry(processOpenAIRequest, {
-      maxRetries: 3,
-      initialDelay: 1000,
-      shouldRetry: (error) => !isRateLimitError(error)
-    });
-
-    console.log('Assistant response:', cleanedResponse);
-
-    // Cache the response for future use
-    await cacheResponse(content, cleanedResponse);
-
-    // Update query count for free trial users
-    if (subscriptionPlan === 'free') {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ query_count: 1 })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error updating query count:', updateError);
-      }
+    if (lockExists) {
+      console.log('Request already being processed');
+      return new Response(
+        JSON.stringify({ error: 'Request already being processed' }),
+        { 
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    return new Response(
-      JSON.stringify({ response: cleanedResponse }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Set processing lock
+    await supabase
+      .from('cached_responses')
+      .insert([{ 
+        query: lockKey,
+        response: 'processing',
+        created_at: new Date().toISOString()
+      }]);
+
+    try {
+      // Process the request with OpenAI using retry mechanism
+      const processOpenAIRequest = async () => {
+        console.log('Creating new thread...');
+        const thread = await createThread();
+        
+        console.log('Adding message to thread...');
+        await addMessageToThread(thread.id, content);
+        
+        console.log('Running assistant...');
+        const run = await runAssistant(thread.id);
+
+        // Poll for completion with retries
+        let runStatus;
+        do {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          runStatus = await withRetry(() => getRunStatus(thread.id, run.id), {
+            maxRetries: 3,
+            shouldRetry: (error) => !isRateLimitError(error)
+          });
+          console.log('Run status:', runStatus.status);
+        } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
+
+        if (runStatus.status !== 'completed') {
+          throw new Error(`Run failed with status: ${runStatus.status}`);
+        }
+
+        const messages = await getMessages(thread.id);
+        const assistantMessage = messages.data.find(m => m.role === 'assistant');
+        
+        if (!assistantMessage) {
+          throw new Error('No assistant response found');
+        }
+
+        return cleanResponse(assistantMessage.content[0].text.value);
+      };
+
+      const cleanedResponse = await withRetry(processOpenAIRequest, {
+        maxRetries: 3,
+        initialDelay: 1000,
+        shouldRetry: (error) => !isRateLimitError(error)
+      });
+
+      console.log('Assistant response:', cleanedResponse);
+
+      // Cache the response for future use
+      await cacheResponse(content, cleanedResponse);
+
+      // Update query count for free trial users
+      if (subscriptionPlan === 'free') {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ query_count: 1 })
+          .eq('id', userId);
+
+        if (updateError) {
+          console.error('Error updating query count:', updateError);
+        }
+      }
+
+      // Remove processing lock
+      await supabase
+        .from('cached_responses')
+        .delete()
+        .eq('query', lockKey);
+
+      return new Response(
+        JSON.stringify({ response: cleanedResponse }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } catch (error) {
+      // Remove processing lock on error
+      await supabase
+        .from('cached_responses')
+        .delete()
+        .eq('query', lockKey);
+      throw error;
+    }
 
   } catch (error) {
     console.error('Error in chat completion:', error);
