@@ -14,10 +14,10 @@ export const SystemStats = () => {
   const { toast } = useToast();
 
   // Set up real-time updates with error handling
-  useRealtimeUpdates(async () => {
+  useRealtimeUpdates(() => {
     try {
       console.log("Refreshing metrics data...");
-      await refetch();
+      refetch();
     } catch (error) {
       console.error("Error refreshing metrics:", error);
       toast({
@@ -37,11 +37,11 @@ export const SystemStats = () => {
   // Show error state if metrics data fails to load
   if (error) {
     console.error("Error loading metrics:", error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "Failed to load metrics data. Please refresh the page.",
-    });
+    return (
+      <div className="p-4 text-red-500">
+        Failed to load metrics data. Please refresh the page.
+      </div>
+    );
   }
 
   if (isLoading) {

@@ -43,7 +43,7 @@ export const useMetricsData = () => {
 
   const query = useQuery<StatsData, Error>({
     queryKey: ["admin-stats"],
-    queryFn: () => adminStats.queryFn(),
+    queryFn: adminStats,
     retry: 2,
     retryDelay: 1000,
   });

@@ -1,41 +1,24 @@
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef } from 'react';
 
-export const useRealtimeUpdates = (refetch: () => Promise<void>) => {
+export const useRealtimeUpdates = (callback: () => void) => {
+  const intervalRef = useRef<number>();
+
   useEffect(() => {
-    console.log("Setting up real-time subscriptions for admin stats...");
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
 
-    const subscriptions = [
-      supabase
-        .channel("profiles-changes")
-        .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, 
-          () => {
-            console.log("Profiles table changed, triggering refetch...");
-            refetch();
-          }
-        )
-        .subscribe((status) => {
-          console.log("Profiles subscription status:", status);
-        }),
+    // Set up new interval
+    intervalRef.current = window.setInterval(() => {
+      callback();
+    }, 30000); // Update every 30 seconds
 
-      supabase
-        .channel("notifications-changes")
-        .on("postgres_changes", { event: "*", schema: "public", table: "notifications" },
-          () => {
-            console.log("Notifications table changed, triggering refetch...");
-            refetch();
-          }
-        )
-        .subscribe((status) => {
-          console.log("Notifications subscription status:", status);
-        }),
-    ];
-
+    // Cleanup on unmount
     return () => {
-      console.log("Cleaning up real-time subscriptions...");
-      subscriptions.forEach(subscription => {
-        subscription.unsubscribe();
-      });
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, [refetch]);
+  }, [callback]);
 };
