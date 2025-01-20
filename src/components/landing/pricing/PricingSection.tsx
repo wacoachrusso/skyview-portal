@@ -37,8 +37,8 @@ export function PricingSection() {
         "Unlimited contract queries",
         "Advanced interpretation",
         "Priority support",
-        "Custom contract uploads",
-        "Offline access",
+        "Save answers for offline access",
+        "Download conversations for offline viewing",
         "Premium features"
       ],
       popular: true,
@@ -55,8 +55,8 @@ export function PricingSection() {
         "Unlimited contract queries",
         "Advanced interpretation",
         "Priority support",
-        "Custom contract uploads",
-        "Offline access",
+        "Save answers for offline access",
+        "Download conversations for offline viewing",
         "Premium features"
       ],
       priceId: "price_1QcfUFA8w17QmjsPe9KXKFpT",
