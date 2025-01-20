@@ -1,6 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { subDays } from "date-fns";
+import { StatsDetails } from "@/types/stats";
 
 export interface StatsData {
   userCount: number;
@@ -13,23 +11,13 @@ export interface StatsData {
   alphaTestersCount: number;
   promotersCount: number;
   messageFeedbackCount: number;
-  details: {
-    users: any[];
-    activeUsers: any[];
-    notifications: any[];
-    releaseNotes: any[];
-    newUsers: any[];
-    monthlySubUsers: any[];
-    yearlySubUsers: any[];
-    alphaTesters: any[];
-    promoters: any[];
-    messageFeedback: any[];
-  };
+  details: StatsDetails;
 }
 
 export const useAdminStats = async (): Promise<StatsData> => {
   console.log("Fetching admin stats...");
-  const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   // Fetch all stats in parallel for better performance
   const [
@@ -54,7 +42,7 @@ export const useAdminStats = async (): Promise<StatsData> => {
     supabase
       .from("profiles")
       .select("*", { count: "exact" })
-      .gte("last_query_timestamp", thirtyDaysAgo)
+      .gte("last_query_timestamp", thirtyDaysAgo.toISOString())
       .neq('account_status', 'deleted'),
     
     // Active notifications
@@ -72,7 +60,7 @@ export const useAdminStats = async (): Promise<StatsData> => {
     supabase
       .from("profiles")
       .select("*", { count: "exact" })
-      .gte("created_at", thirtyDaysAgo)
+      .gte("created_at", thirtyDaysAgo.toISOString())
       .neq('account_status', 'deleted'),
     
     // Monthly subscribers (active only)
@@ -113,41 +101,30 @@ export const useAdminStats = async (): Promise<StatsData> => {
       .order('created_at', { ascending: false })
   ]);
 
-  console.log("Stats fetched:", {
-    userCount,
-    activeUserCount,
-    notificationCount,
-    releaseNoteCount,
-    newUserCount,
-    monthlySubCount,
-    yearlySubCount,
-    alphaTestersCount,
-    promotersCount,
-    messageFeedbackCount
-  });
+  console.log("Stats fetched successfully");
 
   return {
-    userCount,
-    activeUserCount,
-    notificationCount,
-    releaseNoteCount,
-    newUserCount,
-    monthlySubCount,
-    yearlySubCount,
-    alphaTestersCount,
-    promotersCount,
-    messageFeedbackCount,
+    userCount: userCount || 0,
+    activeUserCount: activeUserCount || 0,
+    notificationCount: notificationCount || 0,
+    releaseNoteCount: releaseNoteCount || 0,
+    newUserCount: newUserCount || 0,
+    monthlySubCount: monthlySubCount || 0,
+    yearlySubCount: yearlySubCount || 0,
+    alphaTestersCount: alphaTestersCount || 0,
+    promotersCount: promotersCount || 0,
+    messageFeedbackCount: messageFeedbackCount || 0,
     details: {
-      users,
-      activeUsers,
-      notifications,
-      releaseNotes,
-      newUsers,
-      monthlySubUsers,
-      yearlySubUsers,
-      alphaTesters,
-      promoters,
-      messageFeedback
-    },
+      users: users || [],
+      activeUsers: activeUsers || [],
+      notifications: notifications || [],
+      releaseNotes: releaseNotes || [],
+      newUsers: newUsers || [],
+      monthlySubUsers: monthlySubUsers || [],
+      yearlySubUsers: yearlySubUsers || [],
+      alphaTesters: alphaTesters || [],
+      promoters: promoters || [],
+      messageFeedback: messageFeedback || []
+    }
   };
 };
