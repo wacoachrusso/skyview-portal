@@ -19,7 +19,7 @@ export const SystemStats = () => {
     setIsDialogOpen(true);
   };
 
-  const dialogContent = stats ? getDialogContent(stats.details, selectedMetric) : null;
+  const dialogContent = stats && selectedMetric ? getDialogContent(stats.details, selectedMetric) : null;
 
   return (
     <>
