@@ -117,18 +117,21 @@ function CreativePricing({
             <div
               className={cn(
                 "absolute inset-0 bg-card",
-                "border-2 border-border",
-                "rounded-lg shadow-[4px_4px_0px_0px] shadow-brand-gold/20",
+                "border-2 border-brand-gold",
+                "rounded-lg",
+                "shadow-[4px_4px_0px_0px] shadow-brand-gold/30",
                 "transition-all duration-300",
-                "group-hover:shadow-[8px_8px_0px_0px]",
+                "group-hover:shadow-[8px_8px_0px_0px] group-hover:shadow-brand-gold/40",
                 "group-hover:translate-x-[-4px]",
-                "group-hover:translate-y-[-4px]"
+                "group-hover:translate-y-[-4px]",
+                "before:absolute before:inset-0 before:rounded-lg before:border-2 before:border-brand-gold/50 before:-m-[2px]",
+                "after:absolute after:inset-0 after:rounded-lg after:border-2 after:border-brand-gold/20 after:-m-[4px]"
               )}
             />
 
             <div className="relative p-6">
               {tier.popular && (
-                <div className="absolute -top-2 -right-2 bg-brand-gold text-black px-3 py-1 rounded-full rotate-12 text-sm border-2 border-border">
+                <div className="absolute -top-2 -right-2 bg-brand-gold text-black px-3 py-1 rounded-full rotate-12 text-sm border-2 border-brand-gold/50">
                   Popular!
                 </div>
               )}
@@ -137,12 +140,12 @@ function CreativePricing({
                 <div className={cn(
                   "w-12 h-12 rounded-full mb-4",
                   "flex items-center justify-center",
-                  "border-2 border-border",
+                  "border-2 border-brand-gold/50",
                   "text-brand-gold"
                 )}>
                   {tier.icon}
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">
+                <h3 className="text-2xl font-bold text-white">
                   {tier.name}
                 </h3>
                 <p className="text-muted-foreground">
@@ -151,7 +154,7 @@ function CreativePricing({
               </div>
 
               <div className="mb-6">
-                <span className="text-4xl font-bold text-foreground">
+                <span className="text-4xl font-bold text-white">
                   {tier.price}
                 </span>
                 {tier.price !== "Free" && (
@@ -167,10 +170,10 @@ function CreativePricing({
                     key={feature}
                     className="flex items-center gap-3"
                   >
-                    <div className="w-5 h-5 rounded-full border-2 border-border flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full border-2 border-brand-gold/50 flex items-center justify-center">
                       <Check className="w-3 h-3 text-brand-gold" />
                     </div>
-                    <span className="text-foreground">
+                    <span className="text-white">
                       {feature}
                     </span>
                   </div>
@@ -181,14 +184,14 @@ function CreativePricing({
                 onClick={() => handlePlanSelection(tier)}
                 className={cn(
                   "w-full h-12 text-lg relative",
-                  "border-2 border-border",
+                  "border-2 border-brand-gold/50",
                   "transition-all duration-300",
-                  "shadow-[4px_4px_0px_0px] shadow-brand-gold/20",
-                  "hover:shadow-[6px_6px_0px_0px]",
+                  "shadow-[4px_4px_0px_0px] shadow-brand-gold/30",
+                  "hover:shadow-[6px_6px_0px_0px] hover:shadow-brand-gold/40",
                   "hover:translate-x-[-2px] hover:translate-y-[-2px]",
                   tier.popular
                     ? "bg-brand-gold text-black hover:bg-brand-gold/90"
-                    : "bg-card text-foreground hover:bg-card/90"
+                    : "bg-card text-white hover:bg-card/90"
                 )}
               >
                 Get Started
@@ -201,4 +204,5 @@ function CreativePricing({
   );
 }
 
-export { CreativePricing, type PricingTier };
+export { CreativePricing };
+export type { PricingTier };
