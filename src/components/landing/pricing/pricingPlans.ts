@@ -23,8 +23,8 @@ export const plans = [
       "Unlimited contract queries",
       "Advanced interpretation",
       "Priority support",
-      "Custom contract uploads",
-      "Offline access",
+      "Download conversations for offline access",
+      "Save important answers for later",
       "Premium features"
     ],
     buttonText: "Get Started",
@@ -42,8 +42,8 @@ export const plans = [
       "Unlimited contract queries",
       "Advanced interpretation",
       "Priority support",
-      "Custom contract uploads",
-      "Offline access",
+      "Download conversations for offline access",
+      "Save important answers for later",
       "Premium features"
     ],
     buttonText: "Best Value",
