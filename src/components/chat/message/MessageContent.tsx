@@ -8,40 +8,21 @@ interface MessageContentProps {
 }
 
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
-  const formatContent = (content: string) => {
+  const formatContent = (content: string): string => {
     // Remove all REF tags and their content, including the closing tag
-    const cleanContent = content.replace(/\[REF\].*?\[\/REF\]/gs, '').trim();
-    
-    return (
-      <div className="space-y-4">
-        <ReactMarkdown
-          components={{
-            p: ({ children }) => <p className="mb-2">{children}</p>,
-            strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-            em: ({ children }) => <em className="italic">{children}</em>,
-            ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
-            ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
-            li: ({ children }) => <li className="pl-2">{children}</li>,
-            img: ({ src, alt }) => (
-              <img 
-                src={src} 
-                alt={alt || 'Uploaded image'} 
-                className="max-w-full h-auto rounded-lg shadow-lg my-2"
-                loading="lazy"
-              />
-            ),
-          }}
-        >
-          {cleanContent}
-        </ReactMarkdown>
-      </div>
-    );
+    return content.replace(/\[REF\].*?\[\/REF\]/gs, '').trim();
   };
 
-  return isCurrentUser ? (
-    <div className="text-sm sm:text-base">
+  const MarkdownContent = ({ content }: { content: string }) => (
+    <div className="space-y-4">
       <ReactMarkdown
         components={{
+          p: ({ children }) => <p className="mb-2">{children}</p>,
+          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+          em: ({ children }) => <em className="italic">{children}</em>,
+          ul: ({ children }) => <ul className="list-disc list-inside space-y-2">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside space-y-2">{children}</ol>,
+          li: ({ children }) => <li className="pl-2">{children}</li>,
           img: ({ src, alt }) => (
             <img 
               src={src} 
@@ -52,8 +33,14 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
           ),
         }}
       >
-        {message.content}
+        {content}
       </ReactMarkdown>
+    </div>
+  );
+
+  return isCurrentUser ? (
+    <div className="text-sm sm:text-base">
+      <MarkdownContent content={message.content} />
     </div>
   ) : (
     <div className="text-sm sm:text-base min-h-[20px]">
@@ -65,6 +52,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
         speed={90}
         className="whitespace-pre-wrap"
       />
+      <MarkdownContent content={formatContent(message.content)} />
     </div>
   );
 }
