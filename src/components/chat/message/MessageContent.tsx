@@ -9,9 +9,9 @@ interface MessageContentProps {
 
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
   const formatContent = (content: string) => {
-    // Remove [REF] tags from the content
-    const cleanContent = content.replace(/\[REF\].*?\[\/REF\]/s, '').trim();
-
+    // Remove all REF tags and their content, including the closing tag
+    const cleanContent = content.replace(/\[REF\].*?\[\/REF\]/gs, '').trim();
+    
     return (
       <div className="space-y-4">
         <ReactMarkdown
@@ -58,7 +58,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   ) : (
     <div className="text-sm sm:text-base min-h-[20px]">
       <TypeAnimation
-        sequence={[message.content]}
+        sequence={[formatContent(message.content)]}
         wrapper="div"
         cursor={false}
         repeat={0}
