@@ -37,38 +37,40 @@ export function SocialLinks({ socials, className, ...props }: SocialLinksProps) 
   }, [clicked])
 
   return (
-    <div
-      className={cn("flex items-center justify-center gap-4", className)}
-      {...props}
-    >
-      {socials.map((social, index) => (
-        <a
-          href={social.href}
-          className={cn(
-            "relative cursor-pointer transition-opacity duration-200 hover:text-white",
-            hoveredSocial && hoveredSocial !== social.name
-              ? "opacity-50"
-              : "opacity-100"
-          )}
-          key={index}
-          onMouseEnter={() => {
-            setHoveredSocial(social.name)
-            setRotation(Math.random() * 20 - 10)
-          }}
-          onMouseLeave={() => setHoveredSocial(null)}
-          onClick={() => {
-            setClicked(true)
-          }}
-          aria-label={social.name}
-        >
-          <motion.div
-            className="h-5 w-5"
-            animate={animation}
+    <AnimatePresence>
+      <div
+        className={cn("flex items-center justify-center gap-4", className)}
+        {...props}
+      >
+        {socials.map((social, index) => (
+          <a
+            href={social.href}
+            className={cn(
+              "relative cursor-pointer transition-opacity duration-200 hover:text-white",
+              hoveredSocial && hoveredSocial !== social.name
+                ? "opacity-50"
+                : "opacity-100"
+            )}
+            key={index}
+            onMouseEnter={() => {
+              setHoveredSocial(social.name)
+              setRotation(Math.random() * 20 - 10)
+            }}
+            onMouseLeave={() => setHoveredSocial(null)}
+            onClick={() => {
+              setClicked(true)
+            }}
+            aria-label={social.name}
           >
-            {social.icon}
-          </motion.div>
-        </a>
-      ))}
-    </div>
+            <motion.div
+              className="h-5 w-5"
+              animate={animation}
+            >
+              {social.icon}
+            </motion.div>
+          </a>
+        ))}
+      </div>
+    </AnimatePresence>
   )
 }
