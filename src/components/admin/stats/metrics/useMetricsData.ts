@@ -1,5 +1,6 @@
 import { Users, UserCheck, Bell, FileText, UserPlus, CreditCard, Star, UserCog, MessageSquare } from "lucide-react";
 import { useAdminStats } from "@/hooks/useAdminStats";
+import { useQuery } from "@tanstack/react-query";
 
 export type MetricType = 
   | "messageFeedback"
@@ -13,8 +14,36 @@ export type MetricType =
   | "monthlySubUsers"
   | "yearlySubUsers";
 
+interface StatsData {
+  userCount: number;
+  activeUserCount: number;
+  notificationCount: number;
+  releaseNoteCount: number;
+  newUserCount: number;
+  monthlySubCount: number;
+  yearlySubCount: number;
+  alphaTestersCount: number;
+  promotersCount: number;
+  messageFeedbackCount: number;
+  details: {
+    users: any[];
+    activeUsers: any[];
+    notifications: any[];
+    releaseNotes: any[];
+    newUsers: any[];
+    monthlySubUsers: any[];
+    yearlySubUsers: any[];
+    alphaTesters: any[];
+    promoters: any[];
+    messageFeedback: any[];
+  };
+}
+
 export const useMetricsData = () => {
-  const { data: stats, refetch } = useAdminStats();
+  const { data: stats, refetch } = useQuery<StatsData>({
+    queryKey: ["admin-stats"],
+    queryFn: useAdminStats
+  });
 
   const metrics = [
     {
