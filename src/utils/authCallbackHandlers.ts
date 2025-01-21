@@ -1,92 +1,48 @@
 import { NavigateFunction } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast as toastFunction } from "@/hooks/use-toast";
+import { ToastType } from "@/hooks/use-toast";
+import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 
-interface AuthCallbackProps {
+interface HandlerOptions {
   navigate: NavigateFunction;
-  toast: typeof toastFunction;
+  toast: ToastType;
 }
 
-export const handleStripeCheckout = async (priceId: string) => {
-  console.log('Creating checkout session for plan:', priceId);
-  
-  const response = await supabase.functions.invoke('create-checkout-session', {
-    body: JSON.stringify({
-      priceId,
-      mode: 'subscription',
-    }),
-  });
-
-  if (response.error) throw response.error;
-  const { data: { url } } = response;
-  
-  if (url) {
-    console.log('Redirecting to checkout:', url);
-    window.location.href = url;
+export const handleSelectedPlan = async (
+  selectedPlan: string | null,
+  { navigate, toast }: HandlerOptions
+) => {
+  if (selectedPlan) {
+    console.log('Redirecting to pricing section with selected plan');
+    navigate(`/?scrollTo=pricing-section&selectedPlan=${selectedPlan}`);
     return true;
   }
   return false;
 };
 
 export const handleProfileRedirect = async (
-  profile: any,
+  profile: ProfilesRow,
   selectedPlan: string | null,
-  { navigate, toast }: AuthCallbackProps
+  { navigate, toast }: HandlerOptions
 ) => {
-  if (!profile.user_type || !profile.airline) {
+  console.log('Handling profile redirect');
+
+  if (!profile.full_name || !profile.user_type || !profile.airline) {
     console.log('Profile incomplete, redirecting to complete profile');
     navigate('/complete-profile');
     return;
   }
 
-  if (profile.subscription_plan === 'free') {
-    console.log('Free plan user, redirecting to dashboard');
+  if (profile.account_status === 'deleted') {
+    console.log('Account deleted, redirecting to login');
     toast({
-      title: "Login Successful",
-      description: "You've been signed in. Any other active sessions have been signed out for security."
+      variant: "destructive",
+      title: "Account Unavailable",
+      description: "This account has been deleted. Please contact support."
     });
-    navigate('/dashboard');
+    navigate('/login');
     return;
   }
 
-  // Handle paid plan checkout
-  console.log('Paid plan user, redirecting to checkout');
-  const priceId = profile.subscription_plan === 'monthly'
-    ? 'price_1QcfUFA8w17QmjsPe9KXKFpT'
-    : 'price_1QcfWYA8w17QmjsPZ22koqjj';
-
-  try {
-    await handleStripeCheckout(priceId);
-  } catch (error) {
-    throw new Error('Failed to create checkout session');
-  }
-};
-
-export const handleSelectedPlan = async (
-  selectedPlan: string | null,
-  { navigate, toast }: AuthCallbackProps
-) => {
-  if (selectedPlan && selectedPlan !== 'free') {
-    const priceId = selectedPlan.toLowerCase() === 'monthly' 
-      ? 'price_1QcfUFA8w17QmjsPe9KXKFpT' 
-      : 'price_1QcfWYA8w17QmjsPZ22koqjj';
-
-    try {
-      const success = await handleStripeCheckout(priceId);
-      if (!success) {
-        throw new Error('No checkout URL received');
-      }
-      return true;
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to process payment. Please try again.",
-      });
-      navigate('/dashboard');
-      return true;
-    }
-  }
-  return false;
+  console.log('Profile complete, redirecting to chat');
+  navigate('/chat');
 };
