@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReleaseNote {
   id: string;
@@ -20,12 +21,19 @@ interface ReleaseNote {
 export function ReleaseNotePopup() {
   const [open, setOpen] = useState(false);
   const [latestNote, setLatestNote] = useState<ReleaseNote | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkReleaseNotes = async () => {
       try {
         // Get the current user's session
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          return;
+        }
+        
         if (!session) {
           console.log('No active session, skipping release notes check');
           return;
@@ -36,15 +44,44 @@ export function ReleaseNotePopup() {
         const viewedNotes: string[] = viewedNotesString ? JSON.parse(viewedNotesString) : [];
         console.log('Previously viewed release notes:', viewedNotes);
 
-        // Get the latest release note
-        const { data: notes, error } = await supabase
-          .from('release_notes')
-          .select('*')
-          .order('release_date', { ascending: false })
-          .limit(1);
+        // Get the latest release note with retries
+        let attempts = 0;
+        const maxAttempts = 3;
+        let notes = null;
+        let error = null;
 
-        if (error) {
-          console.error('Error fetching release notes:', error);
+        while (attempts < maxAttempts && !notes) {
+          try {
+            console.log(`Attempting to fetch release notes (attempt ${attempts + 1}/${maxAttempts})`);
+            const response = await supabase
+              .from('release_notes')
+              .select('*')
+              .order('release_date', { ascending: false })
+              .limit(1);
+
+            if (response.error) {
+              throw response.error;
+            }
+
+            notes = response.data;
+            break;
+          } catch (e) {
+            error = e;
+            attempts++;
+            if (attempts < maxAttempts) {
+              // Wait before retrying (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
+            }
+          }
+        }
+
+        if (error || !notes) {
+          console.error('Failed to fetch release notes after all attempts:', error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to check for new releases. Please try again later.",
+          });
           return;
         }
 
@@ -71,6 +108,11 @@ export function ReleaseNotePopup() {
         }
       } catch (error) {
         console.error('Error in checkReleaseNotes:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to check for new releases. Please try again later.",
+        });
       }
     };
 
