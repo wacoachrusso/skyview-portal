@@ -16,25 +16,31 @@ export default function Index() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     console.log('Index page mounted, checking auth status...');
     
     const checkAuthAndRedirect = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error checking auth status:', error);
-        return;
+      // Only redirect on initial load
+      if (!initialLoadComplete) {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error checking auth status:', error);
+          return;
+        }
+
+        if (session?.user) {
+          console.log('User is logged in, redirecting to chat on initial load...');
+          navigate('/chat');
+          return;
+        }
+
+        setInitialLoadComplete(true);
       }
 
-      if (session?.user) {
-        console.log('User is logged in, redirecting to chat...');
-        navigate('/chat');
-        return;
-      }
-
-      // Only proceed with other checks if user is not logged in
+      // Handle scroll to pricing section regardless of auth status
       const searchParams = new URLSearchParams(location.search);
       const scrollTo = searchParams.get('scrollTo');
       if (scrollTo === 'pricing-section') {
@@ -62,7 +68,7 @@ export default function Index() {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event);
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'SIGNED_IN' && session && !initialLoadComplete) {
         console.log('User signed in, redirecting to chat...');
         navigate('/chat');
       }
@@ -72,7 +78,7 @@ export default function Index() {
       console.log('Index page unmounted');
       subscription.unsubscribe();
     };
-  }, [location, navigate]);
+  }, [location, navigate, initialLoadComplete]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
