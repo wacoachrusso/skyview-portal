@@ -7,7 +7,7 @@ interface CTAProps {
   badge?: {
     text: string
   }
-  title: string
+  title: string | React.ReactNode
   description?: string
   action: {
     text: string
