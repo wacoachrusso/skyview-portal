@@ -52,7 +52,6 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
         speed={90}
         className="whitespace-pre-wrap"
       />
-      <MarkdownContent content={formatContent(message.content)} />
     </div>
   );
 }
