@@ -1,4 +1,3 @@
-import { CallToAction } from "@/components/landing/CallToAction";
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -60,7 +59,6 @@ export default function Index() {
         <Testimonials />
         <PricingSection />
         <ReferralSection />
-        <CallToAction />
       </main>
       <Footer />
       <ReleaseNotePopup />
