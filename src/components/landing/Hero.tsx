@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
-import { CTASection } from "@/components/ui/cta-with-rectangle";
 
 export function Hero() {
   const [showVideo, setShowVideo] = useState(false);
@@ -64,7 +63,7 @@ export function Hero() {
               </Button>
             </div>
           </div>
-          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8">
+          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-sm">
               <div className="absolute inset-0 bg-glow-gradient opacity-75" aria-hidden="true" />
               <div className="relative animate-float">
@@ -77,21 +76,6 @@ export function Hero() {
             </div>
           </div>
         </div>
-
-        {/* Adding the CTA Section */}
-        <CTASection
-          badge={{
-            text: "Start Your Journey"
-          }}
-          title="Your Contract, Simplified. Sign Up Now!"
-          description="Get instant access to AI-powered contract interpretation and expert guidance."
-          action={{
-            text: "Sign Up Now",
-            href: "/signup",
-            variant: "default"
-          }}
-          className="mt-16"
-        />
       </div>
 
       <Dialog open={showVideo} onOpenChange={setShowVideo}>
