@@ -1,10 +1,10 @@
 import { NavigateFunction } from "react-router-dom";
-import { ToastType } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 
 interface HandlerOptions {
   navigate: NavigateFunction;
-  toast: ToastType;
+  toast: typeof toast;
 }
 
 export const handleSelectedPlan = async (
