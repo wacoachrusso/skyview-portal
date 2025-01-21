@@ -90,3 +90,44 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
     return false;
   }
 };
+
+export const checkActiveSession = async (userId: string, sessionToken: string): Promise<boolean> => {
+  try {
+    console.log('Checking active session for user:', userId);
+    
+    // Check if the session token exists and is valid
+    const { data: isValid } = await supabase
+      .rpc('is_session_valid', {
+        p_session_token: sessionToken
+      });
+
+    if (!isValid) {
+      console.log('Session token invalid or expired');
+      return false;
+    }
+
+    // Check for other active sessions
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('sessions')
+      .select('session_token, status')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .neq('session_token', sessionToken);
+
+    if (sessionsError) {
+      console.error('Error checking active sessions:', sessionsError);
+      return false;
+    }
+
+    // If there are other active sessions, this session is invalid
+    if (sessions && sessions.length > 0) {
+      console.log('Other active sessions found');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in checkActiveSession:', error);
+    return false;
+  }
+};
