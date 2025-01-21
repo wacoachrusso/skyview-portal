@@ -8,31 +8,48 @@ import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
-    console.log('Index page mounted');
+    console.log('Index page mounted, checking auth status...');
     
-    // Check for pricing section scroll
-    const searchParams = new URLSearchParams(location.search);
-    const scrollTo = searchParams.get('scrollTo');
-    if (scrollTo === 'pricing-section') {
-      const pricingSection = document.getElementById('pricing-section');
-      if (pricingSection) {
-        pricingSection.scrollIntoView({ behavior: 'smooth' });
+    const checkAuthAndRedirect = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error checking auth status:', error);
+        return;
       }
-    }
+
+      if (session?.user) {
+        console.log('User is logged in, redirecting to chat...');
+        navigate('/chat');
+        return;
+      }
+
+      // Only proceed with other checks if user is not logged in
+      const searchParams = new URLSearchParams(location.search);
+      const scrollTo = searchParams.get('scrollTo');
+      if (scrollTo === 'pricing-section') {
+        const pricingSection = document.getElementById('pricing-section');
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    checkAuthAndRedirect();
 
     // Check if it's iOS and not in standalone mode
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    
-    // Check if the prompt has been shown before
     const hasShownPrompt = localStorage.getItem('iosInstallPromptShown');
     
     console.log('Device checks:', { isIOS, isStandalone, hasShownPrompt });
@@ -42,10 +59,20 @@ export default function Index() {
       localStorage.setItem('iosInstallPromptShown', 'true');
     }
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      if (event === 'SIGNED_IN' && session) {
+        console.log('User signed in, redirecting to chat...');
+        navigate('/chat');
+      }
+    });
+
     return () => {
       console.log('Index page unmounted');
+      subscription.unsubscribe();
     };
-  }, [location]);
+  }, [location, navigate]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
