@@ -8,50 +8,23 @@ import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
-    console.log('Index page mounted, checking auth status...');
-    
-    const checkAuthAndRedirect = async () => {
-      // Only redirect on initial load
-      if (!initialLoadComplete) {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error checking auth status:', error);
-          return;
-        }
-
-        if (session?.user) {
-          console.log('User is logged in, redirecting to chat on initial load...');
-          navigate('/chat');
-          return;
-        }
-
-        setInitialLoadComplete(true);
+    // Handle scroll to pricing section
+    const searchParams = new URLSearchParams(location.search);
+    const scrollTo = searchParams.get('scrollTo');
+    if (scrollTo === 'pricing-section') {
+      const pricingSection = document.getElementById('pricing-section');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
       }
-
-      // Handle scroll to pricing section regardless of auth status
-      const searchParams = new URLSearchParams(location.search);
-      const scrollTo = searchParams.get('scrollTo');
-      if (scrollTo === 'pricing-section') {
-        const pricingSection = document.getElementById('pricing-section');
-        if (pricingSection) {
-          pricingSection.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-    };
-
-    checkAuthAndRedirect();
+    }
 
     // Check if it's iOS and not in standalone mode
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -64,21 +37,7 @@ export default function Index() {
       setShowIOSPrompt(true);
       localStorage.setItem('iosInstallPromptShown', 'true');
     }
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event);
-      if (event === 'SIGNED_IN' && session && !initialLoadComplete) {
-        console.log('User signed in, redirecting to chat...');
-        navigate('/chat');
-      }
-    });
-
-    return () => {
-      console.log('Index page unmounted');
-      subscription.unsubscribe();
-    };
-  }, [location, navigate, initialLoadComplete]);
+  }, [location]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
