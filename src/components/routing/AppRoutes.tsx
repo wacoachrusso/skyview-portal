@@ -5,6 +5,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { useEffect } from "react";
+import { SessionCheck } from "@/components/chat/settings/SessionCheck";
 
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   useEffect(() => {
@@ -16,7 +17,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
       <div className="flex flex-col items-center justify-center space-y-4 text-center">
         <AlertCircle className="h-12 w-12 text-destructive" />
         <h2 className="text-2xl font-bold">Something went wrong</h2>
-        <p className="text-muted-foreground">We're having trouble loading this page</p>
+        <p className="mt-2 text-muted-foreground">We're having trouble loading this page</p>
         <div className="flex gap-4">
           <Button 
             onClick={() => window.location.reload()}
@@ -38,6 +39,16 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
+// Wrapper component for protected routes
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <>
+      <SessionCheck />
+      {children}
+    </>
+  );
+};
+
 export function AppRoutes() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -54,16 +65,16 @@ export function AppRoutes() {
         <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
         
         {/* Protected routes */}
-        <Route path="/chat" element={<LazyRoutes.Chat />} />
-        <Route path="/account" element={<LazyRoutes.Account />} />
-        <Route path="/settings" element={<LazyRoutes.Settings />} />
-        <Route path="/dashboard" element={<LazyRoutes.Dashboard />} />
-        <Route path="/admin" element={<LazyRoutes.AdminDashboard />} />
-        <Route path="/release-notes" element={<LazyRoutes.ReleaseNotes />} />
-        <Route path="/refunds" element={<LazyRoutes.Refunds />} />
+        <Route path="/chat" element={<ProtectedRoute><LazyRoutes.Chat /></ProtectedRoute>} />
+        <Route path="/account" element={<ProtectedRoute><LazyRoutes.Account /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><LazyRoutes.Settings /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><LazyRoutes.AdminDashboard /></ProtectedRoute>} />
+        <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
+        <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
         {/* Redirect any unknown routes to dashboard */}
-        <Route path="*" element={<LazyRoutes.Dashboard />} />
+        <Route path="*" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
       </Routes>
     </ErrorBoundary>
   );

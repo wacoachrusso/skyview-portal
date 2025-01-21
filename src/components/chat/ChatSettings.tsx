@@ -10,7 +10,6 @@ import { NotificationPreferences } from "./settings/notifications/NotificationPr
 import { AutoSaveToggle } from "./settings/AutoSaveToggle";
 import { AccountInfo } from "./settings/AccountInfo";
 import { LogoutButton } from "./settings/LogoutButton";
-import { SessionCheck } from "./settings/SessionCheck";
 
 export function ChatSettings() {
   const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");
@@ -37,7 +36,6 @@ export function ChatSettings() {
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
-          <SessionCheck />
           <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
           <FontSizeSelector fontSize={fontSize} setFontSize={setFontSize} />
           <NotificationPreferences />
