@@ -54,7 +54,6 @@ export function Footer() {
             <h3 className="font-bold mb-4 text-white">Company</h3>
             <ul className="space-y-2">
               <li><a href="/about" className="text-sm hover:text-white transition-colors">About Us</a></li>
-              <li><a href="mailto:support@skyguide.site" className="text-sm hover:text-white transition-colors">Contact Support</a></li>
               <li><a href="/privacy-policy" className="text-sm hover:text-white transition-colors">Privacy Policy</a></li>
               <li><a href="/refunds" className="text-sm hover:text-white transition-colors">Refund Policy</a></li>
               <li><a href="#" className="text-sm hover:text-white transition-colors">Terms of Service</a></li>
