@@ -49,7 +49,7 @@ export function Hero() {
                 onClick={scrollToPricing}
                 aria-label="Get instant answers to your contract questions"
               >
-                Get Instant Contract Answers
+                Sign Up & Start Using SkyGuide
               </Button>
               <Button
                 size="lg"
