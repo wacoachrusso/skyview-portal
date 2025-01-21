@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
+import { CTASection } from "@/components/ui/cta-with-rectangle";
 
 export function Hero() {
   const [showVideo, setShowVideo] = useState(false);
@@ -16,7 +17,6 @@ export function Hero() {
 
   return (
     <section className="relative min-h-screen bg-hero-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner">
-      {/* Dynamic gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-brand-navy via-brand-navy/90 to-brand-navy/80 animate-gradient" />
       <div className="absolute inset-0 bg-[url('/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png')] opacity-5 bg-repeat animate-slide" aria-hidden="true" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" aria-hidden="true" />
@@ -63,7 +63,7 @@ export function Hero() {
               </Button>
             </div>
           </div>
-          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8" style={{ animationDelay: "0.4s" }}>
+          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8">
             <div className="relative w-full max-w-sm">
               <div className="absolute inset-0 bg-glow-gradient opacity-75" aria-hidden="true" />
               <div className="relative animate-float">
@@ -76,6 +76,20 @@ export function Hero() {
             </div>
           </div>
         </div>
+
+        <CTASection
+          badge={{
+            text: "Experience the Future of Contract Navigation"
+          }}
+          title="Your Contract, Decoded"
+          description="Get instant, accurate answers to your most complex contract questions. Join thousands of aviation professionals who trust SkyGuide for contract clarity."
+          action={{
+            text: "Start Your Journey Today",
+            href: "/signup",
+            variant: "default"
+          }}
+          className="mt-16 lg:mt-24"
+        />
       </div>
 
       <Dialog open={showVideo} onOpenChange={setShowVideo}>
