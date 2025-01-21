@@ -67,20 +67,43 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
   if (!currentToken) return false;
 
   try {
+    // First check if the current session token is valid
     const { data: sessionValid, error: validationError } = await supabase
       .rpc('is_session_valid', {
         p_session_token: currentToken
       });
 
     if (validationError || !sessionValid) {
-      console.log("Session invalid or superseded by another device");
-      localStorage.clear();
-      await supabase.auth.signOut();
-      toast({
-        title: "Session Ended",
-        description: "Your account has been signed in on another device."
-      });
-      navigate('/login');
+      console.log("Session invalid");
+      await handleSessionInvalidation(navigate, toast);
+      return false;
+    }
+
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log("No user found");
+      await handleSessionInvalidation(navigate, toast);
+      return false;
+    }
+
+    // Check for other active sessions
+    const { data: activeSessions, error: sessionsError } = await supabase
+      .from('sessions')
+      .select('session_token, created_at')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .neq('session_token', currentToken);
+
+    if (sessionsError) {
+      console.error("Error checking active sessions:", sessionsError);
+      return false;
+    }
+
+    // If there are other active sessions, invalidate current session
+    if (activeSessions && activeSessions.length > 0) {
+      console.log("Other active sessions found, invalidating current session");
+      await handleSessionInvalidation(navigate, toast);
       return false;
     }
 
@@ -130,4 +153,15 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
     console.error('Error in checkActiveSession:', error);
     return false;
   }
+};
+
+const handleSessionInvalidation = async (navigate: NavigateFunction, toast: typeof toastFunction) => {
+  console.log("Invalidating session and logging out user");
+  localStorage.clear();
+  await supabase.auth.signOut();
+  toast({
+    title: "Session Ended",
+    description: "Your account has been signed in on another device."
+  });
+  navigate('/login');
 };
