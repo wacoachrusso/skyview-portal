@@ -79,16 +79,21 @@ export function Hero() {
 
         <CTASection
           badge={{
-            text: "Experience the Future of Contract Navigation"
+            text: "✨ Transform Your Contract Understanding"
           }}
-          title="Your Contract, Decoded"
-          description="Get instant, accurate answers to your most complex contract questions. Join thousands of aviation professionals who trust SkyGuide for contract clarity."
+          title={
+            <span className="bg-gradient-to-r from-brand-gold via-brand-purple to-brand-magenta bg-clip-text text-transparent animate-gradient">
+              Unlock Your Contract's Full Potential
+            </span>
+          }
+          description="Join thousands of aviation professionals who've revolutionized how they navigate their contracts. Get instant, expert-level insights with our AI-powered contract assistant."
           action={{
-            text: "Start Your Journey Today",
+            text: "Start Your Free Trial →",
             href: "/signup",
             variant: "default"
           }}
-          className="mt-16 lg:mt-24"
+          className="mt-16 lg:mt-24 transform hover:scale-105 transition-transform duration-300"
+          withGlow={true}
         />
       </div>
 

@@ -77,6 +77,7 @@ export default {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
+
       keyframes: {
         "fade-up": {
           "0%": {
@@ -88,9 +89,24 @@ export default {
             transform: "translateY(0)",
           },
         },
+        gradient: {
+          "0%": {
+            "background-position": "0% 50%",
+          },
+          "50%": {
+            "background-position": "100% 50%",
+          },
+          "100%": {
+            "background-position": "0% 50%",
+          },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
+        "gradient": "gradient 3s ease infinite",
+      },
+      backgroundSize: {
+        "300%": "300%",
       },
     },
   },
