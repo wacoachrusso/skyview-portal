@@ -53,11 +53,20 @@ export const usePricingCard = () => {
         email: userEmail
       });
 
+      const sessionToken = localStorage.getItem('session_token');
+      if (!sessionToken) {
+        throw new Error('No session token found');
+      }
+
       const response = await supabase.functions.invoke('create-checkout-session', {
-        body: {
+        body: JSON.stringify({
           priceId,
           mode,
-          email: userEmail
+          email: userEmail,
+          sessionToken
+        }),
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
