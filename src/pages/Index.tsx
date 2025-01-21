@@ -16,7 +16,9 @@ export default function Index() {
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
-    // Handle scroll to pricing section
+    console.log('Index page mounted');
+    
+    // Check for pricing section scroll
     const searchParams = new URLSearchParams(location.search);
     const scrollTo = searchParams.get('scrollTo');
     if (scrollTo === 'pricing-section') {
@@ -29,6 +31,8 @@ export default function Index() {
     // Check if it's iOS and not in standalone mode
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    // Check if the prompt has been shown before
     const hasShownPrompt = localStorage.getItem('iosInstallPromptShown');
     
     console.log('Device checks:', { isIOS, isStandalone, hasShownPrompt });
@@ -37,6 +41,10 @@ export default function Index() {
       setShowIOSPrompt(true);
       localStorage.setItem('iosInstallPromptShown', 'true');
     }
+
+    return () => {
+      console.log('Index page unmounted');
+    };
   }, [location]);
 
   const handleClosePrompt = () => {
