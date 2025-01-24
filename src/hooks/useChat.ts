@@ -109,9 +109,10 @@ export function useChat() {
 
   const startNewChat = async () => {
     console.log('Starting new chat session...');
-    setIsLoading(true);
     try {
       setMessages([]); // Clear messages immediately
+      setIsLoading(false); // Reset loading state
+      
       if (currentUserId) {
         const newConversationId = await createNewConversation(currentUserId);
         if (newConversationId) {
@@ -127,8 +128,6 @@ export function useChat() {
         variant: "destructive",
         duration: 2000
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

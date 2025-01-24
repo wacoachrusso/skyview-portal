@@ -15,7 +15,8 @@ export function ChatContainer({
   isLoading, 
   onCopyMessage 
 }: ChatContainerProps) {
-  const showWelcomeMessage = !isLoading && messages.length === 0;
+  // Only show welcome message if there are no messages and not loading
+  const showWelcomeMessage = messages.length === 0 && !isLoading;
 
   return (
     <div className="flex-1 overflow-y-auto">
