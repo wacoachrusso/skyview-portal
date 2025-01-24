@@ -22,17 +22,6 @@ const initSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseServiceKey);
 };
 
-const validateEnvironment = () => {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
-
-  if (!openAIApiKey || !assistantId) {
-    throw new Error('Required OpenAI environment variables are not set');
-  }
-
-  return { openAIApiKey, assistantId };
-};
-
 serve(async (req) => {
   console.log('Starting chat completion request');
   
@@ -42,8 +31,6 @@ serve(async (req) => {
 
   try {
     const supabase = initSupabaseClient();
-    validateEnvironment();
-
     const { content, subscriptionPlan, userId } = await req.json();
     console.log('Request payload:', { content, subscriptionPlan, userId });
 
@@ -97,23 +84,28 @@ serve(async (req) => {
       );
     }
 
-    // Process request with OpenAI - using gpt-4o-mini for faster responses
+    // Process request with OpenAI
+    console.log('Creating new thread for chat...');
     const thread = await createThread();
+    console.log('Adding message to thread...');
     await addMessageToThread(thread.id, content);
+    console.log('Running assistant...');
     const run = await runAssistant(thread.id);
 
-    // Poll for completion with shorter intervals
+    // Poll for completion
     let runStatus;
     do {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Reduced polling interval
+      await new Promise(resolve => setTimeout(resolve, 500));
       runStatus = await getRunStatus(thread.id, run.id);
       console.log('Run status:', runStatus.status);
     } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
 
     if (runStatus.status !== 'completed') {
+      console.error('Run failed with status:', runStatus.status);
       throw new Error(`Run failed with status: ${runStatus.status}`);
     }
 
+    console.log('Getting messages from thread...');
     const messages = await getMessages(thread.id);
     const assistantMessage = messages.data.find(m => m.role === 'assistant');
     
