@@ -8,16 +8,16 @@ interface MessageContentProps {
 }
 
 function formatContent(content: string) {
-  // Replace [REF]...[/REF] with a cleaner format
+  // Replace [REF]...[/REF] with a more structured format
   return content.replace(/\[REF\](.*?)\[\/REF\]/g, (_, p1) => {
     // Extract section and page info if present
     const match = p1.match(/(Section .+?, Page \d+):(.*)/);
     if (match) {
       const [, reference, quote] = match;
-      return `📄 *${reference}*\n> ${quote.trim()}`;
+      return `\n📄 **Contract Reference:**\n> ${reference}\n\n📝 **Quote:**\n> ${quote.trim()}\n`;
     }
     // If no specific format, just return the reference with a marker
-    return `📄 *Reference:*\n> ${p1.trim()}`;
+    return `\n📄 **Contract Reference:**\n> ${p1.trim()}\n`;
   });
 }
 
