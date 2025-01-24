@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { cleanResponse } from "./utils/validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +22,7 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
 
+    console.log('Making request to OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -59,18 +59,26 @@ serve(async (req) => {
       throw new Error('Failed to get response from OpenAI');
     }
 
+    console.log('Received response from OpenAI API');
     const data = await response.json();
-    const cleanedResponse = cleanResponse(data.choices[0].message.content);
+    
+    if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid response format from OpenAI:', data);
+      throw new Error('Invalid response format from OpenAI');
+    }
 
     return new Response(
-      JSON.stringify({ response: cleanedResponse }),
+      JSON.stringify({ response: data.choices[0].message.content }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in chat completion:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
