@@ -38,6 +38,7 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
+    // Check cache first for faster responses
     const cachedResponse = await getCachedResponse(content);
     if (cachedResponse) {
       console.log('Using cached response');
@@ -84,38 +85,63 @@ serve(async (req) => {
       );
     }
 
-    // Process request with OpenAI
-    console.log('Creating new thread for chat...');
-    const thread = await createThread();
-    console.log('Adding message to thread...');
-    await addMessageToThread(thread.id, content);
-    console.log('Running assistant...');
-    const run = await runAssistant(thread.id);
+    // Set up timeout for the entire operation
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Operation timed out')), 45000); // 45 second total timeout
+    });
 
-    // Poll for completion
-    let runStatus;
-    do {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      runStatus = await getRunStatus(thread.id, run.id);
-      console.log('Run status:', runStatus.status);
-    } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
+    const processRequest = async () => {
+      console.log('Creating new thread for chat...');
+      const thread = await createThread();
+      
+      console.log('Adding message to thread...');
+      await addMessageToThread(thread.id, content);
+      
+      console.log('Running assistant...');
+      const run = await runAssistant(thread.id);
 
-    if (runStatus.status !== 'completed') {
-      console.error('Run failed with status:', runStatus.status);
-      throw new Error(`Run failed with status: ${runStatus.status}`);
-    }
+      // Poll for completion with shorter intervals and max attempts
+      let runStatus;
+      let attempts = 0;
+      const maxAttempts = 30; // 15 seconds max (500ms * 30)
+      
+      do {
+        if (attempts >= maxAttempts) {
+          throw new Error('Response timeout exceeded');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        runStatus = await getRunStatus(thread.id, run.id);
+        console.log('Run status:', runStatus.status, 'Attempt:', attempts + 1);
+        attempts++;
+      } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
 
-    console.log('Getting messages from thread...');
-    const messages = await getMessages(thread.id);
-    const assistantMessage = messages.data.find(m => m.role === 'assistant');
-    
-    if (!assistantMessage) {
-      throw new Error('No assistant response found');
-    }
+      if (runStatus.status !== 'completed') {
+        console.error('Run failed with status:', runStatus.status);
+        throw new Error(`Run failed with status: ${runStatus.status}`);
+      }
 
-    const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
-    console.log('Assistant response:', cleanedResponse);
+      console.log('Getting messages from thread...');
+      const messages = await getMessages(thread.id);
+      const assistantMessage = messages.data.find(m => m.role === 'assistant');
+      
+      if (!assistantMessage) {
+        throw new Error('No assistant response found');
+      }
 
+      return assistantMessage.content[0].text.value;
+    };
+
+    // Race between the request processing and timeout
+    const response = await Promise.race([
+      processRequest(),
+      timeoutPromise
+    ]);
+
+    const cleanedResponse = cleanResponse(response);
+    console.log('Assistant response received');
+
+    // Cache the successful response
     await cacheResponse(content, cleanedResponse);
 
     if (subscriptionPlan === 'free') {
@@ -137,7 +163,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in chat completion:', error);
     
-    const errorMessage = error.message || 'An unexpected error occurred';
+    const errorMessage = error.message === 'Operation timed out' 
+      ? 'The request took too long to process. Please try again.'
+      : error.message || 'An unexpected error occurred';
+    
     const statusCode = error.status || 500;
     
     return new Response(
