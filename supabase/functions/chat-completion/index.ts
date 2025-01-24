@@ -4,12 +4,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCachedResponse, cacheResponse } from './utils/responseCache.ts';
 import { createThread, addMessageToThread, runAssistant, getRunStatus, getMessages } from './utils/openAI.ts';
 import { cleanResponse, containsNonContractContent } from './utils/validation.ts';
-import { withRetry, isRateLimitError } from './utils/retryUtils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const POLLING_INTERVAL = 500; // 500ms between status checks
+const MAX_POLLING_ATTEMPTS = 30; // 15 seconds max polling time
+const TIMEOUT_DURATION = 20000; // 20 second total timeout
 
 const initSupabaseClient = () => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -29,6 +32,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let currentThread = null;
+
   try {
     const supabase = initSupabaseClient();
     const { content, subscriptionPlan, userId } = await req.json();
@@ -38,7 +43,7 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    // Check cache first for faster responses
+    // Check cache first
     const cachedResponse = await getCachedResponse(content);
     if (cachedResponse) {
       console.log('Using cached response');
@@ -85,63 +90,59 @@ serve(async (req) => {
       );
     }
 
-    // Set up timeout for the entire operation
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Operation timed out')), 30000); // 30 second total timeout
-    });
-
     const processRequest = async () => {
-      console.log('Creating new thread for chat...');
-      const thread = await createThread();
-      
-      console.log('Adding message to thread...');
-      await addMessageToThread(thread.id, content);
-      
-      console.log('Running assistant...');
-      const run = await runAssistant(thread.id);
-
-      // Poll for completion with shorter intervals and max attempts
-      let runStatus;
-      let attempts = 0;
-      const maxAttempts = 20; // 10 seconds max (500ms * 20)
-      
-      do {
-        if (attempts >= maxAttempts) {
-          throw new Error('Response timeout exceeded');
-        }
+      try {
+        console.log('Creating new thread for chat...');
+        currentThread = await createThread();
         
-        await new Promise(resolve => setTimeout(resolve, 500));
-        runStatus = await getRunStatus(thread.id, run.id);
-        console.log('Run status:', runStatus.status, 'Attempt:', attempts + 1);
-        attempts++;
-      } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
+        console.log('Adding message to thread:', currentThread.id);
+        await addMessageToThread(currentThread.id, content);
+        
+        console.log('Running assistant on thread:', currentThread.id);
+        const run = await runAssistant(currentThread.id);
 
-      if (runStatus.status !== 'completed') {
-        console.error('Run failed with status:', runStatus.status);
-        throw new Error(`Run failed with status: ${runStatus.status}`);
+        let runStatus;
+        let attempts = 0;
+        
+        do {
+          if (attempts >= MAX_POLLING_ATTEMPTS) {
+            throw new Error('Response timeout exceeded');
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL));
+          runStatus = await getRunStatus(currentThread.id, run.id);
+          console.log(`Run status: ${runStatus.status}, Attempt: ${attempts + 1}, Thread: ${currentThread.id}`);
+          attempts++;
+        } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
+
+        if (runStatus.status !== 'completed') {
+          console.error(`Run failed with status: ${runStatus.status}, Thread: ${currentThread.id}`);
+          throw new Error(`Run failed with status: ${runStatus.status}`);
+        }
+
+        console.log('Getting messages from thread:', currentThread.id);
+        const messages = await getMessages(currentThread.id);
+        const assistantMessage = messages.data.find(m => m.role === 'assistant');
+        
+        if (!assistantMessage) {
+          throw new Error('No assistant response found');
+        }
+
+        return assistantMessage.content[0].text.value;
+      } catch (error) {
+        console.error('Error in processRequest:', error);
+        throw error;
       }
-
-      console.log('Getting messages from thread...');
-      const messages = await getMessages(thread.id);
-      const assistantMessage = messages.data.find(m => m.role === 'assistant');
-      
-      if (!assistantMessage) {
-        throw new Error('No assistant response found');
-      }
-
-      return assistantMessage.content[0].text.value;
     };
 
-    // Race between the request processing and timeout
     const response = await Promise.race([
       processRequest(),
-      timeoutPromise
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Operation timed out')), TIMEOUT_DURATION))
     ]);
 
     const cleanedResponse = cleanResponse(response);
-    console.log('Assistant response received');
+    console.log('Assistant response received successfully');
 
-    // Cache the successful response
     await cacheResponse(content, cleanedResponse);
 
     if (subscriptionPlan === 'free') {
@@ -167,15 +168,10 @@ serve(async (req) => {
       ? 'The request took too long to process. Please try again.'
       : error.message || 'An unexpected error occurred';
     
-    const statusCode = error.status || 500;
-    
     return new Response(
-      JSON.stringify({ 
-        error: errorMessage,
-        retryAfter: isRateLimitError(error) ? 60 : undefined
-      }),
+      JSON.stringify({ error: errorMessage }),
       { 
-        status: statusCode,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

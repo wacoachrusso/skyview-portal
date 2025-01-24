@@ -1,8 +1,14 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
 
+if (!openAIApiKey || !assistantId) {
+  throw new Error('Required OpenAI environment variables are not set');
+}
+
 export async function createThread() {
-  console.log('Creating thread...');
+  console.log('Creating new OpenAI thread...');
   try {
     const response = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
@@ -98,7 +104,7 @@ export async function runAssistant(threadId: string) {
 }
 
 export async function getRunStatus(threadId: string, runId: string) {
-  console.log('Getting run status:', runId);
+  console.log('Getting run status:', runId, 'for thread:', threadId);
   try {
     const response = await fetch(
       `https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
@@ -117,7 +123,6 @@ export async function getRunStatus(threadId: string, runId: string) {
     }
 
     const data = await response.json();
-    console.log('Run status:', data.status);
     return data;
   } catch (error) {
     console.error('Error in getRunStatus:', error);
