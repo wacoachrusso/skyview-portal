@@ -57,7 +57,7 @@ export async function runAssistant(threadId: string) {
     body: JSON.stringify({
       assistant_id: assistantId,
       model: 'gpt-4o-mini',
-      instructions: "You are a union contract expert. Provide concise, accurate answers based on the contract content. Include specific references from the contract in this format: 'Section X.X, Page Y: Exact quote'. If no specific reference exists, clearly state this. Keep responses focused and brief while maintaining accuracy."
+      instructions: "You are a union contract expert. Only answer questions directly related to union contract terms, policies, or provisions. If a question is not related to the contract, politely redirect the user to focus on contract-related topics. Include specific references from the contract in this format: [REF]Section X.X, Page Y: Exact quote[/REF]. If no specific reference exists, clearly state this. Keep responses focused and brief while maintaining accuracy."
     })
   });
 
