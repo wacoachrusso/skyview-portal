@@ -1,10 +1,6 @@
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
 
-if (!openAIApiKey || !assistantId) {
-  throw new Error('Required OpenAI environment variables are not set');
-}
-
 export async function createThread() {
   console.log('Creating thread...');
   const response = await fetch('https://api.openai.com/v1/threads', {
@@ -17,16 +13,15 @@ export async function createThread() {
   });
 
   if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Thread creation failed:', errorData);
-    throw new Error(`Failed to create thread: ${errorData}`);
+    console.error('Error creating thread:', await response.text());
+    throw new Error('Failed to create thread');
   }
 
-  return await response.json();
+  return response.json();
 }
 
 export async function addMessageToThread(threadId: string, content: string) {
-  console.log('Adding message to thread...');
+  console.log('Adding message to thread:', threadId);
   const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
     method: 'POST',
     headers: {
@@ -36,21 +31,20 @@ export async function addMessageToThread(threadId: string, content: string) {
     },
     body: JSON.stringify({
       role: 'user',
-      content: content
+      content
     })
   });
 
   if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Message creation failed:', errorData);
+    console.error('Error adding message:', await response.text());
     throw new Error('Failed to add message to thread');
   }
 
-  return await response.json();
+  return response.json();
 }
 
 export async function runAssistant(threadId: string) {
-  console.log('Running assistant...');
+  console.log('Running assistant on thread:', threadId);
   const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
     method: 'POST',
     headers: {
@@ -72,15 +66,15 @@ export async function runAssistant(threadId: string) {
   });
 
   if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Run creation failed:', errorData);
+    console.error('Error running assistant:', await response.text());
     throw new Error('Failed to run assistant');
   }
 
-  return await response.json();
+  return response.json();
 }
 
 export async function getRunStatus(threadId: string, runId: string) {
+  console.log('Getting run status:', runId);
   const response = await fetch(
     `https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
     {
@@ -90,18 +84,17 @@ export async function getRunStatus(threadId: string, runId: string) {
       }
     }
   );
-  
+
   if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Status check failed:', errorData);
-    throw new Error('Failed to check run status');
+    console.error('Error getting run status:', await response.text());
+    throw new Error('Failed to get run status');
   }
-  
-  return await response.json();
+
+  return response.json();
 }
 
 export async function getMessages(threadId: string) {
-  console.log('Retrieving messages...');
+  console.log('Getting messages from thread:', threadId);
   const response = await fetch(
     `https://api.openai.com/v1/threads/${threadId}/messages`,
     {
@@ -113,10 +106,9 @@ export async function getMessages(threadId: string) {
   );
 
   if (!response.ok) {
-    const errorData = await response.text();
-    console.error('Messages retrieval failed:', errorData);
-    throw new Error('Failed to retrieve messages');
+    console.error('Error getting messages:', await response.text());
+    throw new Error('Failed to get messages');
   }
 
-  return await response.json();
+  return response.json();
 }
