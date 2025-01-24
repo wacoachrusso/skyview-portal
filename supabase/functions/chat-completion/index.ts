@@ -35,7 +35,9 @@ serve(async (req) => {
     });
 
     if (!threadResponse.ok) {
-      throw new Error(`Failed to create thread: ${await threadResponse.text()}`);
+      const errorText = await threadResponse.text();
+      console.error('Thread creation failed:', errorText);
+      throw new Error(`Failed to create thread: ${errorText}`);
     }
 
     const thread = await threadResponse.json();
@@ -56,7 +58,9 @@ serve(async (req) => {
     });
 
     if (!messageResponse.ok) {
-      throw new Error(`Failed to add message: ${await messageResponse.text()}`);
+      const errorText = await messageResponse.text();
+      console.error('Message creation failed:', errorText);
+      throw new Error(`Failed to add message: ${errorText}`);
     }
 
     console.log('Added message to thread');
@@ -75,7 +79,9 @@ serve(async (req) => {
     });
 
     if (!runResponse.ok) {
-      throw new Error(`Failed to run assistant: ${await runResponse.text()}`);
+      const errorText = await runResponse.text();
+      console.error('Run creation failed:', errorText);
+      throw new Error(`Failed to run assistant: ${errorText}`);
     }
 
     const run = await runResponse.json();
@@ -96,7 +102,9 @@ serve(async (req) => {
       );
 
       if (!statusResponse.ok) {
-        throw new Error(`Failed to check run status: ${await statusResponse.text()}`);
+        const errorText = await statusResponse.text();
+        console.error('Status check failed:', errorText);
+        throw new Error(`Failed to check run status: ${errorText}`);
       }
 
       runStatus = await statusResponse.json();
@@ -104,6 +112,7 @@ serve(async (req) => {
     } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
     if (runStatus.status !== 'completed') {
+      console.error('Run failed with status:', runStatus.status);
       throw new Error(`Run failed with status: ${runStatus.status}`);
     }
 
@@ -119,7 +128,9 @@ serve(async (req) => {
     );
 
     if (!messagesResponse.ok) {
-      throw new Error(`Failed to get messages: ${await messagesResponse.text()}`);
+      const errorText = await messagesResponse.text();
+      console.error('Messages retrieval failed:', errorText);
+      throw new Error(`Failed to get messages: ${errorText}`);
     }
 
     const messages = await messagesResponse.json();
@@ -138,14 +149,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in chat-completion function:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'An error occurred while processing your request'
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
