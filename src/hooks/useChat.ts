@@ -82,8 +82,13 @@ export function useChat() {
 
   const startNewChat = async () => {
     console.log('Starting new chat session...');
-    setMessages([]);
-    setCurrentConversationId(null);
+    if (currentUserId) {
+      const newConversationId = await createNewConversation(currentUserId);
+      if (newConversationId) {
+        setCurrentConversationId(newConversationId);
+        setMessages([]);
+      }
+    }
   };
 
   useEffect(() => {

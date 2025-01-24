@@ -9,8 +9,34 @@ export function useConversation() {
 
   const createNewConversation = async (userId: string) => {
     console.log('Creating new conversation...');
-    setCurrentConversationId(null);
-    return null;
+    try {
+      const { data: newConversation, error: conversationError } = await supabase
+        .from('conversations')
+        .insert([{ 
+          user_id: userId,
+          title: 'New Chat'
+        }])
+        .select()
+        .single();
+
+      if (conversationError) {
+        console.error('Error creating conversation:', conversationError);
+        throw conversationError;
+      }
+      
+      console.log('New conversation created:', newConversation);
+      setCurrentConversationId(newConversation.id);
+      return newConversation.id;
+    } catch (error) {
+      console.error('Error in createNewConversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new conversation",
+        variant: "destructive",
+        duration: 2000
+      });
+      return null;
+    }
   };
 
   const ensureConversation = async (userId: string, firstMessage?: string) => {
