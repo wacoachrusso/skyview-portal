@@ -16,7 +16,10 @@ export async function createThread() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Thread creation failed:', errorText);
-      throw new Error(`Failed to create thread: ${ data = await response.json();
+      throw new Error(`Failed to create thread: ${errorText}`);
+    }
+
+    const data = await response.json();
     console.log('Thread created successfully:', data.id);
     return data;
   } catch (error) {
