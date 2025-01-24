@@ -111,12 +111,12 @@ export function useChat() {
     console.log('Starting new chat session...');
     setIsLoading(true);
     try {
+      setMessages([]); // Clear messages immediately
       if (currentUserId) {
         const newConversationId = await createNewConversation(currentUserId);
         if (newConversationId) {
           console.log('New conversation created, setting ID:', newConversationId);
           setCurrentConversationId(newConversationId);
-          setMessages([]);
         }
       }
     } catch (error) {
