@@ -15,7 +15,7 @@ export function useFeedbackHandling(messageId: string, isCurrentUser: boolean) {
         .from('message_feedback')
         .select('*')
         .eq('message_id', messageId)
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
       if (!error && data) {
         setFeedback(data);
