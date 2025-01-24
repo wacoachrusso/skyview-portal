@@ -12,7 +12,7 @@ const corsHeaders = {
 const openAIHeaders = {
   'Authorization': `Bearer ${openAIApiKey}`,
   'Content-Type': 'application/json',
-  'OpenAI-Beta': 'assistants=v1'
+  'OpenAI-Beta': 'assistants=v2'
 };
 
 serve(async (req) => {
@@ -32,7 +32,7 @@ serve(async (req) => {
     // Create a thread
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
-      headers: openAIHeaders,
+      headers: openAIHeaders
     });
 
     if (!threadResponse.ok) {
