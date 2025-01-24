@@ -23,15 +23,14 @@ serve(async (req) => {
     const { content, subscriptionPlan } = await req.json();
     console.log('Received request with content:', content);
 
-    // Create a thread with v2 headers
+    // Create a thread
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
         'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({})
+      }
     });
 
     if (!threadResponse.ok) {
@@ -43,7 +42,7 @@ serve(async (req) => {
     const thread = await threadResponse.json();
     console.log('Created thread:', thread.id);
 
-    // Add message to thread with v2 headers
+    // Add message to thread
     const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
       headers: {
@@ -65,7 +64,7 @@ serve(async (req) => {
 
     console.log('Added message to thread');
 
-    // Run the assistant with v2 headers
+    // Run the assistant
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
       headers: {
@@ -116,7 +115,7 @@ serve(async (req) => {
       throw new Error(`Run failed with status: ${runStatus.status}`);
     }
 
-    // Get messages with v2 headers
+    // Get messages
     const messagesResponse = await fetch(
       `https://api.openai.com/v1/threads/${thread.id}/messages`,
       {
