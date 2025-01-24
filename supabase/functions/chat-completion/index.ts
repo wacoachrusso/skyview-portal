@@ -38,7 +38,6 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    // Check cache first for faster response
     const cachedResponse = await getCachedResponse(content);
     if (cachedResponse) {
       console.log('Using cached response');
@@ -85,7 +84,7 @@ serve(async (req) => {
       );
     }
 
-    // Process request with OpenAI - with shorter polling interval
+    // Process request with OpenAI
     console.log('Creating new thread for chat...');
     const thread = await createThread();
     console.log('Adding message to thread...');
@@ -93,19 +92,12 @@ serve(async (req) => {
     console.log('Running assistant...');
     const run = await runAssistant(thread.id);
 
-    // Poll for completion with shorter intervals
+    // Poll for completion
     let runStatus;
-    let attempts = 0;
-    const maxAttempts = 60; // Maximum 30 seconds (60 * 500ms)
     do {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Check every 500ms
+      await new Promise(resolve => setTimeout(resolve, 500));
       runStatus = await getRunStatus(thread.id, run.id);
       console.log('Run status:', runStatus.status);
-      attempts++;
-      
-      if (attempts >= maxAttempts) {
-        throw new Error('Response timeout exceeded');
-      }
     } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
 
     if (runStatus.status !== 'completed') {
