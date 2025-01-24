@@ -12,7 +12,7 @@ const corsHeaders = {
 const openAIHeaders = {
   'Authorization': `Bearer ${openAIApiKey}`,
   'Content-Type': 'application/json',
-  'OpenAI-Beta': 'assistants=v2'
+  'OpenAI-Beta': 'assistants=v1'
 };
 
 serve(async (req) => {
@@ -32,7 +32,7 @@ serve(async (req) => {
     // Create a thread
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
-      headers: openAIHeaders
+      headers: openAIHeaders,
     });
 
     if (!threadResponse.ok) {
@@ -50,7 +50,7 @@ serve(async (req) => {
       headers: openAIHeaders,
       body: JSON.stringify({
         role: 'user',
-        content
+        content: content
       })
     });
 
@@ -67,7 +67,8 @@ serve(async (req) => {
       method: 'POST',
       headers: openAIHeaders,
       body: JSON.stringify({
-        assistant_id: assistantId
+        assistant_id: assistantId,
+        instructions: "Please include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section."
       })
     });
 
@@ -83,11 +84,11 @@ serve(async (req) => {
     // Poll for completion
     let runStatus;
     let attempts = 0;
-    const maxAttempts = 30; // 30 seconds timeout
+    const maxAttempts = 60; // 60 seconds timeout
     
     do {
       if (attempts >= maxAttempts) {
-        throw new Error('Run timed out after 30 seconds');
+        throw new Error('Run timed out after 60 seconds');
       }
       
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -141,7 +142,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in chat-completion function:', error);
     
-    // Return a more detailed error response
     return new Response(
       JSON.stringify({
         error: error.message,
