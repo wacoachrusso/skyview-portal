@@ -68,8 +68,8 @@ export function useChat() {
       setCurrentConversationId(conversationId);
 
       console.log('Inserting user message into conversation:', conversationId);
-      await insertUserMessage(content, conversationId);
-      console.log('User message inserted successfully');
+      const userMessage = await insertUserMessage(content, conversationId);
+      console.log('User message inserted successfully:', userMessage);
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
@@ -93,8 +93,6 @@ export function useChat() {
 
     } catch (error) {
       console.error('Error in chat flow:', error);
-      // Remove the temporary message if there was an error
-      setMessages(prev => prev.filter(msg => msg.user_id === currentUserId));
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
@@ -111,6 +109,7 @@ export function useChat() {
     try {
       setMessages([]); // Clear messages immediately
       setIsLoading(false); // Reset loading state
+      setCurrentConversationId(null); // Reset conversation ID
       
       if (currentUserId) {
         const newConversationId = await createNewConversation(currentUserId);
@@ -130,7 +129,10 @@ export function useChat() {
     }
   };
 
+  // Subscribe to real-time message updates
   useEffect(() => {
+    if (!currentConversationId) return;
+
     const channel = supabase
       .channel('messages_channel')
       .on(
@@ -138,15 +140,13 @@ export function useChat() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages'
+          table: 'messages',
+          filter: `conversation_id=eq.${currentConversationId}`
         },
         (payload) => {
           console.log('New message received:', payload);
           const newMessage = payload.new as Message;
-          if (newMessage.conversation_id === currentConversationId) {
-            console.log('Adding message to chat:', newMessage);
-            setMessages(prev => [...prev, newMessage]);
-          }
+          setMessages(prev => [...prev, newMessage]);
         }
       )
       .subscribe();
