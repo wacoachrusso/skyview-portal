@@ -23,7 +23,7 @@ serve(async (req) => {
     }
 
     console.log('Making request to OpenAI API...');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -53,16 +53,16 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI API error:', error);
-      throw new Error('Failed to get response from OpenAI');
+    if (!openAIResponse.ok) {
+      const errorText = await openAIResponse.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${openAIResponse.status} - ${errorText}`);
     }
 
     console.log('Received response from OpenAI API');
-    const data = await response.json();
+    const data = await openAIResponse.json();
     
-    if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+    if (!data?.choices?.[0]?.message?.content) {
       console.error('Invalid response format from OpenAI:', data);
       throw new Error('Invalid response format from OpenAI');
     }
@@ -74,6 +74,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in chat completion:', error);
+    
+    // Check if it's a network error
+    if (error instanceof TypeError && error.message.includes('fetch failed')) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Network error while connecting to OpenAI',
+          details: error.toString()
+        }),
+        { 
+          status: 503,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({ 
         error: error.message,
