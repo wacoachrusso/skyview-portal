@@ -1,6 +1,10 @@
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
 
+if (!openAIApiKey || !assistantId) {
+  throw new Error('Required OpenAI environment variables are not set');
+}
+
 export async function createThread() {
   console.log('Creating thread...');
   const response = await fetch('https://api.openai.com/v1/threads', {
@@ -8,7 +12,7 @@ export async function createThread() {
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
       'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
+      'OpenAI-Beta': 'assistants=v1'
     }
   });
 
@@ -28,7 +32,7 @@ export async function addMessageToThread(threadId: string, content: string) {
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
       'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
+      'OpenAI-Beta': 'assistants=v1'
     },
     body: JSON.stringify({
       role: 'user',
@@ -52,12 +56,18 @@ export async function runAssistant(threadId: string) {
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
       'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
+      'OpenAI-Beta': 'assistants=v1'
     },
     body: JSON.stringify({
       assistant_id: assistantId,
-      model: 'gpt-4o-mini',
-      instructions: "You are a union contract expert. Only answer questions directly related to union contract terms, policies, or provisions. If a question is not related to the contract, politely redirect the user to focus on contract-related topics. Include specific references from the contract in this format: [REF]Section X.X, Page Y: Exact quote[/REF]. If no specific reference exists, clearly state this. Keep responses focused and brief while maintaining accuracy."
+      instructions: `You are a union contract expert. When answering questions, you must:
+      1. Only answer questions directly related to union contract terms, policies, or provisions
+      2. Include specific references from the contract in this exact format:
+         [REF]Section X.X, Page Y: Exact quote from contract[/REF]
+      3. If no specific reference exists, clearly state this
+      4. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
+      5. Keep responses focused and accurate
+      6. Format all contract references consistently using the [REF] tags`
     })
   });
 
@@ -76,7 +86,7 @@ export async function getRunStatus(threadId: string, runId: string) {
     {
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
-        'OpenAI-Beta': 'assistants=v2'
+        'OpenAI-Beta': 'assistants=v1'
       }
     }
   );
@@ -97,7 +107,7 @@ export async function getMessages(threadId: string) {
     {
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
-        'OpenAI-Beta': 'assistants=v2'
+        'OpenAI-Beta': 'assistants=v1'
       }
     }
   );
