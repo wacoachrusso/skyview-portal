@@ -17,11 +17,15 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     e.preventDefault();
     if (!message.trim() || isLoading || disabled) return;
 
+    const messageContent = message.trim();
+    setMessage(""); // Clear input immediately after submission
+    
     try {
-      await onSendMessage(message.trim());
-      setMessage("");
+      await onSendMessage(messageContent);
     } catch (error) {
       console.error('Error sending message:', error);
+      // Restore the message if there was an error
+      setMessage(messageContent);
     }
   };
 

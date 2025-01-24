@@ -65,8 +65,8 @@ export function useChat() {
       setMessages(prev => [...prev, tempUserMessage]);
 
       console.log('Inserting user message into conversation:', conversationId);
-      const userMessage = await insertUserMessage(content, conversationId);
-      console.log('User message inserted:', userMessage);
+      await insertUserMessage(content, conversationId);
+      console.log('User message inserted successfully');
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
@@ -75,7 +75,14 @@ export function useChat() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from chat-completion:', error);
+        throw error;
+      }
+
+      if (!data || !data.response) {
+        throw new Error('Invalid response from chat-completion');
+      }
       
       console.log('Received AI response, inserting message');
       await insertAIMessage(data.response, conversationId);
@@ -83,6 +90,8 @@ export function useChat() {
 
     } catch (error) {
       console.error('Error in chat flow:', error);
+      // Remove the temporary message if there was an error
+      setMessages(prev => prev.filter(msg => msg.id !== tempUserMessage?.id));
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
