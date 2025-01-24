@@ -21,9 +21,10 @@ serve(async (req) => {
     }
 
     const { content, subscriptionPlan } = await req.json();
-    console.log('Received request with content:', content);
+    console.log('Starting chat completion with content:', content);
 
     // Create a thread
+    console.log('Creating thread...');
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
       headers: {
@@ -40,9 +41,10 @@ serve(async (req) => {
     }
 
     const thread = await threadResponse.json();
-    console.log('Created thread:', thread.id);
+    console.log('Thread created successfully:', thread.id);
 
     // Add message to thread
+    console.log('Adding message to thread...');
     const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
       headers: {
@@ -62,9 +64,10 @@ serve(async (req) => {
       throw new Error(`Failed to add message: ${errorText}`);
     }
 
-    console.log('Added message to thread');
+    console.log('Message added successfully');
 
     // Run the assistant
+    console.log('Starting assistant run...');
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
       headers: {
@@ -84,7 +87,7 @@ serve(async (req) => {
     }
 
     const run = await runResponse.json();
-    console.log('Started run:', run.id);
+    console.log('Run started successfully:', run.id);
 
     // Poll for completion
     let runStatus;
@@ -107,7 +110,7 @@ serve(async (req) => {
       }
 
       runStatus = await statusResponse.json();
-      console.log('Run status:', runStatus.status);
+      console.log('Current run status:', runStatus.status);
     } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
     if (runStatus.status !== 'completed') {
@@ -116,6 +119,7 @@ serve(async (req) => {
     }
 
     // Get messages
+    console.log('Retrieving messages...');
     const messagesResponse = await fetch(
       `https://api.openai.com/v1/threads/${thread.id}/messages`,
       {
@@ -140,7 +144,7 @@ serve(async (req) => {
     }
 
     const response = assistantMessage.content[0].text.value;
-    console.log('Assistant response:', response);
+    console.log('Assistant response retrieved successfully');
 
     return new Response(JSON.stringify({ response }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -148,9 +152,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in chat-completion function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
