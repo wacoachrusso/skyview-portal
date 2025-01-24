@@ -1,6 +1,9 @@
 export function cleanResponse(response: string): string {
+  // Remove any source citations like 【8:0†source】
+  const cleanedResponse = response.replace(/【[^】]*】/g, '');
+  
   // Ensure references are properly formatted
-  const cleanedResponse = response.replace(
+  const formattedResponse = cleanedResponse.replace(
     /\[REF\](Section [^,]+, Page \d+):(.*?)\[\/REF\]/g,
     (_, reference, quote) => {
       return `[REF]${reference.trim()}: ${quote.trim()}[/REF]`;
@@ -8,11 +11,11 @@ export function cleanResponse(response: string): string {
   );
   
   // If no references were found, append a note
-  if (!cleanedResponse.includes('[REF]')) {
-    return cleanedResponse + '\n\n[REF]Note: No specific contract references were found for this query.[/REF]';
+  if (!formattedResponse.includes('[REF]')) {
+    return formattedResponse + '\n\n[REF]Note: No specific contract references were found for this query.[/REF]';
   }
   
-  return cleanedResponse;
+  return formattedResponse;
 }
 
 export function containsNonContractContent(content: string): boolean {

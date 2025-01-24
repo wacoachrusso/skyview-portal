@@ -86,7 +86,7 @@ export function useChat() {
         throw new Error('Invalid response from chat-completion');
       }
       
-      console.log('Received AI response, inserting message');
+      console.log('Received AI response:', data.response);
       await insertAIMessage(data.response, conversationId);
       console.log('AI message inserted successfully');
 
