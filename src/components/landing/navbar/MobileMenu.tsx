@@ -1,9 +1,12 @@
-import { MessageSquare } from "lucide-react";
+import { Menu, MessageSquare } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { Link } from "react-router-dom";
-import { ExpandableTabs } from "@/components/ui/expandable-tabs";
-import { Home, MessageSquare as Chat, User, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MobileMenuProps {
   isLoggedIn: boolean;
@@ -20,46 +23,47 @@ export function MobileMenu({
   setIsMobileMenuOpen,
   scrollToPricing
 }: MobileMenuProps) {
-  const handleTabChange = (index: number | null) => {
-    if (index === null) return;
-    
-    const tabs = [
-      { path: "/dashboard", title: "Dashboard" },
-      { path: "/chat", title: "Chat" },
-      { path: "/account", title: "Account" }
-    ];
-    
-    const selectedTab = tabs[index];
-    if (selectedTab) {
-      window.location.href = selectedTab.path;
-    }
-  };
-
   return (
-    <div className="md:hidden">
-      {isLoggedIn && !isLoading ? (
+    <div className="md:hidden flex items-center gap-2">
+      {isLoggedIn && !isLoading && (
         <div className="flex items-center gap-2">
+          <Link 
+            to="/chat"
+            className="p-2 text-foreground hover:bg-accent rounded-md transition-colors"
+            aria-label="Open chat"
+          >
+            <MessageSquare className="h-5 w-5" />
+          </Link>
           <NotificationBell />
-          <ExpandableTabs
-            tabs={[
-              { title: "Dashboard", icon: Home },
-              { title: "Chat", icon: Chat },
-              { type: "separator" },
-              { title: "Account", icon: User },
-              { title: "Sign Out", icon: LogOut }
-            ]}
-            className="border-border/40"
-            onChange={handleTabChange}
-          />
         </div>
-      ) : (
-        <AuthButtons 
-          isLoading={isLoading} 
-          isLoggedIn={isLoggedIn} 
-          scrollToPricing={scrollToPricing}
-          isMobile={true}
-        />
       )}
+      <DropdownMenu 
+        open={isMobileMenuOpen} 
+        onOpenChange={setIsMobileMenuOpen}
+      >
+        <DropdownMenuTrigger asChild>
+          <button
+            className="p-2 text-foreground hover:bg-accent rounded-md transition-colors"
+            aria-label="Toggle menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent 
+          align="end"
+          className="w-56 bg-background/95 backdrop-blur-sm border border-border mt-2"
+        >
+          <div className="p-2">
+            <AuthButtons 
+              isLoading={isLoading} 
+              isLoggedIn={isLoggedIn} 
+              scrollToPricing={scrollToPricing}
+              isMobile={true}
+              showChatOnly={false}
+            />
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
