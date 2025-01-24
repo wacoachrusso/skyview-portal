@@ -54,7 +54,7 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    // Check for cached response
+    // Check for cached response first - this will speed up repeated questions
     const cachedResponse = await getCachedResponse(content);
     if (cachedResponse) {
       console.log('Using cached response');
@@ -102,15 +102,15 @@ serve(async (req) => {
       );
     }
 
-    // Process request with OpenAI
+    // Process request with OpenAI - using gpt-4o-mini for faster responses
     const thread = await createThread();
     await addMessageToThread(thread.id, content);
     const run = await runAssistant(thread.id);
 
-    // Poll for completion
+    // Poll for completion with shorter intervals
     let runStatus;
     do {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500)); // Reduced polling interval
       runStatus = await getRunStatus(thread.id, run.id);
       console.log('Run status:', runStatus.status);
     } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
@@ -129,7 +129,7 @@ serve(async (req) => {
     const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
     console.log('Assistant response:', cleanedResponse);
 
-    // Cache response
+    // Cache response for future use
     await cacheResponse(content, cleanedResponse);
 
     // Update query count for free trial users

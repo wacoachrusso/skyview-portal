@@ -32,7 +32,7 @@ export async function addMessageToThread(threadId: string, content: string) {
     },
     body: JSON.stringify({
       role: 'user',
-      content: `${content}\n\nPlease include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section.`
+      content: content
     })
   });
 
@@ -56,7 +56,8 @@ export async function runAssistant(threadId: string) {
     },
     body: JSON.stringify({
       assistant_id: assistantId,
-      instructions: "Always provide answers based on the contract content. Every response must include a reference section with the specific section and page number from the contract that supports your answer. Format references as [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for a query, clearly state this in the reference section."
+      model: 'gpt-4o-mini', // Using the faster model
+      instructions: "You are a union contract expert. Provide concise, accurate answers based on the contract content. Always include specific references in this format: [REF]Section X.X, Page Y: Exact quote[/REF]. If no reference exists, clearly state this. Keep responses focused and brief while maintaining accuracy."
     })
   });
 
