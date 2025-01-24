@@ -23,13 +23,13 @@ serve(async (req) => {
     const { content, subscriptionPlan } = await req.json();
     console.log('Received request with content:', content);
 
-    // Create a thread
+    // Create a thread with v2 headers
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v1'
+        'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({})
     });
@@ -41,13 +41,13 @@ serve(async (req) => {
     const thread = await threadResponse.json();
     console.log('Created thread:', thread.id);
 
-    // Add message to thread
+    // Add message to thread with v2 headers
     const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v1'
+        'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({
         role: 'user',
@@ -61,13 +61,13 @@ serve(async (req) => {
 
     console.log('Added message to thread');
 
-    // Run the assistant
+    // Run the assistant with v2 headers
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v1'
+        'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({
         assistant_id: assistantId
@@ -90,7 +90,7 @@ serve(async (req) => {
         {
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
-            'OpenAI-Beta': 'assistants=v1'
+            'OpenAI-Beta': 'assistants=v2'
           }
         }
       );
@@ -107,13 +107,13 @@ serve(async (req) => {
       throw new Error(`Run failed with status: ${runStatus.status}`);
     }
 
-    // Get messages
+    // Get messages with v2 headers
     const messagesResponse = await fetch(
       `https://api.openai.com/v1/threads/${thread.id}/messages`,
       {
         headers: {
           'Authorization': `Bearer ${openAIApiKey}`,
-          'OpenAI-Beta': 'assistants=v1'
+          'OpenAI-Beta': 'assistants=v2'
         }
       }
     );
