@@ -87,7 +87,7 @@ serve(async (req) => {
 
     // Set up timeout for the entire operation
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Operation timed out')), 45000); // 45 second total timeout
+      setTimeout(() => reject(new Error('Operation timed out')), 30000); // 30 second total timeout
     });
 
     const processRequest = async () => {
@@ -103,7 +103,7 @@ serve(async (req) => {
       // Poll for completion with shorter intervals and max attempts
       let runStatus;
       let attempts = 0;
-      const maxAttempts = 30; // 15 seconds max (500ms * 30)
+      const maxAttempts = 20; // 10 seconds max (500ms * 20)
       
       do {
         if (attempts >= maxAttempts) {
