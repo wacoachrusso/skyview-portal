@@ -1,6 +1,7 @@
 import { Message } from "@/types/chat";
 import { TypeAnimation } from "react-type-animation";
 import ReactMarkdown from "react-markdown";
+import { Quote } from "lucide-react";
 
 interface MessageContentProps {
   message: Message;
@@ -14,7 +15,7 @@ function formatContent(content: string) {
     const match = p1.match(/(Section .+?, Page \d+):(.*)/);
     if (match) {
       const [, reference, quote] = match;
-      return `\n📄 **Contract Reference:**\n> ${reference}\n\n📝 **Quote:**\n> ${quote.trim()}\n`;
+      return `\n📄 **Contract Reference:**\n> ${reference}\n\n<div class="flex items-center gap-2 mt-2 text-brand-purple"><Quote size={16} /> <em class="text-brand-magenta">${quote.trim()}</em></div>\n`;
     }
     // If no specific format, just return the reference with a marker
     return `\n📄 **Contract Reference:**\n> ${p1.trim()}\n`;
