@@ -11,6 +11,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const TIMEOUT_DURATION = 25000; // 25 seconds timeout
+const MAX_POLLING_ATTEMPTS = 50; // Increased max attempts with shorter intervals
+const POLLING_INTERVAL = 500; // 500ms between checks
+
 const initSupabaseClient = () => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -85,11 +89,6 @@ serve(async (req) => {
       );
     }
 
-    // Set up timeout for the entire operation
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Operation timed out')), 30000); // 30 second total timeout
-    });
-
     const processRequest = async () => {
       console.log('Creating new thread for chat...');
       const thread = await createThread();
@@ -100,17 +99,16 @@ serve(async (req) => {
       console.log('Running assistant...');
       const run = await runAssistant(thread.id);
 
-      // Poll for completion with shorter intervals and max attempts
+      // Poll for completion with shorter intervals
       let runStatus;
       let attempts = 0;
-      const maxAttempts = 20; // 10 seconds max (500ms * 20)
       
       do {
-        if (attempts >= maxAttempts) {
+        if (attempts >= MAX_POLLING_ATTEMPTS) {
           throw new Error('Response timeout exceeded');
         }
         
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL));
         runStatus = await getRunStatus(thread.id, run.id);
         console.log('Run status:', runStatus.status, 'Attempt:', attempts + 1);
         attempts++;
@@ -131,6 +129,11 @@ serve(async (req) => {
 
       return assistantMessage.content[0].text.value;
     };
+
+    // Set up timeout for the entire operation
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Operation timed out')), TIMEOUT_DURATION);
+    });
 
     // Race between the request processing and timeout
     const response = await Promise.race([
