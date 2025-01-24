@@ -21,6 +21,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     setMessage(""); // Clear input immediately after submission
     
     try {
+      console.log('Submitting message:', messageContent);
       await onSendMessage(messageContent);
     } catch (error) {
       console.error('Error sending message:', error);

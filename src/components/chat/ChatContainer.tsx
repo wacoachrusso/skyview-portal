@@ -15,6 +15,8 @@ export function ChatContainer({
   isLoading, 
   onCopyMessage 
 }: ChatContainerProps) {
+  console.log('ChatContainer rendering with messages:', messages);
+  
   // Only show welcome message if there are no messages and not loading
   const showWelcomeMessage = messages.length === 0 && !isLoading;
 

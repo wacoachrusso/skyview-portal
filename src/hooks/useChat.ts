@@ -64,6 +64,8 @@ export function useChat() {
         created_at: new Date().toISOString()
       };
       tempMessageId = tempUserMessage.id;
+      
+      // Update messages state immediately
       setMessages(prev => [...prev, tempUserMessage]);
 
       console.log('Inserting user message into conversation:', conversationId);
