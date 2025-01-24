@@ -12,7 +12,7 @@ const corsHeaders = {
 const openAIHeaders = {
   'Authorization': `Bearer ${openAIApiKey}`,
   'Content-Type': 'application/json',
-  'OpenAI-Beta': 'assistants=v1'
+  'OpenAI-Beta': 'assistants=v2'
 };
 
 serve(async (req) => {
