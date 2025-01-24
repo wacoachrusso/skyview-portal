@@ -8,10 +8,22 @@ interface MessageContentProps {
 }
 
 function formatContent(content: string) {
-  return content.replace(/\[REF\](.*?)\[\/REF\]/g, (_, p1) => `> **Reference:** ${p1}`);
+  // Replace [REF]...[/REF] with a cleaner format
+  return content.replace(/\[REF\](.*?)\[\/REF\]/g, (_, p1) => {
+    // Extract section and page info if present
+    const match = p1.match(/(Section .+?, Page \d+):(.*)/);
+    if (match) {
+      const [, reference, quote] = match;
+      return `📄 *${reference}*\n> ${quote.trim()}`;
+    }
+    // If no specific format, just return the reference with a marker
+    return `📄 *Reference:*\n> ${p1.trim()}`;
+  });
 }
 
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
+  const formattedContent = formatContent(message.content);
+
   if (isCurrentUser) {
     return (
       <div className="prose prose-invert max-w-none">
@@ -23,7 +35,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   return (
     <div className="prose prose-invert max-w-none">
       <TypeAnimation
-        sequence={[message.content]}
+        sequence={[formattedContent]}
         wrapper="div"
         cursor={false}
         repeat={0}
