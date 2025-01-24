@@ -1,4 +1,4 @@
-import { OpenAI } from 'openai';
+import { OpenAI } from 'https://esm.sh/openai@4.28.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const supabase = createClient(
