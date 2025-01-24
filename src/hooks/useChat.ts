@@ -42,31 +42,30 @@ export function useChat() {
     }
     
     setIsLoading(true);
-    let tempMessageId: string | null = null;
     
     try {
+      // Create temporary message for immediate display
+      const tempMessage: Message = {
+        id: crypto.randomUUID(),
+        conversation_id: currentConversationId || '',
+        user_id: currentUserId,
+        content: content,
+        role: 'user',
+        created_at: new Date().toISOString()
+      };
+      
+      // Add temporary message to UI immediately
+      setMessages(prev => [...prev, tempMessage]);
+
       // Ensure we have a valid conversation ID before proceeding
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
       }
 
-      // Set the current conversation ID immediately
+      // Update the temporary message with the correct conversation ID
+      tempMessage.conversation_id = conversationId;
       setCurrentConversationId(conversationId);
-
-      // Add user message to UI immediately
-      const tempUserMessage: Message = {
-        id: crypto.randomUUID(),
-        conversation_id: conversationId,
-        user_id: currentUserId,
-        content: content,
-        role: 'user',
-        created_at: new Date().toISOString()
-      };
-      tempMessageId = tempUserMessage.id;
-      
-      // Update messages state immediately
-      setMessages(prev => [...prev, tempUserMessage]);
 
       console.log('Inserting user message into conversation:', conversationId);
       await insertUserMessage(content, conversationId);
@@ -95,9 +94,7 @@ export function useChat() {
     } catch (error) {
       console.error('Error in chat flow:', error);
       // Remove the temporary message if there was an error
-      if (tempMessageId) {
-        setMessages(prev => prev.filter(msg => msg.id !== tempMessageId));
-      }
+      setMessages(prev => prev.filter(msg => msg.user_id === currentUserId));
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
