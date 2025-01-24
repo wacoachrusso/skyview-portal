@@ -44,6 +44,7 @@ export function useChat() {
     setIsLoading(true);
     
     try {
+      // Create conversation immediately when sending first message
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
@@ -55,7 +56,7 @@ export function useChat() {
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
-          content,
+          content: `${content}\n\nPlease include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section.`,
           subscriptionPlan: userProfile?.subscription_plan || 'free'
         }
       });
