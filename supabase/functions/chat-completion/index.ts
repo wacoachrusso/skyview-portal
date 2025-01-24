@@ -11,7 +11,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Initialize Supabase client with error handling
 const initSupabaseClient = () => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -37,13 +36,11 @@ const validateEnvironment = () => {
 serve(async (req) => {
   console.log('Starting chat completion request');
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Initialize clients and validate environment
     const supabase = initSupabaseClient();
     validateEnvironment();
 
@@ -54,7 +51,6 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
 
-    // Check for cached response first - this will speed up repeated questions
     const cachedResponse = await getCachedResponse(content);
     if (cachedResponse) {
       console.log('Using cached response');
@@ -92,7 +88,6 @@ serve(async (req) => {
       }
     }
 
-    // Content validation
     if (containsNonContractContent(content)) {
       const response = "I noticed your question might not be related to your union contract. I'm here specifically to help you understand your contract terms, policies, and provisions. Would you like to rephrase your question to focus on contract-related matters?";
       await cacheResponse(content, response);
@@ -129,10 +124,8 @@ serve(async (req) => {
     const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
     console.log('Assistant response:', cleanedResponse);
 
-    // Cache response for future use
     await cacheResponse(content, cleanedResponse);
 
-    // Update query count for free trial users
     if (subscriptionPlan === 'free') {
       const { error: updateError } = await supabase
         .from('profiles')
