@@ -44,11 +44,14 @@ export function useChat() {
     setIsLoading(true);
     
     try {
-      // Create conversation immediately when sending first message
+      // Ensure we have a valid conversation ID before proceeding
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
       }
+
+      // Set the current conversation ID immediately
+      setCurrentConversationId(conversationId);
 
       console.log('Inserting user message into conversation:', conversationId);
       const userMessage = await insertUserMessage(content, conversationId);
@@ -82,12 +85,26 @@ export function useChat() {
 
   const startNewChat = async () => {
     console.log('Starting new chat session...');
-    if (currentUserId) {
-      const newConversationId = await createNewConversation(currentUserId);
-      if (newConversationId) {
-        setCurrentConversationId(newConversationId);
-        setMessages([]);
+    setIsLoading(true);
+    try {
+      if (currentUserId) {
+        const newConversationId = await createNewConversation(currentUserId);
+        if (newConversationId) {
+          console.log('New conversation created, setting ID:', newConversationId);
+          setCurrentConversationId(newConversationId);
+          setMessages([]);
+        }
       }
+    } catch (error) {
+      console.error('Error starting new chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start new chat. Please try again.",
+        variant: "destructive",
+        duration: 2000
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
