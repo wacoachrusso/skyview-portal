@@ -28,6 +28,7 @@ const initSupabaseClient = () => {
 serve(async (req) => {
   console.log('Starting chat completion request');
   
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -36,7 +37,9 @@ serve(async (req) => {
 
   try {
     const supabase = initSupabaseClient();
-    const { content, subscriptionPlan, userId } = await req.json();
+    const requestData = await req.json();
+    const { content, subscriptionPlan, userId } = requestData;
+    
     console.log('Request payload:', { content, subscriptionPlan, userId });
 
     if (!content) {
@@ -95,11 +98,19 @@ serve(async (req) => {
         console.log('Creating new thread for chat...');
         currentThread = await createThread();
         
+        if (!currentThread || !currentThread.id) {
+          throw new Error('Failed to create thread');
+        }
+        
         console.log('Adding message to thread:', currentThread.id);
         await addMessageToThread(currentThread.id, content);
         
         console.log('Running assistant on thread:', currentThread.id);
         const run = await runAssistant(currentThread.id);
+
+        if (!run || !run.id) {
+          throw new Error('Failed to start assistant run');
+        }
 
         let runStatus;
         let attempts = 0;

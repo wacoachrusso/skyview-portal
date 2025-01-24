@@ -7,16 +7,18 @@ if (!openAIApiKey || !assistantId) {
   throw new Error('Required OpenAI environment variables are not set');
 }
 
+const headers = {
+  'Authorization': `Bearer ${openAIApiKey}`,
+  'Content-Type': 'application/json',
+  'OpenAI-Beta': 'assistants=v2'
+};
+
 export async function createThread() {
   console.log('Creating new OpenAI thread...');
   try {
     const response = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      }
+      headers
     });
 
     if (!response.ok) {
@@ -39,11 +41,7 @@ export async function addMessageToThread(threadId: string, content: string) {
   try {
     const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
+      headers,
       body: JSON.stringify({
         role: 'user',
         content
@@ -70,11 +68,7 @@ export async function runAssistant(threadId: string) {
   try {
     const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
+      headers,
       body: JSON.stringify({
         assistant_id: assistantId,
         instructions: `You are a union contract expert. When answering questions, you must:
@@ -108,12 +102,7 @@ export async function getRunStatus(threadId: string, runId: string) {
   try {
     const response = await fetch(
       `https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'OpenAI-Beta': 'assistants=v2'
-        }
-      }
+      { headers }
     );
 
     if (!response.ok) {
@@ -135,12 +124,7 @@ export async function getMessages(threadId: string) {
   try {
     const response = await fetch(
       `https://api.openai.com/v1/threads/${threadId}/messages`,
-      {
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'OpenAI-Beta': 'assistants=v2'
-        }
-      }
+      { headers }
     );
 
     if (!response.ok) {
