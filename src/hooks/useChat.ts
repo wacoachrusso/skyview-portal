@@ -54,7 +54,7 @@ export function useChat() {
         created_at: new Date().toISOString()
       };
       
-      // Add temporary message to UI immediately
+      console.log('Adding temporary message to UI:', tempMessage);
       setMessages(prev => [...prev, tempMessage]);
 
       // Ensure we have a valid conversation ID before proceeding
@@ -63,11 +63,10 @@ export function useChat() {
         throw new Error('Failed to create or get conversation');
       }
 
-      // Update the temporary message with the correct conversation ID
-      tempMessage.conversation_id = conversationId;
+      console.log('Conversation ID confirmed:', conversationId);
       setCurrentConversationId(conversationId);
 
-      console.log('Inserting user message into conversation:', conversationId);
+      // Insert the actual user message
       const userMessage = await insertUserMessage(content, conversationId);
       console.log('User message inserted successfully:', userMessage);
 
@@ -131,10 +130,14 @@ export function useChat() {
 
   // Subscribe to real-time message updates
   useEffect(() => {
-    if (!currentConversationId) return;
+    if (!currentConversationId) {
+      console.log('No conversation ID, skipping real-time subscription');
+      return;
+    }
 
+    console.log('Setting up real-time subscription for conversation:', currentConversationId);
     const channel = supabase
-      .channel('messages_channel')
+      .channel(`messages_${currentConversationId}`)
       .on(
         'postgres_changes',
         {
@@ -146,22 +149,33 @@ export function useChat() {
         (payload) => {
           console.log('New message received:', payload);
           const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => {
+            // Check if message already exists to prevent duplicates
+            const exists = prev.some(msg => msg.id === newMessage.id);
+            if (exists) {
+              console.log('Message already exists in state, skipping');
+              return prev;
+            }
+            console.log('Adding new message to state');
+            return [...prev, newMessage];
+          });
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [currentConversationId]);
+  }, [currentConversationId, setMessages]);
 
   // Load messages when conversation changes
   useEffect(() => {
     if (currentConversationId) {
+      console.log('Loading messages for conversation:', currentConversationId);
       loadMessages(currentConversationId);
     }
-  }, [currentConversationId]);
+  }, [currentConversationId, loadMessages]);
 
   return {
     messages,

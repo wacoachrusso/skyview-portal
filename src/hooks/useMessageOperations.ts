@@ -24,6 +24,7 @@ export function useMessageOperations(currentUserId: string | null, currentConver
       .single();
 
     if (userMessageError) throw userMessageError;
+    console.log('User message inserted:', userMessage);
     return userMessage;
   };
 
@@ -41,6 +42,7 @@ export function useMessageOperations(currentUserId: string | null, currentConver
       ]);
 
     if (aiMessageError) throw aiMessageError;
+    console.log('AI message inserted successfully');
   };
 
   const loadMessages = async (conversationId: string) => {

@@ -1,48 +1,34 @@
-import { Message } from "@/types/chat";
-import { TypeAnimation } from "react-type-animation";
-import ReactMarkdown from "react-markdown";
 import { Quote } from "lucide-react";
 
 interface MessageContentProps {
-  message: Message;
+  message: {
+    content: string;
+    role: string;
+  };
   isCurrentUser: boolean;
 }
 
-function formatContent(content: string) {
-  // Replace [REF]...[/REF] with a more structured format
-  return content.replace(/\[REF\](.*?)\[\/REF\]/g, (_, p1) => {
-    // Extract section and page info if present
-    const match = p1.match(/(Section .+?, Page \d+):(.*)/);
-    if (match) {
-      const [, reference, quote] = match;
-      return `\n📄 **Contract Reference:**\n> ${reference}\n\n<div class="flex items-center gap-2 mt-2 text-brand-purple"><Quote size={16} /> <em class="text-brand-magenta">${quote.trim()}</em></div>\n`;
-    }
-    // If no specific format, just return the reference with a marker
-    return `\n📄 **Contract Reference:**\n> ${p1.trim()}\n`;
-  });
-}
-
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
-  const formattedContent = formatContent(message.content);
-
-  if (isCurrentUser) {
-    return (
-      <div className="prose prose-invert max-w-none">
-        <ReactMarkdown>{message.content}</ReactMarkdown>
-      </div>
-    );
-  }
+  const formatContent = (content: string) => {
+    const parts = content.split(/(\[REF\].*?\[\/REF\])/g);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('[REF]') && part.endsWith('[/REF]')) {
+        const quote = part.replace('[REF]', '').replace('[/REF]', '');
+        return (
+          <div key={index} className="flex items-start gap-2 my-2 text-pink-300">
+            <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
+            <em className="italic">{quote}</em>
+          </div>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
 
   return (
-    <div className="prose prose-invert max-w-none">
-      <TypeAnimation
-        sequence={[formattedContent]}
-        wrapper="div"
-        cursor={false}
-        repeat={0}
-        speed={90}
-        className="whitespace-pre-wrap"
-      />
+    <div className="whitespace-pre-wrap break-words">
+      {formatContent(message.content)}
     </div>
   );
 }
