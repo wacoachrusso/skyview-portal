@@ -42,6 +42,7 @@ export function useChat() {
     }
     
     setIsLoading(true);
+    let tempMessageId: string | null = null;
     
     try {
       // Ensure we have a valid conversation ID before proceeding
@@ -62,6 +63,7 @@ export function useChat() {
         role: 'user',
         created_at: new Date().toISOString()
       };
+      tempMessageId = tempUserMessage.id;
       setMessages(prev => [...prev, tempUserMessage]);
 
       console.log('Inserting user message into conversation:', conversationId);
@@ -91,7 +93,9 @@ export function useChat() {
     } catch (error) {
       console.error('Error in chat flow:', error);
       // Remove the temporary message if there was an error
-      setMessages(prev => prev.filter(msg => msg.id !== tempUserMessage?.id));
+      if (tempMessageId) {
+        setMessages(prev => prev.filter(msg => msg.id !== tempMessageId));
+      }
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
