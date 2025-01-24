@@ -1,12 +1,5 @@
-// Import xhr first to ensure proper environment setup
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
-
-if (!openAIApiKey || !assistantId) {
-  throw new Error('Required OpenAI environment variables are not set');
-}
 
 export async function createThread() {
   console.log('Creating thread...');
