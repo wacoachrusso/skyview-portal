@@ -53,6 +53,17 @@ export function useChat() {
       // Set the current conversation ID immediately
       setCurrentConversationId(conversationId);
 
+      // Add user message to UI immediately
+      const tempUserMessage: Message = {
+        id: crypto.randomUUID(),
+        conversation_id: conversationId,
+        user_id: currentUserId,
+        content: content,
+        role: 'user',
+        created_at: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, tempUserMessage]);
+
       console.log('Inserting user message into conversation:', conversationId);
       const userMessage = await insertUserMessage(content, conversationId);
       console.log('User message inserted:', userMessage);
