@@ -1,13 +1,36 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runAssistant } from "./utils/openAI.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCachedResponse, cacheResponse } from './utils/responseCache.ts';
+import { createThread, addMessageToThread, runAssistant, getRunStatus, getMessages } from './utils/openAI.ts';
 import { cleanResponse, containsNonContractContent } from './utils/validation.ts';
+import { withRetry, isRateLimitError } from './utils/retryUtils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const initSupabaseClient = () => {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Required Supabase environment variables are not set');
+  }
+  
+  return createClient(supabaseUrl, supabaseServiceKey);
+};
+
+const validateEnvironment = () => {
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
+
+  if (!openAIApiKey || !assistantId) {
+    throw new Error('Required OpenAI environment variables are not set');
+  }
+
+  return { openAIApiKey, assistantId };
 };
 
 serve(async (req) => {
@@ -18,10 +41,8 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabase = initSupabaseClient();
+    validateEnvironment();
 
     const { content, subscriptionPlan, userId } = await req.json();
     console.log('Request payload:', { content, subscriptionPlan, userId });
@@ -76,8 +97,31 @@ serve(async (req) => {
       );
     }
 
-    const response = await runAssistant({ content, subscriptionPlan });
-    const cleanedResponse = cleanResponse(response);
+    // Process request with OpenAI - using gpt-4o-mini for faster responses
+    const thread = await createThread();
+    await addMessageToThread(thread.id, content);
+    const run = await runAssistant(thread.id);
+
+    // Poll for completion with shorter intervals
+    let runStatus;
+    do {
+      await new Promise(resolve => setTimeout(resolve, 500)); // Reduced polling interval
+      runStatus = await getRunStatus(thread.id, run.id);
+      console.log('Run status:', runStatus.status);
+    } while (runStatus.status === 'in_progress' || runStatus.status === 'queued');
+
+    if (runStatus.status !== 'completed') {
+      throw new Error(`Run failed with status: ${runStatus.status}`);
+    }
+
+    const messages = await getMessages(thread.id);
+    const assistantMessage = messages.data.find(m => m.role === 'assistant');
+    
+    if (!assistantMessage) {
+      throw new Error('No assistant response found');
+    }
+
+    const cleanedResponse = cleanResponse(assistantMessage.content[0].text.value);
     console.log('Assistant response:', cleanedResponse);
 
     await cacheResponse(content, cleanedResponse);
@@ -105,7 +149,10 @@ serve(async (req) => {
     const statusCode = error.status || 500;
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: errorMessage,
+        retryAfter: isRateLimitError(error) ? 60 : undefined
+      }),
       { 
         status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
