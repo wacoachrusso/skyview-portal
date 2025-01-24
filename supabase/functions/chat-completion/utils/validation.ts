@@ -7,6 +7,11 @@ export function cleanResponse(response: string): string {
     }
   );
   
+  // If no references were found, append a note
+  if (!cleanedResponse.includes('[REF]')) {
+    return cleanedResponse + '\n\n[REF]Note: No specific contract references were found for this query.[/REF]';
+  }
+  
   return cleanedResponse;
 }
 
