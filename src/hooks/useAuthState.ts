@@ -8,8 +8,28 @@ export const useAuthState = () => {
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
+    // First check the initial session
+    const checkInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session ? 'Session exists' : 'No session');
+        setIsAuthenticated(!!session);
+        setUserEmail(session?.user?.email || null);
+      } catch (error) {
+        console.error('Error checking initial session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkInitialSession();
+
+    // Then set up the auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -49,17 +69,11 @@ export const useAuthState = () => {
       }
     });
 
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      setUserEmail(session?.user?.email || null);
-    });
-
     return () => {
       console.log("Auth state cleanup");
       subscription.unsubscribe();
     };
   }, [navigate, toast]);
 
-  return { userEmail, isAuthenticated };
+  return { userEmail, isAuthenticated, isLoading };
 };

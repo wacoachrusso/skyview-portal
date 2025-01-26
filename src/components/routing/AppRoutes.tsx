@@ -4,7 +4,15 @@ import * as LazyRoutes from "./LazyRoutes";
 import { useAuthState } from "@/hooks/useAuthState";
 
 export function AppRoutes() {
-  const { isAuthenticated } = useAuthState();
+  const { isAuthenticated, isLoading } = useAuthState();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <Routes>
