@@ -48,11 +48,11 @@ export const useAuthState = () => {
           setIsAuthenticated(false);
           setUserEmail(null);
           // Only navigate to login if we're not already on a public route
-          // and we're not in the test environment
           const isTestEnvironment = window.location.pathname.startsWith('/test-app');
-          const publicRoutes = ['/', '/test-app', '/test-app/login', '/test-app/signup'];
-          if (!isTestEnvironment && !publicRoutes.includes(window.location.pathname)) {
-            navigate('/login');
+          const basePath = isTestEnvironment ? '/test-app' : '';
+          const publicRoutes = ['/', `${basePath}`, `${basePath}/login`, `${basePath}/signup`];
+          if (!publicRoutes.includes(window.location.pathname)) {
+            navigate(`${basePath}/login`);
           }
         }
       } else if (session?.user) {

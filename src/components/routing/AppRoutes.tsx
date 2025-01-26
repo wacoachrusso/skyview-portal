@@ -93,7 +93,7 @@ export function AppRoutes() {
       <Route path="/test-app/help-center" element={<LazyRoutes.HelpCenter />} />
       
       {/* Catch all redirect */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to={isTestEnvironment ? "/test-app" : "/"} replace />} />
     </Routes>
   );
 }
