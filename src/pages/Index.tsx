@@ -51,14 +51,16 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <main>
-        <Hero />
-        <Features />
-        <Testimonials />
-        <PricingSection />
-        <ReferralSection />
+      <main className="flex-1 w-full">
+        <div className="max-w-[100vw] overflow-x-hidden">
+          <Hero />
+          <Features />
+          <Testimonials />
+          <PricingSection />
+          <ReferralSection />
+        </div>
       </main>
       <Footer />
       <ReleaseNotePopup />
