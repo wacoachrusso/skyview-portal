@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 export function ComingSoon() {
@@ -14,20 +13,9 @@ export function ComingSoon() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Coming Soon
           </h1>
-          <p className="text-xl text-gray-300 mb-8">
+          <p className="text-xl text-gray-300">
             We're working hard to bring you the ultimate union contract assistant. Stay tuned!
           </p>
-        </div>
-        
-        <div className="space-y-4">
-          <Link to="/test-app">
-            <Button 
-              variant="outline"
-              className="bg-white/10 border-2 border-white/30 hover:bg-white/20 text-white px-8 py-2 rounded-full"
-            >
-              Access Test Environment
-            </Button>
-          </Link>
         </div>
       </div>
     </div>
