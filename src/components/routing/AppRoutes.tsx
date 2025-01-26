@@ -14,40 +14,73 @@ export function AppRoutes() {
     );
   }
 
+  // Check if we're in the test environment
+  const isTestEnvironment = window.location.pathname.startsWith('/test-app');
+
   return (
     <Routes>
       {/* Public landing page shows Coming Soon */}
       <Route path="/" element={<ComingSoon />} />
       
-      {/* Test environment routes */}
+      {/* Test environment routes - all accessible */}
       <Route path="/test-app" element={<LazyRoutes.Index />} />
       <Route path="/test-app/login" element={<LazyRoutes.Login />} />
       <Route path="/test-app/signup" element={<LazyRoutes.SignUp />} />
       <Route path="/test-app/forgot-password" element={<LazyRoutes.ForgotPassword />} />
       <Route path="/test-app/reset-password" element={<LazyRoutes.ResetPassword />} />
       
-      {/* Protected routes */}
+      {/* Protected routes - only check auth if not in test environment */}
       <Route
         path="/test-app/chat"
-        element={isAuthenticated ? <LazyRoutes.Chat /> : <Navigate to="/test-app/login" />}
+        element={
+          isTestEnvironment || isAuthenticated ? (
+            <LazyRoutes.Chat />
+          ) : (
+            <Navigate to="/test-app/login" />
+          )
+        }
       />
       <Route
         path="/test-app/dashboard"
-        element={isAuthenticated ? <LazyRoutes.Dashboard /> : <Navigate to="/test-app/login" />}
+        element={
+          isTestEnvironment || isAuthenticated ? (
+            <LazyRoutes.Dashboard />
+          ) : (
+            <Navigate to="/test-app/login" />
+          )
+        }
       />
       <Route
         path="/test-app/account"
-        element={isAuthenticated ? <LazyRoutes.Account /> : <Navigate to="/test-app/login" />}
+        element={
+          isTestEnvironment || isAuthenticated ? (
+            <LazyRoutes.Account />
+          ) : (
+            <Navigate to="/test-app/login" />
+          )
+        }
       />
       <Route
         path="/test-app/settings"
-        element={isAuthenticated ? <LazyRoutes.Settings /> : <Navigate to="/test-app/login" />}
+        element={
+          isTestEnvironment || isAuthenticated ? (
+            <LazyRoutes.Settings />
+          ) : (
+            <Navigate to="/test-app/login" />
+          )
+        }
       />
       
       {/* Admin routes */}
       <Route
         path="/test-app/admin/*"
-        element={isAuthenticated ? <LazyRoutes.AdminDashboard /> : <Navigate to="/test-app/login" />}
+        element={
+          isTestEnvironment || isAuthenticated ? (
+            <LazyRoutes.AdminDashboard />
+          ) : (
+            <Navigate to="/test-app/login" />
+          )
+        }
       />
       
       {/* Other public routes */}
