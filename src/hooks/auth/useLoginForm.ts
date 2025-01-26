@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useLoginFormState } from "../useLoginFormState";
 import { useLoginValidation } from "./useLoginValidation";
 import { useSessionCreation } from "./useSessionCreation";
