@@ -26,66 +26,7 @@ export const useLoginForm = () => {
     setFormData 
   } = useLoginFormState();
 
-  const handleAccountLocked = () => {
-    toast({
-      variant: "destructive",
-      title: "Account locked",
-      description: "Your account has been locked due to too many failed login attempts. Please reset your password."
-    });
-  };
-
-  const handleActiveSessions = () => {
-    toast({
-      variant: "destructive",
-      title: "Active Session Detected",
-      description: "There is already an active session. Please log out from other devices first."
-    });
-  };
-
-  const handleLoginSuccess = async (userId: string) => {
-    try {
-      console.log('Creating new session for user:', userId);
-      await createNewSession(userId);
-      
-      if (formData.rememberMe) {
-        console.log('Setting persistent session...');
-        const refreshToken = localStorage.getItem('supabase.refresh-token');
-        if (refreshToken) {
-          document.cookie = `sb-refresh-token=${refreshToken}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`;
-        }
-      }
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in."
-      });
-    } catch (error) {
-      console.error('Error in handleLoginSuccess:', error);
-      throw error;
-    }
-  };
-
-  const handleProfileRedirect = async (userId: string) => {
-    try {
-      console.log('Checking user profile for redirect');
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('user_type, airline')
-        .eq('id', userId)
-        .single();
-
-      if (userProfile?.user_type && userProfile?.airline) {
-        console.log('Profile complete, redirecting to dashboard');
-        navigate('/dashboard');
-      } else {
-        console.log('Profile incomplete, redirecting to complete-profile');
-        navigate('/complete-profile');
-      }
-    } catch (error) {
-      console.error('Error in handleProfileRedirect:', error);
-      throw error;
-    }
-  };
+  const isTestEnvironment = window.location.pathname.startsWith('/test-app');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,14 +43,22 @@ export const useLoginForm = () => {
       const profileData = await checkExistingProfile(formData.email);
 
       if (profileData?.account_status === 'locked') {
-        handleAccountLocked();
+        toast({
+          variant: "destructive",
+          title: "Account locked",
+          description: "Your account has been locked. Please reset your password."
+        });
         return;
       }
 
       if (profileData?.id) {
         const existingSessions = await checkExistingSessions(profileData.id);
-        if (existingSessions && existingSessions.length > 0) {
-          handleActiveSessions();
+        if (existingSessions && existingSessions.length > 0 && !isTestEnvironment) {
+          toast({
+            variant: "destructive",
+            title: "Active Session Detected",
+            description: "There is already an active session. Please log out from other devices first."
+          });
           return;
         }
       }
@@ -130,7 +79,11 @@ export const useLoginForm = () => {
           await updateLoginAttempts(formData.email, newAttempts, newStatus);
 
           if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-            handleAccountLocked();
+            toast({
+              variant: "destructive",
+              title: "Account locked",
+              description: "Your account has been locked. Please reset your password."
+            });
             return;
           }
 
@@ -154,7 +107,7 @@ export const useLoginForm = () => {
         throw new Error('No session created');
       }
 
-      if (!data.user.email_confirmed_at) {
+      if (!data.user.email_confirmed_at && !isTestEnvironment) {
         console.log('Email not verified');
         await supabase.auth.signOut();
         
@@ -177,9 +130,16 @@ export const useLoginForm = () => {
       }
 
       console.log('Login successful, handling post-login actions');
-      await handleLoginSuccess(data.session.user.id);
+      await createNewSession(data.session.user.id);
       await resetLoginAttempts(formData.email);
-      await handleProfileRedirect(data.session.user.id);
+      
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in."
+      });
+
+      // Navigate based on environment
+      navigate(isTestEnvironment ? '/test-app/dashboard' : '/dashboard');
 
     } catch (error) {
       console.error('Unexpected error during login:', error);

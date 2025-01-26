@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isTestEnvironment = window.location.pathname.startsWith('/test-app');
 
   useEffect(() => {
     console.log('Login page mounted');
@@ -16,7 +17,7 @@ const Login = () => {
         const { data: { session } } = await supabase.auth.getSession();
         console.log('Session check result:', session ? 'User logged in' : 'No session');
         
-        if (session) {
+        if (session && !isTestEnvironment) {
           console.log('User logged in:', session.user.id);
           
           // Check if user is an alpha tester or promoter
@@ -59,10 +60,10 @@ const Login = () => {
           // Regular user flow
           if (profile?.user_type && profile?.airline) {
             console.log('Profile complete, redirecting to dashboard');
-            navigate('/dashboard');
+            navigate(isTestEnvironment ? '/test-app/dashboard' : '/dashboard');
           } else {
             console.log('Profile incomplete, redirecting to account page');
-            navigate('/account');
+            navigate(isTestEnvironment ? '/test-app/account' : '/account');
           }
         }
       } catch (error) {
@@ -71,7 +72,7 @@ const Login = () => {
     };
     
     checkUser();
-  }, [navigate, toast]);
+  }, [navigate, toast, isTestEnvironment]);
 
   return (
     <div className="min-h-screen bg-[#1A1F2C] flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">

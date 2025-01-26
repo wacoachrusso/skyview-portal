@@ -18,6 +18,7 @@ export const useSignup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const isTestEnvironment = window.location.pathname.startsWith('/test-app');
 
   const handleSignupSubmit = async (
     formData: SignupFormData, 
@@ -62,8 +63,8 @@ export const useSignup = () => {
 
       console.log('Found matching assistant:', assistant);
 
-      // For paid plans, handle Stripe checkout
-      if (selectedPlan !== 'free' && priceId) {
+      // For paid plans in production, handle Stripe checkout
+      if (selectedPlan !== 'free' && priceId && !isTestEnvironment) {
         console.log('Starting paid plan signup process:', { plan: selectedPlan, priceId });
         
         try {
@@ -100,14 +101,14 @@ export const useSignup = () => {
               title: "Subscription exists",
               description: "You already have an active subscription. Please sign in to your account.",
             });
-            navigate('/login');
+            navigate(isTestEnvironment ? '/test-app/login' : '/login');
             return;
           }
           throw error;
         }
       }
 
-      // Handle free plan signup
+      // Handle free plan signup or test environment
       console.log('Proceeding with free plan signup');
       const signupResult = await handleFreeSignup({
         ...formData,
@@ -118,9 +119,11 @@ export const useSignup = () => {
         console.log('Free signup successful');
         toast({
           title: "Account created",
-          description: "Please check your email to verify your account.",
+          description: isTestEnvironment 
+            ? "Account created successfully. You can now log in."
+            : "Please check your email to verify your account.",
         });
-        navigate('/login');
+        navigate(isTestEnvironment ? '/test-app/login' : '/login');
       } else {
         console.error('Free signup failed without throwing an error');
         throw new Error('Signup failed. Please try again.');
@@ -134,7 +137,7 @@ export const useSignup = () => {
       if (error instanceof Error) {
         if (error.message.includes("User already registered")) {
           errorMessage = "An account with this email already exists. Please sign in instead.";
-          navigate('/login');
+          navigate(isTestEnvironment ? '/test-app/login' : '/login');
         } else {
           errorMessage = error.message;
         }
