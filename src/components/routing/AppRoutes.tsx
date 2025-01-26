@@ -5,6 +5,7 @@ import { useAuthState } from "@/hooks/useAuthState";
 
 export function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuthState();
+  console.log('AppRoutes - Auth state:', { isAuthenticated, isLoading });
 
   if (isLoading) {
     return (
@@ -16,11 +17,12 @@ export function AppRoutes() {
 
   // Check if we're in the test environment
   const isTestEnvironment = window.location.pathname.startsWith('/test-app');
+  console.log('Current environment:', isTestEnvironment ? 'test' : 'production');
 
   return (
     <Routes>
-      {/* Public landing page shows Coming Soon */}
-      <Route path="/" element={<ComingSoon />} />
+      {/* Public landing page shows Coming Soon only if not in test environment */}
+      <Route path="/" element={isTestEnvironment ? <Navigate to="/test-app" /> : <ComingSoon />} />
       
       {/* Test environment routes - all accessible */}
       <Route path="/test-app" element={<LazyRoutes.Index />} />

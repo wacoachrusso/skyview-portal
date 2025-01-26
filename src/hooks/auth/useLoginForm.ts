@@ -19,7 +19,9 @@ export const useLoginForm = () => {
     setFormData 
   } = useLoginFormState();
 
+  // Check if we're in the test environment
   const isTestEnvironment = window.location.pathname.startsWith('/test-app');
+  console.log('Current environment:', isTestEnvironment ? 'test' : 'production');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +55,10 @@ export const useLoginForm = () => {
         description: "You have successfully logged in."
       });
 
-      navigate(isTestEnvironment ? '/test-app/dashboard' : '/dashboard');
+      // Use the correct path based on environment
+      const basePath = isTestEnvironment ? '/test-app' : '';
+      console.log('Navigating to:', `${basePath}/dashboard`);
+      navigate(`${basePath}/dashboard`);
 
     } catch (error) {
       console.error('Unexpected error during login:', error);
