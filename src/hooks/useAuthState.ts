@@ -12,18 +12,24 @@ export const useAuthState = () => {
 
   useEffect(() => {
     console.log('Setting up auth state listener');
+    let mounted = true;
     
     // First check the initial session
     const checkInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         console.log('Initial session check:', session ? 'Session exists' : 'No session');
-        setIsAuthenticated(!!session);
-        setUserEmail(session?.user?.email || null);
+        
+        if (mounted) {
+          setIsAuthenticated(!!session);
+          setUserEmail(session?.user?.email || null);
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Error checking initial session:', error);
-      } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -38,39 +44,27 @@ export const useAuthState = () => {
       if (event === 'SIGNED_OUT' || !session) {
         console.log("User signed out or session ended");
         localStorage.clear();
-        setIsAuthenticated(false);
-        setUserEmail(null);
-        navigate('/login');
+        if (mounted) {
+          setIsAuthenticated(false);
+          setUserEmail(null);
+          // Only navigate to login if we're not already on a public route
+          const publicRoutes = ['/', '/test-app', '/test-app/login', '/test-app/signup'];
+          if (!publicRoutes.includes(window.location.pathname)) {
+            navigate('/test-app/login');
+          }
+        }
       } else if (session?.user) {
         console.log("Valid session detected");
-        setUserEmail(session.user.email);
-        setIsAuthenticated(true);
-        
-        // Sign out other sessions when a new sign in occurs
-        if (event === 'SIGNED_IN') {
-          console.log('New sign-in detected, invalidating other sessions...');
-          const currentToken = localStorage.getItem('session_token');
-          
-          const { error: signOutError } = await supabase
-            .rpc('invalidate_other_sessions', {
-              p_user_id: session.user.id,
-              p_current_session_token: currentToken || ''
-            });
-          
-          if (signOutError) {
-            console.error("Error signing out other sessions:", signOutError);
-            toast({
-              variant: "destructive",
-              title: "Session Warning",
-              description: "Unable to sign out other sessions. You may be signed in on other devices."
-            });
-          }
+        if (mounted) {
+          setUserEmail(session.user.email);
+          setIsAuthenticated(true);
         }
       }
     });
 
     return () => {
       console.log("Auth state cleanup");
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, toast]);
