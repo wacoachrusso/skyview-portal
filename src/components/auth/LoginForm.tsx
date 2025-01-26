@@ -3,8 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GoogleSignInButton } from "./GoogleSignInButton";
-import { useLoginForm } from "@/hooks/auth/useLoginForm";
-import { Link } from "react-router-dom";
+import { useLoginForm } from "@/hooks/useLoginForm";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Link, useNavigate } from "react-router-dom";
 
 export const LoginForm = () => {
   console.log('Rendering LoginForm component');
@@ -17,9 +19,7 @@ export const LoginForm = () => {
     setFormData,
     handleSubmit
   } = useLoginForm();
-
-  const isTestEnvironment = window.location.pathname.startsWith('/test-app');
-  const baseUrl = isTestEnvironment ? '/test-app' : '';
+  const navigate = useNavigate();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -90,12 +90,14 @@ export const LoginForm = () => {
               Stay logged in
             </Label>
           </div>
-          <Link
-            to={`${baseUrl}/forgot-password`}
-            className="text-brand-gold hover:text-brand-gold/80 text-sm"
+          <Button
+            type="button"
+            variant="link"
+            className="text-brand-gold hover:text-brand-gold/80 text-sm px-0"
+            onClick={() => navigate('/forgot-password')}
           >
             Forgot password?
-          </Link>
+          </Button>
         </div>
 
         <Button 
@@ -108,7 +110,7 @@ export const LoginForm = () => {
 
         <p className="text-center text-sm text-gray-400">
           Don't have an account?{" "}
-          <Link to={`${baseUrl}/#pricing-section`} className="text-brand-gold hover:text-brand-gold/80 transition-colors">
+          <Link to="/#pricing-section" className="text-brand-gold hover:text-brand-gold/80 transition-colors">
             Sign up
           </Link>
         </p>
