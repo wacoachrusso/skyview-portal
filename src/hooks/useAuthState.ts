@@ -7,6 +7,7 @@ export const useAuthState = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const {
@@ -17,10 +18,13 @@ export const useAuthState = () => {
       if (event === 'SIGNED_OUT' || !session) {
         console.log("User signed out or session ended");
         localStorage.clear();
+        setIsAuthenticated(false);
+        setUserEmail(null);
         navigate('/login');
       } else if (session?.user) {
         console.log("Valid session detected");
         setUserEmail(session.user.email);
+        setIsAuthenticated(true);
         
         // Sign out other sessions when a new sign in occurs
         if (event === 'SIGNED_IN') {
@@ -45,11 +49,17 @@ export const useAuthState = () => {
       }
     });
 
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setUserEmail(session?.user?.email || null);
+    });
+
     return () => {
       console.log("Auth state cleanup");
       subscription.unsubscribe();
     };
   }, [navigate, toast]);
 
-  return { userEmail };
+  return { userEmail, isAuthenticated };
 };
