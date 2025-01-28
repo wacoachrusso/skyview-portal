@@ -1,4 +1,5 @@
 import { Quote } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface MessageContentProps {
   message: {
@@ -9,6 +10,30 @@ interface MessageContentProps {
 }
 
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
+  const [displayContent, setDisplayContent] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (message.role === "assistant") {
+      setIsTyping(true);
+      let index = 0;
+      const content = message.content;
+      const typingInterval = setInterval(() => {
+        if (index <= content.length) {
+          setDisplayContent(content.slice(0, index));
+          index++;
+        } else {
+          clearInterval(typingInterval);
+          setIsTyping(false);
+        }
+      }, 20); // Adjust speed as needed
+
+      return () => clearInterval(typingInterval);
+    } else {
+      setDisplayContent(message.content);
+    }
+  }, [message.content, message.role]);
+
   const formatContent = (content: string) => {
     const parts = content.split(/(\[REF\].*?\[\/REF\])/g);
     
@@ -28,7 +53,10 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
 
   return (
     <div className="whitespace-pre-wrap break-words">
-      {formatContent(message.content)}
+      {formatContent(displayContent)}
+      {isTyping && (
+        <span className="inline-block w-1 h-4 ml-1 bg-current animate-pulse" />
+      )}
     </div>
   );
 }
