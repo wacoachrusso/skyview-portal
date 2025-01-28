@@ -69,7 +69,7 @@ export function useChat() {
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
-          content: `Please provide a brief summary of the question and then answer it concisely. Include relevant contract references in this format: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists, state that clearly.`,
+          content: `First, provide a 1-2 sentence summary of the question. Then, give a concise answer supported by specific contract references. Format any contract citations as: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists, clearly state that.`,
           subscriptionPlan: userProfile?.subscription_plan || 'free'
         }
       });
