@@ -2,17 +2,11 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const assistantId = "asst_YdZtVHPSq6TIYKRkKcOqtwzn";
+const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const openAIHeaders = {
-  'Authorization': `Bearer ${openAIApiKey}`,
-  'Content-Type': 'application/json',
-  'OpenAI-Beta': 'assistants=v2'
 };
 
 serve(async (req) => {
@@ -26,13 +20,21 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
 
+    if (!assistantId) {
+      throw new Error('OpenAI Assistant ID is not configured');
+    }
+
     const { content, subscriptionPlan } = await req.json();
     console.log('Processing chat request:', { subscriptionPlan });
 
     // Create a thread
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
-      headers: openAIHeaders
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v1'
+      }
     });
 
     if (!threadResponse.ok) {
@@ -47,7 +49,11 @@ serve(async (req) => {
     // Add message to thread
     const messageResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
       method: 'POST',
-      headers: openAIHeaders,
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v1'
+      },
       body: JSON.stringify({
         role: 'user',
         content: content
@@ -65,10 +71,14 @@ serve(async (req) => {
     // Run the assistant
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
-      headers: openAIHeaders,
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v1'
+      },
       body: JSON.stringify({
         assistant_id: assistantId,
-        instructions: "Please include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section."
+        instructions: "First, provide a 1-2 sentence summary of the question. Then, give a concise answer supported by specific contract references. Format any contract citations as: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists, clearly state that."
       })
     });
 
@@ -95,7 +105,13 @@ serve(async (req) => {
       
       const statusResponse = await fetch(
         `https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`,
-        { headers: openAIHeaders }
+        { 
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+            'OpenAI-Beta': 'assistants=v1'
+          }
+        }
       );
 
       if (!statusResponse.ok) {
@@ -116,7 +132,13 @@ serve(async (req) => {
     // Get messages
     const messagesResponse = await fetch(
       `https://api.openai.com/v1/threads/${thread.id}/messages`,
-      { headers: openAIHeaders }
+      { 
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+          'OpenAI-Beta': 'assistants=v1'
+        }
+      }
     );
 
     if (!messagesResponse.ok) {
