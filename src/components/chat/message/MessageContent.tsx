@@ -21,12 +21,12 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       const typingInterval = setInterval(() => {
         if (index <= content.length) {
           setDisplayContent(content.slice(0, index));
-          index += 2; // Increase by 2 characters at a time for faster typing
+          index++;
         } else {
           clearInterval(typingInterval);
           setIsTyping(false);
         }
-      }, 8); // Reduced from 10ms to 8ms for slightly faster typing
+      }, 10); // Increased typing speed from 20ms to 10ms
 
       return () => clearInterval(typingInterval);
     } else {

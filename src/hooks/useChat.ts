@@ -44,6 +44,7 @@ export function useChat() {
     setIsLoading(true);
     
     try {
+      // Create temporary message for immediate display
       const tempMessage: Message = {
         id: crypto.randomUUID(),
         conversation_id: currentConversationId || '',
@@ -56,6 +57,7 @@ export function useChat() {
       console.log('Adding temporary message to UI:', tempMessage);
       setMessages(prev => [...prev, tempMessage]);
 
+      // Ensure we have a valid conversation ID before proceeding
       const conversationId = await ensureConversation(currentUserId, content);
       if (!conversationId) {
         throw new Error('Failed to create or get conversation');
@@ -64,12 +66,13 @@ export function useChat() {
       console.log('Conversation ID confirmed:', conversationId);
       setCurrentConversationId(conversationId);
 
+      // Insert the actual user message
       const userMessage = await insertUserMessage(content, conversationId);
       console.log('User message inserted successfully:', userMessage);
 
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { 
-          content: `First, provide a 1-2 sentence summary of the question. Then, give a concise answer supported by specific contract references. Format any contract citations as: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists, clearly state that.`,
+          content: `${content}\n\nPlease include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section.`,
           subscriptionPlan: userProfile?.subscription_plan || 'free'
         }
       });
