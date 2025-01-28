@@ -33,7 +33,7 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
     <div className="flex flex-col h-full">
       <div 
         ref={containerRef} 
-        className="flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch"
+        className="flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch pb-20"
       >
         <div className="flex flex-col gap-2 p-2 sm:p-4 min-h-full">
           {messages.map((message) => (

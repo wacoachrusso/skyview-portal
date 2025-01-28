@@ -26,7 +26,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
           clearInterval(typingInterval);
           setIsTyping(false);
         }
-      }, 20); // Adjust speed as needed
+      }, 10); // Increased typing speed from 20ms to 10ms
 
       return () => clearInterval(typingInterval);
     } else {
