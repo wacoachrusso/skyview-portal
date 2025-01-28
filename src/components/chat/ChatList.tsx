@@ -17,14 +17,8 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const scrollToTop = () => {
-    containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   useEffect(() => {
-    if (messages.length === 0) {
-      scrollToTop();
-    } else {
+    if (messages.length > 0) {
       scrollToBottom();
     }
   }, [messages]);
@@ -33,14 +27,12 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
     <div className="flex flex-col h-full">
       <div 
         ref={containerRef} 
-        className="flex-1 overflow-y-auto overscroll-none touch-pan-y pb-20 will-change-scroll"
+        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-20"
         style={{
           WebkitOverflowScrolling: 'touch',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none'
         }}
       >
-        <div className="flex flex-col gap-2 p-2 sm:p-4 min-h-full">
+        <div className="flex flex-col gap-2 p-2 sm:p-4">
           {messages.map((message) => (
             <ChatMessage
               key={message.id}
