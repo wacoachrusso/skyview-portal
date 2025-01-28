@@ -22,7 +22,37 @@ export function useMessageStorage(currentMessages: Message[]) {
   const updateStoredMessages = (messages: Message[]) => {
     try {
       if (messages.length > 0) {
+        // Store in localStorage for offline access
         localStorage.setItem('current-chat-messages', JSON.stringify(messages));
+        
+        // Also store in IndexedDB for larger storage
+        if ('indexedDB' in window) {
+          const request = indexedDB.open('chatApp', 1);
+          
+          request.onerror = () => {
+            console.error('Error opening IndexedDB');
+          };
+          
+          request.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result;
+            if (!db.objectStoreNames.contains('messages')) {
+              db.createObjectStore('messages', { keyPath: 'id' });
+            }
+          };
+          
+          request.onsuccess = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result;
+            const tx = db.transaction('messages', 'readwrite');
+            const store = tx.objectStore('messages');
+            
+            messages.forEach(message => {
+              store.put(message);
+            });
+            
+            console.log('Messages cached in IndexedDB');
+          };
+        }
+        
         setStoredMessages(messages);
         console.log('Successfully stored messages for offline access:', messages.length);
       }

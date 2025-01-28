@@ -33,7 +33,12 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
     <div className="flex flex-col h-full">
       <div 
         ref={containerRef} 
-        className="flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch pb-20"
+        className="flex-1 overflow-y-auto overscroll-none touch-pan-y pb-20 will-change-scroll"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none'
+        }}
       >
         <div className="flex flex-col gap-2 p-2 sm:p-4 min-h-full">
           {messages.map((message) => (
