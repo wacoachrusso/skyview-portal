@@ -65,9 +65,39 @@ export const useLoginForm = () => {
     }
   };
 
+  const checkIfFirstLogin = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('disclaimer_consents')
+        .select('has_seen_chat_disclaimer')
+        .eq('user_id', userId)
+        .single();
+        
+      if (error && error.code !== 'PGSQL_NO_ROWS_RETURNED') {
+        console.error('Error checking disclaimer status:', error);
+        return false;
+      }
+      
+      return !data || !data.has_seen_chat_disclaimer;
+    } catch (error) {
+      console.error('Error checking if first login:', error);
+      return false;
+    }
+  };
+
   const handleProfileRedirect = async (userId: string) => {
     try {
       console.log('Checking user profile for redirect');
+      
+      // First login is handled by the Login component's useEffect
+      // Just let the component handle it
+      const isFirstLogin = await checkIfFirstLogin(userId);
+      if (isFirstLogin) {
+        console.log('First login detected, Login component will handle disclaimer');
+        // Don't navigate, let the Login component show the disclaimer first
+        return;
+      }
+      
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('user_type, airline')
@@ -76,7 +106,7 @@ export const useLoginForm = () => {
 
       if (userProfile?.user_type && userProfile?.airline) {
         console.log('Profile complete, redirecting to dashboard');
-        navigate('/dashboard');
+        navigate('/chat');
       } else {
         console.log('Profile incomplete, redirecting to complete-profile');
         navigate('/complete-profile');

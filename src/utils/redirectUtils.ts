@@ -9,5 +9,5 @@ export const redirectToProduction = () => {
     }
   }
   // Redirect to production URL
-  window.location.href = 'https://www.skyguide.site';
+  window.location.href = 'http://localhost:8080';
 };

@@ -19,8 +19,9 @@ interface AuthFormFieldsProps {
 const airlines = [
   "United Airlines",
   "American Airlines",
-  "Delta Air Lines",
+  "Delta AirLines",
   "Southwest Airlines",
+  "Alaska Airlines",
   "Other"
 ];
 
@@ -51,19 +52,37 @@ const validatePassword = (password: string) => {
 export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPassword }: AuthFormFieldsProps) => {
   const isOptionEnabled = (airline: string, jobTitle: string) => {
     if (airline) {
-      // Allow American Airlines for Flight Attendants, United Airlines for all
-      if (airline.toLowerCase() === "american airlines") {
-        return formData.jobTitle.toLowerCase() === "flight attendant";
-      }
-      return airline.toLowerCase() === "united airlines";
-    }
-    if (jobTitle) {
-      // Enable Flight Attendant for both United and American Airlines
-      if (jobTitle.toLowerCase() === "flight attendant") {
+      // Enable all job titles for United Airlines, American Airlines, Southwest Airlines, and Alaska Airlines
+      if (
+        airline.toLowerCase() === "united airlines" ||
+        airline.toLowerCase() === "american airlines" ||
+        airline.toLowerCase() === "southwest airlines" ||
+      
+        airline.toLowerCase() === "alaska airlines"
+      ) {
         return true;
       }
-      // Enable Pilot only for United Airlines
-      return jobTitle.toLowerCase() === "pilot" && formData.airline.toLowerCase() === "united airlines";
+      // Enable only Pilots for Delta Air Lines
+      if (airline.toLowerCase() === "delta airlines") {
+        return jobTitle.toLowerCase() === "pilot";
+      }
+      // Disable all job titles for "Other"
+      return false;
+    }
+    if (jobTitle) {
+      // Enable Flight Attendant for United Airlines, American Airlines, Southwest Airlines, and Alaska Airlines
+      if (jobTitle.toLowerCase() === "flight attendant") {
+        return (
+          formData.airline.toLowerCase() === "united airlines" ||
+          formData.airline.toLowerCase() === "american airlines" ||
+          formData.airline.toLowerCase() === "southwest airlines" ||
+          formData.airline.toLowerCase() === "alaska airlines"
+        );
+      }
+      // Enable Pilot for all airlines except "Other"
+      if (jobTitle.toLowerCase() === "pilot") {
+        return formData.airline.toLowerCase() !== "other";
+      }
     }
     return true;
   };
