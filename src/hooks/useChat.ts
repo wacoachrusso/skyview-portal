@@ -68,7 +68,7 @@ export function useChat() {
           }
 
           const newMessage = payload.new as Message;
-          console.log(`Received new message:`, newMessage);
+          console.log(`Received new message: ${newMessage.id}`);
 
           // Check for duplicates before adding to state
           setMessages((prev) => {
@@ -102,9 +102,12 @@ export function useChat() {
 
       setIsLoading(true);
 
+      // Declare tempMessage outside the try block
+      let tempMessage: Message | null = null;
+
       try {
         // Create a temporary message for optimistic update
-        const tempMessage: Message = {
+        tempMessage = {
           id: crypto.randomUUID(), // Generate a temporary ID
           conversation_id: currentConversationId || '',
           user_id: currentUserId,
@@ -148,7 +151,9 @@ export function useChat() {
         });
 
         // Remove the temporary message if an error occurs
-       
+        if (tempMessage) {
+          setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage!.id));
+        }
       } finally {
         setIsLoading(false);
       }

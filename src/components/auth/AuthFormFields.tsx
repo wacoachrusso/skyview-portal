@@ -19,7 +19,7 @@ interface AuthFormFieldsProps {
 const airlines = [
   "United Airlines",
   "American Airlines",
-  "Delta AirLines",
+  "Delta Airlines",
   "Southwest Airlines",
   "Alaska Airlines",
   "Other"
@@ -49,40 +49,18 @@ const validatePassword = (password: string) => {
   };
 };
 
-export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPassword }: AuthFormFieldsProps) => {
-  const isOptionEnabled = (airline: string, jobTitle: string) => {
-    if (airline) {
-      // Enable all job titles for United Airlines, American Airlines, Southwest Airlines, and Alaska Airlines
-      if (
-        airline.toLowerCase() === "united airlines" ||
-        airline.toLowerCase() === "american airlines" ||
-        airline.toLowerCase() === "southwest airlines" ||
-        airline.toLowerCase() === "delta airlines" ||
-      
-        airline.toLowerCase() === "alaska airlines"
-      ) {
-        return true;
-      }
-    
-      // Disable all job titles for "Other"
-      return false;
-    }
-    if (jobTitle) {
-      // Enable Flight Attendant for United Airlines, American Airlines, Southwest Airlines, and Alaska Airlines
-      if (jobTitle.toLowerCase() === "flight attendant") {
-        return (
-          formData.airline.toLowerCase() === "united airlines" ||
-          formData.airline.toLowerCase() === "american airlines" ||
-          formData.airline.toLowerCase() === "southwest airlines" ||
-          formData.airline.toLowerCase() === "alaska airlines"
-        );
-      }
-      // Enable Pilot for all airlines except "Other"
-     
-    }
-    return true;
-  };
+// Function to enable/disable airlines based on job title
+const isOptionEnabled = (airline: string, jobTitle: string) => {
+  // If "Flight Attendant" is selected, disable "Delta Airlines"
+  if (jobTitle.toLowerCase() === "flight attendant" && airline.toLowerCase() === "delta airlines") {
+    return false;
+  }
+  
+  // Allow both job titles for all airlines
+  return true;
+};
 
+export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPassword }: AuthFormFieldsProps) => {
   const passwordValidation = validatePassword(formData.password);
 
   return (
@@ -130,11 +108,7 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           <div className="text-sm text-gray-400">
@@ -156,17 +130,13 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
         </div>
       </div>
 
+      {/* Job Title Selection */}
       <div className="relative">
         <Label htmlFor="jobTitle" className="text-gray-200">Select Job Title</Label>
         <Select 
           value={formData.jobTitle}
           onValueChange={(value) => {
-            // Reset airline if changing from Flight Attendant to Pilot
-            if (value === "pilot" && formData.airline.toLowerCase() === "american airlines") {
-              setFormData({ ...formData, jobTitle: value, airline: "" });
-            } else {
-              setFormData({ ...formData, jobTitle: value });
-            }
+            setFormData({ ...formData, jobTitle: value });
           }}
         >
           <SelectTrigger className="bg-white/10 border-white/20 text-white">
@@ -174,19 +144,15 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
           </SelectTrigger>
           <SelectContent className="bg-gray-900 border-white/20 text-white z-50">
             {jobTitles.map((title) => (
-              <SelectItem 
-                key={title} 
-                value={title.toLowerCase()}
-                className={`hover:bg-white/10 ${!isOptionEnabled("", title.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!isOptionEnabled("", title.toLowerCase())}
-              >
-                {title} {!isOptionEnabled("", title.toLowerCase()) && "(Coming Soon)"}
+              <SelectItem key={title} value={title.toLowerCase()}>
+                {title}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
+      {/* Airline Selection */}
       <div className="relative">
         <Label htmlFor="airline" className="text-gray-200">Select Airline</Label>
         <Select
@@ -201,10 +167,10 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
               <SelectItem 
                 key={airline} 
                 value={airline.toLowerCase()}
-                className={`hover:bg-white/10 ${!isOptionEnabled(airline.toLowerCase(), "") ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!isOptionEnabled(airline.toLowerCase(), "")}
+                className={`hover:bg-white/10 ${!isOptionEnabled(airline.toLowerCase(), formData.jobTitle) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!isOptionEnabled(airline.toLowerCase(), formData.jobTitle)}
               >
-                {airline} {!isOptionEnabled(airline.toLowerCase(), "") && "(Coming Soon)"}
+                {airline} {!isOptionEnabled(airline.toLowerCase(), formData.jobTitle) && "(Coming Soon)"}
               </SelectItem>
             ))}
           </SelectContent>
