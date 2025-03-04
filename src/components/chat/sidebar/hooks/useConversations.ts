@@ -29,8 +29,9 @@ export function useConversations() {
     queryKey: ['conversations'],
     queryFn: fetchConversations,
     retry: 2,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 30, // 30 seconds
     gcTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: 10000, // Poll every 10 seconds
   });
 
   const deleteConversation = async (conversationId: string) => {

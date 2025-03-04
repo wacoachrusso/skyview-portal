@@ -29,8 +29,6 @@ export function useChat() {
 
   const activeChannelRef = useRef<any>(null);
   const isMountedRef = useRef(true);
-  const retryCountRef = useRef(0);
-  const maxRetries = 5;
 
   // Get a stable channel name
   const getChannelName = useCallback((conversationId: string) => {
@@ -40,15 +38,17 @@ export function useChat() {
   // Function to setup a channel subscription
   const setupChannel = useCallback((conversationId: string) => {
     if (!conversationId || !isMountedRef.current) return;
-  
+
+    // Clean up existing channel
     if (activeChannelRef.current) {
+      console.log(`Removing existing channel: ${activeChannelRef.current}`);
       supabase.removeChannel(activeChannelRef.current);
       activeChannelRef.current = null;
     }
-  
+
     const channelName = getChannelName(conversationId);
     console.log(`Setting up new channel: ${channelName}`);
-  
+
     const channel = supabase
       .channel(channelName)
       .on(
@@ -59,15 +59,18 @@ export function useChat() {
           table: "messages", 
           filter: `conversation_id=eq.${conversationId}` 
         },
-        (payload) => { // ✅ This is the required 3rd argument!
+        (payload) => {
           if (!isMountedRef.current) return;
-  
+
           if (!payload?.new) {
             console.warn("Received payload without 'new' data:", payload);
             return;
           }
-  
+
           const newMessage = payload.new as Message;
+          console.log(`Received new message: ${newMessage.id}`);
+
+          // Check for duplicates before adding to state
           setMessages((prev) => {
             const exists = prev.some((msg) => msg.id === newMessage.id);
             return exists ? prev : [...prev, newMessage];
@@ -78,10 +81,9 @@ export function useChat() {
         console.log(`Channel ${channelName} status: ${status}`);
         if (err) console.error(`Subscription error:`, err);
       });
-  
+
     activeChannelRef.current = channel;
   }, [getChannelName, setMessages]);
-  
 
   // Send a message
   const sendMessage = useCallback(
@@ -101,60 +103,30 @@ export function useChat() {
       setIsLoading(true);
 
       try {
-        // Check connection status before sending
-        if (!activeChannelRef.current) {
-          setupChannel(currentConversationId!);
-        }
-
-        const tempMessage: Message = {
-          id: crypto.randomUUID(),
-          conversation_id: currentConversationId || '',
-          user_id: currentUserId,
-          content: content,
-          role: 'user',
-          created_at: new Date().toISOString(),
-        };
-        
-        if (isMountedRef.current) {
-          setMessages((prev) => [...prev, tempMessage]);
-        }
-
+        // Ensure the conversation exists
         const conversationId = await ensureConversation(currentUserId, content);
         if (!conversationId) {
           throw new Error('Failed to create or get conversation');
         }
-        
-        if (isMountedRef.current) {
-          setCurrentConversationId(conversationId);
-        }
 
+        // Insert the user message
         await insertUserMessage(content, conversationId);
 
-        const timeoutPromise = new Promise<{ data: null, error: Error }>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 30000)
-        );
-
-        const responsePromise = supabase.functions.invoke('chat-completion', {
+        // Call the AI completion function
+        const { data, error } = await supabase.functions.invoke('chat-completion', {
           body: {
             content: `${content}`,
             subscriptionPlan: userProfile?.subscription_plan || 'free',
           },
         });
 
-        let result;
-        try {
-          result = await Promise.race([responsePromise, timeoutPromise]);
-        } catch (raceError) {
-          result = { data: null, error: raceError instanceof Error ? raceError : new Error(String(raceError)) };
-        }
-
-        const { data, error } = result;
-
         if (error) throw error;
         if (!data || !data.response) throw new Error('Invalid response from chat-completion');
 
+        // Insert the AI response
         await insertAIMessage(data.response, conversationId);
       } catch (error) {
+        console.error('Error sending message:', error);
         toast({
           title: "Error",
           description: "Failed to send message. Please try again.",
@@ -165,7 +137,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [currentUserId, currentConversationId, ensureConversation, insertUserMessage, insertAIMessage, setCurrentConversationId, setMessages, setIsLoading, userProfile, toast, isLoading, setupChannel]
+    [currentUserId, ensureConversation, insertUserMessage, insertAIMessage, userProfile, toast, isLoading]
   );
 
   // Start a new chat
@@ -194,22 +166,25 @@ export function useChat() {
   // Subscribe to real-time updates
   useEffect(() => {
     if (!currentConversationId) return;
-    
+
     setupChannel(currentConversationId);
 
     return () => {
       if (activeChannelRef.current) {
+        console.log(`Cleaning up channel: ${activeChannelRef.current}`);
         supabase.removeChannel(activeChannelRef.current);
         activeChannelRef.current = null;
       }
     };
   }, [currentConversationId, setupChannel]);
 
+  // Cleanup on unmount
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
       if (activeChannelRef.current) {
+        console.log(`Cleaning up channel on unmount: ${activeChannelRef.current}`);
         supabase.removeChannel(activeChannelRef.current);
         activeChannelRef.current = null;
       }
