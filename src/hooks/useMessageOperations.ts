@@ -10,44 +10,56 @@ export function useMessageOperations(currentUserId: string | null, currentConver
 
   const insertUserMessage = async (content: string, conversationId: string) => {
     console.log('Inserting user message:', { content, conversationId });
+
     const { data: userMessage, error: userMessageError } = await supabase
       .from('messages')
       .insert([
         {
           content,
           user_id: currentUserId,
-          role: 'user' as const,
-          conversation_id: conversationId
+          role: 'user',
+          conversation_id: conversationId,
+          created_at: new Date().toISOString(),
         }
       ])
       .select()
       .single();
 
-    if (userMessageError) throw userMessageError;
+    if (userMessageError) {
+      console.error('Error inserting user message:', userMessageError);
+      throw userMessageError;
+    }
+
     console.log('User message inserted:', userMessage);
     return userMessage;
   };
 
   const insertAIMessage = async (content: string, conversationId: string) => {
     console.log('Inserting AI message:', { conversationId });
+
     const { error: aiMessageError } = await supabase
       .from('messages')
       .insert([
         {
           content,
           user_id: null,
-          role: 'assistant' as const,
-          conversation_id: conversationId
+          role: 'assistant',
+          conversation_id: conversationId,
+          created_at: new Date().toISOString(),
         }
       ]);
 
-    if (aiMessageError) throw aiMessageError;
+    if (aiMessageError) {
+      console.error('Error inserting AI message:', aiMessageError);
+      throw aiMessageError;
+    }
+
     console.log('AI message inserted successfully');
   };
 
   const loadMessages = async (conversationId: string) => {
     if (!conversationId) return;
-    
+
     console.log('Loading messages for conversation:', conversationId);
     const { data: messagesData, error } = await supabase
       .from('messages')

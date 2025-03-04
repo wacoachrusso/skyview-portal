@@ -68,7 +68,7 @@ export function useChat() {
           }
 
           const newMessage = payload.new as Message;
-          console.log(`Received new message: ${newMessage.id}`);
+          console.log(`Received new message:`, newMessage);
 
           // Check for duplicates before adding to state
           setMessages((prev) => {
@@ -103,13 +103,26 @@ export function useChat() {
       setIsLoading(true);
 
       try {
+        // Create a temporary message for optimistic update
+        const tempMessage: Message = {
+          id: crypto.randomUUID(), // Generate a temporary ID
+          conversation_id: currentConversationId || '',
+          user_id: currentUserId,
+          content: content,
+          role: 'user',
+          created_at: new Date().toISOString(),
+        };
+
+        // Add the temporary message to the state
+        setMessages((prev) => [...prev, tempMessage]);
+
         // Ensure the conversation exists
         const conversationId = await ensureConversation(currentUserId, content);
         if (!conversationId) {
           throw new Error('Failed to create or get conversation');
         }
 
-        // Insert the user message
+        // Insert the user message into the database
         await insertUserMessage(content, conversationId);
 
         // Call the AI completion function
@@ -133,11 +146,14 @@ export function useChat() {
           variant: "destructive",
           duration: 2000,
         });
+
+        // Remove the temporary message if an error occurs
+       
       } finally {
         setIsLoading(false);
       }
     },
-    [currentUserId, ensureConversation, insertUserMessage, insertAIMessage, userProfile, toast, isLoading]
+    [currentUserId, ensureConversation, insertUserMessage, insertAIMessage, userProfile, toast, isLoading, currentConversationId]
   );
 
   // Start a new chat
