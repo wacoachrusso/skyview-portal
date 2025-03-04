@@ -89,7 +89,7 @@ export const useGoogleAuth = () => {
         }
 
         console.log('Profile verified, proceeding with login');
-        navigate('/dashboard');
+        navigate('/chat');
       }
     } catch (error) {
       console.error('Unexpected error during Google sign-in:', error);
