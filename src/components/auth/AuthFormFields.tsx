@@ -57,15 +57,13 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
         airline.toLowerCase() === "united airlines" ||
         airline.toLowerCase() === "american airlines" ||
         airline.toLowerCase() === "southwest airlines" ||
+        airline.toLowerCase() === "delta airlines" ||
       
         airline.toLowerCase() === "alaska airlines"
       ) {
         return true;
       }
-      // Enable only Pilots for Delta Air Lines
-      if (airline.toLowerCase() === "delta airlines") {
-        return jobTitle.toLowerCase() === "pilot";
-      }
+    
       // Disable all job titles for "Other"
       return false;
     }
@@ -80,9 +78,7 @@ export const AuthFormFields = ({ formData, showPassword, setFormData, setShowPas
         );
       }
       // Enable Pilot for all airlines except "Other"
-      if (jobTitle.toLowerCase() === "pilot") {
-        return formData.airline.toLowerCase() !== "other";
-      }
+     
     }
     return true;
   };

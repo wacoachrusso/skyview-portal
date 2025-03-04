@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { updateConversationTitle, loadConversationMessages } from "@/utils/conversationUtils";
+import { loadConversationMessages } from "@/utils/conversationUtils";
 
 export function useConversation() {
   const { toast } = useToast();
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const isFetching = useRef(false);
 
   const createNewConversation = async (userId: string) => {
     console.log('Creating new conversation...');
@@ -20,7 +22,6 @@ export function useConversation() {
         .single();
 
       if (conversationError) {
-        console.error('Error creating conversation:', conversationError);
         throw conversationError;
       }
       
@@ -33,7 +34,7 @@ export function useConversation() {
         title: "Error",
         description: "Failed to create new conversation",
         variant: "destructive",
-        duration: 2000
+        duration: 2000,
       });
       return null;
     }
@@ -41,42 +42,45 @@ export function useConversation() {
 
   const ensureConversation = async (userId: string, firstMessage?: string) => {
     console.log('Ensuring conversation exists before sending message...');
-    if (!currentConversationId) {
-      try {
-        const title = firstMessage ? firstMessage.slice(0, 50) : 'New Chat';
-        const { data: newConversation, error: conversationError } = await supabase
-          .from('conversations')
-          .insert([{ 
-            user_id: userId,
-            title: title
-          }])
-          .select()
-          .single();
-
-        if (conversationError) {
-          console.error('Error creating conversation:', conversationError);
-          throw conversationError;
-        }
-        
-        console.log('New conversation created:', newConversation);
-        setCurrentConversationId(newConversation.id);
-        return newConversation.id;
-      } catch (error) {
-        console.error('Error creating new conversation:', error);
-        toast({
-          title: "Error",
-          description: "Failed to create new conversation",
-          variant: "destructive",
-          duration: 2000
-        });
-        return null;
-      }
+    
+    if (currentConversationId) {
+      return currentConversationId;
     }
-    return currentConversationId;
+  
+    try {
+      const title = firstMessage ? firstMessage.slice(0, 50) : 'New Chat';
+      const { data: newConversation, error: conversationError } = await supabase
+        .from('conversations')
+        .insert([{ 
+          user_id: userId,
+          title: title
+        }])
+        .select()
+        .single();
+  
+      if (conversationError) {
+        throw conversationError;
+      }
+      
+      console.log('New conversation created:', newConversation);
+      setCurrentConversationId(newConversation.id);
+      return newConversation.id;
+    } catch (error) {
+      console.error('Error creating new conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new conversation",
+        variant: "destructive",
+        duration: 2000,
+      });
+      return null;
+    }
   };
 
   const loadConversation = async (conversationId: string) => {
-    console.log('Loading conversation:', conversationId);
+    if (isFetching.current || isLoading) return; // Prevent overlapping requests
+    isFetching.current = true;
+    setIsLoading(true);
     try {
       const messages = await loadConversationMessages(conversationId);
       setCurrentConversationId(conversationId);
@@ -87,9 +91,12 @@ export function useConversation() {
         title: "Error",
         description: "Failed to load conversation",
         variant: "destructive",
-        duration: 2000
+        duration: 2000,
       });
       return [];
+    } finally {
+      isFetching.current = false;
+      setIsLoading(false);
     }
   };
 
@@ -98,6 +105,7 @@ export function useConversation() {
     createNewConversation,
     ensureConversation,
     loadConversation,
-    setCurrentConversationId
+    setCurrentConversationId,
+    isLoading,
   };
 }

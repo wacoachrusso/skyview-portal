@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendButton } from "./SendButton";
 import { MicButton } from "./MicButton";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => Promise<void>;
@@ -12,6 +13,7 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +29,12 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
       console.error('Error sending message:', error);
       // Restore the message if there was an error
       setMessage(messageContent);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+        duration: 2000,
+      });
     }
   };
 
@@ -48,6 +56,8 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
             placeholder={disabled ? "Chat unavailable while offline" : "Ask about your contract..."}
             className="min-h-[60px] w-full pr-[120px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
             disabled={isLoading || disabled}
+            aria-label="Chat input"
+            aria-describedby="chat-input-description"
           />
           <div className="absolute right-2 flex items-center space-x-1 h-full pr-1">
             <MicButton 
@@ -61,7 +71,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
           </div>
         </div>
       </form>
-      <p className="text-xs text-muted-foreground/70 text-center mb-2 px-2">
+      <p id="chat-input-description" className="text-xs text-muted-foreground/70 text-center mb-2 px-2">
         SkyGuide can make mistakes. Check important info.
       </p>
     </div>
