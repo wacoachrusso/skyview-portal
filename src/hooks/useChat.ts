@@ -184,19 +184,18 @@ export function useChat() {
     }
   }, [createNewConversation, currentUserId, setCurrentConversationId, setMessages, setIsLoading, toast]);
 
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (currentConversationId) {
+      loadMessages(currentConversationId);
+    }
+  }, [currentConversationId, loadMessages]);
+
   // Subscribe to real-time updates
   useEffect(() => {
-    if (!currentConversationId) return;
-
-    setupChannel(currentConversationId);
-
-    return () => {
-      if (activeChannelRef.current) {
-        console.log(`Cleaning up channel: ${activeChannelRef.current}`);
-        supabase.removeChannel(activeChannelRef.current);
-        activeChannelRef.current = null;
-      }
-    };
+    if (currentConversationId) {
+      setupChannel(currentConversationId);
+    }
   }, [currentConversationId, setupChannel]);
 
   // Cleanup on unmount

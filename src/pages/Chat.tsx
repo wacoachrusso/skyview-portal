@@ -40,14 +40,20 @@ const Chat = () => {
         throw fetchError;
       }
   
+      // If the profile doesn't exist, throw an error
+      if (!profile) {
+        throw new Error(`Profile with id ${userId} not found`);
+      }
+  
+      // Step 2: Calculate the new query count
       const newCount = (profile?.query_count || 0) + 1;
       console.log("New query count:", newCount);
   
-      // Step 2: Update the query count
+      // Step 3: Update the query count in the database
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ query_count: newCount })
-        .match({ id: userId });
+        .eq("id", userId);
   
       if (updateError) {
         console.error("Update error details:", {
@@ -61,9 +67,10 @@ const Chat = () => {
       console.log("Query count updated successfully");
     } catch (error) {
       console.error("Error in incrementQueryCount:", error);
-      
+      throw error; // Re-throw the error to handle it in the calling function
     }
   };
+
   // Check user access and subscription plan on component mount
   useEffect(() => {
     const checkAccess = async () => {
@@ -119,6 +126,7 @@ const Chat = () => {
   );
 
   // Handle sending a message
+
   const handleSendMessage = useCallback(
     async (message: string) => {
       if (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 1) {
@@ -130,7 +138,7 @@ const Chat = () => {
         navigate("/?scrollTo=pricing-section");
         return;
       }
-
+  
       await sendMessage(message);
       if (currentUserId) {
         await incrementQueryCount(currentUserId); // Increment query count after sending a message

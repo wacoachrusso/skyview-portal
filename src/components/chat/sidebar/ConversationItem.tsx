@@ -36,17 +36,15 @@ export function ConversationItem({
   const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // If checkbox is shown, handle selection differently
     if (showCheckbox) {
       onCheckChange?.(!isChecked);
-      return;
-    }
-
-    console.log('Conversation interaction:', conversation.id);
-    // Ensure we don't trigger selection during download
-    if (!downloadInProgress) {
-      onSelect(conversation.id);
+    } else {
+      // Ensure we don't trigger selection during download
+      if (!downloadInProgress) {
+        onSelect(conversation.id);
+      }
     }
   };
 

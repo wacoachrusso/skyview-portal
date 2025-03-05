@@ -8,6 +8,7 @@ import { AccountInfo } from "@/components/account/AccountInfo";
 import { SubscriptionInfo } from "@/components/account/SubscriptionInfo";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { CancelSubscriptionDialog } from "@/components/account/CancelSubscriptionDialog";
+import { SubscriptionStatusTracker } from "@/components/account/SubscriptionStatusTracker";
 import { supabase } from "@/integrations/supabase/client";
 
 const Account = () => {
@@ -89,6 +90,7 @@ const Account = () => {
             profile={profile} 
             showPasswordChange={showPasswordChange}
           />
+          <SubscriptionStatusTracker profile={profile} />
           <SubscriptionInfo 
             profile={profile}
             onPlanChange={handlePlanChange}
