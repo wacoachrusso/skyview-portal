@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const assistantId = Deno.env.get('OPENAI_ASSISTANT_ID');
+const assistantId = "asst_rzmUnjI0Hnfn8ah2nVT5ujU0"
 
 if (!openAIApiKey || !assistantId) {
   throw new Error('Required OpenAI environment variables are not set');
