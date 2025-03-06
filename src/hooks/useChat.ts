@@ -36,54 +36,57 @@ export function useChat() {
   }, []);
 
   // Function to setup a channel subscription
-  const setupChannel = useCallback((conversationId: string) => {
-    if (!conversationId || !isMountedRef.current) return;
+  const setupChannel = useCallback(
+    (conversationId: string) => {
+      if (!conversationId || !isMountedRef.current) return;
 
-    // Clean up existing channel
-    if (activeChannelRef.current) {
-      console.log(`Removing existing channel: ${activeChannelRef.current}`);
-      supabase.removeChannel(activeChannelRef.current);
-      activeChannelRef.current = null;
-    }
+      // Clean up existing channel
+      if (activeChannelRef.current) {
+        console.log(`Removing existing channel: ${activeChannelRef.current}`);
+        supabase.removeChannel(activeChannelRef.current);
+        activeChannelRef.current = null;
+      }
 
-    const channelName = getChannelName(conversationId);
-    console.log(`Setting up new channel: ${channelName}`);
+      const channelName = getChannelName(conversationId);
+      console.log(`Setting up new channel: ${channelName} for conversation: ${conversationId}`);
 
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        "postgres_changes",
-        { 
-          event: "INSERT", 
-          schema: "public", 
-          table: "messages", 
-          filter: `conversation_id=eq.${conversationId}` 
-        },
-        (payload) => {
-          if (!isMountedRef.current) return;
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          (payload) => {
+            if (!isMountedRef.current) return;
 
-          if (!payload?.new) {
-            console.warn("Received payload without 'new' data:", payload);
-            return;
+            if (!payload?.new) {
+              console.warn("Received payload without 'new' data:", payload);
+              return;
+            }
+
+            const newMessage = payload.new as Message;
+            console.log(`Received new message: ${newMessage.id}`);
+
+            // Check for duplicates before adding to state
+            setMessages((prev) => {
+              const exists = prev.some((msg) => msg.id === newMessage.id);
+              return exists ? prev : [...prev, newMessage];
+            });
           }
+        )
+        .subscribe((status, err) => {
+          console.log(`Channel ${channelName} status: ${status}`);
+          if (err) console.error(`Subscription error:`, err);
+        });
 
-          const newMessage = payload.new as Message;
-          console.log(`Received new message: ${newMessage.id}`);
-
-          // Check for duplicates before adding to state
-          setMessages((prev) => {
-            const exists = prev.some((msg) => msg.id === newMessage.id);
-            return exists ? prev : [...prev, newMessage];
-          });
-        }
-      )
-      .subscribe((status, err) => {
-        console.log(`Channel ${channelName} status: ${status}`);
-        if (err) console.error(`Subscription error:`, err);
-      });
-
-    activeChannelRef.current = channel;
-  }, [getChannelName, setMessages]);
+      activeChannelRef.current = channel;
+    },
+    [getChannelName, setMessages]
+  );
 
   // Send a message
   const sendMessage = useCallback(
@@ -98,52 +101,67 @@ export function useChat() {
         return;
       }
 
-      if (isLoading) return;
+      if (isLoading) {
+        console.log("Message sending is already in progress.");
+        return;
+      }
 
       setIsLoading(true);
+      console.log("Sending message...");
 
-      // Declare tempMessage outside the try block
       let tempMessage: Message | null = null;
 
       try {
         // Create a temporary message for optimistic update
         tempMessage = {
           id: crypto.randomUUID(), // Generate a temporary ID
-          conversation_id: currentConversationId || '',
+          conversation_id: currentConversationId || "",
           user_id: currentUserId,
           content: content,
-          role: 'user',
+          role: "user",
           created_at: new Date().toISOString(),
         };
 
         // Add the temporary message to the state
-        setMessages((prev) => [...prev, tempMessage]);
+        setMessages((prev) => {
+          console.log("Adding temporary message:", tempMessage);
+          return [...prev, tempMessage];
+        });
 
         // Ensure the conversation exists
         const conversationId = await ensureConversation(currentUserId, content);
         if (!conversationId) {
-          throw new Error('Failed to create or get conversation');
+          throw new Error("Failed to create or get conversation");
         }
 
         // Insert the user message into the database
         await insertUserMessage(content, conversationId);
+        console.log("User message inserted.");
 
         // Call the AI completion function
-        const { data, error } = await supabase.functions.invoke('chat-completion', {
+        const { data, error } = await supabase.functions.invoke("chat-completion", {
           body: {
             content: `${content}`,
-            subscriptionPlan: userProfile?.subscription_plan || 'free',
-            assistantId: userProfile?.assistant_id || 'default_assistant_id'
+            subscriptionPlan: userProfile?.subscription_plan || "free",
+            assistantId: userProfile?.assistant_id || "default_assistant_id",
           },
         });
 
-        if (error) throw error;
-        if (!data || !data.response) throw new Error('Invalid response from chat-completion');
+        if (error) {
+          console.error("AI completion error:", error);
+          throw error;
+        }
+
+        if (!data || !data.response) {
+          console.error("Invalid response from AI completion:", data);
+          throw new Error("Invalid response from chat-completion");
+        }
 
         // Insert the AI response
         await insertAIMessage(data.response, conversationId);
+        console.log("AI message inserted.");
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error("Error sending message:", error);
         toast({
           title: "Error",
           description: "Failed to send message. Please try again.",
@@ -153,13 +171,27 @@ export function useChat() {
 
         // Remove the temporary message if an error occurs
         if (tempMessage) {
-          setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage!.id));
+          setMessages((prev) => {
+            console.log("Removing temporary message due to error:", tempMessage);
+            return prev.filter((msg) => msg.id !== tempMessage!.id);
+          });
         }
       } finally {
         setIsLoading(false);
+        console.log("Message sending completed.");
       }
     },
-    [currentUserId, ensureConversation, insertUserMessage, insertAIMessage, userProfile, toast, isLoading, currentConversationId]
+    [
+      currentUserId,
+      ensureConversation,
+      insertUserMessage,
+      insertAIMessage,
+      userProfile,
+      toast,
+      isLoading,
+      currentConversationId,
+      setMessages,
+    ]
   );
 
   // Start a new chat
