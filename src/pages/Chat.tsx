@@ -10,7 +10,6 @@ const Chat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [hasReachedQueryLimit, setHasReachedQueryLimit] = useState(false); // State to track query limit
 
   const {
     currentConversationId,
@@ -28,34 +27,34 @@ const Chat = () => {
   const incrementQueryCount = async (userId: string) => {
     try {
       console.log("Incrementing query count for user:", userId);
-
+  
       // Step 1: Fetch the current query count
       const { data: profile, error: fetchError } = await supabase
         .from("profiles")
         .select("query_count")
         .eq("id", userId)
         .single();
-
+  
       if (fetchError) {
         console.error("Error fetching profile:", fetchError);
         throw fetchError;
       }
-
+  
       // If the profile doesn't exist, throw an error
       if (!profile) {
         throw new Error(`Profile with id ${userId} not found`);
       }
-
+  
       // Step 2: Calculate the new query count
       const newCount = (profile?.query_count || 0) + 1;
       console.log("New query count:", newCount);
-
+  
       // Step 3: Update the query count in the database
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ query_count: newCount })
         .eq("id", userId);
-
+  
       if (updateError) {
         console.error("Update error details:", {
           message: updateError.message,
@@ -64,7 +63,7 @@ const Chat = () => {
         });
         throw updateError;
       }
-
+  
       console.log("Query count updated successfully");
     } catch (error) {
       console.error("Error in incrementQueryCount:", error);
@@ -89,7 +88,7 @@ const Chat = () => {
         .single();
 
       if (profile?.subscription_plan === "free" && profile?.query_count >= 1) {
-        setHasReachedQueryLimit(true); // Set query limit state
+        console.log("Free trial ended, redirecting to pricing");
         toast({
           title: "Free Trial Ended",
           description: "Please select a subscription plan to continue using SkyGuide.",
@@ -105,7 +104,7 @@ const Chat = () => {
   // Check query limit after each message is sent
   useEffect(() => {
     if (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 1) {
-      setHasReachedQueryLimit(true); // Set query limit state
+      console.log("Query limit reached, redirecting to pricing");
       toast({
         title: "Free Trial Ended",
         description: "Please select a subscription plan to continue using SkyGuide.",
@@ -127,9 +126,10 @@ const Chat = () => {
   );
 
   // Handle sending a message
+
   const handleSendMessage = useCallback(
     async (message: string) => {
-      if (hasReachedQueryLimit) {
+      if (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 1) {
         toast({
           title: "Free Trial Ended",
           description: "Please select a subscription plan to continue using SkyGuide.",
@@ -138,7 +138,7 @@ const Chat = () => {
         navigate("/?scrollTo=pricing-section");
         return;
       }
-
+  
       await sendMessage(message);
       if (currentUserId) {
         await incrementQueryCount(currentUserId); // Increment query count after sending a message
@@ -146,7 +146,7 @@ const Chat = () => {
         console.error("currentUserId is not set");
       }
     },
-    [sendMessage, hasReachedQueryLimit, toast, navigate, currentUserId]
+    [sendMessage, userProfile, toast, navigate, currentUserId]
   );
 
   return (
@@ -163,7 +163,6 @@ const Chat = () => {
           isLoading={isLoading}
           onSendMessage={handleSendMessage}
           onNewChat={startNewChat}
-          hasReachedQueryLimit={hasReachedQueryLimit} // Pass query limit state
         />
       </ChatLayout>
     </div>
@@ -171,3 +170,4 @@ const Chat = () => {
 };
 
 export default Chat;
+
