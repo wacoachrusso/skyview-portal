@@ -1,3 +1,4 @@
+// File: src/components/auth/LoginForm.tsx
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +7,11 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 import { useLoginForm } from "@/hooks/useLoginForm";
 import { Link, useNavigate } from "react-router-dom";
 
-export const LoginForm = () => {
+type LoginFormProps = {
+  onNewLogin: () => Promise<void>; // Add onNewLogin prop
+};
+
+export const LoginForm = ({ onNewLogin }: LoginFormProps) => {
   const {
     loading,
     showPassword,
@@ -14,7 +19,7 @@ export const LoginForm = () => {
     setShowPassword,
     setFormData,
     handleSubmit
-  } = useLoginForm();
+  } = useLoginForm({ onNewLogin }); // Pass onNewLogin to useLoginForm
   const navigate = useNavigate();
 
   return (

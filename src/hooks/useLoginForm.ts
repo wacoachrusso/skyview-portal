@@ -1,3 +1,4 @@
+// File: src/hooks/useLoginForm.ts
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +10,11 @@ import { checkExistingProfile, checkExistingSessions, updateLoginAttempts, reset
 const MAX_LOGIN_ATTEMPTS = 3;
 const SESSION_DURATION = 30 * 24 * 60 * 60; // 30 days in seconds
 
-export const useLoginForm = () => {
+type UseLoginFormProps = {
+  onNewLogin: () => Promise<void>; // Add onNewLogin prop
+};
+
+export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createNewSession } = useSessionManagement();
@@ -21,7 +26,8 @@ export const useLoginForm = () => {
 
     setLoading(true);
     try {
-      await supabase.auth.signOut();
+      // Log out existing session before proceeding with new login
+      await onNewLogin();
 
       const profileData = await checkExistingProfile(formData.email);
       if (profileData?.account_status === 'locked') {
@@ -29,6 +35,7 @@ export const useLoginForm = () => {
         return;
       }
 
+      // Sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
         password: formData.password,
@@ -46,6 +53,7 @@ export const useLoginForm = () => {
 
       if (!data.session) throw new Error("No session created");
 
+      // Check if email is verified
       if (!data.user.email_confirmed_at) {
         await supabase.auth.signOut();
         await handleEmailVerification(formData.email);
@@ -53,8 +61,20 @@ export const useLoginForm = () => {
         return;
       }
 
+      // Delete existing sessions for the user from auth.sessions
+      const { error: sessionError } = await supabase
+        .from('sessions')
+        .delete()
+        .eq('user_id', data.session.user.id);
+
+      if (sessionError) {
+        console.error('Error deleting existing sessions:', sessionError);
+      }
+
+      // Create a new session
       await createNewSession(data.session.user.id);
 
+      // Set remember-me cookie if enabled
       if (formData.rememberMe) {
         const refreshToken = localStorage.getItem('supabase.refresh-token');
         if (refreshToken) {
@@ -62,6 +82,7 @@ export const useLoginForm = () => {
         }
       }
 
+      // Reset login attempts and navigate to chat
       await resetLoginAttempts(formData.email);
       navigate('/chat');
 

@@ -97,6 +97,34 @@ const Login = () => {
     checkUser();
   }, [navigate, toast]);
 
+  const handleNewLogin = async () => {
+    try {
+      // Check for existing session and log it out
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Delete existing sessions for the user from auth.sessions
+        const { error: sessionError } = await supabase
+          .from('sessions')
+          .delete()
+          .eq('user_id', session.user.id);
+
+        if (sessionError) {
+          console.error('Error deleting existing sessions:', sessionError);
+        }
+
+        // Sign out the user
+        await supabase.auth.signOut();
+        toast({
+          title: "Existing Session Logged Out",
+          description: "You have been logged out of your existing session to proceed with the new login.",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error('Error logging out existing session:', error);
+    }
+  };
+
   const handleAcceptDisclaimer = async () => {
     try {
       if (!userId) return;
@@ -167,7 +195,7 @@ const Login = () => {
             </p>
           </div>
 
-          <LoginForm />
+          <LoginForm onNewLogin={handleNewLogin} />
         </div>
       </div>
       
