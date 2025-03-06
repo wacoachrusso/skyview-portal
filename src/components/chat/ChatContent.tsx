@@ -14,6 +14,7 @@ interface ChatContentProps {
   isLoading?: boolean;
   onSendMessage: (content: string) => Promise<void>;
   onNewChat?: () => void;
+  hasReachedQueryLimit: boolean; // Add this prop
 }
 
 export function ChatContent({ 
@@ -21,20 +22,27 @@ export function ChatContent({
   currentUserId, 
   isLoading, 
   onSendMessage,
-  onNewChat 
+  onNewChat,
+  hasReachedQueryLimit, // Destructure the new prop
 }: ChatContentProps) {
   const { isOffline, offlineError } = useOfflineStatus();
   const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
   const { displayMessages } = useChatState(messages, isTrialEnded, isOffline);
 
-  if (isTrialEnded) {
+  // If the trial has ended or the query limit is reached, show the TrialEndedState
+  if (isTrialEnded || hasReachedQueryLimit) {
     return <TrialEndedState />;
   }
 
   return (
     <div className="flex flex-col h-full">
+      {/* Chat Header */}
       <ChatHeader onNewChat={onNewChat || (() => {})} />
+
+      {/* Offline Alert */}
       {isOffline && <OfflineAlert offlineError={offlineError || loadError} />}
+
+      {/* Chat Container */}
       <ChatContainer
         messages={displayMessages}
         currentUserId={currentUserId || ''}
@@ -43,11 +51,13 @@ export function ChatContent({
           navigator.clipboard.writeText(content);
         }}
       />
+
+      {/* Chat Input */}
       <div className="flex-shrink-0">
         <ChatInput 
           onSendMessage={onSendMessage} 
           isLoading={isLoading}
-          disabled={isOffline || isTrialEnded} 
+          disabled={isOffline || isTrialEnded || hasReachedQueryLimit} // Disable input if offline, trial ended, or query limit reached
         />
       </div>
     </div>

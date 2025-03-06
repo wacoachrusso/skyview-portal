@@ -28,7 +28,7 @@ export function ConversationItem({
   onToggleOffline,
   showCheckbox,
   isChecked,
-  onCheckChange
+  onCheckChange,
 }: ConversationItemProps) {
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const { downloadChat, downloadInProgress } = useDownloadChat();
@@ -37,11 +37,9 @@ export function ConversationItem({
     e.preventDefault();
     e.stopPropagation();
 
-    // If checkbox is shown, handle selection differently
     if (showCheckbox) {
       onCheckChange?.(!isChecked);
     } else {
-      // Ensure we don't trigger selection during download
       if (!downloadInProgress) {
         onSelect(conversation.id);
       }
@@ -49,39 +47,32 @@ export function ConversationItem({
   };
 
   const handleToggleOffline = async (e: React.MouseEvent | React.TouchEvent) => {
-    console.log('Toggle offline clicked');
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isOffline) {
-      console.log('Removing from offline storage');
       onToggleOffline(e, conversation.id);
       return;
     }
 
-    console.log('Showing download permission dialog');
     setShowPermissionDialog(true);
   };
 
   const handleDownloadConfirmed = async () => {
-    console.log('Download confirmed, starting download process');
     setShowPermissionDialog(false);
-    
+
     try {
       const success = await downloadChat(conversation.id, conversation.title);
-      console.log('Download result:', success);
-      
       if (success) {
-        console.log('Download successful, updating offline status');
-        const mockEvent = new MouseEvent('click', {
+        const mockEvent = new MouseEvent("click", {
           bubbles: true,
           cancelable: true,
-          view: window
+          view: window,
         }) as unknown as React.MouseEvent;
         onToggleOffline(mockEvent, conversation.id);
       }
     } catch (error) {
-      console.error('Error during download:', error);
+      console.error("Error during download:", error);
     }
   };
 
@@ -93,8 +84,8 @@ export function ConversationItem({
         onClick={handleInteraction}
         onTouchEnd={handleInteraction}
         className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 touch-manipulation ${
-          isSelected 
-            ? "bg-white/10 border-l-brand-gold" 
+          isSelected
+            ? "bg-white/10 border-l-brand-gold"
             : "border-l-transparent hover:border-l-white/20"
         }`}
       >
@@ -102,9 +93,7 @@ export function ConversationItem({
           {showCheckbox && (
             <Checkbox
               checked={isChecked}
-              onCheckedChange={(checked) => 
-                onCheckChange?.(checked as boolean)
-              }
+              onCheckedChange={(checked) => onCheckChange?.(checked as boolean)}
               onClick={(e) => e.stopPropagation()}
               className="data-[state=checked]:bg-destructive data-[state=checked]:border-destructive"
             />

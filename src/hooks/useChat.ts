@@ -29,6 +29,7 @@ export function useChat() {
 
   const activeChannelRef = useRef<any>(null);
   const isMountedRef = useRef(true);
+  const isInitialLoadRef = useRef(true);
 
   // Get a stable channel name
   const getChannelName = useCallback((conversationId: string) => {
@@ -86,6 +87,30 @@ export function useChat() {
       activeChannelRef.current = channel;
     },
     [getChannelName, setMessages]
+  );
+
+  // Load messages when conversation changes
+  const loadConversationMessages = useCallback(
+    async (conversationId: string) => {
+      if (!isInitialLoadRef.current) return;
+
+      setIsLoading(true);
+      try {
+        await loadMessages(conversationId);
+        isInitialLoadRef.current = false;
+      } catch (error) {
+        console.error("Error loading messages:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load messages. Please try again.",
+          variant: "destructive",
+          duration: 2000,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [loadMessages, setIsLoading, toast]
   );
 
   // Send a message
@@ -220,13 +245,13 @@ export function useChat() {
   // Load messages when conversation changes
   useEffect(() => {
     if (currentConversationId) {
-      loadMessages(currentConversationId);
+      loadConversationMessages(currentConversationId);
     }
-  }, [currentConversationId, loadMessages]);
+  }, [currentConversationId, loadConversationMessages]);
 
   // Subscribe to real-time updates
   useEffect(() => {
-    if (currentConversationId) {
+    if (currentConversationId && !isInitialLoadRef.current) {
       setupChannel(currentConversationId);
     }
   }, [currentConversationId, setupChannel]);

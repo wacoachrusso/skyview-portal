@@ -1,6 +1,5 @@
 import { Conversation } from "@/types/chat";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect } from "react";
 import { ConversationItem } from "./ConversationItem";
 import { BulkActions } from "./BulkActions";
 import { useOfflineConversations } from "@/hooks/useOfflineConversations";
@@ -19,18 +18,18 @@ export function ConversationList({
   currentConversationId,
   onSelectConversation,
   onDeleteConversation,
-  isLoading
+  isLoading,
 }: ConversationListProps) {
-  const { 
-    offlineConversations, 
-    removeFromOfflineStorage, 
-    toggleOfflineAvailability 
+  const {
+    offlineConversations,
+    removeFromOfflineStorage,
+    toggleOfflineAvailability,
   } = useOfflineConversations();
-  
+
   const {
     selectedConversations,
     handleCheckboxChange,
-    clearSelection
+    clearSelection,
   } = useBulkSelection();
 
   const handleSelect = (conversationId: string) => {
@@ -53,7 +52,7 @@ export function ConversationList({
   };
 
   const handleDeleteSelected = () => {
-    selectedConversations.forEach(id => {
+    selectedConversations.forEach((id) => {
       onDeleteConversation(id);
       removeFromOfflineStorage(id);
     });

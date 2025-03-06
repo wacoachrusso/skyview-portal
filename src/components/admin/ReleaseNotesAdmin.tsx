@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,28 @@ export const ReleaseNotesAdmin = () => {
   const handleEdit = (note: any) => {
     setEditingNote(note);
     setIsFormOpen(true);
+  };
+
+  const [showReleaseNotePopup, setShowReleaseNotePopup] = useState(false);
+  const [latestReleaseNote, setLatestReleaseNote] = useState<any>(null);
+
+  useEffect(() => {
+    if (releaseNotes && releaseNotes.length > 0) {
+      const latestNote = releaseNotes[0];
+      const lastSeenNoteId = localStorage.getItem("lastSeenNoteId");
+
+      if (lastSeenNoteId !== latestNote.id) {
+        setLatestReleaseNote(latestNote);
+        setShowReleaseNotePopup(true);
+      }
+    }
+  }, [releaseNotes]);
+
+  const handleClosePopup = () => {
+    if (latestReleaseNote) {
+      localStorage.setItem("lastSeenNoteId", latestReleaseNote.id);
+      }
+    setShowReleaseNotePopup(false);
   };
 
   return (
@@ -137,6 +159,19 @@ export const ReleaseNotesAdmin = () => {
             refetch();
           }}
         />
+      )}
+
+      {showReleaseNotePopup && latestReleaseNote && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
+            <h2 className="text-xl font-semibold mb-4">New Release: {latestReleaseNote.version}</h2>
+            <p className="mb-4">{latestReleaseNote.title}</p>
+            <p className="mb-4">{latestReleaseNote.description}</p>
+            <div className="flex justify-end">
+              <Button onClick={handleClosePopup}>OK</Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
