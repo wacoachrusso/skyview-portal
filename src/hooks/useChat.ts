@@ -133,6 +133,7 @@ export function useChat() {
           body: {
             content: `${content}`,
             subscriptionPlan: userProfile?.subscription_plan || 'free',
+            assistantId: userProfile?.assistant_id || 'default_assistant_id'
           },
         });
 

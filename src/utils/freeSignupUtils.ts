@@ -7,7 +7,7 @@ interface FreeSignupParams {
   fullName: string;
   jobTitle: string;
   airline: string;
-  assistantId?: string;
+  assistantId: string;
 }
 
 export const handleFreeSignup = async ({

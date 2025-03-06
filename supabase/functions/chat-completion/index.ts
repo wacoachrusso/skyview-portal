@@ -2,7 +2,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const assistantId = "asst_rzmUnjI0Hnfn8ah2nVT5ujU0"
+// Default assistant ID as fallback
+const defaultAssistantId = "asst_rzmUnjI0Hnfn8ah2nVT5ujU0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,8 +27,14 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
 
-    const { content, subscriptionPlan } = await req.json();
-    console.log('Processing chat request:', { subscriptionPlan });
+    const { content, subscriptionPlan, assistantId } = await req.json();
+    const effectiveAssistantId = assistantId || defaultAssistantId;
+    
+    console.log('Processing chat request:', { 
+      subscriptionPlan, 
+      assistantId: effectiveAssistantId,
+      usingDefault: !assistantId
+    });
 
     // Create a thread
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
@@ -62,12 +69,12 @@ serve(async (req) => {
 
     console.log('Message added to thread');
 
-    // Run the assistant
+    // Run the assistant with dynamic assistant ID
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
       headers: openAIHeaders,
       body: JSON.stringify({
-        assistant_id: assistantId,
+        assistant_id: effectiveAssistantId,
         instructions: "Please include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section."
       })
     });
@@ -79,7 +86,7 @@ serve(async (req) => {
     }
 
     const run = await runResponse.json();
-    console.log('Run started:', run.id);
+    console.log('Assistant run started:', run.id);
 
     // Poll for completion
     let runStatus;

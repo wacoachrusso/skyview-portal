@@ -1,10 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const assistantId = "asst_rzmUnjI0Hnfn8ah2nVT5ujU0"
+// Default assistant ID as fallback
+const defaultAssistantId = "asst_rzmUnjI0Hnfn8ah2nVT5ujU0";
 
-if (!openAIApiKey || !assistantId) {
-  throw new Error('Required OpenAI environment variables are not set');
+if (!openAIApiKey) {
+  throw new Error('Required OpenAI API key is not set');
 }
 
 const headers = {
@@ -63,14 +64,16 @@ export async function addMessageToThread(threadId: string, content: string) {
   }
 }
 
-export async function runAssistant(threadId: string) {
-  console.log('Running assistant on thread:', threadId);
+export async function runAssistant(threadId: string, assistantId: string) {
+  const effectiveAssistantId = assistantId || defaultAssistantId;
+  console.log('Running assistant on thread:', threadId, 'with assistant ID:', effectiveAssistantId);
+  
   try {
     const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        assistant_id: assistantId,
+        assistant_id: effectiveAssistantId,
         instructions: `You are a union contract expert. When answering questions, you must:
         1. Only answer questions directly related to union contract terms, policies, or provisions
         2. Include specific references from the contract in this exact format:
