@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,7 +18,7 @@ interface ChangelogEntry {
   change_type: string;
   changes: any;
   created_at: string;
-  profiles: {
+  profiles?: {
     full_name: string | null;
   } | null;
 }
@@ -46,7 +47,7 @@ export function ChangelogDialog({
             change_type,
             changes,
             created_at,
-            profiles!release_note_changes_user_id_fkey(full_name)
+            profiles:user_id(full_name)
           `)
           .eq('release_note_id', releaseNoteId)
           .order('created_at', { ascending: false });
@@ -58,13 +59,23 @@ export function ChangelogDialog({
 
         console.log('Fetched changes:', data);
         
-        // Transform the data to match our ChangelogEntry interface
-        const transformedData = data.map(item => ({
-          ...item,
-          profiles: item.profiles || { full_name: null }
-        }));
+        // Safely transform the data with type checking
+        const transformedData = data.map(item => {
+          // Create a base entry with required fields
+          const entry: ChangelogEntry = {
+            id: item.id,
+            release_note_id: item.release_note_id,
+            user_id: item.user_id,
+            change_type: item.change_type || 'unknown',
+            changes: item.changes,
+            created_at: item.created_at,
+            profiles: item.profiles
+          };
+          
+          return entry;
+        });
 
-        setChanges(transformedData as ChangelogEntry[]);
+        setChanges(transformedData);
       } catch (error) {
         console.error('Error fetching changelog:', error);
       } finally {
@@ -82,36 +93,44 @@ export function ChangelogDialog({
           <DialogTitle>Release Note History</DialogTitle>
         </DialogHeader>
         <div className="mt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Change Type</TableHead>
-                <TableHead>Changes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {changes.map((change) => (
-                <TableRow key={change.id}>
-                  <TableCell>
-                    {format(new Date(change.created_at), "MMM d, yyyy HH:mm")}
-                  </TableCell>
-                  <TableCell>{change.profiles?.full_name || 'Unknown User'}</TableCell>
-                  <TableCell className="capitalize">{change.change_type}</TableCell>
-                  <TableCell>
-                    {change.changes ? (
-                      <pre className="text-sm whitespace-pre-wrap">
-                        {JSON.stringify(change.changes, null, 2)}
-                      </pre>
-                    ) : (
-                      'No changes recorded'
-                    )}
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : changes.length === 0 ? (
+            <p className="text-center py-4 text-muted-foreground">No history found for this release note.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Change Type</TableHead>
+                  <TableHead>Changes</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {changes.map((change) => (
+                  <TableRow key={change.id}>
+                    <TableCell>
+                      {format(new Date(change.created_at), "MMM d, yyyy HH:mm")}
+                    </TableCell>
+                    <TableCell>{change.profiles?.full_name || 'Unknown User'}</TableCell>
+                    <TableCell className="capitalize">{change.change_type}</TableCell>
+                    <TableCell>
+                      {change.changes ? (
+                        <pre className="text-sm whitespace-pre-wrap">
+                          {JSON.stringify(change.changes, null, 2)}
+                        </pre>
+                      ) : (
+                        'No changes recorded'
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </DialogContent>
     </Dialog>
