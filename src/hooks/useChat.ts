@@ -35,7 +35,7 @@ export function useChat() {
     return `messages_${conversationId}`;
   }, []);
 
-  // Function to setup a channel subscription
+  // Function to setup a channel subscription with reconnection logic
   const setupChannel = useCallback(
     (conversationId: string) => {
       if (!conversationId || !isMountedRef.current) return;
@@ -51,7 +51,11 @@ export function useChat() {
       console.log(`Setting up new channel: ${channelName} for conversation: ${conversationId}`);
 
       const channel = supabase
-        .channel(channelName)
+        .channel(channelName, {
+          config: {
+            // Add any necessary configuration here
+          },
+        })
         .on(
           "postgres_changes",
           {
@@ -62,6 +66,8 @@ export function useChat() {
           },
           (payload) => {
             if (!isMountedRef.current) return;
+
+            console.log("Received payload:", payload); // Log the full payload
 
             if (!payload?.new) {
               console.warn("Received payload without 'new' data:", payload);
@@ -78,9 +84,29 @@ export function useChat() {
             });
           }
         )
+        .on("system", { event: "disconnect" }, () => {
+          console.log("WebSocket disconnected. Attempting to reconnect...");
+          // Attempt to reconnect after a delay
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              setupChannel(conversationId);
+            }
+          }, 5000); // Reconnect after 5 seconds
+        })
+        .on("system", { event: "connected" }, () => {
+          console.log("WebSocket connected successfully.");
+        })
         .subscribe((status, err) => {
           console.log(`Channel ${channelName} status: ${status}`);
-          if (err) console.error(`Subscription error:`, err);
+          if (err) {
+            console.error(`Subscription error:`, err);
+            // Attempt to reconnect on error
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                setupChannel(conversationId);
+              }
+            }, 5000); // Reconnect after 5 seconds
+          }
         });
 
       activeChannelRef.current = channel;
@@ -257,4 +283,3 @@ export function useChat() {
     startNewChat,
   };
 }
-

@@ -17,14 +17,14 @@ export const checkProfileStatus = async (userId: string, { navigate, toast }: Va
 
     if (profileError) {
       console.error("Profile fetch error:", profileError);
-      await supabase.auth.signOut();
+      
       navigate('/login');
       return false;
     }
 
     if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
       console.log('Free trial exhausted, logging out');
-      await supabase.auth.signOut();
+      
       toast({
         title: "Free Trial Ended",
         description: "Please select a subscription plan to continue."

@@ -11,50 +11,60 @@ export function useMessageOperations(currentUserId: string | null, currentConver
   const insertUserMessage = async (content: string, conversationId: string) => {
     console.log('Inserting user message:', { content, conversationId });
 
-    const { data: userMessage, error: userMessageError } = await supabase
-      .from('messages')
-      .insert([
-        {
-          content,
-          user_id: currentUserId,
-          role: 'user',
-          conversation_id: conversationId,
-          created_at: new Date().toISOString(),
-        }
-      ])
-      .select()
-      .single();
+    try {
+      const { data: userMessage, error: userMessageError } = await supabase
+        .from('messages')
+        .insert([
+          {
+            content,
+            user_id: currentUserId,
+            role: 'user',
+            conversation_id: conversationId,
+            created_at: new Date().toISOString(),
+          }
+        ])
+        .select()
+        .single();
 
-    if (userMessageError) {
-      console.error('Error inserting user message:', userMessageError);
-      throw userMessageError;
+      if (userMessageError) {
+        console.error('Error inserting user message:', userMessageError);
+        throw userMessageError;
+      }
+
+      console.log('User message inserted:', userMessage);
+      return userMessage;
+    } catch (error) {
+      console.error('Error in insertUserMessage:', error);
+      throw error;
     }
-
-    console.log('User message inserted:', userMessage);
-    return userMessage;
   };
 
   const insertAIMessage = async (content: string, conversationId: string) => {
     console.log('Inserting AI message:', { conversationId });
 
-    const { error: aiMessageError } = await supabase
-      .from('messages')
-      .insert([
-        {
-          content,
-          user_id: null,
-          role: 'assistant',
-          conversation_id: conversationId,
-          created_at: new Date().toISOString(),
-        }
-      ]);
+    try {
+      const { error: aiMessageError } = await supabase
+        .from('messages')
+        .insert([
+          {
+            content,
+            user_id: null,
+            role: 'assistant',
+            conversation_id: conversationId,
+            created_at: new Date().toISOString(),
+          }
+        ]);
 
-    if (aiMessageError) {
-      console.error('Error inserting AI message:', aiMessageError);
-      throw aiMessageError;
+      if (aiMessageError) {
+        console.error('Error inserting AI message:', aiMessageError);
+        throw aiMessageError;
+      }
+
+      console.log('AI message inserted successfully');
+    } catch (error) {
+      console.error('Error in insertAIMessage:', error);
+      throw error;
     }
-
-    console.log('AI message inserted successfully');
   };
 
   const loadMessages = async (conversationId: string) => {

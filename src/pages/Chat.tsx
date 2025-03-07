@@ -76,7 +76,7 @@ const Chat = () => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/login");
+        navigate("/");
         return;
       }
 
@@ -126,7 +126,6 @@ const Chat = () => {
   );
 
   // Handle sending a message
-
   const handleSendMessage = useCallback(
     async (message: string) => {
       if (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 1) {
@@ -170,4 +169,3 @@ const Chat = () => {
 };
 
 export default Chat;
-

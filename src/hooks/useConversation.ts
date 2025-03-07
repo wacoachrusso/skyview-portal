@@ -44,11 +44,14 @@ export function useConversation() {
     console.log('Ensuring conversation exists before sending message...');
     
     if (currentConversationId) {
+      console.log('Using existing conversation:', currentConversationId);
       return currentConversationId;
     }
   
     try {
       const title = firstMessage ? firstMessage.slice(0, 50) : 'New Chat';
+      console.log('Creating new conversation with title:', title);
+      
       const { data: newConversation, error: conversationError } = await supabase
         .from('conversations')
         .insert([{ 
