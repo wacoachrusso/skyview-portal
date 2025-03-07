@@ -557,25 +557,22 @@ export type Database = {
       }
       release_note_changes: {
         Row: {
-          change_type: string
-          changes: Json | null
           created_at: string
+          has_seen_release_note: boolean | null
           id: string
           release_note_id: string
           user_id: string
         }
         Insert: {
-          change_type: string
-          changes?: Json | null
           created_at?: string
+          has_seen_release_note?: boolean | null
           id?: string
           release_note_id: string
           user_id: string
         }
         Update: {
-          change_type?: string
-          changes?: Json | null
           created_at?: string
+          has_seen_release_note?: boolean | null
           id?: string
           release_note_id?: string
           user_id?: string
