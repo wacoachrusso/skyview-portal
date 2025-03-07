@@ -62,7 +62,7 @@ export const GoogleAuthHandler = () => {
       }
 
       console.log('Auth callback successful, redirecting to dashboard');
-      navigate('/chat');
+      navigate('/dashboard');
     };
 
     handleAuthCallback();
