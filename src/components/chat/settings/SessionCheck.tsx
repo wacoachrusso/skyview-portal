@@ -30,10 +30,7 @@ export function SessionCheck() {
         const session = await validateCurrentSession({ navigate, toast });
         if (!session) return;
 
-        // Check profile and trial status
-        const isProfileValid = await checkProfileStatus(session.user.id, { navigate, toast });
-        if (!isProfileValid) return;
-
+       
         // Validate session token
         const currentToken = localStorage.getItem('session_token');
         const isTokenValid = await validateSessionToken(currentToken, { navigate, toast });

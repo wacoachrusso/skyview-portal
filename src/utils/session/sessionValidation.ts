@@ -2,7 +2,7 @@ import { NavigateFunction } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as toastFunction } from "@/hooks/use-toast";
 import { validateSessionToken } from "./sessionTokenValidation";
-import { checkProfileStatus } from "./profileValidation";
+
 
 interface ValidationProps {
   navigate: NavigateFunction;
@@ -32,4 +32,4 @@ export const validateCurrentSession = async ({ navigate, toast }: ValidationProp
   }
 };
 
-export { validateSessionToken, checkProfileStatus };
+export { validateSessionToken};

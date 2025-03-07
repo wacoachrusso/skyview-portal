@@ -13,46 +13,40 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
     if (!currentUserId || isOffline) return;
 
     try {
-      console.log('Checking free trial status for user:', currentUserId);
+      console.log("Checking free trial status for user:", currentUserId);
       const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('subscription_plan, query_count')
-        .eq('id', currentUserId)
+        .from("profiles")
+        .select("subscription_plan, query_count")
+        .eq("id", currentUserId)
         .single();
 
       if (error) throw error;
 
-      if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
-        console.log('Free trial ended - query count:', profile.query_count);
+      if (profile?.subscription_plan === "free" && profile?.query_count >= 2) {
+        console.log("Free trial ended - query count:", profile.query_count);
         setIsTrialEnded(true);
-        
-        // Update the profile to prevent further queries
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ subscription_plan: 'trial_ended' })
-          .eq('id', currentUserId);
-
-        if (updateError) {
-          console.error('Error updating profile status:', updateError);
-        }
 
         toast({
           title: "Free Trial Ended",
           description: "Please select a subscription plan to continue.",
-          variant: "destructive"
+          variant: "destructive",
         });
-        navigate('/?scrollTo=pricing-section');
+        navigate("/?scrollTo=pricing-section");
+      } else {
+        setIsTrialEnded(false);
       }
     } catch (error) {
-      console.error('Error checking trial status:', error);
-      setLoadError('Failed to check subscription status');
+      console.error("Error checking trial status:", error);
+      setLoadError("Failed to check subscription status");
     }
   }, [currentUserId, isOffline, navigate, toast]);
 
-  // Check trial status on component mount
+  // Check trial status on component mount and when dependencies change
   useEffect(() => {
-    checkFreeTrialStatus();
-  }, [checkFreeTrialStatus]);
+    if (currentUserId) {
+      checkFreeTrialStatus();
+    }
+  }, [checkFreeTrialStatus, currentUserId]);
 
   return { checkFreeTrialStatus, loadError, isTrialEnded };
 }
