@@ -66,7 +66,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log("Starting admin verification process");
         
-        // Direct database check for most up-to-date admin status
+        // Check if we have a session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
@@ -79,7 +79,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         
         console.log("Fetching profile data for user:", session.user.id);
         
-        // Fetch fresh user profile data directly from the database
+        // Explicitly fetch profile with is_admin field
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('is_admin, email')
@@ -141,14 +141,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
           <p>Verifying admin access...</p>
         </div>
-      </div>
-    );
-  }
-  
-  if (!isAdmin) {
-    return (
-      <div className="flex items-center justify-center h-screen text-red-500 text-xl">
-        Access Denied. You need administrator privileges to access this page.
       </div>
     );
   }

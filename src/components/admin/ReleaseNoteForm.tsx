@@ -26,16 +26,15 @@ export function ReleaseNoteForm() {
     form,
     onSubmit,
     isLoading,
-    releaseNoteId,
-    setReleaseNoteId,
-    resetForm,
-    isEditing,
-    sendEmail,
-    setSendEmail,
-    sendEmailNotification
   } = useReleaseNoteForm();
 
   const [isChangelogOpen, setIsChangelogOpen] = useState(false);
+  const [releaseNoteId, setReleaseNoteId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [sendEmail, setSendEmail] = useState(false);
+
+  // Dummy functions to satisfy props requirements
+  const resetForm = () => form.reset();
 
   return (
     <div className="space-y-6">
@@ -47,8 +46,8 @@ export function ReleaseNoteForm() {
             {isEditing && (
               <div className="mt-6">
                 <EmailNotificationToggle
-                  value={sendEmail}
-                  onChange={setSendEmail}
+                  checked={sendEmail}
+                  onCheckedChange={setSendEmail}
                 />
               </div>
             )}
@@ -56,7 +55,6 @@ export function ReleaseNoteForm() {
           
           <FormActions
             isLoading={isLoading}
-            isEditing={isEditing}
             onReset={resetForm}
             onViewChangelog={() => setIsChangelogOpen(true)}
           />

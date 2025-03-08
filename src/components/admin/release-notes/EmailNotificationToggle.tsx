@@ -1,27 +1,21 @@
-import { Checkbox } from "@/components/ui/checkbox";
+
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface EmailNotificationToggleProps {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
 }
 
-export const EmailNotificationToggle = ({
-  checked,
-  onCheckedChange,
-}: EmailNotificationToggleProps) => {
+export function EmailNotificationToggle({ checked, onCheckedChange }: EmailNotificationToggleProps) {
   return (
     <div className="flex items-center space-x-2">
-      <Checkbox
-        id="sendEmail"
+      <Switch 
+        id="email-notification" 
         checked={checked}
-        onCheckedChange={(checked) => onCheckedChange(checked as boolean)}
+        onCheckedChange={onCheckedChange}
       />
-      <label
-        htmlFor="sendEmail"
-        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        Send email notification to subscribed users
-      </label>
+      <Label htmlFor="email-notification">Send email notification to subscribers</Label>
     </div>
   );
-};
+}

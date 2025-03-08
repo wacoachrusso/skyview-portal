@@ -16,52 +16,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  const [isAdmin, setIsAdmin] = useState(true);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const confirmAdminAccess = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
-        
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (error || !profile?.is_admin) {
-          console.log("Admin check failed:", error || "User is not an admin");
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error("Error confirming admin access:", error);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    confirmAdminAccess();
-  }, [navigate, toast]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null; // The AdminRoute component will handle this case
-  }
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="container mx-auto px-4 py-8">

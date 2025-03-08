@@ -1,19 +1,43 @@
-import { Button } from "@/components/ui/button";
 
-interface FormActionsProps {
+import { Button } from "@/components/ui/button";
+import { ArrowCounterClockwise, Eye } from "lucide-react";
+
+export interface FormActionsProps {
   isLoading: boolean;
-  onClose: () => void;
+  onReset: () => void;
+  onViewChangelog?: () => void;
 }
 
-export const FormActions = ({ isLoading, onClose }: FormActionsProps) => {
+export function FormActions({ isLoading, onReset, onViewChangelog }: FormActionsProps) {
   return (
-    <div className="flex justify-end space-x-2">
-      <Button variant="outline" onClick={onClose}>
-        Cancel
-      </Button>
+    <div className="flex justify-between">
+      <div className="flex space-x-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onReset}
+          disabled={isLoading}
+        >
+          <ArrowCounterClockwise className="mr-2 h-4 w-4" />
+          Reset
+        </Button>
+        
+        {onViewChangelog && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onViewChangelog}
+            disabled={isLoading}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            View Changelog
+          </Button>
+        )}
+      </div>
+      
       <Button type="submit" disabled={isLoading}>
         {isLoading ? "Saving..." : "Save"}
       </Button>
     </div>
   );
-};
+}

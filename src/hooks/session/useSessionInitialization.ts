@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +33,27 @@ export const useSessionInitialization = () => {
       if (session.refresh_token) {
         localStorage.setItem('supabase.refresh-token', session.refresh_token);
         document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`;
+      }
+
+      // Verify user profile and admin status
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      } else if (profile) {
+        console.log("User profile loaded:", profile.email, "Is admin:", profile.is_admin);
+        
+        // Store admin status in local storage for quick access
+        if (profile.is_admin) {
+          localStorage.setItem('user_is_admin', 'true');
+          console.log("Admin status set in local storage");
+        } else {
+          localStorage.removeItem('user_is_admin');
+        }
       }
 
       // Get current session token

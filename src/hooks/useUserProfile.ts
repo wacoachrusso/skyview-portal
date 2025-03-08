@@ -25,6 +25,16 @@ export function useUserProfile() {
       }
       
       console.log("Loaded user profile:", profile);
+      
+      // Set admin status in localStorage for quick access
+      if (profile.is_admin) {
+        localStorage.setItem('user_is_admin', 'true');
+        console.log("Admin status set in localStorage: true");
+      } else {
+        localStorage.removeItem('user_is_admin');
+        console.log("Admin status removed from localStorage");
+      }
+      
       setUserProfile(profile);
     } catch (error) {
       console.error("Error in loadUserProfile:", error);
@@ -72,6 +82,7 @@ export function useUserProfile() {
           console.log("User signed out");
           setCurrentUserId(null);
           setUserProfile(null);
+          localStorage.removeItem('user_is_admin');
           setIsLoading(false);
         }
       }
