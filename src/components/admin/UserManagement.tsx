@@ -1,4 +1,3 @@
-
 import { useUserManagement } from "@/hooks/useUserManagement";
 import { UsersTable } from "./user-management/UsersTable";
 import { UserDetailsDialog } from "./user-management/UserDetailsDialog";
@@ -17,7 +16,6 @@ export const UserManagement = () => {
     updateAccountStatus,
     handleDeleteUser,
     isLoading,
-    refetch,
   } = useUserManagement();
 
   // Filter out deleted users and null values completely
@@ -55,7 +53,6 @@ export const UserManagement = () => {
         <UserDetailsDialog
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
-          onUserUpdated={refetch}
         />
       )}
 

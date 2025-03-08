@@ -1,4 +1,3 @@
-
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 
 export interface UserManagementState {
@@ -11,7 +10,6 @@ export interface UserManagementState {
 export interface UseUserManagementReturn extends UserManagementState {
   users: ProfilesRow[] | undefined;
   isLoading: boolean;
-  refetch: () => Promise<any>;
   setSelectedUser: (user: ProfilesRow | null) => void;
   setUserToDelete: (user: ProfilesRow | null) => void;
   toggleAdminStatus: (userId: string, currentStatus: boolean) => Promise<void>;

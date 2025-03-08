@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +5,7 @@ import { ReleaseNotesAdmin } from "@/components/admin/ReleaseNotesAdmin";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { NotificationManager } from "@/components/admin/NotificationManager";
@@ -100,24 +99,10 @@ const AdminDashboard = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            onClick={() => setActiveTab("users")} 
-            className="gap-2"
-          >
-            <Users className="h-4 w-4" />
-            Manage Users
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/dashboard")} 
-            className="gap-2"
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Go to Dashboard
-          </Button>
-        </div>
+        <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2">
+          <LayoutDashboard className="h-4 w-4" />
+          Go to Dashboard
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
