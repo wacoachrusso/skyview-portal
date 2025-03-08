@@ -1,95 +1,147 @@
-// File: src/hooks/useLoginForm.ts
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useSessionManagement } from "@/hooks/useSessionManagement";
-import { handleEmailVerification } from "@/utils/authUtils";
-import { useLoginFormState } from "./useLoginFormState";
 import { checkExistingProfile, checkExistingSessions, updateLoginAttempts, resetLoginAttempts } from "@/services/loginService";
+import { useToast } from "@/hooks/use-toast";
 
-const MAX_LOGIN_ATTEMPTS = 3;
-const SESSION_DURATION = 30 * 24 * 60 * 60; // 30 days in seconds
+type LoginFormData = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+};
 
 type UseLoginFormProps = {
-  onNewLogin: () => Promise<void>; // Add onNewLogin prop
+  onNewLogin: () => Promise<void>;
 };
 
 export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { createNewSession } = useSessionManagement();
-  const { loading, setLoading, showPassword, setShowPassword, formData, setFormData } = useLoginFormState();
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: "",
+    password: "",
+    rememberMe: false,
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
-
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
-    try {
-      // Log out existing session before proceeding with new login
-      await onNewLogin();
 
-      const profileData = await checkExistingProfile(formData.email);
-      if (profileData?.account_status === 'locked') {
-        toast({ variant: "destructive", title: "Account locked", description: "Too many failed login attempts." });
+    try {
+      console.log("Attempting login for user:", formData.email);
+      
+      // Check if user exists and account status
+      const profile = await checkExistingProfile(formData.email);
+      
+      // If account is disabled, suspended, or deleted, block login
+      if (profile?.account_status === "disabled" || profile?.account_status === "suspended" || profile?.account_status === "deleted") {
+        console.log(`Login blocked due to account status: ${profile.account_status}`);
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: `Your account has been ${profile.account_status}. Please contact support.`,
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Check for too many login attempts
+      if (profile?.login_attempts && profile.login_attempts >= 5) {
+        console.log("Login blocked due to too many attempts");
+        // Disable account after 5 failed attempts
+        await updateLoginAttempts(formData.email, profile.login_attempts, "disabled");
+        toast({
+          variant: "destructive",
+          title: "Account Locked",
+          description: "Too many failed login attempts. Your account has been disabled.",
+        });
+        setLoading(false);
         return;
       }
 
-      // Sign in with email and password
+      // Attempt login
+      await onNewLogin(); // Sign out existing sessions first
+      
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email.trim(),
+        email: formData.email,
         password: formData.password,
       });
 
       if (error) {
-        if (profileData) {
-          const newAttempts = (profileData.login_attempts || 0) + 1;
-          const newStatus = newAttempts >= MAX_LOGIN_ATTEMPTS ? 'locked' : 'active';
-          await updateLoginAttempts(formData.email, newAttempts, newStatus);
+        console.error("Login error:", error);
+        
+        // Increment login attempts on failure
+        if (profile) {
+          const newAttempts = (profile.login_attempts || 0) + 1;
+          await updateLoginAttempts(formData.email, newAttempts, profile.account_status || 'active');
+          
+          const remainingAttempts = 5 - newAttempts;
+          if (remainingAttempts > 0) {
+            toast({
+              variant: "destructive",
+              title: "Login Failed",
+              description: `Incorrect password. ${remainingAttempts} attempts remaining before your account is locked.`,
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Account Locked",
+              description: "Too many failed login attempts. Your account has been disabled.",
+            });
+          }
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Login Failed", 
+            description: "Invalid email or password",
+          });
         }
-        toast({ variant: "destructive", title: "Login failed", description: "Incorrect email or password." });
+        
+        setLoading(false);
         return;
       }
 
-      if (!data.session) throw new Error("No session created");
-
-      // Check if email is verified
-      if (!data.user.email_confirmed_at) {
-        await supabase.auth.signOut();
-        await handleEmailVerification(formData.email);
-        toast({ variant: "destructive", title: "Email not verified", description: "Check your inbox." });
-        return;
+      console.log("Login successful, user data:", data);
+      
+      // Reset login attempts on successful login
+      if (profile) {
+        await resetLoginAttempts(formData.email);
       }
 
-      // Delete existing sessions for the user from auth.sessions
-      const { error: sessionError } = await supabase
-        .from('sessions')
-        .delete()
-        .eq('user_id', data.session.user.id);
+      // Ensure user profile data is refreshed after login
+      const { data: userData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
 
-      if (sessionError) {
-        console.error('Error deleting existing sessions:', sessionError);
-      }
+      console.log("Fetched updated user profile:", userData);
 
-      // Create a new session
-      await createNewSession(data.session.user.id);
-
-      // Set remember-me cookie if enabled
-      if (formData.rememberMe) {
-        const refreshToken = localStorage.getItem('supabase.refresh-token');
-        if (refreshToken) {
-          document.cookie = `sb-refresh-token=${refreshToken}; path=/; secure; samesite=strict; max-age=${SESSION_DURATION}`;
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+      
+      // Check for existing sessions
+      if (profile) {
+        const existingSessions = await checkExistingSessions(profile.id);
+        if (existingSessions && existingSessions.length > 0) {
+          console.log(`User has ${existingSessions.length} existing sessions`);
         }
       }
 
-      // Reset login attempts and navigate to chat
-      await resetLoginAttempts(formData.email);
-      navigate('/chat');
-
-      toast({ title: "Welcome back!", description: "You have successfully logged in." });
-
-    } catch (error) {
-      toast({ variant: "destructive", title: "Login failed", description: "An unexpected error occurred." });
+      // Redirect based on profile completeness
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Unexpected error during login:", error);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
     } finally {
       setLoading(false);
     }
@@ -101,6 +153,6 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
     formData,
     setShowPassword,
     setFormData,
-    handleSubmit
+    handleSubmit,
   };
 };
