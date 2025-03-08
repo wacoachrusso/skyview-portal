@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 // Default assistant ID as fallback
-const defaultAssistantId = "asst_rzmUnjI0Hnfn8ah2nVT5ujU0";
+const defaultAssistantId = "asst_xpkEzhLUt4Qn6uzRzSxAekGh";
 
 if (!openAIApiKey) {
   throw new Error('Required OpenAI API key is not set');
