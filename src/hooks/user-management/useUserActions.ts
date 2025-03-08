@@ -9,23 +9,33 @@ export const useUserActions = (refetch: () => void) => {
 
   const toggleAdminStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      console.log("Toggling admin status for user:", userId);
+      console.log("Toggling admin status for user:", userId, "Current status:", currentStatus);
       setUpdatingUser(userId);
+
+      // Set the new admin status (opposite of current)
+      const newAdminStatus = !currentStatus;
+      
+      // Set subscription plan based on admin status
+      const subscriptionPlan = newAdminStatus ? "monthly" : "free";
+      
+      console.log("Setting admin status to:", newAdminStatus, "and subscription plan to:", subscriptionPlan);
 
       const { error } = await supabase
         .from("profiles")
         .update({ 
-          is_admin: !currentStatus,
-          // Give admins monthly subscription access automatically
-          subscription_plan: !currentStatus ? "monthly" : "free" 
+          is_admin: newAdminStatus,
+          subscription_plan: subscriptionPlan
         })
         .eq("id", userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       toast({
         title: "Admin status updated",
-        description: `User is now ${!currentStatus ? "an admin" : "not an admin"}`,
+        description: `User is now ${newAdminStatus ? "an admin" : "not an admin"}`,
       });
 
       // Refresh the user list
