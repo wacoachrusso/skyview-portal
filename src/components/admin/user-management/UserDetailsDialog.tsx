@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,9 @@ export const UserDetailsDialog = ({ user, onClose }: UserDetailsDialogProps) => 
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>User Details</DialogTitle>
+          <DialogDescription>
+            View detailed information about this user
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">

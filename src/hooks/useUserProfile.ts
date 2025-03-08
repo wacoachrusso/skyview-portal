@@ -8,6 +8,8 @@ export function useUserProfile() {
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log("Loading user profile for ID:", userId);
+      
       // Fetch the most up-to-date profile data
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -35,6 +37,7 @@ export function useUserProfile() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user && mounted) {
+          console.log("Session user found:", session.user.id);
           setCurrentUserId(session.user.id);
           await loadUserProfile(session.user.id);
         }
@@ -51,11 +54,13 @@ export function useUserProfile() {
       
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
         if (session?.user && mounted) {
+          console.log("User signed in/updated:", session.user.id);
           setCurrentUserId(session.user.id);
           await loadUserProfile(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         if (mounted) {
+          console.log("User signed out");
           setCurrentUserId(null);
           setUserProfile(null);
         }
@@ -73,6 +78,7 @@ export function useUserProfile() {
     userProfile,
     refreshProfile: async () => {
       if (currentUserId) {
+        console.log("Manually refreshing profile for:", currentUserId);
         await loadUserProfile(currentUserId);
       }
     }

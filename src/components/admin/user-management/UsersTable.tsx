@@ -35,7 +35,7 @@ export const UsersTable = ({
 }: UsersTableProps) => {
   const getSubscriptionBadge = (plan: string | null, isAdmin: boolean) => {
     if (isAdmin) {
-      return <Badge className="bg-purple-500">Admin - {plan || 'monthly'}</Badge>;
+      return <Badge className="bg-purple-500">Admin Plan</Badge>;
     }
     
     if (!plan || plan === 'free') {
@@ -83,9 +83,10 @@ export const UsersTable = ({
                 <Switch
                   checked={user.is_admin || false}
                   disabled={updatingUser === user.id}
-                  onCheckedChange={() =>
-                    toggleAdminStatus(user.id, user.is_admin || false)
-                  }
+                  onCheckedChange={() => {
+                    console.log("Toggle switch clicked for user:", user.id);
+                    toggleAdminStatus(user.id, user.is_admin || false);
+                  }}
                 />
               </TableCell>
               <TableCell>

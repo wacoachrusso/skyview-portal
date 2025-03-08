@@ -34,14 +34,16 @@ export const useUserActions = (refetch: () => void) => {
         throw error;
       }
 
-      // Log the updated data for debugging
+      // Log the updated data for verification
       const { data: updatedProfile, error: verifyError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
         
-      if (!verifyError) {
+      if (verifyError) {
+        console.error("Error verifying profile update:", verifyError);
+      } else {
         console.log("Updated profile:", updatedProfile);
       }
 
