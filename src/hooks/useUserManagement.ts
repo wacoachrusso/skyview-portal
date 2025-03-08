@@ -1,53 +1,56 @@
 
-import { useCallback, useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 import { useToast } from "@/hooks/use-toast";
-import { UserManagementState, UseUserManagementReturn } from "./user-management/types";
+import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 
-export function useUserManagement(): UseUserManagementReturn {
+export const useUserManagement = () => {
   const { toast } = useToast();
-  const [users, setUsers] = useState<ProfilesRow[]>([]);
+  const [users, setUsers] = useState<ProfilesRow[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<ProfilesRow | null>(null);
   const [userToDelete, setUserToDelete] = useState<ProfilesRow | null>(null);
+  const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Fetch users
   const fetchUsers = useCallback(async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      setUsers(data);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load users",
+        description: "Failed to load users.",
       });
     } finally {
       setIsLoading(false);
     }
   }, [toast]);
 
+  // Initial data fetch
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const refetch = useCallback(async () => {
+  // Refetch users - explicit implementation for TS
+  const refetch = useCallback(() => {
     return fetchUsers();
   }, [fetchUsers]);
 
+  // Toggle admin status
   const toggleAdminStatus = useCallback(
     async (userId: string, currentStatus: boolean) => {
-      setUpdatingUser(userId);
       try {
+        setUpdatingUser(userId);
         const { error } = await supabase
           .from("profiles")
           .update({ is_admin: !currentStatus })
@@ -55,26 +58,27 @@ export function useUserManagement(): UseUserManagementReturn {
 
         if (error) throw error;
 
-        setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user.id === userId
-              ? { ...user, is_admin: !currentStatus }
-              : user
-          )
-        );
-
         toast({
           title: "Success",
           description: `Admin status ${
-            !currentStatus ? "granted" : "revoked"
-          }`,
+            currentStatus ? "revoked" : "granted"
+          } successfully`,
         });
+
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers?.map((user) =>
+            user.id === userId
+              ? { ...user, is_admin: !currentStatus }
+              : user
+          ) || null
+        );
       } catch (error) {
-        console.error("Error updating admin status:", error);
+        console.error("Error toggling admin status:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to update admin status",
+          description: "Failed to update admin status.",
         });
       } finally {
         setUpdatingUser(null);
@@ -83,10 +87,15 @@ export function useUserManagement(): UseUserManagementReturn {
     [toast]
   );
 
+  // Update account status
   const updateAccountStatus = useCallback(
-    async (userId: string, email: string, status: "disabled" | "suspended" | "deleted" | "active") => {
-      setUpdatingUser(userId);
+    async (
+      userId: string,
+      email: string,
+      status: "disabled" | "suspended" | "deleted" | "active"
+    ) => {
       try {
+        setUpdatingUser(userId);
         const { error } = await supabase
           .from("profiles")
           .update({ account_status: status })
@@ -94,27 +103,41 @@ export function useUserManagement(): UseUserManagementReturn {
 
         if (error) throw error;
 
-        setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user.id === userId ? { ...user, account_status: status } : user
-          )
-        );
-
-        // If setting to deleted, remove from the list
-        if (status === "deleted") {
-          setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-        }
+        const statusVerb =
+          status === "active"
+            ? "activated"
+            : status === "deleted"
+            ? "deleted"
+            : status === "disabled"
+            ? "disabled"
+            : "suspended";
 
         toast({
           title: "Success",
-          description: `Account status updated to ${status}`,
+          description: `Account ${statusVerb} successfully`,
         });
+
+        // Update local state
+        setUsers((prevUsers) =>
+          prevUsers?.map((user) =>
+            user.id === userId
+              ? { ...user, account_status: status }
+              : user
+          ) || null
+        );
+
+        // If we're deleting the account, remove it from the users list
+        if (status === "deleted") {
+          setUsers((prevUsers) =>
+            prevUsers?.filter((user) => user.id !== userId) || null
+          );
+        }
       } catch (error) {
         console.error("Error updating account status:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to update account status",
+          description: "Failed to update account status.",
         });
       } finally {
         setUpdatingUser(null);
@@ -123,35 +146,46 @@ export function useUserManagement(): UseUserManagementReturn {
     [toast]
   );
 
+  // Handle user deletion
   const handleDeleteUser = useCallback(
-    async (user: ProfilesRow) => {
-      if (!user || !user.id) return;
+    async (user: ProfilesRow | null) => {
+      if (!user) return;
 
-      setIsDeleting(true);
       try {
-        // Update account status to deleted
-        await updateAccountStatus(user.id, user.email || "", "deleted");
+        setIsDeleting(true);
 
-        // Could also call a Supabase function to delete the auth user if needed
-        // await supabase.functions.invoke('delete-user-auth', { body: { userId: user.id } });
+        // Call Supabase Function to delete user and all associated data
+        const { data, error } = await supabase.functions.invoke(
+          "delete-user-auth",
+          {
+            body: { user_email: user.email },
+          }
+        );
 
-        setUserToDelete(null);
+        if (error) throw error;
+
         toast({
           title: "Success",
-          description: "User marked as deleted",
+          description: "User deleted successfully",
         });
+
+        // Remove from local state
+        setUsers((prevUsers) =>
+          prevUsers?.filter((u) => u.id !== user.id) || null
+        );
+        setUserToDelete(null);
       } catch (error) {
         console.error("Error deleting user:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to delete user",
+          description: "Failed to delete user.",
         });
       } finally {
         setIsDeleting(false);
       }
     },
-    [toast, updateAccountStatus]
+    [toast]
   );
 
   return {
@@ -168,4 +202,7 @@ export function useUserManagement(): UseUserManagementReturn {
     updateAccountStatus,
     handleDeleteUser,
   };
-}
+};
+
+// Import React hooks
+import { useEffect } from 'react';
