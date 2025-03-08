@@ -35,12 +35,31 @@ export const UserDetailsDialog = ({ user, onClose, onUserUpdated }: UserDetailsD
     try {
       setIsUpdating(true);
       
-      // Update the user's airline and user_type (workgroup)
+      // First, find the appropriate assistant_id for the selected airline and user_type
+      let assistantId = null;
+      if (airline && userType) {
+        const { data: assistantData, error: assistantError } = await supabase
+          .from("openai_assistants")
+          .select("assistant_id")
+          .eq("airline", airline.toLowerCase())
+          .eq("work_group", userType.toLowerCase())
+          .maybeSingle();
+          
+        if (assistantError) {
+          console.error("Error finding assistant:", assistantError);
+        } else if (assistantData) {
+          assistantId = assistantData.assistant_id;
+          console.log(`Found assistant ID ${assistantId} for ${airline} ${userType}`);
+        }
+      }
+      
+      // Update the user's airline, user_type (workgroup), and assistant_id
       const { error } = await supabase
         .from("profiles")
         .update({ 
           airline: airline.trim() || null,
           user_type: userType.trim() || null,
+          assistant_id: assistantId  // This will be null if no matching assistant was found
         })
         .eq("id", user.id);
 
@@ -48,7 +67,9 @@ export const UserDetailsDialog = ({ user, onClose, onUserUpdated }: UserDetailsD
       
       toast({
         title: "Success",
-        description: "User information updated successfully",
+        description: assistantId 
+          ? "User information and AI assistant updated successfully" 
+          : "User information updated successfully",
       });
       
       if (onUserUpdated) {
