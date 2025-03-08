@@ -1,96 +1,72 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
-import { handleUserDeletion } from "@/utils/userDeletion";
 
-export const useUserActions = (refetch: () => Promise<any>) => {
-  const { toast } = useToast();
+export const useUserActions = (refetch: () => void) => {
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const toggleAdminStatus = async (userId: string, currentStatus: boolean) => {
-    if (!userId) {
-      console.error("Invalid user ID provided to toggleAdminStatus");
-      return;
-    }
-
     try {
       console.log("Toggling admin status for user:", userId);
       setUpdatingUser(userId);
+
       const { error } = await supabase
         .from("profiles")
-        .update({ is_admin: !currentStatus })
+        .update({ 
+          is_admin: !currentStatus,
+          // Give admins monthly subscription access automatically
+          subscription_plan: !currentStatus ? "monthly" : "free" 
+        })
         .eq("id", userId);
 
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "User admin status updated successfully",
+        title: "Admin status updated",
+        description: `User is now ${!currentStatus ? "an admin" : "not an admin"}`,
       });
-      await refetch();
+
+      // Refresh the user list
+      refetch();
     } catch (error) {
-      console.error("Error updating user admin status:", error);
+      console.error("Error updating admin status:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update user admin status",
+        title: "Error updating admin status",
+        description: "Please try again later.",
       });
     } finally {
       setUpdatingUser(null);
     }
   };
 
-  const updateAccountStatus = async (
-    userId: string,
-    email: string,
-    status: "disabled" | "suspended" | "deleted" | "active"
-  ) => {
+  const updateAccountStatus = async (userId: string, email: string, status: "disabled" | "suspended" | "deleted" | "active") => {
     try {
-      console.log(`Updating account status to ${status} for user:`, userId);
+      console.log(`Updating account status for ${email} to ${status}`);
       setUpdatingUser(userId);
 
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({ account_status: status })
         .eq("id", userId);
 
-      if (updateError) throw updateError;
+      if (error) throw error;
 
-      // Send email notification
-      const { error: emailError } = await supabase.functions.invoke(
-        "send-account-status-email",
-        {
-          body: { 
-            email, 
-            status,
-            fullName: email.split("@")[0] // Fallback if full name not available
-          },
-        }
-      );
+      toast({
+        title: "Account status updated",
+        description: `User account is now ${status}`,
+      });
 
-      if (emailError) {
-        console.error("Error sending status update email:", emailError);
-        toast({
-          variant: "destructive",
-          title: "Warning",
-          description: "Account status updated but failed to send notification email",
-        });
-      } else {
-        console.log("Status update email sent successfully");
-        toast({
-          title: "Success",
-          description: `User account ${status} successfully and notification sent`,
-        });
-      }
-      
-      await refetch();
+      // Refresh the user list
+      refetch();
     } catch (error) {
-      console.error(`Error ${status} user account:`, error);
+      console.error("Error updating account status:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: `Failed to ${status} user account`,
+        title: "Error updating account status",
+        description: "Please try again later.",
       });
     } finally {
       setUpdatingUser(null);
