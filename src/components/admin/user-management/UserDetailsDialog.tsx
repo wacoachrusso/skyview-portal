@@ -9,7 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ProfilesRow } from "@/integrations/supabase/types/tables.types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -69,15 +68,13 @@ export const UserDetailsDialog = ({ user, onClose, onUserUpdated }: UserDetailsD
     }
   };
 
+  // Only offering user types supported by OpenAI assistants
   const userTypeOptions = [
     { value: "pilot", label: "Pilot" },
     { value: "flight_attendant", label: "Flight Attendant" },
-    { value: "ground_staff", label: "Ground Staff" },
-    { value: "maintenance", label: "Maintenance" },
-    { value: "management", label: "Management" },
-    { value: "other", label: "Other" },
   ];
 
+  // Only offering airlines supported by OpenAI assistants
   const airlineOptions = [
     { value: "american", label: "American Airlines" },
     { value: "delta", label: "Delta Air Lines" },
@@ -89,7 +86,6 @@ export const UserDetailsDialog = ({ user, onClose, onUserUpdated }: UserDetailsD
     { value: "frontier", label: "Frontier Airlines" },
     { value: "hawaiian", label: "Hawaiian Airlines" },
     { value: "allegiant", label: "Allegiant Air" },
-    { value: "other", label: "Other" },
   ];
 
   return (
@@ -108,7 +104,7 @@ export const UserDetailsDialog = ({ user, onClose, onUserUpdated }: UserDetailsD
             <div className="col-span-3">{user.email || "N/A"}</div>
           </div>
           
-          {/* Editable User Type / Workgroup */}
+          {/* Editable User Type / Workgroup - Only showing supported options */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="user-type" className="font-medium">User Type:</Label>
             <div className="col-span-3">
@@ -130,7 +126,7 @@ export const UserDetailsDialog = ({ user, onClose, onUserUpdated }: UserDetailsD
             </div>
           </div>
           
-          {/* Editable Airline */}
+          {/* Editable Airline - Only showing supported options */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="airline" className="font-medium">Airline:</Label>
             <div className="col-span-3">
