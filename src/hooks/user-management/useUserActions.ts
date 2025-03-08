@@ -34,7 +34,7 @@ export const useUserActions = (refetch: () => void) => {
         throw error;
       }
 
-      // Verify the update was successful by fetching the updated profile
+      // Important: Verify the update was successful
       const { data: updatedProfile, error: verifyError } = await supabase
         .from("profiles")
         .select("*")
@@ -51,12 +51,7 @@ export const useUserActions = (refetch: () => void) => {
       // Double-check the admin status was correctly updated
       if (updatedProfile.is_admin !== newAdminStatus) {
         console.error("Admin status was not updated correctly!");
-        toast({
-          variant: "destructive",
-          title: "Error updating admin status",
-          description: "The update was not applied correctly. Please try again.",
-        });
-        return;
+        throw new Error("Admin status was not updated correctly");
       }
 
       toast({
@@ -71,7 +66,7 @@ export const useUserActions = (refetch: () => void) => {
       toast({
         variant: "destructive",
         title: "Error updating admin status",
-        description: "Please try again later.",
+        description: "Please try again later."
       });
     } finally {
       setUpdatingUser(null);
@@ -102,7 +97,7 @@ export const useUserActions = (refetch: () => void) => {
       toast({
         variant: "destructive",
         title: "Error updating account status",
-        description: "Please try again later.",
+        description: "Please try again later."
       });
     } finally {
       setUpdatingUser(null);

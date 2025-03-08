@@ -25,13 +25,14 @@ export function ReleaseNoteForm() {
   const {
     form,
     onSubmit,
-    isSubmitting,
+    isLoading,
     releaseNoteId,
     setReleaseNoteId,
     resetForm,
     isEditing,
-    isSendingEmail,
-    sendEmailNotification,
+    sendEmail,
+    setSendEmail,
+    sendEmailNotification
   } = useReleaseNoteForm();
 
   const [isChangelogOpen, setIsChangelogOpen] = useState(false);
@@ -46,15 +47,15 @@ export function ReleaseNoteForm() {
             {isEditing && (
               <div className="mt-6">
                 <EmailNotificationToggle
-                  isSending={isSendingEmail}
-                  onSend={sendEmailNotification}
+                  value={sendEmail}
+                  onChange={setSendEmail}
                 />
               </div>
             )}
           </div>
           
           <FormActions
-            isSubmitting={isSubmitting}
+            isLoading={isLoading}
             isEditing={isEditing}
             onReset={resetForm}
             onViewChangelog={() => setIsChangelogOpen(true)}

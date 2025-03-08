@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { AuthCallback } from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SessionCheck } from "@/components/chat/settings/SessionCheck";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -56,25 +54,30 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Special wrapper for admin routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile, isLoading } = useUserProfile();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [verifying, setVerifying] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
+    let isMounted = true;
+    
     const verifyAdminStatus = async () => {
       try {
-        setVerifying(true);
+        console.log("Starting admin verification process");
         
         // Direct database check for most up-to-date admin status
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
           console.log("No session found, redirecting to login");
-          navigate('/login');
+          if (isMounted) {
+            navigate('/login');
+          }
           return;
         }
+        
+        console.log("Fetching profile data for user:", session.user.id);
         
         // Fetch fresh user profile data directly from the database
         const { data: profile, error } = await supabase
@@ -85,7 +88,14 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           
         if (error) {
           console.error("Error fetching admin status:", error);
-          navigate('/dashboard');
+          if (isMounted) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Could not verify admin status"
+            });
+            navigate('/dashboard');
+          }
           return;
         }
         
@@ -93,27 +103,36 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         
         if (!profile?.is_admin) {
           console.log("User is not an admin, redirecting to dashboard");
-          toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: "You need administrator privileges to access this page."
-          });
-          navigate('/dashboard');
+          if (isMounted) {
+            toast({
+              variant: "destructive",
+              title: "Access Denied",
+              description: "You need administrator privileges to access this page."
+            });
+            navigate('/dashboard');
+          }
           return;
         }
         
         console.log("Admin access confirmed for:", profile.email);
-        setIsAdmin(true);
+        if (isMounted) {
+          setIsAdmin(true);
+          setVerifying(false);
+        }
       } catch (error) {
         console.error("Error verifying admin status:", error);
-        navigate('/dashboard');
-      } finally {
-        setVerifying(false);
+        if (isMounted) {
+          navigate('/dashboard');
+        }
       }
     };
     
     verifyAdminStatus();
-  }, [navigate, toast, userProfile]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, toast]);
 
   if (verifying) {
     return (
