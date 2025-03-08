@@ -1,3 +1,4 @@
+
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef } from "react";
@@ -13,15 +14,28 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // This function will only scroll to bottom when new messages are added
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Scroll to bottom when new messages are added, but don't prevent scrolling back up
   useEffect(() => {
+    // Only auto-scroll if already at the bottom or new message is from current user
     if (messages.length > 0) {
-      scrollToBottom();
+      const container = containerRef.current;
+      const isAtBottom = container ? 
+        Math.abs((container.scrollHeight - container.scrollTop) - container.clientHeight) < 50 : 
+        true;
+      
+      const lastMessage = messages[messages.length - 1];
+      const isUserMessage = lastMessage.user_id === currentUserId;
+      
+      if (isAtBottom || isUserMessage || isLoading) {
+        scrollToBottom();
+      }
     }
-  }, [messages]);
+  }, [messages, currentUserId, isLoading]);
 
   return (
     <div className="flex flex-col h-full">
