@@ -15,37 +15,17 @@ export const useUserActions = (refetch: () => void) => {
       // Set the new admin status (opposite of current)
       const newAdminStatus = !currentStatus;
       
-      // Set subscription plan based on admin status
+      // Set subscription plan based on admin status - always use 'monthly' for admins
       const subscriptionPlan = newAdminStatus ? "monthly" : "free";
       
       console.log("Setting admin status to:", newAdminStatus, "and subscription plan to:", subscriptionPlan);
 
-      // First, get the current user profile to have all current values
-      const { data: currentProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-        
-      if (profileError) {
-        console.error("Error fetching current profile:", profileError);
-        throw profileError;
-      }
-        
-      // Now update with all existing values plus the changed ones
+      // Update the profile with the new admin status and subscription plan
       const { error } = await supabase
         .from("profiles")
         .update({ 
           is_admin: newAdminStatus,
-          subscription_plan: subscriptionPlan,
-          // Ensure we're not losing any existing data
-          full_name: currentProfile.full_name,
-          user_type: currentProfile.user_type,
-          airline: currentProfile.airline,
-          email: currentProfile.email,
-          email_notifications: currentProfile.email_notifications,
-          push_notifications: currentProfile.push_notifications,
-          account_status: currentProfile.account_status || 'active'
+          subscription_plan: subscriptionPlan
         })
         .eq("id", userId);
 

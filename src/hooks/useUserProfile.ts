@@ -31,10 +31,15 @@ export function useUserProfile() {
     let mounted = true;
 
     const initializeUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user && mounted) {
-        setCurrentUserId(session.user.id);
-        await loadUserProfile(session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user && mounted) {
+          setCurrentUserId(session.user.id);
+          await loadUserProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error("Error initializing user:", error);
       }
     };
     
@@ -43,6 +48,7 @@ export function useUserProfile() {
     // Set up subscription for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
+      
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
         if (session?.user && mounted) {
           setCurrentUserId(session.user.id);

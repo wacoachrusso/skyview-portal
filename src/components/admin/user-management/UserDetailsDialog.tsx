@@ -41,23 +41,21 @@ export const UserDetailsDialog = ({ user, onClose }: UserDetailsDialogProps) => 
             <div className="col-span-3">{user.airline || "N/A"}</div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <div className="font-medium">Plan:</div>
+            <div className="font-medium">Admin Status:</div>
             <div className="col-span-3">
               {user.is_admin ? (
-                <Badge className="bg-purple-500">Admin {user.subscription_plan || "N/A"}</Badge>
+                <Badge className="bg-purple-500">Admin</Badge>
               ) : (
-                user.subscription_plan || "N/A"
+                <Badge variant="outline">User</Badge>
               )}
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <div className="font-medium">Admin:</div>
+            <div className="font-medium">Plan:</div>
             <div className="col-span-3">
-              {user.is_admin ? (
-                <Badge className="bg-green-500">Yes</Badge>
-              ) : (
-                <Badge variant="outline">No</Badge>
-              )}
+              <Badge className={user.is_admin ? "bg-green-500" : ""}>
+                {user.subscription_plan || "N/A"}
+              </Badge>
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

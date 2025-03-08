@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,13 +33,16 @@ export const UsersTable = ({
   setSelectedUser,
   setUserToDelete,
 }: UsersTableProps) => {
-  const getSubscriptionBadge = (plan: string | null) => {
-    if (!plan || plan === 'free') return (
-      <Badge variant="destructive">Never Subscribed</Badge>
-    );
-    return (
-      <Badge variant="default">{plan}</Badge>
-    );
+  const getSubscriptionBadge = (plan: string | null, isAdmin: boolean) => {
+    if (isAdmin) {
+      return <Badge className="bg-purple-500">Admin - {plan || 'monthly'}</Badge>;
+    }
+    
+    if (!plan || plan === 'free') {
+      return <Badge variant="destructive">Free</Badge>;
+    }
+    
+    return <Badge variant="default">{plan}</Badge>;
   };
 
   return (
@@ -73,7 +77,7 @@ export const UsersTable = ({
                 <UserStatusBadge status={user.account_status || "active"} />
               </TableCell>
               <TableCell>
-                {getSubscriptionBadge(user.subscription_plan)}
+                {getSubscriptionBadge(user.subscription_plan, user.is_admin || false)}
               </TableCell>
               <TableCell>
                 <Switch
