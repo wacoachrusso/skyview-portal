@@ -77,7 +77,11 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
   };
 
   const handleSubmit = async () => {
+    console.log('handleSubmit called');
+    console.log('Form data:', formData);
+
     if (!isProfileComplete()) {
+      console.log('Profile is not complete');
       toast({
         variant: "destructive",
         title: "Required Fields Missing",
@@ -87,13 +91,18 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
     }
 
     try {
+      console.log('Attempting to update profile with data:', formData);
       const { error } = await supabase
         .from('profiles')
         .update(formData)
         .eq('id', profile.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating profile:', error);
+        throw error;
+      }
 
+      console.log('Profile updated successfully');
       toast({
         title: "Success",
         description: "Your profile has been updated successfully.",
@@ -169,6 +178,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
           <ChangePasswordForm />
         </CardContent>
       </Card>
+
     </div>
   );
 };

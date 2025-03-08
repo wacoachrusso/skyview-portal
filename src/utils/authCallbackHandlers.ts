@@ -45,7 +45,7 @@ export const handleProfileRedirect = async (
       title: "Login Successful",
       description: "You've been signed in. Any other active sessions have been signed out for security."
     });
-    navigate('/dashboard');
+    navigate('/chat');
     return;
   }
 

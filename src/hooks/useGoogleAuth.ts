@@ -9,8 +9,9 @@ const checkExistingProfile = async (email: string) => {
     .from('profiles')
     .select('*')
     .eq('email', email)
-    .single();
+    .maybeSingle();
 
+  console.log('Profile check result:', { profile, error });
   return { profile, error };
 };
 
@@ -24,6 +25,7 @@ export const useGoogleAuth = () => {
       console.log('Starting Google sign-in process');
       setLoading(true);
 
+      // Step 1: Start OAuth flow
       const { data, error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -39,67 +41,25 @@ export const useGoogleAuth = () => {
         console.error('Google sign-in error:', signInError);
         toast({
           variant: "destructive",
-          title: "Sign Up Required",
-          description: "Please sign up and select a subscription plan to continue.",
+          title: "Sign In Failed",
+          description: signInError.message || "Failed to sign in with Google.",
         });
-        navigate('/?scrollTo=pricing-section');
+        navigate('/login');
         return;
       }
 
-      // Get the current session to access user data
-      const { data: { session } } = await supabase.auth.getSession();
+      // Redirect will happen automatically
+      console.log('OAuth flow initiated, redirecting to callback');
       
-      if (session?.user?.email) {
-        console.log('Google auth successful, checking profile');
-        const { profile, error: profileError } = await checkExistingProfile(session.user.email);
-
-        if (profileError || !profile) {
-          console.log('No existing profile found, redirecting to pricing');
-          toast({
-            title: "Welcome to SkyGuide!",
-            description: "Please select a subscription plan to get started.",
-          });
-          await supabase.auth.signOut();
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        // Check if account is active and has valid subscription
-        if (!profile.subscription_plan || profile.subscription_plan === 'free') {
-          console.log('No subscription plan, redirecting to pricing');
-          await supabase.auth.signOut();
-          toast({
-            title: "Subscription Required",
-            description: "Please select a subscription plan to continue.",
-          });
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        if (profile.account_status === 'deleted') {
-          console.log('Account is deleted, redirecting to pricing');
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Account Unavailable",
-            description: "This account has been deleted. Please create a new account with a different email."
-          });
-          navigate('/?scrollTo=pricing-section');
-          return;
-        }
-
-        console.log('Profile verified, proceeding with login');
-        navigate('/dashboard');
-      }
     } catch (error) {
       console.error('Unexpected error during Google sign-in:', error);
       toast({
-        title: "Welcome to SkyGuide!",
-        description: "Please select a subscription plan to get started.",
+        variant: "destructive",
+        title: "Sign In Error",
+        description: "An unexpected error occurred. Please try again.",
       });
-      navigate('/?scrollTo=pricing-section');
-    } finally {
       setLoading(false);
+      navigate('/login');
     }
   };
 

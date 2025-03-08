@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,11 +10,7 @@ type LoginFormData = {
   rememberMe: boolean;
 };
 
-type UseLoginFormProps = {
-  onNewLogin: () => Promise<void>;
-};
-
-export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
+export const useLoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -32,10 +27,10 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
 
     try {
       console.log("Attempting login for user:", formData.email);
-      
+
       // Check if user exists and account status
       const profile = await checkExistingProfile(formData.email);
-      
+
       // If account is disabled, suspended, or deleted, block login
       if (profile?.account_status === "disabled" || profile?.account_status === "suspended" || profile?.account_status === "deleted") {
         console.log(`Login blocked due to account status: ${profile.account_status}`);
@@ -47,7 +42,7 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
         setLoading(false);
         return;
       }
-      
+
       // Check for too many login attempts
       if (profile?.login_attempts && profile.login_attempts >= 5) {
         console.log("Login blocked due to too many attempts");
@@ -62,9 +57,7 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
         return;
       }
 
-      // Attempt login
-      await onNewLogin(); // Sign out existing sessions first
-      
+      // Sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -72,12 +65,12 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
 
       if (error) {
         console.error("Login error:", error);
-        
+
         // Increment login attempts on failure
         if (profile) {
           const newAttempts = (profile.login_attempts || 0) + 1;
           await updateLoginAttempts(formData.email, newAttempts, profile.account_status || 'active');
-          
+
           const remainingAttempts = 5 - newAttempts;
           if (remainingAttempts > 0) {
             toast({
@@ -95,17 +88,17 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
         } else {
           toast({
             variant: "destructive",
-              title: "Login Failed", 
-              description: "Invalid email or password",
-            });
+            title: "Login Failed",
+            description: "Invalid email or password",
+          });
         }
-        
+
         setLoading(false);
         return;
       }
 
       console.log("Login successful, user data:", data);
-      
+
       // Reset login attempts on successful login
       if (profile) {
         await resetLoginAttempts(formData.email);
@@ -122,12 +115,22 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
 
       // Force refresh of session to ensure all profile data is current
       await supabase.auth.refreshSession();
-      
+
+      // Handle "Remember Me" functionality for 30 days
+      if (formData.rememberMe) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.refresh_token) {
+          // Store refresh token in localStorage and a long-lived cookie
+          localStorage.setItem('supabase.refresh-token', session.refresh_token);
+          document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`; // 30 days
+        }
+      }
+
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
-      
+
       // Check for existing sessions
       if (profile) {
         const existingSessions = await checkExistingSessions(profile.id);
@@ -144,7 +147,7 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
         // Regular user flow - check profile completeness
         if (userData?.user_type && userData?.airline) {
           console.log("Profile complete, redirecting to dashboard");
-          navigate("/dashboard");
+          navigate("/chat");
         } else {
           console.log("Profile incomplete, redirecting to account page");
           navigate("/account");

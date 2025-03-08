@@ -23,5 +23,5 @@ export const handleAuthSession = async (
   });
   
   console.log("Redirecting to dashboard");
-  navigate('/dashboard');
+  navigate('/chat');
 };

@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { ArrowCounterClockwise, Eye } from "lucide-react";
+import { RotateCcw, Eye } from "lucide-react"; // Updated import
 
 export interface FormActionsProps {
   isLoading: boolean;
@@ -18,7 +17,7 @@ export function FormActions({ isLoading, onReset, onViewChangelog }: FormActions
           onClick={onReset}
           disabled={isLoading}
         >
-          <ArrowCounterClockwise className="mr-2 h-4 w-4" />
+          <RotateCcw className="mr-2 h-4 w-4" /> {/* Updated icon */}
           Reset
         </Button>
         

@@ -1,4 +1,3 @@
-// File: src/pages/Login.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +62,7 @@ const Login = () => {
             toast({
               title: "Profile Update Required",
               description: "Please complete your profile and change your temporary password to continue.",
-              duration: 10000,
+              duration: 30000,
             });
             return;
           }
@@ -83,7 +82,7 @@ const Login = () => {
           // Regular user flow
           if (profile?.user_type && profile?.airline) {
             console.log('Profile complete, redirecting to dashboard');
-            navigate('/dashboard');
+            navigate('/chat');
           } else {
             console.log('Profile incomplete, redirecting to account page');
             navigate('/account');
@@ -195,7 +194,7 @@ const Login = () => {
             </p>
           </div>
 
-          <LoginForm onNewLogin={handleNewLogin} />
+          <LoginForm  />
         </div>
       </div>
       
