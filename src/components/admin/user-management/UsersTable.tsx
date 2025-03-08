@@ -84,7 +84,7 @@ export const UsersTable = ({
                   checked={user.is_admin || false}
                   disabled={updatingUser === user.id}
                   onCheckedChange={() => {
-                    console.log("Toggle switch clicked for user:", user.id);
+                    console.log("Toggle switch clicked for user:", user.id, "Current admin status:", user.is_admin);
                     toggleAdminStatus(user.id, user.is_admin || false);
                   }}
                 />

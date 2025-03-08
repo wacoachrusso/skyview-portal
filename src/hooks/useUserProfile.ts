@@ -10,7 +10,7 @@ export function useUserProfile() {
     try {
       console.log("Loading user profile for ID:", userId);
       
-      // Fetch the most up-to-date profile data
+      // Fetch the most up-to-date profile data directly from the database
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -34,6 +34,7 @@ export function useUserProfile() {
 
     const initializeUser = async () => {
       try {
+        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user && mounted) {

@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { AuthCallback } from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { useEffect } from "react";
 import { SessionCheck } from "@/components/chat/settings/SessionCheck";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   useEffect(() => {
@@ -49,6 +51,37 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Special wrapper for admin routes
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { userProfile } = useUserProfile();
+  
+  useEffect(() => {
+    // Log admin status for debugging
+    if (userProfile) {
+      console.log("AdminRoute check - User profile:", {
+        email: userProfile.email,
+        isAdmin: userProfile.is_admin,
+        subscription: userProfile.subscription_plan
+      });
+    }
+  }, [userProfile]);
+
+  // Check admin status
+  if (userProfile && !userProfile.is_admin) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500 text-xl">
+        Access Denied. You need administrator privileges to access this page.
+      </div>
+    );
+  }
+  
+  return (
+    <ProtectedRoute>
+      {children}
+    </ProtectedRoute>
+  );
+};
+
 export function AppRoutes() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -69,9 +102,11 @@ export function AppRoutes() {
         <Route path="/account" element={<ProtectedRoute><LazyRoutes.Account /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><LazyRoutes.Settings /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><LazyRoutes.AdminDashboard /></ProtectedRoute>} />
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
+        
+        {/* Admin routes with special protection */}
+        <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
         {/* Redirect any unknown routes to dashboard */}
         <Route path="*" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />

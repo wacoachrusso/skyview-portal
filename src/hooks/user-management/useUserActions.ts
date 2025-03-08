@@ -34,7 +34,7 @@ export const useUserActions = (refetch: () => void) => {
         throw error;
       }
 
-      // Log the updated data for verification
+      // Verify the update was successful
       const { data: updatedProfile, error: verifyError } = await supabase
         .from("profiles")
         .select("*")
@@ -45,6 +45,17 @@ export const useUserActions = (refetch: () => void) => {
         console.error("Error verifying profile update:", verifyError);
       } else {
         console.log("Updated profile:", updatedProfile);
+        
+        // Double-check the admin status was correctly updated
+        if (updatedProfile.is_admin !== newAdminStatus) {
+          console.error("Admin status was not updated correctly!");
+          toast({
+            variant: "destructive",
+            title: "Error updating admin status",
+            description: "The update was not applied correctly. Please try again.",
+          });
+          return;
+        }
       }
 
       toast({

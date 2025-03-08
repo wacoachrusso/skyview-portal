@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +42,7 @@ const AdminDashboard = () => {
 
         console.log("Session Data:", session);
 
-        // Fetch user admin status
+        // Fetch fresh user admin status directly from the database
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("is_admin")
@@ -57,15 +58,15 @@ const AdminDashboard = () => {
 
         console.log("Admin Check Result:", profile);
 
+        // Double check admin status
         if (!profile?.is_admin) {
-          console.warn("User is NOT an admin!");
+          console.warn("User is NOT an admin! Profile data:", profile);
           toast({ 
             variant: "destructive", 
             title: "Access Denied", 
             description: "You don't have permission to access the admin dashboard." 
           });
 
-          // ❌ Instead of redirecting immediately, let's debug first
           setTimeout(() => navigate("/dashboard"), 3000);
           return;
         }
