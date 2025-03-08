@@ -95,9 +95,9 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
         } else {
           toast({
             variant: "destructive",
-            title: "Login Failed", 
-            description: "Invalid email or password",
-          });
+              title: "Login Failed", 
+              description: "Invalid email or password",
+            });
         }
         
         setLoading(false);
@@ -118,8 +118,11 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
         .eq('id', data.user.id)
         .single();
 
-      console.log("Fetched updated user profile:", userData);
+      console.log("Fetched updated user profile after login:", userData);
 
+      // Force refresh of session to ensure all profile data is current
+      await supabase.auth.refreshSession();
+      
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
@@ -133,8 +136,20 @@ export const useLoginForm = ({ onNewLogin }: UseLoginFormProps) => {
         }
       }
 
-      // Redirect based on profile completeness
-      navigate("/dashboard");
+      // Decide where to redirect based on admin status
+      if (userData?.is_admin) {
+        console.log("User is an admin, redirecting to admin dashboard");
+        navigate("/admin");
+      } else {
+        // Regular user flow - check profile completeness
+        if (userData?.user_type && userData?.airline) {
+          console.log("Profile complete, redirecting to dashboard");
+          navigate("/dashboard");
+        } else {
+          console.log("Profile incomplete, redirecting to account page");
+          navigate("/account");
+        }
+      }
     } catch (error: any) {
       console.error("Unexpected error during login:", error);
       toast({

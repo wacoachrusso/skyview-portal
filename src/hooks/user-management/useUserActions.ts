@@ -20,17 +20,49 @@ export const useUserActions = (refetch: () => void) => {
       
       console.log("Setting admin status to:", newAdminStatus, "and subscription plan to:", subscriptionPlan);
 
+      // First, get the current user profile to have all current values
+      const { data: currentProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+        
+      if (profileError) {
+        console.error("Error fetching current profile:", profileError);
+        throw profileError;
+      }
+        
+      // Now update with all existing values plus the changed ones
       const { error } = await supabase
         .from("profiles")
         .update({ 
           is_admin: newAdminStatus,
-          subscription_plan: subscriptionPlan
+          subscription_plan: subscriptionPlan,
+          // Ensure we're not losing any existing data
+          full_name: currentProfile.full_name,
+          user_type: currentProfile.user_type,
+          airline: currentProfile.airline,
+          email: currentProfile.email,
+          email_notifications: currentProfile.email_notifications,
+          push_notifications: currentProfile.push_notifications,
+          account_status: currentProfile.account_status || 'active'
         })
         .eq("id", userId);
 
       if (error) {
         console.error("Supabase error:", error);
         throw error;
+      }
+
+      // Log the updated data for debugging
+      const { data: updatedProfile, error: verifyError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+        
+      if (!verifyError) {
+        console.log("Updated profile:", updatedProfile);
       }
 
       toast({

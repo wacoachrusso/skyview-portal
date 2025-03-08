@@ -43,7 +43,11 @@ export const UserDetailsDialog = ({ user, onClose }: UserDetailsDialogProps) => 
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="font-medium">Plan:</div>
             <div className="col-span-3">
-              {user.subscription_plan || "N/A"}
+              {user.is_admin ? (
+                <Badge className="bg-purple-500">Admin {user.subscription_plan || "N/A"}</Badge>
+              ) : (
+                user.subscription_plan || "N/A"
+              )}
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

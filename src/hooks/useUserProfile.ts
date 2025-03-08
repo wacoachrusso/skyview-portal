@@ -6,61 +6,69 @@ export function useUserProfile() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
+  const loadUserProfile = async (userId: string) => {
+    try {
+      // Fetch the most up-to-date profile data
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return;
+      }
+      
+      console.log("Loaded user profile:", profile);
+      setUserProfile(profile);
+    } catch (error) {
+      console.error("Error in loadUserProfile:", error);
+    }
+  };
+
   useEffect(() => {
-    const loadUserProfile = async () => {
+    let mounted = true;
+
+    const initializeUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
+      if (session?.user && mounted) {
         setCurrentUserId(session.user.id);
-        
-        // Fetch the most up-to-date profile data
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching user profile:", error);
-          return;
-        }
-        
-        console.log("Loaded user profile:", profile);
-        setUserProfile(profile);
+        await loadUserProfile(session.user.id);
       }
     };
     
-    loadUserProfile();
+    initializeUser();
     
     // Set up subscription for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        if (session?.user) {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        if (session?.user && mounted) {
           setCurrentUserId(session.user.id);
-          
-          // Fetch the most up-to-date profile data
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-            
-          console.log("Updated user profile after auth change:", profile);
-          setUserProfile(profile);
+          await loadUserProfile(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
-        setCurrentUserId(null);
-        setUserProfile(null);
+        if (mounted) {
+          setCurrentUserId(null);
+          setUserProfile(null);
+        }
       }
     });
     
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
   return {
     currentUserId,
-    userProfile
+    userProfile,
+    refreshProfile: async () => {
+      if (currentUserId) {
+        await loadUserProfile(currentUserId);
+      }
+    }
   };
 }
