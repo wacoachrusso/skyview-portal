@@ -5,9 +5,12 @@ import * as LazyRoutes from "./LazyRoutes";
 import { ErrorBoundary } from "react-error-boundary";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SessionCheck } from "@/components/chat/settings/SessionCheck";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   useEffect(() => {
@@ -53,21 +56,77 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Special wrapper for admin routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userProfile } = useUserProfile();
+  const { userProfile, isLoading } = useUserProfile();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [verifying, setVerifying] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
-    // Log admin status for debugging
-    if (userProfile) {
-      console.log("AdminRoute check - User profile:", {
-        email: userProfile.email,
-        isAdmin: userProfile.is_admin,
-        subscription: userProfile.subscription_plan
-      });
-    }
-  }, [userProfile]);
+    const verifyAdminStatus = async () => {
+      try {
+        setVerifying(true);
+        
+        // Direct database check for most up-to-date admin status
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) {
+          console.log("No session found, redirecting to login");
+          navigate('/login');
+          return;
+        }
+        
+        // Fetch fresh user profile data directly from the database
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('is_admin, email')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching admin status:", error);
+          navigate('/dashboard');
+          return;
+        }
+        
+        console.log("Admin verification result:", profile);
+        
+        if (!profile?.is_admin) {
+          console.log("User is not an admin, redirecting to dashboard");
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You need administrator privileges to access this page."
+          });
+          navigate('/dashboard');
+          return;
+        }
+        
+        console.log("Admin access confirmed for:", profile.email);
+        setIsAdmin(true);
+      } catch (error) {
+        console.error("Error verifying admin status:", error);
+        navigate('/dashboard');
+      } finally {
+        setVerifying(false);
+      }
+    };
+    
+    verifyAdminStatus();
+  }, [navigate, toast, userProfile]);
 
-  // Check admin status
-  if (userProfile && !userProfile.is_admin) {
+  if (verifying) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
+          <p>Verifying admin access...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAdmin) {
     return (
       <div className="flex items-center justify-center h-screen text-red-500 text-xl">
         Access Denied. You need administrator privileges to access this page.

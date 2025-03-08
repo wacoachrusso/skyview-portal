@@ -15,7 +15,7 @@ export const useUserActions = (refetch: () => void) => {
       // Set the new admin status (opposite of current)
       const newAdminStatus = !currentStatus;
       
-      // Set subscription plan based on admin status - always use 'monthly' for admins
+      // Always use 'monthly' subscription plan for admins
       const subscriptionPlan = newAdminStatus ? "monthly" : "free";
       
       console.log("Setting admin status to:", newAdminStatus, "and subscription plan to:", subscriptionPlan);
@@ -30,11 +30,11 @@ export const useUserActions = (refetch: () => void) => {
         .eq("id", userId);
 
       if (error) {
-        console.error("Supabase error:", error);
+        console.error("Supabase update error:", error);
         throw error;
       }
 
-      // Verify the update was successful
+      // Verify the update was successful by fetching the updated profile
       const { data: updatedProfile, error: verifyError } = await supabase
         .from("profiles")
         .select("*")
@@ -43,19 +43,20 @@ export const useUserActions = (refetch: () => void) => {
         
       if (verifyError) {
         console.error("Error verifying profile update:", verifyError);
-      } else {
-        console.log("Updated profile:", updatedProfile);
-        
-        // Double-check the admin status was correctly updated
-        if (updatedProfile.is_admin !== newAdminStatus) {
-          console.error("Admin status was not updated correctly!");
-          toast({
-            variant: "destructive",
-            title: "Error updating admin status",
-            description: "The update was not applied correctly. Please try again.",
-          });
-          return;
-        }
+        throw verifyError;
+      }
+      
+      console.log("Updated profile:", updatedProfile);
+      
+      // Double-check the admin status was correctly updated
+      if (updatedProfile.is_admin !== newAdminStatus) {
+        console.error("Admin status was not updated correctly!");
+        toast({
+          variant: "destructive",
+          title: "Error updating admin status",
+          description: "The update was not applied correctly. Please try again.",
+        });
+        return;
       }
 
       toast({

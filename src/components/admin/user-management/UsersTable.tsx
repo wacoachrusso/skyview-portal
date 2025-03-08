@@ -35,14 +35,27 @@ export const UsersTable = ({
 }: UsersTableProps) => {
   const getSubscriptionBadge = (plan: string | null, isAdmin: boolean) => {
     if (isAdmin) {
-      return <Badge className="bg-purple-500">Admin Plan</Badge>;
+      return <Badge className="bg-purple-500 hover:bg-purple-600">Admin Plan</Badge>;
     }
     
     if (!plan || plan === 'free') {
       return <Badge variant="destructive">Free</Badge>;
     }
     
-    return <Badge variant="default">{plan}</Badge>;
+    if (plan === 'monthly') {
+      return <Badge variant="default">Monthly</Badge>;
+    }
+    
+    if (plan === 'yearly') {
+      return <Badge variant="default">Yearly</Badge>;
+    }
+    
+    return <Badge variant="outline">{plan}</Badge>;
+  };
+
+  const handleAdminToggle = async (userId: string, currentAdminStatus: boolean) => {
+    console.log("AdminToggle clicked - User ID:", userId, "Current admin status:", currentAdminStatus);
+    await toggleAdminStatus(userId, currentAdminStatus);
   };
 
   return (
@@ -70,7 +83,7 @@ export const UsersTable = ({
               <TableCell>{user.user_type || "N/A"}</TableCell>
               <TableCell>{user.airline || "N/A"}</TableCell>
               <TableCell>
-                {format(new Date(user.created_at), "MMM d, yyyy")}
+                {user.created_at && format(new Date(user.created_at), "MMM d, yyyy")}
               </TableCell>
               <TableCell>{user.query_count || 0}</TableCell>
               <TableCell>
@@ -83,10 +96,7 @@ export const UsersTable = ({
                 <Switch
                   checked={user.is_admin || false}
                   disabled={updatingUser === user.id}
-                  onCheckedChange={() => {
-                    console.log("Toggle switch clicked for user:", user.id, "Current admin status:", user.is_admin);
-                    toggleAdminStatus(user.id, user.is_admin || false);
-                  }}
+                  onCheckedChange={() => handleAdminToggle(user.id, user.is_admin || false)}
                 />
               </TableCell>
               <TableCell>
