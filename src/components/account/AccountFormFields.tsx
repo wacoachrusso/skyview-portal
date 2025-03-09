@@ -12,7 +12,7 @@ interface AccountFormFieldsProps {
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   profile: any;
-  hasSetAirlineAndJobRole: boolean; // New prop to check if airline and job role are set
+  hasSetAirlineAndJobRole: boolean;
 }
 
 export const AccountFormFields = ({
@@ -20,12 +20,12 @@ export const AccountFormFields = ({
   formData,
   handleInputChange,
   profile,
-  hasSetAirlineAndJobRole, // Destructure the new prop
+  hasSetAirlineAndJobRole,
 }: AccountFormFieldsProps) => {
   const fields = [
     { name: "full_name", label: "Full Name", required: true },
-    { name: "user_type", label: "Job Title", required: true, disableAfterSet: true }, // Add disableAfterSet flag
-    { name: "airline", label: "Airline", required: true, disableAfterSet: true }, // Add disableAfterSet flag
+    { name: "user_type", label: "Job Title", required: true, disableAfterSet: true },
+    { name: "airline", label: "Airline", required: true, disableAfterSet: true },
     { name: "employee_id", label: "Employee ID", required: true },
     { name: "address", label: "Address", optional: true },
     { name: "phone_number", label: "Phone Number", optional: true },
@@ -34,7 +34,6 @@ export const AccountFormFields = ({
   return (
     <div className="grid gap-4">
       {fields.map((field) => {
-        // Determine if the field should be disabled
         const isDisabled =
           !isEditing || (field.disableAfterSet && hasSetAirlineAndJobRole);
 
@@ -51,7 +50,7 @@ export const AccountFormFields = ({
                 className={`col-span-2 ${field.required ? 'border-gray-300' : ''}`}
                 placeholder={field.optional ? "Optional" : "Required"}
                 required={field.required}
-                disabled={isDisabled} // Disable the field if conditions are met
+                disabled={isDisabled}
               />
             ) : (
               <span className="col-span-2 text-gray-700">

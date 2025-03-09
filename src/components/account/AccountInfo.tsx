@@ -35,7 +35,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
       if (!profile?.id) return;
 
       console.log('Checking alpha tester and promoter status for profile:', profile.id);
-      
+
       // Check if user is an alpha tester or promoter
       const { data: alphaTester, error } = await supabase
         .from('alpha_testers')
@@ -49,7 +49,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
       }
 
       console.log('User status data:', alphaTester);
-      
+
       // Show password change form if they have a temporary password or are a promoter
       if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
         console.log('Setting password change as required');
@@ -70,9 +70,9 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
   // Check if required fields are filled
   const isProfileComplete = () => {
-    return formData.full_name && 
-           formData.user_type && 
-           formData.airline && 
+    return formData.full_name &&
+           formData.user_type &&
+           formData.airline &&
            formData.employee_id;
   };
 
@@ -118,14 +118,14 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
       if (!assistant) {
         console.log('No matching assistant found for:', {
           airline: formData.airline,
-          jobTitle: formData.user_type
+          jobTitle: formData.user_type,
         });
         throw new Error('We currently do not support your airline and role combination. Please contact support for assistance.');
       }
 
       console.log('Found matching assistant:', assistant);
 
-      // Update profile
+      // Save data to the database only if assistant is found
       console.log('Attempting to update profile with data:', formData);
       const { error } = await supabase
         .from('profiles')
@@ -215,7 +215,6 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
           <ChangePasswordForm />
         </CardContent>
       </Card>
-
     </div>
   );
 };
