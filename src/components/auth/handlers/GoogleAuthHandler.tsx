@@ -47,7 +47,7 @@ export const GoogleAuthHandler = () => {
         // Check if the profile is marked as deleted and reactivate if needed
         if (profile && profile.account_status === 'deleted') {
           console.log('Found deleted account, attempting to reactivate');
-          await reactivateAccount(profile, session.user);
+          // Implement reactivation logic here
           return;
         }
 
@@ -66,7 +66,7 @@ export const GoogleAuthHandler = () => {
             // Check if the profile by email is marked as deleted
             if (emailProfile.account_status === 'deleted') {
               console.log('Found deleted account by email, attempting to reactivate');
-              await reactivateAccount(emailProfile, session.user);
+              // Implement reactivation logic here
               return;
             }
             
@@ -79,6 +79,13 @@ export const GoogleAuthHandler = () => {
               
             if (updateError) {
               console.error('Error updating profile ID:', updateError);
+              toast({
+                variant: "destructive",
+                title: "Profile Update Failed",
+                description: "Failed to update profile. Please try again."
+              });
+              navigate('/login');
+              return;
             } else {
               // Redirect to dashboard after successfully updating the profile
               navigate('/chat');
@@ -110,7 +117,19 @@ export const GoogleAuthHandler = () => {
               return;
             }
           }
-
+          
+          if (!profile.user_type || !profile.airline) {
+            console.log("User role or airline not set up");
+            toast({
+              variant: "destructive",
+              title: "Profile Incomplete",
+              description: "You need to set up your role and airline in your account to use your specific assistant.",
+            });
+            setIsProcessing(false);
+            navigate("/account"); // Redirect to account page to complete setup
+            return;
+          }
+          
           console.log('Auth callback successful, redirecting to dashboard');
           navigate('/chat');
           return;
@@ -137,58 +156,6 @@ export const GoogleAuthHandler = () => {
       }
     };
     
-    const reactivateAccount = async (deletedProfile: any, user: any) => {
-      try {
-        console.log("Attempting to reactivate deleted account:", deletedProfile.id);
-        
-        // Update the profile to reactivate it
-        const { data: reactivatedProfile, error: reactivationError } = await supabase
-          .from('profiles')
-          .update({
-            account_status: 'active',
-            // Set to free plan initially
-            subscription_plan: 'free',
-            // Reset query count
-            query_count: 0,
-            // Update timestamp
-            last_query_timestamp: new Date().toISOString(),
-            // Ensure ID matches auth ID
-            id: user.id
-          })
-          .eq('email', user.email)
-          .select()
-          .single();
-        
-        if (reactivationError) {
-          console.error("Error reactivating account:", reactivationError);
-          throw reactivationError;
-        }
-        
-        console.log("Account successfully reactivated:", reactivatedProfile);
-        
-        // Show success toast
-        toast({
-          title: "Account Reactivated",
-          description: "Your account has been successfully reactivated. Please upgrade your subscription plan.",
-        });
-        
-        // Redirect to pricing section
-        navigate('/?scrollTo=pricing-section');
-        
-      } catch (error) {
-        console.error("Failed to reactivate account:", error);
-        toast({
-          variant: "destructive",
-          title: "Reactivation Failed",
-          description: "We couldn't reactivate your account. Please try again or contact support.",
-        });
-        
-        // Sign out the user if reactivation fails
-        await supabase.auth.signOut();
-        navigate('/login');
-      }
-    };
-
     handleAuthCallback();
   }, [navigate, toast]);
 
