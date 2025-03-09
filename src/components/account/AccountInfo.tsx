@@ -20,6 +20,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
+  const [hasSetAirlineAndJobRole, setHasSetAirlineAndJobRole] = useState(false);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     user_type: profile?.user_type || '',
@@ -60,6 +61,13 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
     checkUserStatus();
   }, [profile?.id]);
 
+  useEffect(() => {
+    // Check if airline and job role have already been set
+    if (profile?.airline && profile?.user_type) {
+      setHasSetAirlineAndJobRole(true);
+    }
+  }, [profile]);
+
   // Check if required fields are filled
   const isProfileComplete = () => {
     return formData.full_name && 
@@ -91,6 +99,33 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
     }
 
     try {
+      // Lookup assistant configuration
+      const { data: assistant, error: assistantError } = await supabase
+        .from('openai_assistants')
+        .select('assistant_id')
+        .eq('airline', formData.airline.toLowerCase())
+        .eq('work_group', formData.user_type.toLowerCase())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      console.log('Assistant lookup result:', { assistant, error: assistantError });
+
+      if (assistantError) {
+        console.error('Assistant lookup error:', assistantError);
+        throw new Error('Error looking up assistant configuration. Please try again.');
+      }
+
+      if (!assistant) {
+        console.log('No matching assistant found for:', {
+          airline: formData.airline,
+          jobTitle: formData.user_type
+        });
+        throw new Error('We currently do not support your airline and role combination. Please contact support for assistance.');
+      }
+
+      console.log('Found matching assistant:', assistant);
+
+      // Update profile
       console.log('Attempting to update profile with data:', formData);
       const { error } = await supabase
         .from('profiles')
@@ -108,12 +143,13 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
         description: "Your profile has been updated successfully.",
       });
       setIsEditing(false);
+      setHasSetAirlineAndJobRole(true); // Disable airline and job role fields after first save
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: error.message || "Failed to update profile. Please try again.",
       });
     }
   };
@@ -143,6 +179,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
             formData={formData}
             handleInputChange={handleInputChange}
             profile={profile}
+            hasSetAirlineAndJobRole={hasSetAirlineAndJobRole}
           />
         </CardContent>
       </Card>
