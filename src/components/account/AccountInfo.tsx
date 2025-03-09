@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ChangePasswordForm } from "@/components/auth/password-reset/ChangePasswordForm";
-import { AccountFormFields } from "./AccountFormFields";
 import { EmailDisplay } from "./EmailDisplay";
 import { ExternalLink } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AccountInfoProps {
   userEmail: string | null;
@@ -28,8 +28,17 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
     address: profile?.address || '',
     phone_number: profile?.phone_number || '',
     employee_id: profile?.employee_id || '',
-    assistant_id: profile?.assistant_id || '', // Add assistant_id to formData
+    assistant_id: profile?.assistant_id || '',
   });
+
+  // Mock data for airlines and job roles (replace with your actual data)
+  const airlines = ["Delta Airlines", "American Airlines", "United Airlines", "Southwest Airlines", "Alaska Airlines"];
+  const jobRoles = ["Pilot", "Flight Attendant"];
+
+  // Disable Delta Airlines if the job role is "Flight Attendant"
+  const isAirlineDisabled = (airline: string) => {
+    return formData.user_type === "Flight Attendant" && airline === "Delta Airlines";
+  };
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -37,7 +46,6 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
       console.log('Checking alpha tester and promoter status for profile:', profile.id);
 
-      // Check if user is an alpha tester or promoter
       const { data: alphaTester, error } = await supabase
         .from('alpha_testers')
         .select('temporary_password, is_promoter')
@@ -51,11 +59,10 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
       console.log('User status data:', alphaTester);
 
-      // Show password change form if they have a temporary password or are a promoter
       if (alphaTester?.temporary_password || alphaTester?.is_promoter) {
         console.log('Setting password change as required');
         setIsPasswordChangeRequired(true);
-        setIsEditing(true); // Automatically enable profile editing
+        setIsEditing(true);
       }
     };
 
@@ -63,13 +70,11 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
   }, [profile?.id]);
 
   useEffect(() => {
-    // Check if airline and job role have already been set
     if (profile?.airline && profile?.user_type) {
       setHasSetAirlineAndJobRole(true);
     }
   }, [profile]);
 
-  // Check if required fields are filled
   const isProfileComplete = () => {
     return formData.full_name &&
            formData.user_type &&
@@ -83,6 +88,21 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Reset airline if the job role changes to "Flight Attendant" and Delta Airlines is selected
+    if (name === "user_type" && value === "Flight Attendant" && formData.airline === "Delta Airlines") {
+      setFormData(prev => ({
+        ...prev,
+        airline: ""
+      }));
+    }
   };
 
   const handleSubmit = async () => {
@@ -100,7 +120,6 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
     }
 
     try {
-      // Lookup assistant configuration
       const { data: assistant, error: assistantError } = await supabase
         .from('openai_assistants')
         .select('assistant_id')
@@ -126,13 +145,11 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
       console.log('Found matching assistant:', assistant);
 
-      // Add assistant_id to the formData before saving
       const updatedFormData = {
         ...formData,
-        assistant_id: assistant.assistant_id, // Save the assistant_id to the profile
+        assistant_id: assistant.assistant_id,
       };
 
-      // Save data to the database
       console.log('Attempting to update profile with data:', updatedFormData);
       const { error } = await supabase
         .from('profiles')
@@ -150,7 +167,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
         description: "Your profile has been updated successfully.",
       });
       setIsEditing(false);
-      setHasSetAirlineAndJobRole(true); // Disable airline and job role fields after first save
+      setHasSetAirlineAndJobRole(true);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -181,13 +198,73 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
         </CardHeader>
         <CardContent className="space-y-4">
           <EmailDisplay userEmail={userEmail} />
-          <AccountFormFields
-            isEditing={isEditing}
-            formData={formData}
-            handleInputChange={handleInputChange}
-            profile={profile}
-            hasSetAirlineAndJobRole={hasSetAirlineAndJobRole}
-          />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Full Name</label>
+              <input
+                type="text"
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-navy focus:ring-brand-navy sm:text-sm"
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Job Role</label>
+              <Select
+                value={formData.user_type}
+                onValueChange={(value) => handleSelectChange('user_type', value)}
+                disabled={!isEditing || hasSetAirlineAndJobRole}
+              >
+                <SelectTrigger className="w-full bg-gray-800 text-white">
+                  <SelectValue placeholder="Select job role" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 text-white">
+                  {jobRoles.map((role) => (
+                    <SelectItem key={role} value={role} className="hover:bg-gray-700">
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Airline</label>
+              <Select
+                value={formData.airline}
+                onValueChange={(value) => handleSelectChange('airline', value)}
+                disabled={!isEditing || hasSetAirlineAndJobRole}
+              >
+                <SelectTrigger className="w-full bg-gray-800 text-white">
+                  <SelectValue placeholder="Select airline" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 text-white">
+                  {airlines.map((airline) => (
+                    <SelectItem
+                      key={airline}
+                      value={airline}
+                      className="hover:bg-gray-700"
+                      disabled={isAirlineDisabled(airline)}
+                    >
+                      {airline}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Employee ID</label>
+              <input
+                type="text"
+                name="employee_id"
+                value={formData.employee_id}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-navy focus:ring-brand-navy sm:text-sm"
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 

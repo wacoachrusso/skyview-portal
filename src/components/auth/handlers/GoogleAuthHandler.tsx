@@ -118,6 +118,7 @@ export const GoogleAuthHandler = () => {
             }
           }
           
+          // Check if user role and airline are set up
           if (!profile.user_type || !profile.airline) {
             console.log("User role or airline not set up");
             toast({
