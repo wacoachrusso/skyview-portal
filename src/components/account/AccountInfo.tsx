@@ -28,6 +28,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
     address: profile?.address || '',
     phone_number: profile?.phone_number || '',
     employee_id: profile?.employee_id || '',
+    assistant_id: profile?.assistant_id || '', // Add assistant_id to formData
   });
 
   useEffect(() => {
@@ -125,11 +126,17 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
       console.log('Found matching assistant:', assistant);
 
-      // Save data to the database only if assistant is found
-      console.log('Attempting to update profile with data:', formData);
+      // Add assistant_id to the formData before saving
+      const updatedFormData = {
+        ...formData,
+        assistant_id: assistant.assistant_id, // Save the assistant_id to the profile
+      };
+
+      // Save data to the database
+      console.log('Attempting to update profile with data:', updatedFormData);
       const { error } = await supabase
         .from('profiles')
-        .update(formData)
+        .update(updatedFormData)
         .eq('id', profile.id);
 
       if (error) {
