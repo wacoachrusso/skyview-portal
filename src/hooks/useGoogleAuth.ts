@@ -48,8 +48,84 @@ export const useGoogleAuth = () => {
         return;
       }
 
-      // Redirect will happen automatically
-      console.log('OAuth flow initiated, redirecting to callback');
+      // Step 2: Wait for the redirect to complete and get the session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError);
+        toast({
+          variant: "destructive",
+          title: "Authentication Failed",
+          description: sessionError?.message || "Failed to retrieve session."
+        });
+        navigate('/login');
+        return;
+      }
+
+      console.log('Session found for user:', session.user.email);
+
+      // Step 3: Check if the user has an existing profile
+      const { profile, error: profileError } = await checkExistingProfile(session.user.email!);
+
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        toast({
+          variant: "destructive",
+          title: "Profile Error",
+          description: "Failed to fetch user profile."
+        });
+        navigate('/login');
+        return;
+      }
+
+      // If no profile found, redirect to signup
+      if (!profile) {
+        console.log('No profile found, redirecting to signup');
+        toast({
+          title: "Welcome!",
+          description: "Please complete your profile to get started."
+        });
+        navigate('/signup');
+        return;
+      }
+
+      // Step 4: Update subscription plan if null
+      if (profile.subscription_plan === null) {
+        console.log('Subscription plan is null, updating to free');
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ subscription_plan: 'free' })
+          .eq('id', session.user.id);
+
+        if (updateError) {
+          console.error('Error updating subscription plan:', updateError);
+          toast({
+            variant: "destructive",
+            title: "Subscription Update Failed",
+            description: "Failed to update subscription plan. Please try again."
+          });
+          navigate('/login');
+          return;
+        }
+
+        console.log('Subscription plan updated to free');
+      }
+
+      // Step 5: Check job role and airline
+      if (!profile.user_type || !profile.airline) {
+        console.log('Job role or airline not set up');
+        toast({
+          variant: "destructive",
+          title: "Profile Incomplete",
+          description: "You need to set up your job role and airline to use your specific assistant."
+        });
+        navigate('/account'); // Redirect to account page to complete setup
+        return;
+      }
+
+      // Step 6: All checks passed, redirect to chat
+      console.log('Auth callback successful, redirecting to chat');
+      navigate('/chat');
       
     } catch (error) {
       console.error('Unexpected error during Google sign-in:', error);
@@ -58,8 +134,9 @@ export const useGoogleAuth = () => {
         title: "Sign In Error",
         description: "An unexpected error occurred. Please try again.",
       });
-      setLoading(false);
       navigate('/login');
+    } finally {
+      setLoading(false);
     }
   };
 
