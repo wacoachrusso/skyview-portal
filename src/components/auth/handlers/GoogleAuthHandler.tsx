@@ -35,12 +35,12 @@ export const GoogleAuthHandler = () => {
         console.log('Session found for user:', session.user.email);
         console.log('User ID:', session.user.id);
 
-        // Check if user has a profile by ID
+        // Fetch the user's profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .maybeSingle();
+          .single(); // Use .single() to ensure only one profile is returned
 
         if (profileError) {
           console.error('Profile error:', profileError);
@@ -64,8 +64,8 @@ export const GoogleAuthHandler = () => {
           return;
         }
 
-        // Check subscription plan
-        if (!profile.subscription_plan) {
+        // Check and update subscription plan if null
+        if (profile.subscription_plan === null) {
           console.log('Subscription plan is null, updating to free');
           const { error: updateError } = await supabase
             .from('profiles')
@@ -82,6 +82,8 @@ export const GoogleAuthHandler = () => {
             navigate('/login');
             return;
           }
+
+          console.log('Subscription plan updated to free');
         }
 
         // Check job role and airline
