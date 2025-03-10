@@ -20,139 +20,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-export async function createThread() {
-  console.log('Creating new OpenAI thread...');
-  try {
-    const response = await fetch('https://api.openai.com/v1/threads', {
-      method: 'POST',
-      headers
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Thread creation failed:', errorText);
-      throw new Error(`Failed to create thread: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('Thread created successfully:', data.id);
-    return data;
-  } catch (error) {
-    console.error('Error in createThread:', error);
-    throw error;
-  }
-}
-
-export async function addMessageToThread(threadId: string, content: string) {
-  console.log('Adding message to thread:', threadId);
-  try {
-    const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        role: 'user',
-        content
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Message creation failed:', errorText);
-      throw new Error(`Failed to add message: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('Message added successfully:', data.id);
-    return data;
-  } catch (error) {
-    console.error('Error in addMessageToThread:', error);
-    throw error;
-  }
-}
-
-export async function runAssistant(threadId: string, assistantId: string) {
-  // Use the default assistant ID if none is provided
-  const effectiveAssistantId = assistantId || defaultAssistantId;
-  
-  console.log('Running assistant on thread:', threadId, 'with assistant ID:', effectiveAssistantId);
-  
-  try {
-    const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        assistant_id: effectiveAssistantId,
-        instructions: `You are a union contract expert. When answering questions, you must:
-        1. Only answer questions directly related to union contract terms, policies, or provisions
-        2. Include specific references from the contract in this exact format:
-           [REF]Section X.X, Page Y: Exact quote from contract[/REF]
-        3. If no specific reference exists, clearly state this
-        4. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
-        5. Keep responses focused and accurate
-        6. Format all contract references consistently using the [REF] tags`
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Run creation failed:', errorText);
-      throw new Error(`Failed to run assistant: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('Assistant run started:', data.id);
-    return data;
-  } catch (error) {
-    console.error('Error in runAssistant:', error);
-    throw error;
-  }
-}
-
-export async function getRunStatus(threadId: string, runId: string) {
-  console.log('Getting run status:', runId, 'for thread:', threadId);
-  try {
-    const response = await fetch(
-      `https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Status check failed:', errorText);
-      throw new Error(`Failed to get run status: ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error in getRunStatus:', error);
-    throw error;
-  }
-}
-
-export async function getMessages(threadId: string) {
-  console.log('Getting messages from thread:', threadId);
-  try {
-    const response = await fetch(
-      `https://api.openai.com/v1/threads/${threadId}/messages`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Messages retrieval failed:', errorText);
-      throw new Error(`Failed to get messages: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('Messages retrieved successfully');
-    return data;
-  } catch (error) {
-    console.error('Error in getMessages:', error);
-    throw error;
-  }
-}
-
 // Server handler
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -165,19 +32,22 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
 
+    // Parse the request body
     const { content, subscriptionPlan, assistantId } = await req.json();
-    
-    // Use the default assistant ID if none is provided
-    const effectiveAssistantId = assistantId || defaultAssistantId;
-    
-    // Log detailed information for debugging
-    console.log('Processing chat request:', { 
-      subscriptionPlan, 
-      providedAssistantId: assistantId,
-      defaultAssistantId: defaultAssistantId,
-      effectiveAssistantId: effectiveAssistantId,
-      usingDefault: !assistantId
-    });
+
+    // Debugging: Log the assistantId from the request
+    console.log('Received assistantId:', assistantId);
+
+    // Use the default assistant ID if none is provided or if the provided ID is invalid
+    const effectiveAssistantId = assistantId?.trim() || defaultAssistantId;
+
+    // Debugging: Log the effective assistant ID being used
+    console.log('Using assistant ID:', effectiveAssistantId);
+
+    // Validate the assistant ID
+    if (!effectiveAssistantId.startsWith('asst_')) {
+      throw new Error(`Invalid assistant ID: ${effectiveAssistantId}. Expected an ID that begins with 'asst'.`);
+    }
 
     // Create a thread
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
@@ -212,17 +82,7 @@ serve(async (req) => {
 
     console.log('Message added to thread');
 
-    // Debug log to see exactly what we're sending
-    console.log('About to run assistant with:', {
-      threadId: thread.id,
-      assistantId: effectiveAssistantId,
-      requestBody: JSON.stringify({
-        assistant_id: effectiveAssistantId,
-        instructions: "Please include the specific section and page number from the contract that supports your answer, formatted like this: [REF]Section X.X, Page Y: Exact quote from contract[/REF]. If no specific reference exists for this query, please state that clearly in the reference section."
-      })
-    });
-
-    // Run the assistant with dynamic assistant ID
+    // Run the assistant with the effective assistant ID
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
       method: 'POST',
       headers,
