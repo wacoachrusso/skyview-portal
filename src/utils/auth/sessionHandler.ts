@@ -8,20 +8,44 @@ export const handleAuthSession = async (
   navigate: NavigateFunction
 ) => {
   console.log("Creating new session for user:", userId);
-  const newSession = await createNewSession(userId);
-  
-  if (!newSession) {
-    console.error("Failed to create new session");
-    throw new Error("Failed to create session");
+
+  try {
+    // Fetch user profile (optional, just for logging/debugging)
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.warn("Warning: Unable to fetch user profile:", profileError);
+    } else {
+      console.log("Profile data:", profile);
+    }
+
+    // Create a new session
+    const newSession = await createNewSession(userId);
+
+    if (!newSession) {
+      console.error("Failed to create new session");
+      toast({
+        variant: "destructive",
+        title: "Session Error",
+        description: "Failed to create a new session."
+      });
+      navigate('/login');
+      return;
+    }
+
+    console.log("New session created successfully:", newSession);
+    
+  } catch (error) {
+    console.error("Unexpected error in handleAuthSession:", error);
+    toast({
+      variant: "destructive",
+      title: "Authentication Error",
+      description: error.message || "An unexpected error occurred. Please try again."
+    });
+    navigate('/login');
   }
-
-  console.log("New session created successfully:", newSession);
-
-  toast({
-    title: "Welcome to SkyGuide!",
-    description: "Your account has been created and you've been successfully signed in."
-  });
-  
-  console.log("Redirecting to dashboard");
-  navigate('/chat');
 };

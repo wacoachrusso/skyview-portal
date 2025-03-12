@@ -13,9 +13,10 @@ export const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createNewSession } = useSessionManagement();
-  const provider = searchParams.get("provider");
+  const provider = searchParams.get("provider") || "google"; 
   const sessionId = searchParams.get("session_id");
 
+  // Handle Google Auth separately
   if (provider === "google") {
     return <GoogleAuthHandler />;
   }
@@ -28,10 +29,14 @@ export const AuthCallback = () => {
           provider,
           hasSearchParams: searchParams.toString()
         });
-        
+
+        // Handle Stripe callback
         if (sessionId) {
           const pendingSignup = await handleStripeCallback(sessionId, navigate);
-          if (!pendingSignup) return;
+          if (!pendingSignup) {
+            console.error("No pending signup found for session ID:", sessionId);
+            throw new Error("Failed to process Stripe callback");
+          }
 
           // Create the user account
           const user = await createUserAccount(pendingSignup);
@@ -70,12 +75,13 @@ export const AuthCallback = () => {
 
         // Handle regular auth callback flow
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError || !session) {
           console.error("Session error:", sessionError);
           throw new Error("Invalid session");
         }
 
+        // Handle auth session and redirect
         await handleAuthSession(session.user.id, createNewSession, navigate);
 
       } catch (error) {
@@ -90,7 +96,7 @@ export const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast, createNewSession, sessionId]);
+  }, [navigate, toast, createNewSession, sessionId, searchParams]);
 
   return null;
 };

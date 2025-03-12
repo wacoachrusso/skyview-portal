@@ -20,7 +20,8 @@ export const GoogleAuthHandler = () => {
           toast({
             variant: "destructive",
             title: "Authentication Failed",
-            description: sessionError.message || "Failed to authenticate with Google."
+            description: sessionError.message || "Failed to authenticate with Google.",
+            duration:30000
           });
           navigate('/login');
           return;
@@ -35,79 +36,57 @@ export const GoogleAuthHandler = () => {
         console.log('Session found for user:', session.user.email);
         console.log('User ID:', session.user.id);
 
-        // Fetch the user's profile
+        // Extract user data from the session
+        const { email, user_metadata } = session.user;
+        const fullName = user_metadata?.full_name || user_metadata?.name || "";
+
+        // Check if the user has a profile in the profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('*')
+          .select('user_type, airline')
           .eq('id', session.user.id)
-          .single(); // Use .single() to ensure only one profile is returned
+          .maybeSingle();
 
-        if (profileError) {
+        // Handle profile fetch errors (excluding "No rows found" error)
+        if (profileError && profileError.code !== 'PGRST116') {
           console.error('Profile error:', profileError);
           toast({
             variant: "destructive",
             title: "Profile Error",
-            description: "Failed to fetch user profile."
+            description: `Failed to fetch user profile: ${profileError.message}`,
+            duration:30000
           });
           navigate('/login');
           return;
         }
 
-        // If no profile found, redirect to signup
-        if (!profile) {
-          console.log('No profile found, redirecting to signup');
-          toast({
-            title: "Welcome!",
-            description: "Please complete your profile to get started."
-          });
-          navigate('/signup');
+        // Debug: Log the profile data
+        console.log("Profile data:", profile);
+
+        // If profile exists and is complete, redirect to chat
+        if (profile?.user_type && profile?.airline) {
+          console.log('Profile is complete, redirecting to chat');
+          navigate('/chat');
           return;
         }
 
-        // Check and update subscription plan if null
-        if (profile.subscription_plan === null) {
-          console.log('Subscription plan is null, updating to free');
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ subscription_plan: 'free' })
-            .eq('id', session.user.id);
-
-          if (updateError) {
-            console.error('Error updating subscription plan:', updateError);
-            toast({
-              variant: "destructive",
-              title: "Subscription Update Failed",
-              description: "Failed to update subscription plan. Please try again."
-            });
-            navigate('/login');
-            return;
-          }
-
-          console.log('Subscription plan updated to free');
-        }
-
-        // Check job role and airline
-        if (!profile.user_type || !profile.airline) {
-          console.log('Job role or airline not set up');
-          toast({
-            variant: "destructive",
-            title: "Profile Incomplete",
-            description: "You need to set up your job role and airline to use your specific assistant."
-          });
-          navigate('/account'); // Redirect to account page to complete setup
-          return;
-        }
-
-        // All checks passed, redirect to chat
-        console.log('Auth callback successful, redirecting to chat');
-        navigate('/chat');
+        // If profile does not exist or is incomplete, redirect to signup
+        console.log('Profile is incomplete, redirecting to signup');
+        toast({
+          title: "Welcome!",
+          description: "Please complete your profile to get started."
+        });
+        navigate('/signup', {
+          state: { userId: session.user.id, email, fullName, isGoogleSignIn: true }, // Pass user data and Google sign-in flag
+        });
         
       } catch (error) {
         console.error('Unexpected error in auth callback:', error);
         toast({
           variant: "destructive",
           title: "Authentication Error",
-          description: "An unexpected error occurred. Please try again."
+          description: error.message || "An unexpected error occurred. Please try again.",
+          duration:30000
         });
         navigate('/login');
       } finally {

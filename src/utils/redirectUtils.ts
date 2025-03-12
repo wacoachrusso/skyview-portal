@@ -9,5 +9,5 @@ export const redirectToProduction = () => {
     }
   }
   // Redirect to production URL
-  window.location.href = 'http://localhost:8080';
+  window.location.href = 'http://localhost:5173';
 };

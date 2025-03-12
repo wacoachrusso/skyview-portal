@@ -1,8 +1,11 @@
-
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function useUserProfile() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,10 +24,13 @@ export function useUserProfile() {
         
       if (error) {
         console.error("Error fetching user profile:", error);
+        toast({
+          variant: "destructive",
+          title: "Profile Error",
+          description: "Failed to fetch user profile. Please try again."
+        });
         return;
       }
-      
-      console.log("Loaded user profile:", profile);
       
       // Set admin status in localStorage for quick access
       if (profile.is_admin) {
@@ -38,6 +44,11 @@ export function useUserProfile() {
       setUserProfile(profile);
     } catch (error) {
       console.error("Error in loadUserProfile:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again."
+      });
     } finally {
       setIsLoading(false);
     }
@@ -71,14 +82,14 @@ export function useUserProfile() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        if (session?.user && mounted) {
-          console.log("User signed in/updated:", session.user.id);
-          setCurrentUserId(session.user.id);
-          await loadUserProfile(session.user.id);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        if (mounted) {
+      if (mounted) {
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+          if (session?.user) {
+            console.log("User signed in/updated:", session.user.id);
+            setCurrentUserId(session.user.id);
+            await loadUserProfile(session.user.id);
+          }
+        } else if (event === 'SIGNED_OUT') {
           console.log("User signed out");
           setCurrentUserId(null);
           setUserProfile(null);
@@ -90,7 +101,7 @@ export function useUserProfile() {
     
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 

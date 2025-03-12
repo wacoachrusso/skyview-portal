@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     preview: {
-      port: 8080,
+      port: 5173,
       strictPort: true,
       headers: {
         'Access-Control-Allow-Origin': '*',

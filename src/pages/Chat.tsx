@@ -5,12 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/hooks/useChat";
 import { ChatContent } from "@/components/chat/ChatContent";
 import { useToast } from "@/hooks/use-toast";
+import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 
 const Chat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChatDisabled, setIsChatDisabled] = useState(false); // State to disable chat
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [firstLogin, setFirstLogin] = useState(false);
 
   const {
     currentConversationId,
@@ -99,6 +102,24 @@ const Chat = () => {
         return;
       }
 
+      // Check if user has seen the disclaimer
+      const { data: disclaimerRecord, error: disclaimerError } = await supabase
+        .from('disclaimer_consents')
+        .select('has_seen_chat_disclaimer')
+        .eq('user_id', session.user.id)
+        .single();
+        
+      if (disclaimerError && disclaimerError.code !== 'PGSQL_NO_ROWS_RETURNED') {
+        console.error('Error checking disclaimer status:', disclaimerError);
+      }
+        
+      // If no record or hasn't seen disclaimer, show disclaimer
+      if (!disclaimerRecord || !disclaimerRecord.has_seen_chat_disclaimer) {
+        setFirstLogin(true);
+        setShowDisclaimer(true);
+        return; // Wait for disclaimer acceptance before continuing
+      }
+
       // Fetch user profile to check subscription plan and query count
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -114,7 +135,7 @@ const Chat = () => {
       console.log("Fetched profile:", profile);
 
       // Check if user is on free plan and query_count >= 1
-      if (profile?.subscription_plan === "free"  && profile?.query_count >= 2) {
+      if (profile?.subscription_plan === "free" && profile?.query_count >= 2) {
         console.log("Free trial ended, disabling chat...");
         setIsChatDisabled(true); // Disable chat
         toast({
@@ -128,7 +149,46 @@ const Chat = () => {
     checkAccess();
   }, [navigate, toast, currentUserId]); // Add currentUserId as a dependency
 
+  const handleAcceptDisclaimer = async () => {
+    try {
+      if (!currentUserId) return;
+      
+      // Record that user has seen the disclaimer
+      const { error } = await supabase
+        .from('disclaimer_consents')
+        .upsert({ 
+          user_id: currentUserId, 
+          has_seen_chat_disclaimer: true,
+          status: 'accepted',
+          created_at: new Date().toISOString()
+        }, { 
+          onConflict: 'user_id' 
+        });
+        
+      if (error) {
+        console.error('Error saving disclaimer acceptance:', error);
+        return;
+      }
+      
+      // Close the disclaimer dialog
+      setShowDisclaimer(false);
+      
+      // Continue with normal chat flow
+    } catch (error) {
+      console.error('Error accepting disclaimer:', error);
+    }
+  };
   
+  const handleRejectDisclaimer = async () => {
+    // Sign out if they reject the disclaimer
+    await supabase.auth.signOut();
+    navigate('/');
+    toast({
+      title: "Disclaimer Declined",
+      description: "You must accept the disclaimer to use the service.",
+      duration: 5000,
+    });
+  };
 
   // Handle conversation selection
   const handleSelectConversation = useCallback(
@@ -214,6 +274,12 @@ const Chat = () => {
           isChatDisabled={isChatDisabled} // Pass the disabled state to ChatContent
         />
       </ChatLayout>
+      
+      <DisclaimerDialog 
+        open={showDisclaimer} 
+        onAccept={handleAcceptDisclaimer} 
+        onReject={handleRejectDisclaimer} 
+      />
     </div>
   );
 };

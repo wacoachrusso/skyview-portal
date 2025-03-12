@@ -20,126 +20,104 @@ export const useSignup = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSignupSubmit = async (
-    formData: SignupFormData, 
-    selectedPlan: string, 
-    priceId?: string
+    formData: SignupFormData,
+    selectedPlan: string,
+    priceId?: string,
+    isGoogleSignIn: boolean = false // Flag to check if the user signed in with Google
   ) => {
     if (loading) return;
     setLoading(true);
 
     try {
-      console.log('Starting signup process with data:', { 
+      console.log("Starting signup process:", {
         email: formData.email,
         fullName: formData.fullName,
         jobTitle: formData.jobTitle,
         airline: formData.airline,
-        plan: selectedPlan 
+        plan: selectedPlan,
+        isGoogleSignIn,
       });
 
-      // Check if there's a matching assistant for this user's role
+      // Lookup assistant based on airline and job title
       const { data: assistant, error: assistantError } = await supabase
-        .from('openai_assistants')
-        .select('assistant_id')
-        .eq('airline', formData.airline.toLowerCase())
-        .eq('work_group', formData.jobTitle.toLowerCase())
-        .eq('is_active', true)
+        .from("openai_assistants")
+        .select("assistant_id")
+        .eq("airline", formData.airline.toLowerCase())
+        .eq("work_group", formData.jobTitle.toLowerCase())
+        .eq("is_active", true)
         .maybeSingle();
 
-      console.log('Assistant lookup result:', { assistant, error: assistantError });
-
       if (assistantError) {
-        console.error('Assistant lookup error:', assistantError);
-        throw new Error('Error looking up assistant configuration. Please try again.');
+        console.error("Assistant lookup error:", assistantError);
+        throw new Error("Error looking up assistant configuration. Please try again.");
       }
 
       if (!assistant) {
-        console.log('No matching assistant found for:', {
-          airline: formData.airline,
-          jobTitle: formData.jobTitle
-        });
-        throw new Error('We currently do not support your airline and role combination. Please contact support for assistance.');
+        throw new Error(
+          "We currently do not support your airline and role combination. Please contact support."
+        );
       }
 
-      console.log('Found matching assistant:', assistant);
+      console.log("Found matching assistant:", assistant);
 
-      // For paid plans, handle Stripe checkout
-      if (selectedPlan !== 'free' && priceId) {
-        console.log('Starting paid plan signup process:', { plan: selectedPlan, priceId });
-        
-        try {
-          // Store signup data for after payment
-          storePendingSignup({
-            email: formData.email,
-            password: formData.password,
-            fullName: formData.fullName,
-            jobTitle: formData.jobTitle,
-            airline: formData.airline,
-            plan: selectedPlan,
-            assistantId: assistant.assistant_id
-          });
+      const signupData = {
+        ...formData,
+        assistantId: assistant.assistant_id,
+      };
 
-          // Create and redirect to checkout
-          const checkoutUrl = await createStripeCheckoutSession({
-            priceId,
-            email: formData.email,
-          });
+      // Handle paid plan signup via Stripe
+      if (selectedPlan !== "free" && priceId) {
+        storePendingSignup({ ...signupData, plan: selectedPlan });
 
-          if (checkoutUrl) {
-            console.log('Redirecting to checkout URL:', checkoutUrl);
-            window.location.href = checkoutUrl;
-            return;
-          } else {
-            console.error('No checkout URL received');
-            throw new Error('Failed to create checkout session');
-          }
-        } catch (error) {
-          console.error('Error creating checkout session:', error);
-          if (error instanceof Error && error.message.includes('active subscription')) {
-            toast({
-              variant: "destructive",
-              title: "Subscription exists",
-              description: "You already have an active subscription. Please sign in to your account.",
-            });
-            navigate('/login');
-            return;
-          }
-          throw error;
+        const checkoutUrl = await createStripeCheckoutSession({
+          priceId,
+          email: formData.email,
+        });
+
+        if (checkoutUrl) {
+          console.log("Redirecting to checkout URL:", checkoutUrl);
+          window.location.href = checkoutUrl;
+          return;
+        } else {
+          throw new Error("Failed to create checkout session");
         }
       }
 
       // Handle free plan signup
-      console.log('Proceeding with free plan signup');
+      console.log("Proceeding with free plan signup");
       const signupResult = await handleFreeSignup({
-        ...formData,
-        assistantId: assistant.assistant_id
+        ...signupData,
+        isGoogleSignIn, // Pass isGoogleSignIn flag
       });
-      
-      if (signupResult) {
-        console.log('Free signup successful');
-        toast({
-          title: "Account created",
-          description: "Please check your email to verify your account.",
-        });
-        navigate('/login');
-      } else {
-        console.error('Free signup failed without throwing an error');
-        throw new Error('Signup failed. Please try again.');
+
+      if (!signupResult) {
+        throw new Error("Signup failed. Please try again.");
       }
 
+      
+        toast({
+          title: "Account created",
+          description: isGoogleSignIn 
+            ? "Successfully!" 
+            : "Please check your email to verify your account.",
+            duration:30000
+        });
+      
+
+      navigate("/chat");
     } catch (error) {
       console.error("Error during signup:", error);
-      
+
       let errorMessage = "An unexpected error occurred";
-      
       if (error instanceof Error) {
         if (error.message.includes("User already registered")) {
           errorMessage = "An account with this email already exists. Please sign in instead.";
-          navigate('/login');
+          navigate("/login");
         } else {
           errorMessage = error.message;
         }
       }
-      
+
       toast({
         variant: "destructive",
         title: "Signup failed",
