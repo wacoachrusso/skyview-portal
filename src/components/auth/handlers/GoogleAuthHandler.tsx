@@ -97,14 +97,5 @@ export const GoogleAuthHandler = () => {
     handleAuthCallback();
   }, [navigate, toast]);
 
-  // Show loading state while processing
-  if (isProcessing) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Processing authentication...</p>
-      </div>
-    );
-  }
-
-  return null;
+ 
 };
