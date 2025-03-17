@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { handlePasswordReset } from "@/utils/auth/sessionHandler";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -24,22 +25,17 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      console.log('Starting password reset process for:', email);
+      const { success, error } = await handlePasswordReset(email.trim());
       
-      const { error: emailError } = await supabase.functions.invoke('send-password-reset', {
-        body: { 
-          email: email.trim(),
-          resetUrl: `${window.location.origin}/reset-password`
-        }
-      });
-
-      if (emailError) throw emailError;
-
-      toast({
-        title: "Check your email",
-        description: "We've sent you a password reset link."
-      });
-      navigate('/login');
+      if (success) {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link."
+        });
+        navigate('/login');
+      } else {
+        throw new Error(error);
+      }
     } catch (error) {
       console.error('Password reset error:', error);
       toast({

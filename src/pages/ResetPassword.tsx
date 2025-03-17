@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,6 +84,11 @@ const ResetPassword = () => {
       toast({
         title: "Success",
         description: "Your password has been reset successfully."
+      });
+
+      // Send a confirmation email
+      await supabase.functions.invoke('send-password-reset-confirmation', {
+        body: { email: (await supabase.auth.getUser()).data.user?.email }
       });
 
       // Sign out to clear any existing session

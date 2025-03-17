@@ -1,7 +1,5 @@
-export const validatePassword = (password: string): { 
-  isValid: boolean; 
-  requirements: { met: boolean; text: string }[] 
-} => {
+
+export const validatePassword = (password: string): { isValid: boolean; requirements: { met: boolean; text: string }[] } => {
   const hasLowerCase = /[a-z]/.test(password);
   const hasUpperCase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
