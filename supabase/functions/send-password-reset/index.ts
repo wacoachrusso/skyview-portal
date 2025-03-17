@@ -16,7 +16,7 @@ const generateUnsubscribeLink = async (email: string): Promise<string> => {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   
-  return `${new URL(Deno.env.get('SUPABASE_URL') || '').origin}/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
+  return `${Deno.env.get('SUPABASE_URL')}/functions/v1/handle-unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
 };
 
 // Generate email footer
@@ -49,9 +49,23 @@ serve(async (req) => {
   try {
     console.log("Password reset function invoked");
     
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    
+    console.log("Environment check:", {
+      supabaseUrl: supabaseUrl ? "✅ Present" : "❌ Missing",
+      supabaseServiceKey: supabaseServiceKey ? "✅ Present" : "❌ Missing",
+      resendApiKey: resendApiKey ? "✅ Present" : "❌ Missing"
+    });
+    
+    if (!supabaseUrl || !supabaseServiceKey || !resendApiKey) {
+      throw new Error("Missing required environment variables");
+    }
+    
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      supabaseUrl,
+      supabaseServiceKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -60,7 +74,10 @@ serve(async (req) => {
       }
     );
 
-    const { email, redirectUrl } = await req.json() as RequestBody;
+    const requestData = await req.json();
+    console.log("Request data:", requestData);
+    
+    const { email, redirectUrl } = requestData as RequestBody;
 
     if (!email) {
       throw new Error("Email is required");
@@ -70,7 +87,8 @@ serve(async (req) => {
     console.log("Redirect URL:", redirectUrl || "not provided");
 
     // Use the redirect URL if provided, otherwise use a default
-    const finalRedirectUrl = redirectUrl || `${new URL(Deno.env.get('SUPABASE_URL') || '').origin}/reset-password`;
+    // Use absolute URL for clarity
+    const finalRedirectUrl = redirectUrl || "https://www.skyguide.site/reset-password";
     console.log("Final redirect URL:", finalRedirectUrl);
 
     // Generate password reset link with redirect to reset password page
@@ -95,9 +113,9 @@ serve(async (req) => {
     
     const emailFooter = await getEmailFooter(email);
 
-    // Send custom email using Resend
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    const resend = new Resend(resendApiKey);
     
+    // Send custom email using Resend
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "SkyGuide <no-reply@skyguide.site>",
       to: email,
@@ -146,10 +164,13 @@ serve(async (req) => {
       throw emailError;
     }
 
-    console.log("Password reset email sent successfully");
+    console.log("Password reset email sent successfully:", emailData);
     
     return new Response(
-      JSON.stringify({ message: "Password reset email sent successfully" }),
+      JSON.stringify({ 
+        message: "Password reset email sent successfully",
+        emailId: emailData.id 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

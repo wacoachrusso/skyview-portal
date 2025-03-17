@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { handlePasswordReset } from "@/utils/authUtils";
 
 const ForgotPassword = () => {
@@ -76,6 +76,7 @@ const ForgotPassword = () => {
           {emailSent ? (
             <div className="text-center space-y-6">
               <Alert className="bg-green-500/10 text-green-400 border-green-500/20 mb-6">
+                <Info className="h-4 w-4 text-green-400" />
                 <AlertTitle className="text-green-400">Check your email</AlertTitle>
                 <AlertDescription>
                   We've sent a password reset link to <span className="font-semibold">{email}</span>. 

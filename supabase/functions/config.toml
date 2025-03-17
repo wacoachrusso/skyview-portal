@@ -1,12 +1,21 @@
 
-# This file lists which secrets are required by which functions.
-# When run locally with `supabase functions serve` you'll need to set the secrets in a .env file.
-# When deployed to Supabase, you'll need to set the secrets in the dashboard.
-# https://supabase.com/docs/guides/functions/secrets
+# Project Configuration
+project_id = "xnlzqsoujwsffoxhhybk"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54323
+
+[studio]
+enabled = true
+port = 54323
 
 [functions.send-password-reset]
 verify_jwt = false
 
 [functions.send-password-reset.import_map]
 imports = {}
-

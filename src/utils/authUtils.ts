@@ -37,19 +37,21 @@ export const handlePasswordReset = async (email: string) => {
     // Clean up the email input
     const cleanEmail = email.trim().toLowerCase();
     
-    // Get the origin without any trailing colons
-    const baseUrl = window.location.origin.replace(/:\/?$/, '');
+    // Get the origin with protocol
+    const baseUrl = window.location.origin;
     const redirectUrl = `${baseUrl}/reset-password`;
     
     console.log('Reset redirect URL:', redirectUrl);
     
-    // Use our custom edge function instead of Supabase's built-in reset
+    // Use our custom edge function to send the password reset email
     const { data, error } = await supabase.functions.invoke('send-password-reset', {
       body: { 
         email: cleanEmail,
         redirectUrl
       }
     });
+
+    console.log('Edge function response:', data, error);
 
     if (error) {
       console.error('Error from edge function:', error);
