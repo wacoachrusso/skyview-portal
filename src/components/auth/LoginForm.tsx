@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -80,7 +81,7 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
       </Button>
 
       <div className="flex items-center justify-center">
-        <GoogleSignInButton text="Sign In with Google" />
+        <GoogleSignInButton />
       </div>
     </form>
   );

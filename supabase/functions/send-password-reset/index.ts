@@ -38,6 +38,7 @@ const getEmailFooter = async (email: string): Promise<string> => {
 
 interface RequestBody {
   email: string;
+  resetUrl?: string;
 }
 
 serve(async (req) => {
@@ -46,6 +47,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Password reset function invoked");
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -83,6 +86,8 @@ serve(async (req) => {
       throw new Error("No reset link generated");
     }
 
+    console.log("Reset link generated:", data.properties.action_link);
+    
     const emailFooter = await getEmailFooter(email);
 
     // Send custom email using Resend
@@ -136,6 +141,8 @@ serve(async (req) => {
       throw emailError;
     }
 
+    console.log("Password reset email sent successfully");
+    
     return new Response(
       JSON.stringify({ message: "Password reset email sent successfully" }),
       {

@@ -1,102 +1,44 @@
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { GoogleAuthHandler } from "./handlers/GoogleAuthHandler";
-import { useSessionManagement } from "@/hooks/useSessionManagement";
-import { handleStripeCallback } from "@/utils/auth/stripeCallbackHandler";
-import { createUserAccount } from "@/utils/auth/userCreationHandler";
-import { handleAuthSession } from "@/utils/auth/sessionHandler";
 
-export const AuthCallback = () => {
+import { useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useEmailConfirmation } from '@/hooks/useEmailConfirmation';
+import { LoadingSpinner } from '../shared/LoadingSpinner';
+
+const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { createNewSession } = useSessionManagement();
-  const provider = searchParams.get("provider") || "google"; 
-  const sessionId = searchParams.get("session_id");
-
-  // Handle Google Auth separately
-  if (provider === "google") {
-    return <GoogleAuthHandler />;
-  }
-
+  const { handleEmailConfirmation } = useEmailConfirmation();
+  
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        console.log("Starting auth callback process with params:", {
-          sessionId,
-          provider,
-          hasSearchParams: searchParams.toString()
-        });
-
-        // Handle Stripe callback
-        if (sessionId) {
-          const pendingSignup = await handleStripeCallback(sessionId, navigate);
-          if (!pendingSignup) {
-            console.error("No pending signup found for session ID:", sessionId);
-            throw new Error("Failed to process Stripe callback");
-          }
-
-          // Create the user account
-          const user = await createUserAccount(pendingSignup);
-          console.log("User account created successfully:", user.id);
-
-          // Sign in the user immediately
-          console.log("Attempting to sign in user:", pendingSignup.email);
-          const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
-            email: pendingSignup.email,
-            password: pendingSignup.password
-          });
-
-          if (signInError || !session) {
-            console.error("Error signing in user:", signInError);
-            throw new Error("Failed to sign in after account creation");
-          }
-
-          console.log("User signed in successfully:", session.user.id);
-
-          // Create new session and handle redirect
-          await handleAuthSession(session.user.id, createNewSession, navigate);
-
-          // Delete the pending signup
-          console.log("Cleaning up pending signup data");
-          const { error: deleteError } = await supabase
-            .from('pending_signups')
-            .delete()
-            .eq('stripe_session_id', sessionId);
-
-          if (deleteError) {
-            console.error("Error cleaning up pending signup:", deleteError);
-          }
-
-          return;
+    const processCallback = async () => {
+      const email = searchParams.get('email');
+      const token_hash = searchParams.get('token_hash');
+      
+      if (email && token_hash) {
+        // Handle email confirmation
+        const success = await handleEmailConfirmation(email, token_hash);
+        
+        if (success) {
+          // Redirect to login page after successful confirmation
+          navigate('/login');
         }
-
-        // Handle regular auth callback flow
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError || !session) {
-          console.error("Session error:", sessionError);
-          throw new Error("Invalid session");
-        }
-
-        // Handle auth session and redirect
-        await handleAuthSession(session.user.id, createNewSession, navigate);
-
-      } catch (error) {
-        console.error("Error in auth callback:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || "An unexpected error occurred. Please try again or contact support."
-        });
-        navigate('/?scrollTo=pricing-section');
+      } else {
+        // For other auth callbacks or if missing parameters
+        navigate('/login');
       }
     };
-
-    handleAuthCallback();
-  }, [navigate, toast, createNewSession, sessionId, searchParams]);
-
-  return null;
+    
+    processCallback();
+  }, [searchParams, navigate, handleEmailConfirmation]);
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="text-center">
+        <LoadingSpinner size="lg" />
+        <h2 className="mt-4 text-xl text-white">Processing authentication...</h2>
+      </div>
+    </div>
+  );
 };
+
+export default AuthCallback;

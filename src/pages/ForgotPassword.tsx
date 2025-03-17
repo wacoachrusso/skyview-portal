@@ -25,9 +25,11 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
+      console.log("Initiating password reset for:", email);
       const { success, error } = await handlePasswordReset(email.trim());
       
       if (success) {
+        console.log("Password reset email sent successfully");
         toast({
           title: "Check your email",
           description: "We've sent you a password reset link."

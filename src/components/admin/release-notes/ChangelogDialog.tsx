@@ -1,120 +1,144 @@
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { Database } from "@/integrations/supabase/types";
-
-type ReleaseNoteChangeType = Database["public"]["Tables"]["release_note_changes"]["Row"];
+import { useToast } from "@/hooks/use-toast";
 
 interface ChangelogDialogProps {
-  releaseNoteId: string | null;
-  isOpen: boolean;
+  note: any;
+  open: boolean;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-export function ChangelogDialog({ 
-  releaseNoteId, 
-  isOpen, 
-  onClose 
-}: ChangelogDialogProps) {
-  const [changes, setChanges] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export const ChangelogDialog = ({
+  note,
+  open,
+  onClose,
+  onSuccess,
+}: ChangelogDialogProps) => {
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchChanges = async () => {
-      if (!releaseNoteId || !isOpen) return;
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('release_note_changes')
-          .select(`
-            id,
-            release_note_id,
-            user_id,
-            created_at,
-            has_seen_release_note,
-            profiles(full_name, email)
-          `)
-          .eq('release_note_id', releaseNoteId)
-          .order('created_at', { ascending: false });
+  const handleSendEmail = async () => {
+    if (!note) return;
 
-        if (error) {
-          console.error("Error fetching changelog:", error);
-          return;
-        }
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-release-email", {
+        body: {
+          noteId: note.id,
+          version: note.version,
+          title: note.title,
+          description: note.description,
+          is_major: note.is_major,
+        },
+      });
 
-        if (data) {
-          console.log("Changelog data:", data);
-          setChanges(data);
-        }
-      } catch (err) {
-        console.error("Unexpected error in fetchChanges:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      if (error) throw error;
 
-    fetchChanges();
-  }, [releaseNoteId, isOpen]);
+      // Update last_email_sent timestamp
+      const { error: updateError } = await supabase
+        .from("release_notes")
+        .update({ last_email_sent: new Date().toISOString() })
+        .eq("id", note.id);
 
-  // Type guard to check if an item has the profiles property
-  const hasProfiles = (item: any): item is (ReleaseNoteChangeType & { profiles: any }) => {
-    return item && typeof item === 'object' && 'profiles' in item;
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Email notification sent",
+        description: "Users have been notified about the release.",
+      });
+      onSuccess();
+    } catch (error) {
+      console.error("Error sending email notification:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send email notification. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Type guard to check if item is valid
-  const isValidChange = (item: any): item is ReleaseNoteChangeType => {
-    return item && typeof item === 'object' && 'id' in item && 'user_id' in item;
-  };
+  if (!note) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Release Note Changelog</DialogTitle>
+          <DialogTitle>Release Preview</DialogTitle>
         </DialogHeader>
         
-        {isLoading ? (
-          <div className="py-4 text-center">Loading changelog...</div>
-        ) : changes.length === 0 ? (
-          <div className="py-4 text-center">No changes have been recorded for this release note.</div>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-muted">
-                <th className="p-2 text-left">Date</th>
-                <th className="p-2 text-left">User</th>
-                <th className="p-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {changes.map((change) => {
-                if (!isValidChange(change)) return null;
-                
-                return (
-                  <tr key={change.id} className="border-b">
-                    <td className="p-2">
-                      {format(new Date(change.created_at), "MMM d, yyyy h:mm a")}
-                    </td>
-                    <td className="p-2">
-                      {hasProfiles(change) && change.profiles
-                        ? (change.profiles.full_name || change.profiles.email || 'Unknown user')
-                        : 'Unknown user'}
-                    </td>
-                    <td className="p-2">
-                      {change.has_seen_release_note !== undefined
-                        ? (change.has_seen_release_note ? "Viewed note" : "Note displayed")
-                        : "Unknown action"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+        <ScrollArea className="flex-1 pr-4 my-4">
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-semibold">{note.title}</h3>
+                {note.is_major && (
+                  <Badge className="bg-brand-gold text-brand-navy">Major</Badge>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <span>Version {note.version}</span>
+                <span>•</span>
+                <span>
+                  {note.release_date
+                    ? format(parseISO(note.release_date), "PP")
+                    : "No release date"}
+                </span>
+              </div>
+            </div>
+
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              {note.description.split("\n").map((paragraph: string, i: number) => (
+                <p key={i}>{paragraph}</p>
+              ))}
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="flex-shrink-0 pt-2">
+          <div className="w-full flex justify-between items-center">
+            <div className="text-xs text-muted-foreground">
+              {note.last_email_sent ? (
+                <span>
+                  Email notification sent on{" "}
+                  {format(parseISO(note.last_email_sent), "PPp")}
+                </span>
+              ) : (
+                <span>No email notification sent yet</span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              <Button
+                onClick={handleSendEmail}
+                disabled={loading || !!note.last_email_sent}
+              >
+                {loading
+                  ? "Sending..."
+                  : note.last_email_sent
+                  ? "Already Sent"
+                  : "Send Email Notification"}
+              </Button>
+            </div>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};

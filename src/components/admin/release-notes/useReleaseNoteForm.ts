@@ -1,83 +1,93 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { format } from 'date-fns';
 
-// Define the form schema
-const formSchema = z.object({
-  version: z.string().min(1, "Version is required"),
-  title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  is_major: z.boolean().default(false),
-  release_date: z.date().nullable().default(null),
-});
+interface ReleaseNoteFormValues {
+  version: string;
+  title: string;
+  description: string;
+  is_major: boolean;
+  release_date: Date | string;
+}
 
-export const useReleaseNoteForm = () => {
-  const [isLoading, setIsLoading] = useState(false);
+interface UseReleaseNoteFormProps {
+  onSuccess?: () => void;
+  initialData?: any;
+}
+
+export const useReleaseNoteForm = ({ onSuccess, initialData }: UseReleaseNoteFormProps = {}) => {
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      version: "",
-      title: "",
-      description: "",
-      is_major: false,
-      release_date: null,
-    },
+  const form = useForm<ReleaseNoteFormValues>({
+    defaultValues: initialData
+      ? {
+          ...initialData,
+          release_date: initialData.release_date || format(new Date(), 'yyyy-MM-dd'),
+        }
+      : {
+          version: '',
+          title: '',
+          description: '',
+          is_major: false,
+          release_date: format(new Date(), 'yyyy-MM-dd'),
+        },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Form submission started with values:", values);
-    setIsLoading(true);
-    
+  const handleSubmit = async (values: ReleaseNoteFormValues) => {
+    setLoading(true);
     try {
-      // Format the release date
+      // Format date if needed
       const formattedValues = {
         ...values,
-        release_date: values.release_date ? values.release_date.toISOString() : new Date().toISOString(),
+        release_date: values.release_date instanceof Date
+          ? format(values.release_date, 'yyyy-MM-dd')
+          : values.release_date,
       };
-      
-      console.log("Creating new release note with values:", JSON.stringify(formattedValues));
-      
-      const { data, error } = await supabase
-        .from("release_notes")
-        .insert([formattedValues])
-        .select();
-        
-      if (error) {
-        console.error("Insert error details:", error);
-        throw error;
+
+      let response;
+      if (initialData?.id) {
+        // Update existing record
+        response = await supabase
+          .from('release_notes')
+          .update(formattedValues)
+          .eq('id', initialData.id);
+      } else {
+        // Create new record
+        response = await supabase
+          .from('release_notes')
+          .insert(formattedValues);
       }
-      
-      console.log("Note created successfully:", data);
+
+      if (response.error) throw response.error;
+
       toast({
-        title: "Success",
-        description: "Release note created successfully",
+        title: initialData ? 'Release note updated' : 'Release note created',
+        description: initialData
+          ? 'The release note has been updated successfully.'
+          : 'The release note has been created successfully.',
       });
-      
-      // Reset form after successful submission
+
+      if (onSuccess) onSuccess();
       form.reset();
-      
     } catch (error) {
-      console.error("Error saving release note:", error);
+      console.error('Error saving release note:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save release note: " + (error instanceof Error ? error.message : String(error)),
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to save release note. Please try again.',
       });
     } finally {
-      console.log("Setting isLoading to false");
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return {
     form,
-    isLoading,
-    onSubmit,
+    loading,
+    handleSubmit: form.handleSubmit(handleSubmit),
   };
 };
