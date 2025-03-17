@@ -34,26 +34,17 @@ export const handlePasswordReset = async (email: string) => {
   try {
     console.log('Starting password reset process for:', email);
     
-    // Create a clean base URL
-    const baseUrl = window.location.origin.replace(/:\/?$/, '');
-    
-    // Important: Don't include the token in the URL - Supabase will do this
-    // Set only the base path where the user should land after clicking the link
-    const resetUrl = `${baseUrl}/reset-password`;
-    
-    console.log('Reset URL that will be used:', resetUrl);
-    
-    // Use Supabase's built-in password reset function
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: resetUrl
+    // Using the edge function for better reliability
+    const { error } = await supabase.functions.invoke("send-password-reset", {
+      body: { email: email.trim() }
     });
 
     if (error) {
-      console.error('Error from Supabase resetPasswordForEmail:', error);
+      console.error('Error from edge function:', error);
       throw error;
     }
     
-    console.log('Password reset email sent via Supabase');
+    console.log('Password reset email sent via edge function');
     return { success: true };
   } catch (error) {
     console.error('Password reset error:', error);

@@ -5,21 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+    
     if (!email.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Email required",
-        description: "Please enter your email address to reset your password."
-      });
+      setErrorMsg("Please enter your email address to reset your password.");
       return;
     }
 
@@ -33,9 +34,9 @@ const ForgotPassword = () => {
       
       console.log("Reset URL that will be used:", resetUrl);
       
-      // Use Supabase's built-in password reset function
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: resetUrl
+      // Use Supabase edge function instead of direct auth API call
+      const { error } = await supabase.functions.invoke("send-password-reset", {
+        body: { email: email.trim() }
       });
 
       if (error) throw error;
@@ -48,11 +49,7 @@ const ForgotPassword = () => {
       navigate('/login');
     } catch (error) {
       console.error('Password reset error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not send password reset email. Please try again."
-      });
+      setErrorMsg("Could not send password reset email. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -73,6 +70,14 @@ const ForgotPassword = () => {
               Enter your email address below to begin the password reset process
             </p>
           </div>
+
+          {errorMsg && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{errorMsg}</AlertDescription>
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
