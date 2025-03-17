@@ -10,7 +10,7 @@ export interface ReleaseNoteFormValues {
   title: string;
   description: string;
   is_major: boolean;
-  release_date: Date | string;
+  release_date: string | Date;
 }
 
 interface UseReleaseNoteFormProps {

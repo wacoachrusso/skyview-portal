@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "./release-notes/FormActions";
 import { FormFields } from "./release-notes/FormFields";
-import { useReleaseNoteForm } from "./release-notes/useReleaseNoteForm";
+import { useReleaseNoteForm, ReleaseNoteFormValues } from "./release-notes/useReleaseNoteForm";
 import { Switch } from "@/components/ui/switch";
 import { EmailNotificationToggle } from "./release-notes/EmailNotificationToggle";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ interface ReleaseNoteFormProps {
 
 export const ReleaseNoteForm = ({
   onSuccess,
-  onCancel,
+  onCancel = () => {},
   initialData,
 }: ReleaseNoteFormProps) => {
   const [sendEmail, setSendEmail] = useState(false);
@@ -31,7 +31,7 @@ export const ReleaseNoteForm = ({
     initialData,
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ReleaseNoteFormValues) => {
     if (sendEmail) {
       setIsSending(true);
       try {

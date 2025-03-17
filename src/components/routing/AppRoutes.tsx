@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -43,7 +42,6 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
-// Wrapper component for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
@@ -53,7 +51,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Special wrapper for admin routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,7 +64,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log("Starting admin verification process");
         
-        // Check if we have a session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
@@ -80,7 +76,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         
         console.log("Fetching profile data for user:", session.user.id);
         
-        // Explicitly fetch profile with is_admin field
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('is_admin, email')
@@ -157,7 +152,6 @@ export function AppRoutes() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<LazyRoutes.Index />} />
         <Route path="/login" element={<LazyRoutes.Login />} />
         <Route path="/signup" element={<LazyRoutes.SignUp />} />
@@ -168,7 +162,6 @@ export function AppRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
         
-        {/* Protected routes */}
         <Route path="/chat" element={<ProtectedRoute><LazyRoutes.Chat /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><LazyRoutes.Account /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><LazyRoutes.Settings /></ProtectedRoute>} />
@@ -176,10 +169,8 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
-        {/* Admin routes with special protection */}
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
-        {/* Redirect any unknown routes to dashboard */}
         <Route path="*" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
       </Routes>
     </ErrorBoundary>
