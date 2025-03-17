@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { handlePasswordReset } from "@/utils/authUtils";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -28,18 +28,11 @@ const ForgotPassword = () => {
     try {
       console.log("Initiating password reset for:", email);
       
-      // Generate clean base URL
-      const baseUrl = window.location.origin.replace(/:\/?$/, '');
-      const resetUrl = `${baseUrl}/reset-password`;
+      const result = await handlePasswordReset(email);
       
-      console.log("Reset URL that will be used:", resetUrl);
-      
-      // Use Supabase edge function instead of direct auth API call
-      const { error } = await supabase.functions.invoke("send-password-reset", {
-        body: { email: email.trim() }
-      });
-
-      if (error) throw error;
+      if (!result.success) {
+        throw new Error(result.error || "Failed to send reset email");
+      }
       
       console.log("Password reset email sent successfully");
       toast({

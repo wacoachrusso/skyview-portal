@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordResetForm } from "@/components/auth/password-reset/PasswordResetForm";
 import { supabase } from "@/integrations/supabase/client";
-import { usePasswordResetHandler } from "@/components/auth/handlers/PasswordResetHandler";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
@@ -17,47 +16,66 @@ const ResetPassword = () => {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Extract tokens from URL
-  const accessToken = searchParams.get("access_token");
-  const refreshToken = searchParams.get("refresh_token");
-  const type = searchParams.get("type");
-  
-  const { processPasswordReset } = usePasswordResetHandler(accessToken, refreshToken);
-
+  // Extract token from URL directly (the format may differ from what we expect)
   useEffect(() => {
     const validateResetLink = async () => {
       try {
-        console.log("Validating reset link params:", { 
-          hasAccessToken: !!accessToken, 
-          hasRefreshToken: !!refreshToken, 
-          type 
-        });
-
-        // Check if this is actually a password reset flow
+        console.log("URL search params:", Object.fromEntries(searchParams.entries()));
+        
+        // Check for the type first - it should be recovery for password reset
+        const type = searchParams.get("type");
         if (type !== "recovery") {
-          console.log("Not a recovery flow, type:", type);
+          console.error("Not a recovery flow, type:", type);
           setIsError(true);
           setIsValidating(false);
           return;
         }
-
-        // Process the tokens
-        const success = await processPasswordReset();
         
-        if (!success) {
-          console.log("Password reset validation failed");
+        // Get the tokens directly from the URL
+        // Supabase auth redirects include these tokens
+        const accessToken = searchParams.get("access_token");
+        const refreshToken = searchParams.get("refresh_token");
+        
+        console.log("Tokens present:", { 
+          hasAccessToken: !!accessToken, 
+          hasRefreshToken: !!refreshToken 
+        });
+        
+        if (!accessToken || !refreshToken) {
+          console.error("Missing tokens for password reset");
           setIsError(true);
+          setIsValidating(false);
+          return;
         }
+        
+        // First ensure we're starting fresh by signing out
+        await supabase.auth.signOut();
+        console.log("Cleared existing session");
+        
+        // Set the session with the recovery tokens
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+        
+        if (sessionError) {
+          console.error("Error setting recovery session:", sessionError);
+          setIsError(true);
+          setIsValidating(false);
+          return;
+        }
+        
+        console.log("Recovery session set successfully");
+        setIsValidating(false);
       } catch (error) {
         console.error("Error validating reset link:", error);
         setIsError(true);
-      } finally {
         setIsValidating(false);
       }
     };
 
     validateResetLink();
-  }, [accessToken, refreshToken, type, processPasswordReset]);
+  }, [searchParams, toast, navigate]);
 
   const handleResetPassword = async (newPassword: string) => {
     setLoading(true);

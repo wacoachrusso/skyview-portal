@@ -38,7 +38,7 @@ const getEmailFooter = async (email: string): Promise<string> => {
 
 interface RequestBody {
   email: string;
-  resetUrl?: string;
+  redirectUrl?: string;
 }
 
 serve(async (req) => {
@@ -60,20 +60,25 @@ serve(async (req) => {
       }
     );
 
-    const { email } = await req.json() as RequestBody;
+    const { email, redirectUrl } = await req.json() as RequestBody;
 
     if (!email) {
       throw new Error("Email is required");
     }
 
     console.log("Processing password reset for email:", email);
+    console.log("Redirect URL:", redirectUrl || "not provided");
 
-    // Generate password reset link with direct redirect to reset password page
+    // Use the redirect URL if provided, otherwise use a default
+    const finalRedirectUrl = redirectUrl || 'https://www.skyguide.site/reset-password';
+    console.log("Final redirect URL:", finalRedirectUrl);
+
+    // Generate password reset link with redirect to reset password page
     const { data, error: resetError } = await supabaseClient.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: 'https://www.skyguide.site/reset-password'
+        redirectTo: finalRedirectUrl
       }
     });
 

@@ -34,9 +34,18 @@ export const handlePasswordReset = async (email: string) => {
   try {
     console.log('Starting password reset process for:', email);
     
-    // Using the edge function for better reliability
+    // Get the origin without any trailing colons
+    const baseUrl = window.location.origin.replace(/:\/?$/, '');
+    const redirectUrl = `${baseUrl}/reset-password`;
+    
+    console.log('Reset redirect URL:', redirectUrl);
+    
+    // Using the edge function for better reliability and custom emails
     const { error } = await supabase.functions.invoke("send-password-reset", {
-      body: { email: email.trim() }
+      body: { 
+        email: email.trim(),
+        redirectUrl
+      }
     });
 
     if (error) {

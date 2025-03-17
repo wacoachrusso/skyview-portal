@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +17,6 @@ export const usePasswordResetHandler = (accessToken: string | null, refreshToken
         title: "Invalid reset link",
         description: "The password reset link is invalid or has expired."
       });
-      navigate('/login', { replace: true });
       return false;
     }
 
@@ -38,7 +38,6 @@ export const usePasswordResetHandler = (accessToken: string | null, refreshToken
           title: "Reset link expired",
           description: "Please request a new password reset link."
         });
-        navigate('/login', { replace: true });
         return false;
       }
 
@@ -51,7 +50,6 @@ export const usePasswordResetHandler = (accessToken: string | null, refreshToken
         title: "Error",
         description: "An error occurred during password reset. Please try again."
       });
-      navigate('/login', { replace: true });
       return false;
     }
   };
