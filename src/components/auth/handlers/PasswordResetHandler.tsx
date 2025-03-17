@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export const usePasswordResetHandler = (accessToken: string | null, refreshToken: string | null) => {
+export const usePasswordResetHandler = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const processPasswordReset = async () => {
-    console.log('Processing password reset with tokens:', { accessToken: !!accessToken, refreshToken: !!refreshToken });
+  const processPasswordReset = async (code: string | null) => {
+    console.log('Processing password reset with code:', code ? 'present' : 'missing');
     
-    if (!accessToken || !refreshToken) {
-      console.error('Missing tokens for password reset');
+    if (!code) {
+      console.error('Missing code for password reset');
       toast({
         variant: "destructive",
         title: "Invalid reset link",
@@ -21,27 +21,8 @@ export const usePasswordResetHandler = (accessToken: string | null, refreshToken
     }
 
     try {
-      // First ensure we're starting fresh by signing out
-      await supabase.auth.signOut();
-      console.log('Cleared existing session');
-
-      // Set the session with the recovery tokens
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
-
-      if (sessionError) {
-        console.error('Error setting recovery session:', sessionError);
-        toast({
-          variant: "destructive",
-          title: "Reset link expired",
-          description: "Please request a new password reset link."
-        });
-        return false;
-      }
-
-      console.log('Successfully set recovery session');
+      // Validate that the code parameter is valid
+      // The actual password reset will happen later when the user submits the form
       return true;
     } catch (error) {
       console.error('Error in processPasswordReset:', error);

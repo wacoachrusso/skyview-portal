@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const handleEmailVerification = async (email: string) => {
@@ -33,14 +34,17 @@ export const handlePasswordReset = async (email: string) => {
   try {
     console.log('Starting password reset process for:', email);
     
+    // Clean up the email input
+    const cleanEmail = email.trim().toLowerCase();
+    
     // Get the origin without any trailing colons
     const baseUrl = window.location.origin.replace(/:\/?$/, '');
     const redirectUrl = `${baseUrl}/reset-password`;
     
     console.log('Reset redirect URL:', redirectUrl);
     
-    // Using the edge function for better reliability and custom emails
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // Call Supabase's built-in password reset function
+    const { data, error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: redirectUrl
     });
 
@@ -49,7 +53,7 @@ export const handlePasswordReset = async (email: string) => {
       throw error;
     }
     
-    console.log('Password reset email sent via Supabase auth');
+    console.log('Password reset email sent successfully:', data);
     return { success: true };
   } catch (error) {
     console.error('Password reset error:', error);

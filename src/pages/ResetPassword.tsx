@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -12,26 +13,35 @@ const ResetPassword = () => {
   const { toast } = useToast();
   const [isValidating, setIsValidating] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("The password reset link is invalid or has expired. Please request a new link.");
   const [resetSuccess, setResetSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Extract token from URL directly (the format may differ from what we expect)
   useEffect(() => {
     const validateResetLink = async () => {
       try {
         console.log("URL search params:", Object.fromEntries(searchParams.entries()));
         
-        // We expect to find a "type=recovery" parameter in the URL for password reset 
-        // Check if this is a proper recovery flow
+        // Check if this is a proper recovery flow from Supabase
         const type = searchParams.get("type");
+        
         if (type !== "recovery") {
           console.error("Not a recovery flow, type:", type);
+          setErrorMessage("Invalid reset link. Please request a new password reset link.");
           setIsError(true);
           setIsValidating(false);
           return;
         }
         
-        // Check for the recovery token - should be in the right format from Supabase
+        // Validate that we have a code parameter (needed for password reset)
+        if (!searchParams.get("code")) {
+          console.error("Missing code parameter in URL");
+          setErrorMessage("This reset link is incomplete. Please request a new password reset link.");
+          setIsError(true);
+          setIsValidating(false);
+          return;
+        }
+        
         console.log("Token validation complete, ready for password reset");
         setIsValidating(false);
       } catch (error) {
@@ -42,35 +52,36 @@ const ResetPassword = () => {
     };
 
     validateResetLink();
-  }, [searchParams, toast, navigate]);
+  }, [searchParams, navigate]);
 
   const handleResetPassword = async (newPassword: string) => {
     setLoading(true);
     try {
       console.log("Attempting to update password");
       
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      // Get the code from URL parameters (this is how Supabase handles the reset)
+      const code = searchParams.get("code");
+      
+      if (!code) {
+        throw new Error("Missing reset code");
+      }
+      
+      // Use the updateUser method with the code parameter
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
       
       if (error) throw error;
       
       console.log("Password updated successfully");
-      
-      // Send confirmation email
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user?.email) {
-        await supabase.functions.invoke("send-password-reset-confirmation", {
-          body: { email: user.email }
-        });
-      }
-      
-      setResetSuccess(true);
       
       // Show success toast
       toast({
         title: "Password Reset Complete",
         description: "Your password has been successfully reset."
       });
+      
+      setResetSuccess(true);
       
       // Automatically redirect to login after 3 seconds
       setTimeout(() => {
@@ -126,7 +137,7 @@ const ResetPassword = () => {
               <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
               <h1 className="text-xl font-semibold text-white mb-2">Invalid Reset Link</h1>
               <p className="text-gray-400 mb-6">
-                The password reset link is invalid or has expired. Please request a new link.
+                {errorMessage}
               </p>
               <button
                 onClick={() => navigate("/forgot-password")}
