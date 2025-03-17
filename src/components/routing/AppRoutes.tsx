@@ -1,5 +1,6 @@
+
 import { Route, Routes } from "react-router-dom";
-import { AuthCallback } from "@/components/auth/AuthCallback";
+import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
 import { ErrorBoundary } from "react-error-boundary";
 import { Button } from "@/components/ui/button";

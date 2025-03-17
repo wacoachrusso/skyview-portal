@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 
-interface ReleaseNoteFormValues {
+export interface ReleaseNoteFormValues {
   version: string;
   title: string;
   description: string;

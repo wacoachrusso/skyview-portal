@@ -15,10 +15,20 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const token = searchParams.get('token');
+  // We need to look for multiple possible token parameters
+  // Supabase might use different param names in different contexts
+  const getToken = () => {
+    const token = searchParams.get('token') || 
+                 searchParams.get('token_hash') || 
+                 window.location.hash.substring(1);
+    console.log('Token detected:', token ? 'Yes (hidden for security)' : 'No');
+    return token;
+  };
 
   useEffect(() => {
     const validateToken = async () => {
+      const token = getToken();
+      
       if (!token) {
         console.error('No reset token provided');
         toast({
@@ -31,15 +41,14 @@ const ResetPassword = () => {
       }
 
       try {
-        const tokenHash = token.split('#')[1] || token;
-        console.log('Verifying token hash:', tokenHash);
+        console.log('Verifying token...');
 
         // First ensure we're starting fresh
         await supabase.auth.signOut();
 
         // Verify the recovery token
         const { data, error } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
+          token_hash: token,
           type: 'recovery'
         });
 
@@ -68,10 +77,10 @@ const ResetPassword = () => {
     };
 
     validateToken();
-  }, [token, navigate, toast]);
+  }, [navigate, toast]);
 
   const handlePasswordReset = async (newPassword: string) => {
-    if (!token) return;
+    if (!getToken()) return;
 
     setLoading(true);
     try {

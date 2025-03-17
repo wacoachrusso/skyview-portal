@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { handlePasswordReset } from "@/utils/auth/sessionHandler";
+import { supabase } from "@/integrations/supabase/client";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -26,18 +26,26 @@ const ForgotPassword = () => {
     setLoading(true);
     try {
       console.log("Initiating password reset for:", email);
-      const { success, error } = await handlePasswordReset(email.trim());
       
-      if (success) {
-        console.log("Password reset email sent successfully");
-        toast({
-          title: "Check your email",
-          description: "We've sent you a password reset link."
-        });
-        navigate('/login');
-      } else {
-        throw new Error(error);
-      }
+      // Generate clean base URL
+      const baseUrl = window.location.origin.replace(/:\/?$/, '');
+      const resetUrl = `${baseUrl}/reset-password`;
+      
+      console.log("Reset URL that will be used:", resetUrl);
+      
+      // Use Supabase's built-in password reset function
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: resetUrl
+      });
+
+      if (error) throw error;
+      
+      console.log("Password reset email sent successfully");
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link."
+      });
+      navigate('/login');
     } catch (error) {
       console.error('Password reset error:', error);
       toast({
