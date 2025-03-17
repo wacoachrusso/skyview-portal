@@ -70,7 +70,7 @@ serve(async (req) => {
     console.log("Redirect URL:", redirectUrl || "not provided");
 
     // Use the redirect URL if provided, otherwise use a default
-    const finalRedirectUrl = redirectUrl || 'https://www.skyguide.site/reset-password';
+    const finalRedirectUrl = redirectUrl || `${new URL(Deno.env.get('SUPABASE_URL') || '').origin}/reset-password`;
     console.log("Final redirect URL:", finalRedirectUrl);
 
     // Generate password reset link with redirect to reset password page
