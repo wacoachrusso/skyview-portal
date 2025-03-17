@@ -43,13 +43,16 @@ export const handlePasswordReset = async (email: string) => {
     
     console.log('Reset redirect URL:', redirectUrl);
     
-    // Call Supabase's built-in password reset function
-    const { data, error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: redirectUrl
+    // Use our custom edge function instead of Supabase's built-in reset
+    const { data, error } = await supabase.functions.invoke('send-password-reset', {
+      body: { 
+        email: cleanEmail,
+        redirectUrl
+      }
     });
 
     if (error) {
-      console.error('Error from Supabase auth:', error);
+      console.error('Error from edge function:', error);
       throw error;
     }
     
