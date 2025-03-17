@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const handleEmailVerification = async (email: string) => {
@@ -41,19 +40,16 @@ export const handlePasswordReset = async (email: string) => {
     console.log('Reset redirect URL:', redirectUrl);
     
     // Using the edge function for better reliability and custom emails
-    const { error } = await supabase.functions.invoke("send-password-reset", {
-      body: { 
-        email: email.trim(),
-        redirectUrl
-      }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl
     });
 
     if (error) {
-      console.error('Error from edge function:', error);
+      console.error('Error from Supabase auth:', error);
       throw error;
     }
     
-    console.log('Password reset email sent via edge function');
+    console.log('Password reset email sent via Supabase auth');
     return { success: true };
   } catch (error) {
     console.error('Password reset error:', error);

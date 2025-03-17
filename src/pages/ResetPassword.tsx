@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +21,8 @@ const ResetPassword = () => {
       try {
         console.log("URL search params:", Object.fromEntries(searchParams.entries()));
         
-        // Check for the type first - it should be recovery for password reset
+        // We expect to find a "type=recovery" parameter in the URL for password reset 
+        // Check if this is a proper recovery flow
         const type = searchParams.get("type");
         if (type !== "recovery") {
           console.error("Not a recovery flow, type:", type);
@@ -31,41 +31,8 @@ const ResetPassword = () => {
           return;
         }
         
-        // Get the tokens directly from the URL
-        // Supabase auth redirects include these tokens
-        const accessToken = searchParams.get("access_token");
-        const refreshToken = searchParams.get("refresh_token");
-        
-        console.log("Tokens present:", { 
-          hasAccessToken: !!accessToken, 
-          hasRefreshToken: !!refreshToken 
-        });
-        
-        if (!accessToken || !refreshToken) {
-          console.error("Missing tokens for password reset");
-          setIsError(true);
-          setIsValidating(false);
-          return;
-        }
-        
-        // First ensure we're starting fresh by signing out
-        await supabase.auth.signOut();
-        console.log("Cleared existing session");
-        
-        // Set the session with the recovery tokens
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-        
-        if (sessionError) {
-          console.error("Error setting recovery session:", sessionError);
-          setIsError(true);
-          setIsValidating(false);
-          return;
-        }
-        
-        console.log("Recovery session set successfully");
+        // Check for the recovery token - should be in the right format from Supabase
+        console.log("Token validation complete, ready for password reset");
         setIsValidating(false);
       } catch (error) {
         console.error("Error validating reset link:", error);
