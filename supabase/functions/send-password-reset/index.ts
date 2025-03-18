@@ -42,6 +42,7 @@ interface RequestBody {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -63,7 +64,7 @@ serve(async (req) => {
       throw new Error("Missing required environment variables");
     }
     
-    const supabaseClient = createClient(
+    const supabaseAdmin = createClient(
       supabaseUrl,
       supabaseServiceKey,
       {
@@ -86,13 +87,20 @@ serve(async (req) => {
     console.log("Processing password reset for email:", email);
     console.log("Redirect URL:", redirectUrl || "not provided");
 
-    // Use the redirect URL if provided, otherwise use a default
-    // Use absolute URL for clarity
-    const finalRedirectUrl = redirectUrl || "https://www.skyguide.site/reset-password";
+    // Make sure we always have a fully qualified redirect URL
+    // If redirectUrl is not provided or is relative, make it absolute
+    let finalRedirectUrl = redirectUrl;
+    
+    if (!finalRedirectUrl || !finalRedirectUrl.startsWith('http')) {
+      const host = req.headers.get('host') || 'skyguide.site';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      finalRedirectUrl = `${protocol}://${host.replace(/:\d+$/, '')}/reset-password`;
+    }
+    
     console.log("Final redirect URL:", finalRedirectUrl);
 
     // Generate password reset link with redirect to reset password page
-    const { data, error: resetError } = await supabaseClient.auth.admin.generateLink({
+    const { data, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
@@ -105,7 +113,7 @@ serve(async (req) => {
       throw resetError;
     }
 
-    if (!data.properties?.action_link) {
+    if (!data || !data.properties || !data.properties.action_link) {
       throw new Error("No reset link generated");
     }
 

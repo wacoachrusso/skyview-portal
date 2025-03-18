@@ -39,11 +39,11 @@ const ForgotPassword = () => {
       setEmailSent(true);
       toast({
         title: "Check your email",
-        description: "We've sent you a password reset link."
+        description: "We've sent you a password reset link. Please check both your inbox and spam folder."
       });
     } catch (error) {
       console.error('Password reset error:', error);
-      setErrorMsg("Could not send password reset email. Please try again or contact support if the issue persists.");
+      setErrorMsg("Could not send password reset email. Please ensure you've entered the correct email and try again, or contact support if the issue persists.");
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ const ForgotPassword = () => {
               </Alert>
               
               <p className="text-sm text-gray-400">
-                Didn't receive the email? Check your spam folder or try again.
+                Didn't receive the email? Check your spam folder or try again in a few minutes.
               </p>
               
               <Button 
