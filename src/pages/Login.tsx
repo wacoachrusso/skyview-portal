@@ -20,8 +20,8 @@ const Login = () => {
     const { data } = await supabase.auth.getSession();
     
     if (data.session) {
-      console.log("Session found, redirecting to dashboard");
-      navigate("/dashboard");
+      console.log("Session found, redirecting to chat");
+      navigate("/chat");
     } else {
       console.log("Session check result: No session");
     }
@@ -63,7 +63,7 @@ const Login = () => {
             title: "Welcome back!",
             description: "You've successfully signed in."
           });
-          navigate("/dashboard");
+          navigate("/chat");
         }
       }
     } catch (error) {
