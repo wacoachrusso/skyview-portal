@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ export const useGoogleAuth = () => {
     fetchSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
       setSession(session);
     });
 
@@ -30,6 +32,7 @@ export const useGoogleAuth = () => {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
+      console.log("Initiating Google sign in...");
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -43,14 +46,18 @@ export const useGoogleAuth = () => {
       });
 
       if (error) {
+        console.error("Google sign in error:", error);
         toast({
           variant: "destructive",
           title: "Sign In Failed",
           description: error.message || "Failed to sign in with Google.",
         });
         navigate("/login");
+      } else {
+        console.log("Google sign in initiated, awaiting redirect...");
       }
     } catch (error) {
+      console.error("Unexpected error during Google sign in:", error);
       toast({
         variant: "destructive",
         title: "Sign In Error",
@@ -63,9 +70,21 @@ export const useGoogleAuth = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    navigate("/login");
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+      setSession(null);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign Out Error",
+        description: "Failed to sign out. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return { handleGoogleSignIn, handleSignOut, loading, session };

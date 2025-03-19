@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +67,7 @@ export const GoogleAuthHandler = () => {
         // If profile exists and is complete, redirect to chat
         if (profile?.user_type && profile?.airline) {
           console.log('Profile is complete, redirecting to chat');
-          navigate('/chat');
+          navigate('/chat', { replace: true });
           return;
         }
 
@@ -97,5 +98,13 @@ export const GoogleAuthHandler = () => {
     handleAuthCallback();
   }, [navigate, toast]);
 
- 
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-luxury-dark">
+      <div className="relative">
+        {/* Loading indicator with glow */}
+        <div className="absolute -inset-4 bg-gradient-to-r from-brand-purple/30 to-brand-gold/30 rounded-full blur-xl opacity-50 animate-pulse-subtle" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent relative" />
+      </div>
+    </div>
+  );
 };
