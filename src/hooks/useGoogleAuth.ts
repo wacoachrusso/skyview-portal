@@ -39,7 +39,7 @@ export const useGoogleAuth = () => {
       setLoading(true);
       console.log("Initiating Google sign in...");
 
-      // Clear any existing session
+      // Clear any existing session data to avoid conflicts
       localStorage.removeItem('session_token');
       
       const { error } = await supabase.auth.signInWithOAuth({
