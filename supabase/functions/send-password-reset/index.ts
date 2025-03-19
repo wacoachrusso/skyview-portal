@@ -87,15 +87,10 @@ serve(async (req) => {
     console.log("Processing password reset for email:", email);
     console.log("Redirect URL:", redirectUrl || "not provided");
 
-    // Make sure we always have a fully qualified redirect URL
-    // If redirectUrl is not provided or is relative, make it absolute
-    let finalRedirectUrl = redirectUrl;
-    
-    if (!finalRedirectUrl || !finalRedirectUrl.startsWith('http')) {
-      const host = req.headers.get('host') || 'skyguide.site';
-      const protocol = host.includes('localhost') ? 'http' : 'https';
-      finalRedirectUrl = `${protocol}://${host.replace(/:\d+$/, '')}/reset-password`;
-    }
+    // IMPORTANT: Always use a full, absolute URL for the redirectTo parameter
+    // This ensures the email link will work properly when clicked
+    const websiteUrl = "https://skyguide.site";
+    const finalRedirectUrl = redirectUrl || `${websiteUrl}/reset-password`;
     
     console.log("Final redirect URL:", finalRedirectUrl);
 
