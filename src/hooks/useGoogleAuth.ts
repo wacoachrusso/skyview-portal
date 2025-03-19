@@ -25,7 +25,7 @@ export const useGoogleAuth = () => {
       
       // If user signs in, we'll let the GoogleAuthHandler component handle the redirect
       if (event === 'SIGNED_IN' && window.location.pathname !== '/auth/callback') {
-        navigate('/auth/callback');
+        navigate('/auth/callback', { replace: true });
       }
     });
 
@@ -78,7 +78,7 @@ export const useGoogleAuth = () => {
       await supabase.auth.signOut();
       setSession(null);
       localStorage.clear(); // Clear any stored session data
-      navigate("/login");
+      navigate("/login", { replace: true });
       toast({
         title: "Signed Out",
         description: "You have been successfully signed out.",

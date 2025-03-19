@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { createNewSession } from "@/hooks/session/useSessionCreation";
+import { createNewSession } from "@/services/sessionService";
 
 export const GoogleAuthHandler = () => {
   const navigate = useNavigate();
@@ -109,6 +109,7 @@ export const GoogleAuthHandler = () => {
           });
           navigate('/signup', {
             state: { userId: session.user.id, email, fullName, isGoogleSignIn: true },
+            replace: true
           });
           return;
         }
@@ -121,6 +122,7 @@ export const GoogleAuthHandler = () => {
         });
         navigate('/signup', {
           state: { userId: session.user.id, email, fullName, isGoogleSignIn: true },
+          replace: true
         });
         
       } catch (error) {

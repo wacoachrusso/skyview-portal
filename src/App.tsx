@@ -8,6 +8,7 @@ import { Suspense, useEffect } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +22,7 @@ const queryClient = new QueryClient({
 // Component to handle initial session check and redirect
 function InitialSessionCheck() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   useEffect(() => {
     const checkInitialSession = async () => {
@@ -62,7 +64,7 @@ function InitialSessionCheck() {
     };
     
     checkInitialSession();
-  }, [navigate]);
+  }, [navigate, toast]);
   
   return null;
 }
