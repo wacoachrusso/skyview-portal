@@ -97,11 +97,12 @@ serve(async (req) => {
     console.log("Final redirect URL:", finalRedirectUrl);
 
     // Generate password reset link with redirect to reset password page
+    // Include the email parameter in the redirect URL
     const { data, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: finalRedirectUrl
+        redirectTo: `${finalRedirectUrl}?email=${encodeURIComponent(email)}`
       }
     });
 

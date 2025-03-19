@@ -46,10 +46,21 @@ const ResetPassword = () => {
           return;
         }
         
-        // Verify the token is valid
+        // Verify the token is valid - updated to use the correct parameter structure
+        // We need to get the user's email from the URL too, as it's required for OTP verification
+        const email = searchParams.get("email");
+        if (!email) {
+          console.error("Missing email parameter in URL");
+          setErrorMessage("This reset link is missing required information. Please request a new password reset link.");
+          setIsError(true);
+          setIsValidating(false);
+          return;
+        }
+        
         const { error } = await supabase.auth.verifyOtp({
           type: 'recovery',
-          token: code
+          token: code,
+          email: email
         });
         
         if (error) {
