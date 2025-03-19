@@ -22,12 +22,17 @@ export const useGoogleAuth = () => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
       setSession(session);
+      
+      // If user signs in, we'll let the GoogleAuthHandler component handle the redirect
+      if (event === 'SIGNED_IN' && window.location.pathname !== '/auth/callback') {
+        navigate('/auth/callback');
+      }
     });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -52,7 +57,6 @@ export const useGoogleAuth = () => {
           title: "Sign In Failed",
           description: error.message || "Failed to sign in with Google.",
         });
-        navigate("/login");
       } else {
         console.log("Google sign in initiated, awaiting redirect...");
       }
@@ -63,7 +67,6 @@ export const useGoogleAuth = () => {
         title: "Sign In Error",
         description: "An unexpected error occurred. Please try again.",
       });
-      navigate("/login");
     } finally {
       setLoading(false);
     }
@@ -74,7 +77,12 @@ export const useGoogleAuth = () => {
       setLoading(true);
       await supabase.auth.signOut();
       setSession(null);
+      localStorage.clear(); // Clear any stored session data
       navigate("/login");
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
     } catch (error) {
       console.error("Error signing out:", error);
       toast({

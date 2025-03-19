@@ -29,8 +29,32 @@ function InitialSessionCheck() {
         const { data } = await supabase.auth.getSession();
         
         if (data.session) {
-          console.log("Initial session found, redirecting to chat");
-          navigate('/chat', { replace: true });
+          console.log("Initial session found, checking if profile is complete");
+          
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_type, airline')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+            
+          if (profile?.user_type && profile?.airline) {
+            console.log("Profile is complete, redirecting to chat");
+            navigate('/chat', { replace: true });
+          } else if (profile) {
+            console.log("Profile exists but is incomplete, redirecting to signup");
+            navigate('/signup', { 
+              state: { 
+                userId: data.session.user.id, 
+                email: data.session.user.email, 
+                fullName: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || "", 
+                isGoogleSignIn: true 
+              },
+              replace: true
+            });
+          } else {
+            console.log("No profile found, redirecting to login");
+            navigate('/login', { replace: true });
+          }
         }
       } catch (error) {
         console.error("Error checking initial session:", error);

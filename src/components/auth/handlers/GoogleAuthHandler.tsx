@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createNewSession } from "@/hooks/session/useSessionCreation";
 
 export const GoogleAuthHandler = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export const GoogleAuthHandler = () => {
             variant: "destructive",
             title: "Authentication Failed",
             description: sessionError.message || "Failed to authenticate with Google.",
-            duration:30000
+            duration: 30000
           });
           navigate('/login');
           return;
@@ -37,6 +38,9 @@ export const GoogleAuthHandler = () => {
         console.log('Session found for user:', session.user.email);
         console.log('User ID:', session.user.id);
 
+        // Create a new session to ensure session token is set
+        await createNewSession(session.user.id);
+
         // Extract user data from the session
         const { email, user_metadata } = session.user;
         const fullName = user_metadata?.full_name || user_metadata?.name || "";
@@ -44,7 +48,7 @@ export const GoogleAuthHandler = () => {
         // Check if the user has a profile in the profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('user_type, airline')
+          .select('user_type, airline, id')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -55,7 +59,7 @@ export const GoogleAuthHandler = () => {
             variant: "destructive",
             title: "Profile Error",
             description: `Failed to fetch user profile: ${profileError.message}`,
-            duration:30000
+            duration: 30000
           });
           navigate('/login');
           return;
@@ -71,14 +75,52 @@ export const GoogleAuthHandler = () => {
           return;
         }
 
-        // If profile does not exist or is incomplete, redirect to signup
+        // If profile does not exist, create it
+        if (!profile) {
+          console.log('Profile does not exist, creating profile');
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: session.user.id,
+              email: email,
+              full_name: fullName,
+              subscription_plan: 'free',
+              email_notifications: true,
+              push_notifications: true,
+              account_status: 'active'
+            });
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            toast({
+              variant: "destructive",
+              title: "Profile Creation Error",
+              description: createError.message || "Failed to create your profile.",
+              duration: 30000
+            });
+            navigate('/login');
+            return;
+          }
+          
+          // If profile was created, redirect to signup to complete profile
+          toast({
+            title: "Welcome!",
+            description: "Please complete your profile to get started."
+          });
+          navigate('/signup', {
+            state: { userId: session.user.id, email, fullName, isGoogleSignIn: true },
+          });
+          return;
+        }
+
+        // If profile exists but is incomplete, redirect to signup
         console.log('Profile is incomplete, redirecting to signup');
         toast({
           title: "Welcome!",
           description: "Please complete your profile to get started."
         });
         navigate('/signup', {
-          state: { userId: session.user.id, email, fullName, isGoogleSignIn: true }, // Pass user data and Google sign-in flag
+          state: { userId: session.user.id, email, fullName, isGoogleSignIn: true },
         });
         
       } catch (error) {
@@ -87,7 +129,7 @@ export const GoogleAuthHandler = () => {
           variant: "destructive",
           title: "Authentication Error",
           description: error.message || "An unexpected error occurred. Please try again.",
-          duration:30000
+          duration: 30000
         });
         navigate('/login');
       } finally {
