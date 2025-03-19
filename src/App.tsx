@@ -9,6 +9,7 @@ import { LazyMotion, domAnimation } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { createNewSession } from "@/services/sessionService";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +34,13 @@ function InitialSessionCheck() {
         if (data.session) {
           console.log("Initial session found, checking if profile is complete");
           
+          // Try to get or create a session token
+          const sessionToken = localStorage.getItem('session_token');
+          if (!sessionToken) {
+            console.log("No session token found, creating new session");
+            await createNewSession(data.session.user.id);
+          }
+          
           const { data: profile } = await supabase
             .from('profiles')
             .select('user_type, airline')
@@ -53,7 +61,7 @@ function InitialSessionCheck() {
               },
               replace: true
             });
-          } else {
+          } else if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
             console.log("No profile found, redirecting to login");
             navigate('/login', { replace: true });
           }

@@ -25,13 +25,13 @@ export const GoogleAuthHandler = () => {
             description: sessionError.message || "Failed to authenticate with Google.",
             duration: 30000
           });
-          navigate('/login');
+          navigate('/login', { replace: true });
           return;
         }
 
         if (!session?.user) {
           console.log('No session found');
-          navigate('/login');
+          navigate('/login', { replace: true });
           return;
         }
 
@@ -52,7 +52,6 @@ export const GoogleAuthHandler = () => {
           .eq('id', session.user.id)
           .maybeSingle();
 
-        // Handle profile fetch errors (excluding "No rows found" error)
         if (profileError && profileError.code !== 'PGRST116') {
           console.error('Profile error:', profileError);
           toast({
@@ -61,16 +60,19 @@ export const GoogleAuthHandler = () => {
             description: `Failed to fetch user profile: ${profileError.message}`,
             duration: 30000
           });
-          navigate('/login');
+          navigate('/login', { replace: true });
           return;
         }
 
-        // Debug: Log the profile data
         console.log("Profile data:", profile);
 
         // If profile exists and is complete, redirect to chat
         if (profile?.user_type && profile?.airline) {
           console.log('Profile is complete, redirecting to chat');
+          toast({
+            title: "Welcome back!",
+            description: "You've successfully signed in."
+          });
           navigate('/chat', { replace: true });
           return;
         }
@@ -98,11 +100,10 @@ export const GoogleAuthHandler = () => {
               description: createError.message || "Failed to create your profile.",
               duration: 30000
             });
-            navigate('/login');
+            navigate('/login', { replace: true });
             return;
           }
           
-          // If profile was created, redirect to signup to complete profile
           toast({
             title: "Welcome!",
             description: "Please complete your profile to get started."
@@ -133,7 +134,7 @@ export const GoogleAuthHandler = () => {
           description: error.message || "An unexpected error occurred. Please try again.",
           duration: 30000
         });
-        navigate('/login');
+        navigate('/login', { replace: true });
       } finally {
         setIsProcessing(false);
       }
