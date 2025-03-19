@@ -87,10 +87,12 @@ serve(async (req) => {
     console.log("Processing password reset for email:", email);
     console.log("Redirect URL:", redirectUrl || "not provided");
 
-    // IMPORTANT: Always use a full, absolute URL for the redirectTo parameter
-    // This ensures the email link will work properly when clicked
-    const websiteUrl = "https://skyguide.site";
-    const finalRedirectUrl = redirectUrl || `${websiteUrl}/reset-password`;
+    // Get the Site URL from environment or use a fallback domain
+    const siteUrl = Deno.env.get("SITE_URL") || "https://skyguide.site";
+    // Ensure we use an absolute URL for the reset password page
+    const resetPasswordPath = "/reset-password";
+    // Combine to get the final redirect URL
+    const finalRedirectUrl = `${siteUrl}${resetPasswordPath}`;
     
     console.log("Final redirect URL:", finalRedirectUrl);
 
@@ -112,6 +114,7 @@ serve(async (req) => {
       throw new Error("No reset link generated");
     }
 
+    // Log the entire action link for debugging
     console.log("Reset link generated:", data.properties.action_link);
     
     const emailFooter = await getEmailFooter(email);

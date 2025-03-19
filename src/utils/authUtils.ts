@@ -37,10 +37,15 @@ export const handlePasswordReset = async (email: string) => {
     // Clean up the email input
     const cleanEmail = email.trim().toLowerCase();
     
-    // Use a hardcoded website URL to ensure it's always absolute
-    // This is critical for the password reset link to work properly
-    const websiteUrl = window.location.origin;
-    const redirectUrl = `${websiteUrl}/reset-password`;
+    // Make sure we have a complete, valid URL for reset
+    // First try to get origin (which includes protocol and domain)
+    const websiteOrigin = window.location.origin;
+    
+    // Make sure there's no trailing slash
+    const baseUrl = websiteOrigin.replace(/\/$/, '');
+    
+    // Construct full reset URL path
+    const redirectUrl = `${baseUrl}/reset-password`;
     
     console.log('Reset redirect URL:', redirectUrl);
     

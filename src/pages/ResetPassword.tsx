@@ -6,6 +6,7 @@ import { PasswordResetForm } from "@/components/auth/password-reset/PasswordRese
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -20,10 +21,13 @@ const ResetPassword = () => {
   useEffect(() => {
     const validateResetLink = async () => {
       try {
-        console.log("URL search params:", Object.fromEntries(searchParams.entries()));
+        // Log all search params for debugging
+        const paramEntries = Object.fromEntries(searchParams.entries());
+        console.log("URL search params:", paramEntries);
         
-        // Check if this is a proper recovery flow from Supabase
+        // Check for token/code in the URL
         const type = searchParams.get("type");
+        const code = searchParams.get("code");
         
         if (type !== "recovery") {
           console.error("Not a recovery flow, type:", type);
@@ -34,9 +38,23 @@ const ResetPassword = () => {
         }
         
         // Validate that we have a code parameter (needed for password reset)
-        if (!searchParams.get("code")) {
+        if (!code) {
           console.error("Missing code parameter in URL");
           setErrorMessage("This reset link is incomplete. Please request a new password reset link.");
+          setIsError(true);
+          setIsValidating(false);
+          return;
+        }
+        
+        // Verify the token is valid
+        const { error } = await supabase.auth.verifyOtp({
+          type: 'recovery',
+          token: code
+        });
+        
+        if (error) {
+          console.error("Error verifying recovery token:", error);
+          setErrorMessage("The password reset link is invalid or has expired. Please request a new link.");
           setIsError(true);
           setIsValidating(false);
           return;
@@ -59,14 +77,7 @@ const ResetPassword = () => {
     try {
       console.log("Attempting to update password");
       
-      // Get the code from URL parameters (this is how Supabase handles the reset)
-      const code = searchParams.get("code");
-      
-      if (!code) {
-        throw new Error("Missing reset code");
-      }
-      
-      // Use the updateUser method with the code parameter
+      // Use the updateUser method to set the new password
       const { error } = await supabase.auth.updateUser({ 
         password: newPassword 
       });
@@ -139,12 +150,12 @@ const ResetPassword = () => {
               <p className="text-gray-400 mb-6">
                 {errorMessage}
               </p>
-              <button
+              <Button
                 onClick={() => navigate("/forgot-password")}
                 className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold py-2 px-4 rounded"
               >
                 Request New Link
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -168,12 +179,12 @@ const ResetPassword = () => {
               <p className="text-gray-400 mb-6">
                 Your password has been successfully reset. You'll be redirected to the login page shortly.
               </p>
-              <button
+              <Button
                 onClick={() => navigate("/login")}
                 className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold py-2 px-4 rounded"
               >
                 Go to Login
-              </button>
+              </Button>
             </div>
           </div>
         </div>
