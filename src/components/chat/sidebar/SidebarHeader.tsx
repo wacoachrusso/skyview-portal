@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { ChatSettings } from "../ChatSettings";
@@ -24,7 +23,7 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate('/', { replace: true });
+    navigate('/', { state: { fromChat: true } });
   };
 
   return (

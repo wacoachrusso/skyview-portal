@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 
 export const DashboardLogo = () => {
@@ -6,7 +5,7 @@ export const DashboardLogo = () => {
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate('/', { replace: true });
+    navigate('/', { state: { fromDashboard: true } });
   };
 
   return (

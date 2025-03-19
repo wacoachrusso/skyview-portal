@@ -21,7 +21,7 @@ const Login = () => {
     
     if (data.session) {
       console.log("Session found, redirecting to chat");
-      navigate("/chat", { replace: true });
+      navigate("/chat");
     } else {
       console.log("Session check result: No session");
     }
@@ -63,7 +63,7 @@ const Login = () => {
             title: "Welcome back!",
             description: "You've successfully signed in."
           });
-          navigate("/chat", { replace: true });
+          navigate("/chat");
         }
       }
     } catch (error) {
@@ -121,6 +121,6 @@ const Login = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Login;
