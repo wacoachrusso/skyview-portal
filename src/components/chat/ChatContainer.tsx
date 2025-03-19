@@ -1,3 +1,4 @@
+
 import { Message } from "@/types/chat";
 import { ChatList } from "./ChatList";
 import { WelcomeMessage } from "./WelcomeMessage";
@@ -21,7 +22,7 @@ export function ChatContainer({
   const showWelcomeMessage = messages.length === 0 && !isLoading;
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 h-full overflow-hidden">
       {showWelcomeMessage ? (
         <WelcomeMessage />
       ) : (

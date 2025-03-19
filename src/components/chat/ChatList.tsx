@@ -2,6 +2,7 @@
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatListProps {
   messages: Message[];
@@ -12,7 +13,6 @@ interface ChatListProps {
 
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -21,13 +21,8 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    // Determine if we should auto-scroll
-    const shouldAutoScroll = 
-      // Auto-scroll if there are new messages
-      messages.length > previousMessagesLengthRef.current ||
-      // Or if we're at the bottom already (within 100px)
-      (containerRef.current && 
-       containerRef.current.scrollHeight - containerRef.current.scrollTop - containerRef.current.clientHeight < 100);
+    // Only auto-scroll if there are new messages
+    const shouldAutoScroll = messages.length > previousMessagesLengthRef.current;
     
     if (shouldAutoScroll && messages.length > 0) {
       // Use instant scroll for initial load and smooth for new messages
@@ -41,13 +36,7 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
 
   return (
     <div className="flex flex-col h-full">
-      <div 
-        ref={containerRef} 
-        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-20"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
+      <ScrollArea className="flex-1 pb-20">
         <div className="flex flex-col gap-2 p-2 sm:p-4">
           {messages.map((message) => (
             <ChatMessage
@@ -71,7 +60,7 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
           )}
           <div ref={messagesEndRef} />
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 }
