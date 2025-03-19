@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
 import { useState } from "react";
@@ -31,23 +30,18 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
     <>
       <div
         className={cn(
-          "flex w-full gap-2 p-1 sm:p-2 group animate-fade-in",
+          "flex w-full gap-2 p-1 sm:p-2 group",
           isCurrentUser ? "justify-end" : "justify-start"
         )}
       >
         <div
           className={cn(
-            "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-xl px-3 py-2 sm:px-4 sm:py-2 relative shadow-lg transition-all duration-300",
+            "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2 relative",
             isCurrentUser
-              ? "bg-chat-user-gradient text-white border border-blue-500/10"
-              : "bg-chat-ai-gradient text-white border border-white/5"
+              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+              : "bg-gradient-to-r from-[#2A2F3C] to-[#1E1E2E] text-white shadow-md"
           )}
         >
-          {/* Message glow effect */}
-          {isCurrentUser && (
-            <div className="absolute inset-0 -z-10 bg-blue-500/5 rounded-xl blur-md opacity-75" />
-          )}
-          
           <MessageContent message={message} isCurrentUser={isCurrentUser} />
           
           <div className="flex items-center justify-between gap-2 mt-2">
@@ -61,9 +55,6 @@ export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps
               isSubmittingFeedback={isSubmittingFeedback}
             />
           </div>
-          
-          {/* Subtle shine effect on hover */}
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
         </div>
       </div>
       <FlagFeedbackDialog

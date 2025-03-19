@@ -2,7 +2,6 @@
 import { Message } from "@/types/chat";
 import { ChatList } from "./ChatList";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { motion } from "framer-motion";
 
 interface ChatContainerProps {
   messages: Message[];
@@ -23,12 +22,7 @@ export function ChatContainer({
   const showWelcomeMessage = messages.length === 0 && !isLoading;
 
   return (
-    <motion.div 
-      className="flex-1 h-full overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="flex-1 h-full overflow-hidden">
       {showWelcomeMessage ? (
         <WelcomeMessage />
       ) : (
@@ -39,6 +33,6 @@ export function ChatContainer({
           onCopyMessage={onCopyMessage}
         />
       )}
-    </motion.div>
+    </div>
   );
 }

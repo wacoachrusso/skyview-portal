@@ -1,4 +1,3 @@
-
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -10,7 +9,6 @@ import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { motion } from "framer-motion";
 
 export default function Index() {
   const location = useLocation();
@@ -52,64 +50,26 @@ export default function Index() {
     setShowIOSPrompt(false);
   };
 
-  // Animation variants for sections
-  const sectionVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5 } }
-  };
-
   return (
-    <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <main className="flex-1 w-full">
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />
-          
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
-            <Features />
-          </motion.div>
-          
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
-            <Testimonials />
-          </motion.div>
-          
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
-            <PricingSection />
-          </motion.div>
-          
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
-            <ReferralSection />
-          </motion.div>
+          <Features />
+          <Testimonials />
+          <PricingSection />
+          <ReferralSection />
         </div>
       </main>
       <Footer />
       <ReleaseNotePopup />
 
       <Sheet open={showIOSPrompt} onOpenChange={handleClosePrompt}>
-        <SheetContent side="bottom" className="glass-morphism h-[40vh] bg-premium-gradient border-t border-white/10">
+        <SheetContent side="bottom" className="h-[40vh]">
           <SheetHeader>
-            <SheetTitle className="text-xl font-bold text-white">Install SkyGuide App</SheetTitle>
-            <SheetDescription className="text-base text-gray-300">
+            <SheetTitle className="text-xl font-bold">Install SkyGuide App</SheetTitle>
+            <SheetDescription className="text-base">
               <div className="space-y-4">
                 <p>Install SkyGuide on your iOS device for the best experience:</p>
                 <ol className="list-decimal pl-5 space-y-2">
@@ -124,7 +84,7 @@ export default function Index() {
                 <div className="mt-6">
                   <button
                     onClick={handleClosePrompt}
-                    className="premium-button w-full bg-brand-gold text-brand-navy font-semibold py-3 rounded-lg hover:bg-brand-gold/90 transition-colors shadow-gold hover:shadow-gold-hover"
+                    className="w-full bg-brand-gold text-brand-navy font-semibold py-3 rounded-lg hover:bg-brand-gold/90 transition-colors"
                   >
                     Got it
                   </button>
