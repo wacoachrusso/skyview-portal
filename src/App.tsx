@@ -28,7 +28,7 @@ function InitialSessionCheck() {
         console.log("Checking initial session on app load");
         const { data } = await supabase.auth.getSession();
         
-        if (data.session && window.location.pathname === '/') {
+        if (data.session) {
           console.log("Initial session found, redirecting to chat");
           navigate('/chat', { replace: true });
         }
