@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -39,6 +40,9 @@ export default {
           gold: "#D4AF37",
           navy: "#1a365d",
           slate: "#334155",
+          teal: "#14b8a6",
+          emerald: "#10b981",
+          amber: "#f59e0b",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -59,15 +63,25 @@ export default {
       },
       backgroundImage: {
         'hero-gradient': 'linear-gradient(135deg, #9b87f5 0%, #7E69AB 100%)',
+        'premium-gradient': 'linear-gradient(135deg, #1a365d 0%, #3B82F6 100%)',
+        'luxury-dark': 'linear-gradient(to right, #0f172a 0%, #1e293b 100%)',
         'card-gradient': 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
         'feature-gradient': 'linear-gradient(to right, #243949 0%, #517fa4 100%)',
         'testimonial-gradient': 'linear-gradient(225deg, #8B5CF6 0%, #D946EF 100%)',
         'cta-gradient': 'linear-gradient(to right, #9b87f5 0%, #7E69AB 100%)',
         'footer-gradient': 'linear-gradient(to bottom, #1e293b 0%, #0f172a 100%)',
         'glow-gradient': 'radial-gradient(circle at center, rgba(155,135,245,0.15) 0%, transparent 70%)',
+        'chat-user-gradient': 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+        'chat-ai-gradient': 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
         'action-card': 'linear-gradient(225deg, rgba(155,135,245,0.1) 0%, rgba(126,105,171,0.1) 100%)',
         'welcome-card': 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(217,70,239,0.1) 100%)',
         'stats-card': 'linear-gradient(225deg, rgba(249,115,22,0.1) 0%, rgba(212,175,55,0.1) 100%)',
+      },
+      boxShadow: {
+        'premium': '0 10px 25px -5px rgba(59, 130, 246, 0.1), 0 8px 10px -6px rgba(59, 130, 246, 0.1)',
+        'premium-hover': '0 20px 35px -10px rgba(59, 130, 246, 0.2), 0 10px 15px -3px rgba(59, 130, 246, 0.15)',
+        'gold': '0 10px 25px -5px rgba(212, 175, 55, 0.1), 0 8px 10px -6px rgba(212, 175, 55, 0.1)',
+        'gold-hover': '0 20px 35px -10px rgba(212, 175, 55, 0.2), 0 10px 15px -3px rgba(212, 175, 55, 0.15)',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -88,9 +102,27 @@ export default {
             transform: "translateY(0)",
           },
         },
+        "fade-in": {
+          "0%": {
+            opacity: "0",
+          },
+          "100%": {
+            opacity: "1",
+          },
+        },
+        "pulse-subtle": {
+          "0%, 100%": {
+            opacity: "1",
+          },
+          "50%": {
+            opacity: "0.85",
+          },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
+        "fade-in": "fade-in 0.5s ease-out",
+        "pulse-subtle": "pulse-subtle 3s infinite ease-in-out",
       },
     },
   },
