@@ -1,3 +1,4 @@
+
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef } from "react";
@@ -12,15 +13,30 @@ interface ChatListProps {
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const previousMessagesLengthRef = useRef<number>(0);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
+  // Scroll to bottom when messages change
   useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom();
+    // Determine if we should auto-scroll
+    const shouldAutoScroll = 
+      // Auto-scroll if there are new messages
+      messages.length > previousMessagesLengthRef.current ||
+      // Or if we're at the bottom already (within 100px)
+      (containerRef.current && 
+       containerRef.current.scrollHeight - containerRef.current.scrollTop - containerRef.current.clientHeight < 100);
+    
+    if (shouldAutoScroll && messages.length > 0) {
+      // Use instant scroll for initial load and smooth for new messages
+      const behavior = previousMessagesLengthRef.current === 0 ? "auto" : "smooth";
+      scrollToBottom(behavior);
     }
+    
+    // Update the previous messages length reference
+    previousMessagesLengthRef.current = messages.length;
   }, [messages]);
 
   return (

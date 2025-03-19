@@ -1,3 +1,4 @@
+
 import { Quote } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -26,7 +27,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
           clearInterval(typingInterval);
           setIsTyping(false);
         }
-      }, 10); // Increased typing speed from 20ms to 10ms
+      }, 5); // Increased typing speed for better user experience
 
       return () => clearInterval(typingInterval);
     } else {

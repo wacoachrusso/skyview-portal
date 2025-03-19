@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const updateConversationTitle = async (conversationId: string, content: string) => {
@@ -7,8 +8,11 @@ export const updateConversationTitle = async (conversationId: string, content: s
   }
 
   console.log('Updating conversation title for:', conversationId);
-  // Generate a title from the first message content (max 50 chars)
-  const title = content.length > 50 ? `${content.substring(0, 47)}...` : content;
+  
+  // Generate a more meaningful title from the message content (max 50 chars)
+  // Remove special characters and trim whitespace
+  const trimmedContent = content.replace(/[^\w\s]/gi, '').trim();
+  const title = trimmedContent.length > 50 ? `${trimmedContent.substring(0, 47)}...` : trimmedContent || 'New Chat';
   
   try {
     const { error } = await supabase
@@ -47,4 +51,37 @@ export const loadConversationMessages = async (conversationId: string) => {
 
   console.log('Loaded messages:', messages?.length || 0, 'messages');
   return messages || [];
+};
+
+export const setupMessageChannel = (conversationId: string, onNewMessage: (message: any) => void) => {
+  if (!conversationId) {
+    console.error('No conversation ID provided for channel setup');
+    return null;
+  }
+
+  console.log(`Setting up real-time channel for conversation: ${conversationId}`);
+  
+  const channel = supabase
+    .channel(`messages_${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        console.log('New message received via real-time:', payload);
+        onNewMessage(payload.new);
+      }
+    )
+    .subscribe((status, err) => {
+      console.log(`Real-time subscription status for conversation ${conversationId}:`, status);
+      if (err) {
+        console.error('Real-time subscription error:', err);
+      }
+    });
+
+  return channel;
 };

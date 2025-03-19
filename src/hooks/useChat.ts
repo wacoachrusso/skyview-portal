@@ -1,10 +1,12 @@
-import { useEffect, useCallback, useRef } from "react";
+
+import { useEffect, useCallback, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useConversation } from "./useConversation";
 import { useMessageOperations } from "./useMessageOperations";
 import { useUserProfile } from "./useUserProfile";
 import { Message } from "@/types/chat";
+import { setupMessageChannel } from "@/utils/conversationUtils";
 
 export function useChat() {
   const { toast } = useToast();
@@ -30,11 +32,6 @@ export function useChat() {
   const activeChannelRef = useRef<any>(null);
   const isMountedRef = useRef(true);
 
-  // Get a stable channel name
-  const getChannelName = useCallback((conversationId: string) => {
-    return `messages_${conversationId}`;
-  }, []);
-
   // Function to setup a channel subscription with reconnection logic
   const setupChannel = useCallback(
     (conversationId: string) => {
@@ -47,71 +44,22 @@ export function useChat() {
         activeChannelRef.current = null;
       }
 
-      const channelName = getChannelName(conversationId);
-      console.log(`Setting up new channel: ${channelName} for conversation: ${conversationId}`);
+      // Set up new real-time channel for the conversation
+      const channel = setupMessageChannel(conversationId, (newMessage) => {
+        if (!isMountedRef.current) return;
+        
+        console.log(`Received new message: ${newMessage.id}`);
 
-      const channel = supabase
-        .channel(channelName, {
-          config: {
-            // Add any necessary configuration here
-          },
-        })
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          (payload) => {
-            if (!isMountedRef.current) return;
-
-            console.log("Received payload:", payload); // Log the full payload
-
-            if (!payload?.new) {
-              console.warn("Received payload without 'new' data:", payload);
-              return;
-            }
-
-            const newMessage = payload.new as Message;
-            console.log(`Received new message: ${newMessage.id}`);
-
-            // Check for duplicates before adding to state
-            setMessages((prev) => {
-              const exists = prev.some((msg) => msg.id === newMessage.id);
-              return exists ? prev : [...prev, newMessage];
-            });
-          }
-        )
-        .on("system", { event: "disconnect" }, () => {
-          console.log("WebSocket disconnected. Attempting to reconnect...");
-          // Attempt to reconnect after a delay
-          setTimeout(() => {
-            if (isMountedRef.current) {
-              setupChannel(conversationId);
-            }
-          }, 5000); // Reconnect after 5 seconds
-        })
-        .on("system", { event: "connected" }, () => {
-          console.log("WebSocket connected successfully.");
-        })
-        .subscribe((status, err) => {
-          console.log(`Channel ${channelName} status: ${status}`);
-          if (err) {
-            console.error(`Subscription error:`, err);
-            // Attempt to reconnect on error
-            setTimeout(() => {
-              if (isMountedRef.current) {
-                setupChannel(conversationId);
-              }
-            }, 5000); // Reconnect after 5 seconds
-          }
+        // Check for duplicates before adding to state
+        setMessages((prev) => {
+          const exists = prev.some((msg) => msg.id === newMessage.id);
+          return exists ? prev : [...prev, newMessage];
         });
+      });
 
       activeChannelRef.current = channel;
     },
-    [getChannelName, setMessages]
+    [setMessages]
   );
 
   // Send a message
