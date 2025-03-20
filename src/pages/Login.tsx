@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
@@ -12,7 +13,7 @@ import { Icons } from "@/components/icons";
 import { OAuthSignIn } from "@/components/auth/OAuthSignIn";
 import { createNewSession, validateSessionToken } from "@/services/session";
 
-export function Login() {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,8 +21,8 @@ export function Login() {
   const [isPasswordResetting, setIsPasswordResetting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-	const [searchParams] = useSearchParams();
-	const next = searchParams.get("next") ?? "/";
+  const [searchParams] = useSearchParams();
+  const next = searchParams.get("next") ?? "/";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,4 +183,6 @@ export function Login() {
       </Card>
     </div>
   );
-}
+};
+
+export default Login;

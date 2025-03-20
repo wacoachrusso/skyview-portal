@@ -1,9 +1,16 @@
 
 import { lazy } from "react";
 
-// Simple lazy loading without the complex retry logic that's causing issues
+// Fix lazy loading to handle named exports vs default exports
 export const Index = lazy(() => import("@/pages/Index"));
-export const Login = lazy(() => import("@/pages/Login"));
+
+// For Login component which has a named export
+export const Login = lazy(() => 
+  import("@/pages/Login").then(module => {
+    return { default: module.Login };
+  })
+);
+
 export const SignUp = lazy(() => import("@/pages/SignUp"));
 export const Chat = lazy(() => import("@/pages/Chat"));
 export const Account = lazy(() => import("@/pages/Account"));
