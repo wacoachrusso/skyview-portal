@@ -30,7 +30,7 @@ const Login = () => {
     });
   }
 
-  const handleLogin = async (email: string, password?: string) => {
+  const handleLogin = async (email: string, password: string, rememberMe: boolean) => {
     if (!email || !password) {
       toast({
         variant: "destructive",
@@ -56,6 +56,19 @@ const Login = () => {
         
         if (user) {
           await handleAuthSession(user.id, createNewSession, navigate);
+          
+          // Handle rememberMe option - set longer session duration
+          if (rememberMe) {
+            // Get the current session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.refresh_token) {
+              console.log("Setting up 30-day session persistence");
+              localStorage.setItem('supabase.refresh-token', session.refresh_token);
+              // Set a cookie that expires in 30 days
+              document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`;
+            }
+          }
+          
           navigate(next);
         }
       } else {

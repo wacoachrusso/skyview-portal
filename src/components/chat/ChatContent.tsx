@@ -1,122 +1,122 @@
-
-import { Message } from "@/types/chat";
+import { useRef, useEffect } from "react";
+import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
-import { ChatContainer } from "./ChatContainer";
-import { OfflineAlert } from "./OfflineAlert";
-import { TrialEndedState } from "./TrialEndedState";
-import { useOfflineStatus } from "@/hooks/useOfflineStatus";
-import { useFreeTrial } from "@/hooks/useFreeTrial";
-import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 interface ChatContentProps {
-  messages: Message[];
+  messages: any[];
   currentUserId: string | null;
-  isLoading?: boolean;
-  onSendMessage: (content: string) => Promise<void>;
-  onNewChat?: () => void;
-  isChatDisabled?: boolean;
+  isLoading: boolean;
+  onSendMessage: (message: string) => Promise<void>;
+  onNewChat: () => void;
+  isChatDisabled: boolean;
 }
 
-export function ChatContent({
-  messages,
-  currentUserId,
-  isLoading,
-  onSendMessage,
+function WelcomeMessage() {
+  return (
+    <div className="text-center text-muted-foreground">
+      <h2 className="text-xl font-semibold mb-4">Welcome to SkyGuide AI</h2>
+      <p className="mb-2">Ask me anything about your contract!</p>
+      <p className="text-sm">
+        For best results, be specific and provide context.
+      </p>
+    </div>
+  );
+}
+
+export function ChatContent({ 
+  messages, 
+  currentUserId, 
+  isLoading, 
+  onSendMessage, 
   onNewChat,
-  isChatDisabled = false,
+  isChatDisabled
 }: ChatContentProps) {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { isOffline, offlineError } = useOfflineStatus();
-  const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
-  const [userProfile, setUserProfile] = useState<{
-    subscription_plan: string;
-    query_count: number;
-  } | null>(null);
+  const bottomRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
-  // Fetch user profile from the database
+  // Scroll to bottom effect when messages change
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!currentUserId) return;
-
-      try {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("subscription_plan, query_count")
-          .eq("id", currentUserId)
-          .single();
-
-        if (error) throw error;
-
-        setUserProfile(profile);
-        
-        // If user is on free plan and has reached the limit, redirect to pricing
-        if (profile.subscription_plan === "free" && profile.query_count >= 2) {
-          console.log("Free trial ended in ChatContent - redirecting");
-          toast({
-            title: "Free Trial Ended",
-            description: "Please select a subscription plan to continue.",
-            variant: "destructive",
-          });
-          navigate("/?scrollTo=pricing-section", { replace: true });
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
-
-    fetchUserProfile();
-  }, [currentUserId, navigate, toast]);
-
-  // Determine if the chat should be disabled
-  const shouldDisableChat = useMemo(() => {
-    return isChatDisabled || 
-           isTrialEnded || 
-           (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2);
-  }, [isChatDisabled, isTrialEnded, userProfile]);
-
-  // Memoize the display messages
-  const displayMessages = useMemo(() => 
-    isOffline ? messages : messages
-  , [isOffline, messages]);
-
-  // Auto-redirect if trial has ended - this is an additional check to ensure redirection works
-  useEffect(() => {
-    if (shouldDisableChat && currentUserId) {
-      console.log("Chat is disabled, redirecting to pricing");
-      navigate("/?scrollTo=pricing-section", { replace: true });
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [shouldDisableChat, navigate, currentUserId]);
-
-  // If the trial has ended or chat is disabled, show the TrialEndedState
-  if (shouldDisableChat) {
-    return <TrialEndedState />;
-  }
+  }, [messages]);
 
   return (
     <div className="flex flex-col h-full">
-      <ChatHeader onNewChat={onNewChat || (() => {})} isLoading={isLoading} />
-      {isOffline && <OfflineAlert offlineError={offlineError || loadError} />}
-      <ChatContainer
-        messages={displayMessages}
-        currentUserId={currentUserId || ""}
-        isLoading={isLoading}
-        onCopyMessage={(content) => {
-          navigator.clipboard.writeText(content);
-        }}
-      />
-      <div className="flex-shrink-0">
-        <ChatInput
-          onSendMessage={onSendMessage}
+      {/* Header */}
+      <ChatHeader onNewChat={onNewChat} />
+      
+      {/* Chat Messages */}
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-6" 
+        ref={messagesContainerRef}
+      >
+        {/* Welcome message or messages list */}
+        {messages.length === 0 ? (
+          <WelcomeMessage />
+        ) : (
+          messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              currentUserId={currentUserId}
+            />
+          ))
+        )}
+        
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="flex items-center space-x-2 p-4 rounded-lg bg-muted/30">
+            <div className="h-6 w-6 rounded-full border-2 border-t-transparent border-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">
+              SkyGuide is thinking...
+            </p>
+          </div>
+        )}
+        
+        {/* Auto-scroll anchor */}
+        <div ref={bottomRef} />
+      </div>
+      
+      {/* Input area */}
+      <div className="mt-auto w-full">
+        <ChatInput 
+          onSendMessage={onSendMessage} 
           isLoading={isLoading}
-          disabled={isOffline || shouldDisableChat}
-          queryCount={userProfile?.query_count || 0}
-          subscriptionPlan={userProfile?.subscription_plan || "free"}
+          disabled={isChatDisabled}
         />
+      </div>
+      
+      {/* Chat suggestions area - ensure this doesn't get cut off */}
+      <div className="w-full px-4 pb-6">
+        <div className="rounded-lg p-4 bg-secondary/10 mb-4">
+          <h3 className="text-lg font-medium mb-2 text-center">Ask about your contract...</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Button 
+              variant="outline" 
+              className="text-sm text-left justify-start h-auto py-3 px-4 bg-secondary/20"
+              onClick={() => onSendMessage("What are my rest period rights if my flight is delayed?")}
+            >
+              What are my rights if my flight is delayed?
+            </Button>
+            <Button 
+              variant="outline" 
+              className="text-sm text-left justify-start h-auto py-3 px-4 bg-secondary/20"
+              onClick={() => onSendMessage("What are the minimum rest periods for international flights?")}
+            >
+              What are the minimum rest periods for international flights?
+            </Button>
+            <Button 
+              variant="outline" 
+              className="text-sm text-left justify-start h-auto py-3 px-4 bg-secondary/20"
+              onClick={() => onSendMessage("Can my rest period be reduced for operational reasons?")}
+            >
+              Can my rest period be reduced for operational reasons?
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

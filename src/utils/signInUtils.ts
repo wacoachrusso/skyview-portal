@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -52,4 +53,24 @@ export const handleSignIn = async (email: string, password: string) => {
     });
     return false;
   }
+};
+
+// Extension for handling "Remember Me" functionality
+export const persistSession = async (rememberMe: boolean) => {
+  if (rememberMe) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.refresh_token) {
+        // Store refresh token for long-term persistence
+        localStorage.setItem('supabase.refresh-token', session.refresh_token);
+        // Set a cookie with 30-day expiration
+        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`;
+        console.log("30-day session persistence enabled");
+        return true;
+      }
+    } catch (error) {
+      console.error("Error persisting session:", error);
+    }
+  }
+  return false;
 };
