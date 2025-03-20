@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,7 +6,6 @@ import {
   checkSession,
   getCurrentUser,
   signOutGlobally,
-  reAuthenticateSession,
   checkUserProfile
 } from "@/utils/authCallbackUtils";
 import {
@@ -33,12 +33,6 @@ export const useAuthCallback = () => {
       const signOutSuccess = await signOutGlobally({ navigate, toast });
       if (!signOutSuccess) return;
 
-      // Re-authenticate if needed
-      if (session.provider_token) {
-        const reAuthSuccess = await reAuthenticateSession('google', { navigate, toast });
-        if (!reAuthSuccess) return;
-      }
-
       // Get the selected plan from URL state
       const params = new URLSearchParams(window.location.search);
       const selectedPlan = params.get('selectedPlan');
@@ -50,8 +44,29 @@ export const useAuthCallback = () => {
 
       // Check user profile and handle redirect
       const profile = await checkUserProfile(user.id, { navigate, toast });
-      if (!profile) return;
+      if (!profile) {
+        // Create a new session token for this user
+        try {
+          const { createNewSession } = await import('@/services/sessionService');
+          await createNewSession(user.id);
+          console.log("Created new session token after profile check");
+        } catch (error) {
+          console.error("Error creating session:", error);
+        }
+        
+        navigate('/complete-profile');
+        return;
+      }
 
+      // Create a new session token for this user before redirecting
+      try {
+        const { createNewSession } = await import('@/services/sessionService');
+        await createNewSession(user.id);
+        console.log("Created new session token before redirect");
+      } catch (error) {
+        console.error("Error creating session:", error);
+      }
+      
       await handleProfileRedirect(profile, selectedPlan, { navigate, toast });
 
     } catch (error) {

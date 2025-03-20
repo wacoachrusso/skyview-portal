@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -17,13 +18,52 @@ const Login = () => {
 
   const checkSession = async () => {
     console.log("Checking user session...");
-    const { data } = await supabase.auth.getSession();
-    
-    if (data.session) {
-      console.log("Session found, redirecting to chat");
-      navigate("/chat", { replace: true });
-    } else {
-      console.log("Session check result: No session");
+    try {
+      setCheckingSession(true);
+      
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error checking session:", error);
+        setCheckingSession(false);
+        return;
+      }
+      
+      if (data.session) {
+        console.log("Session found, redirecting to chat");
+        
+        // Get user profile to determine where to redirect
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("user_type, airline")
+          .eq("id", data.session.user.id)
+          .maybeSingle();
+          
+        console.log("Profile check result:", { profile, error: profileError });
+        
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          setCheckingSession(false);
+          return;
+        }
+        
+        if (profile && profile.user_type && profile.airline) {
+          // Profile is complete, redirect to chat
+          navigate("/chat", { replace: true });
+        } else if (profile) {
+          // Profile exists but incomplete
+          navigate("/complete-profile", { replace: true });
+        } else {
+          // No profile found
+          navigate("/complete-profile", { replace: true });
+        }
+      } else {
+        console.log("Session check result: No session");
+        setCheckingSession(false);
+      }
+    } catch (error) {
+      console.error("Unexpected error checking session:", error);
+      setCheckingSession(false);
     }
   };
 
@@ -63,6 +103,16 @@ const Login = () => {
             title: "Welcome back!",
             description: "You've successfully signed in."
           });
+          
+          // Create a new session
+          try {
+            const { createNewSession } = await import('@/services/sessionService');
+            await createNewSession(data.user.id);
+            console.log("Created new session after login");
+          } catch (sessionError) {
+            console.error("Error creating session after login:", sessionError);
+          }
+          
           navigate("/chat", { replace: true });
         }
       }
@@ -77,6 +127,17 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-premium-gradient flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mx-auto"></div>
+          <p className="mt-4 text-white">Checking session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-premium-gradient flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">

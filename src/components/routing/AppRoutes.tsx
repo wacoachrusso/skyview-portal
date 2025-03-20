@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -168,6 +169,7 @@ export function AppRoutes() {
         <Route path="/dashboard" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
+        <Route path="/complete-profile" element={<LazyRoutes.CompleteProfile />} />
         
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
