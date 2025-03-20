@@ -7,8 +7,10 @@ import { DisclaimerDialog } from "@/components/consent/DisclaimerDialog";
 import { useQueryCounter } from "@/hooks/useQueryCounter";
 import { useDisclaimerDialog } from "@/hooks/useDisclaimerDialog";
 import { useChatAccess } from "@/hooks/useChatAccess";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Chat = () => {
+  const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {

@@ -3,9 +3,56 @@ import { Button } from "@/components/ui/button";
 import { MessageSquareText, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
+
+// Define a pool of example questions
+const EXAMPLE_QUESTIONS = [
+  // Rest requirements
+  "What are my rest requirements between flights?",
+  "How many hours of rest am I entitled to after a red-eye flight?",
+  "What are the minimum rest periods for international flights?",
+  "Can my rest period be reduced for operational reasons?",
+  
+  // Pay and compensation
+  "How much vacation time am I entitled to?",
+  "What are the pay provisions for working on a holiday?",
+  "How is overtime calculated for flight attendants?",
+  "What is the per diem rate for overnight stays?",
+  "How are sick days compensated?",
+  
+  // Schedule and assignments
+  "How far in advance should my monthly schedule be published?",
+  "What are the rules for voluntary trip trades?",
+  "How many consecutive days can I be scheduled to work?",
+  "What are my rights if my flight is canceled?",
+  
+  // Benefits and accommodations
+  "What hotel accommodations am I entitled to during layovers?",
+  "What are the uniform allowance provisions?",
+  "What are my health insurance benefits?",
+  "How does maternity/paternity leave work?",
+  
+  // Training and qualifications
+  "How often do I need to renew my safety training?",
+  "Is training time compensated, and at what rate?",
+  "What are the qualification requirements for international flights?",
+];
+
+// Helper function to get random unique items from an array
+const getRandomUniqueItems = (array: string[], count: number): string[] => {
+  const shuffled = [...array].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
 
 export function WelcomeMessage() {
   const isMobile = useIsMobile();
+  
+  // Select 3 random questions from the pool
+  // Using useMemo to ensure questions only change on component mount
+  const randomQuestions = useMemo(() => 
+    getRandomUniqueItems(EXAMPLE_QUESTIONS, 3), 
+    []
+  );
   
   return (
     <div className="h-full flex flex-col items-center justify-center px-4 py-8 md:py-12">
@@ -34,21 +81,21 @@ export function WelcomeMessage() {
             <ExampleCard 
               icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-gold" />}
               title="Try asking me:"
-              question="What are my rest requirements between flights?"
+              question={randomQuestions[0]}
               color="brand-gold"
             />
             
             <ExampleCard 
               icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-purple" />}
               title="Or ask about:"
-              question="How much vacation time am I entitled to?"
+              question={randomQuestions[1]}
               color="brand-purple"
             />
             
             <ExampleCard 
               icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-teal" />}
               title="You can also ask:"
-              question="What are the pay provisions for working on a holiday?"
+              question={randomQuestions[2]}
               color="brand-teal"
               className={isMobile ? "" : ""}
             />

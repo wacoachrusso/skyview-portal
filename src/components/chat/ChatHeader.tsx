@@ -34,7 +34,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isMobile ? 'ml-8' : ''}`}>
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
             alt="SkyGuide Logo" 
