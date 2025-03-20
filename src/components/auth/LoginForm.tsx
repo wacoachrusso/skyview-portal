@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Eye, EyeOff } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface LoginFormProps {
-  onSubmit: (email: string, password?: string) => Promise<void>;
+  onSubmit: (email: string, password?: string, rememberMe?: boolean) => Promise<void>;
   loading: boolean;
 }
 
@@ -16,11 +17,12 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(email, password);
+    await onSubmit(email, password, rememberMe);
   };
 
   return (
@@ -71,6 +73,21 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="rememberMe" 
+            checked={rememberMe} 
+            onCheckedChange={(checked) => setRememberMe(checked === true)}
+            className="border-white/30 data-[state=checked]:bg-brand-gold data-[state=checked]:border-brand-gold"
+          />
+          <label 
+            htmlFor="rememberMe" 
+            className="text-sm text-gray-300 cursor-pointer"
+          >
+            Stay logged in for 30 days
+          </label>
         </div>
       </div>
 

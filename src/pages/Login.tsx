@@ -30,7 +30,7 @@ const Login = () => {
     });
   }
 
-  const handleLogin = async (email: string, password?: string) => {
+  const handleLogin = async (email: string, password?: string, rememberMe?: boolean) => {
     if (!email || !password) {
       toast({
         variant: "destructive",
@@ -42,7 +42,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const success = await handleSignIn(email, password);
+      const success = await handleSignIn(email, password, rememberMe);
       
       if (success) {
         console.log("Login successful");
