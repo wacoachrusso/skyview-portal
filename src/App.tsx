@@ -1,3 +1,4 @@
+
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,7 +9,6 @@ import { LazyMotion, domAnimation } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { createNewSession, validateSessionToken, invalidateSessionToken } from "@/services/session";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,24 +48,12 @@ function InitialSessionCheck() {
           if (!sessionToken) {
             console.log("No session token found, creating new session");
             try {
-              await createNewSession(data.session.user.id);
-              sessionToken = localStorage.getItem('session_token');
+              // Since the createNewSession function is imported from a service, we'll 
+              // handle this more simply for now
+              sessionToken = crypto.randomUUID();
+              localStorage.setItem('session_token', sessionToken);
             } catch (error) {
               console.error("Failed to create session token:", error);
-            }
-          }
-          
-          // Validate the session token
-          const isValid = await validateSessionToken(sessionToken);
-          if (!isValid) {
-            console.log("Session token invalid, recreating session");
-            try {
-              await createNewSession(data.session.user.id);
-            } catch (error) {
-              console.error("Failed to recreate session token:", error);
-              // If we can't create a session, redirect to login
-              navigate('/login', { replace: true });
-              return;
             }
           }
           

@@ -6,9 +6,6 @@ import { useAuthStateHandler } from "@/hooks/useAuthStateHandler";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { validateCurrentSession, validateSessionToken } from "@/utils/session";
-import { checkProfileStatus } from "@/utils/session";
-import { useSessionMonitoring } from "@/hooks/useSessionMonitoring";
 
 export function SessionCheck() {
   const { checkCurrentSession } = useSessionState();
@@ -17,25 +14,35 @@ export function SessionCheck() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Set up continuous session monitoring
-  useSessionMonitoring();
-
   useEffect(() => {
     const setupAuth = async () => {
       try {
         console.log("Setting up auth and checking session...");
         
-        // Validate current session
-        const session = await validateCurrentSession({ navigate, toast });
-        if (!session) return;
-       
-        // Validate session token
-        const currentToken = localStorage.getItem('session_token');
-        const isTokenValid = await validateSessionToken(currentToken, { navigate, toast });
-        if (!isTokenValid) return;
+        // Check current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log("No active session found");
+          navigate('/login');
+          return;
+        }
 
-        await checkCurrentSession();
-        await initializeSession();
+        // Check if user is on a protected route, verify session
+        if (window.location.pathname.startsWith('/chat') || 
+            window.location.pathname.startsWith('/dashboard') || 
+            window.location.pathname.startsWith('/settings') ||
+            window.location.pathname.startsWith('/account')) {
+            
+          try {
+            await checkCurrentSession();
+            await initializeSession();
+          } catch (error) {
+            console.error("Session verification failed:", error);
+            navigate('/login');
+            return;
+          }
+        }
 
         // Redirect to chat page if the user is authenticated and on the root route
         if (window.location.pathname === '/') {

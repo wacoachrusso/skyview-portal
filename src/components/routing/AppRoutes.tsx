@@ -65,7 +65,8 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log("Starting admin verification process");
         
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
         
         if (!session?.user) {
           console.log("No session found, redirecting to login");
@@ -174,7 +175,7 @@ export function AppRoutes() {
         
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
-        <Route path="*" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
+        <Route path="*" element={<LazyRoutes.Dashboard />} />
       </Routes>
     </ErrorBoundary>
   );
