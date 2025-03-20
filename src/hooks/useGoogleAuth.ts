@@ -1,14 +1,40 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { createNewSession } from "@/services/sessionService";
+import { Session } from "@supabase/supabase-js";
 
 export const useGoogleAuth = () => {
   const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check for an existing session when the hook is initialized
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (!error && data?.session) {
+        setSession(data.session);
+      }
+    };
+    
+    checkSession();
+    
+    // Set up auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, updatedSession) => {
+        console.log("Auth state changed:", event);
+        setSession(updatedSession);
+      }
+    );
+    
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -46,5 +72,5 @@ export const useGoogleAuth = () => {
     }
   };
 
-  return { handleGoogleSignIn, loading };
+  return { handleGoogleSignIn, loading, session };
 };
