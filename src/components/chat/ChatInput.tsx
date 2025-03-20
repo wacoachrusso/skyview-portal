@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,16 +9,16 @@ interface ChatInputProps {
   onSendMessage: (content: string) => Promise<void>;
   isLoading?: boolean;
   disabled?: boolean;
-  queryCount?: number;
-  subscriptionPlan?: string;
+  queryCount?: number; // Add queryCount prop
+  subscriptionPlan?: string; // Add subscriptionPlan prop
 }
 
 export function ChatInput({
   onSendMessage,
   isLoading,
   disabled,
-  queryCount = 0,
-  subscriptionPlan = "free",
+  queryCount = 0, // Default to 0
+  subscriptionPlan = "free", // Default to "free"
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const { toast } = useToast();
@@ -60,46 +59,40 @@ export function ChatInput({
 
   return (
     <div className="flex flex-col">
-      <div className="p-4 border-t border-border/50">
-        <form onSubmit={handleSubmit} className="w-full">
-          <div className="relative flex flex-col space-y-2">
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                isInputDisabled
-                  ? "Chat unavailable while offline or trial ended"
-                  : "Ask about your contract..."
-              }
-              className="min-h-[80px] w-full resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0 pr-12"
+      <form onSubmit={handleSubmit} className="p-4 border-t border-border/50">
+        <div className="relative flex items-center">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              isInputDisabled
+                ? "Chat unavailable while offline or trial ended"
+                : "Ask about your contract..."
+            }
+            className="min-h-[60px] w-full pr-[120px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
+            disabled={isInputDisabled}
+            aria-label="Chat input"
+            aria-describedby="chat-input-description"
+          />
+          <div className="absolute right-2 flex items-center space-x-1 h-full pr-1">
+            <MicButton
+              onRecognized={setMessage}
               disabled={isInputDisabled}
-              aria-label="Chat input"
-              aria-describedby="chat-input-description"
             />
-            <div className="absolute right-2 bottom-2 flex items-center space-x-1">
-              <MicButton
-                onRecognized={setMessage}
-                disabled={isInputDisabled}
-              />
-              <SendButton
-                isLoading={isLoading}
-                disabled={!message.trim() || isInputDisabled}
-              />
-            </div>
+            <SendButton
+              isLoading={isLoading}
+              disabled={!message.trim() || isInputDisabled}
+            />
           </div>
-        </form>
-      </div>
-      <div className="w-full px-4 pb-6 pt-2">
-        <div className="w-full mx-auto max-w-3xl">
-          <p
-            id="chat-input-description"
-            className="text-xs text-muted-foreground/70 text-center"
-          >
-            Ask about your contract...
-          </p>
         </div>
-      </div>
+      </form>
+      <p
+        id="chat-input-description"
+        className="text-xs text-muted-foreground/70 text-center mb-2 px-2"
+      >
+        SkyGuide can make mistakes. Check important info.
+      </p>
     </div>
   );
 }

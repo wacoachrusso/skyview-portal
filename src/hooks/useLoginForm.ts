@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,7 +127,6 @@ export const useLoginForm = () => {
           // Store refresh token in localStorage and a long-lived cookie
           localStorage.setItem('supabase.refresh-token', session.refresh_token);
           document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`; // 30 days
-          console.log("Set 30-day session persistence");
         }
       }
   
