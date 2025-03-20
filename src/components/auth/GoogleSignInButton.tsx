@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export const GoogleSignInButton = () => {
   const { handleGoogleSignIn, loading } = useGoogleAuth();
@@ -10,32 +10,23 @@ export const GoogleSignInButton = () => {
   const handleMouseDown = () => setIsPressed(true);
   const handleMouseUp = () => setIsPressed(false);
   
-  // More robust click handling
-  const handleClick = (e: React.MouseEvent) => {
+  // Simplified click handler with focus on reliability
+  const handleClick = () => {
     console.log("Google sign-in button clicked");
-    e.preventDefault(); // Prevent any default behavior
-    e.stopPropagation(); // Prevent event bubbling
     handleGoogleSignIn();
   };
-
-  // Ensure the button is accessible
-  useEffect(() => {
-    const button = document.querySelector('button[type="button"]');
-    if (button) {
-      button.setAttribute('tabindex', '0');
-    }
-  }, []);
   
   return (
     <Button
       type="button"
       variant="outline"
-      className={`w-full border-white/20 text-white hover:bg-white/10 hover:text-white active:scale-95 transition-all z-10 ${isPressed ? 'bg-white/10 scale-95' : ''}`}
+      className={`w-full border-white/20 text-white hover:bg-white/10 hover:text-white active:scale-95 transition-all z-20 ${isPressed ? 'bg-white/10 scale-95' : ''}`}
       onClick={handleClick}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={() => setIsPressed(false)}
       disabled={loading}
+      tabIndex={0}
     >
       {loading ? (
         <div className="flex items-center">

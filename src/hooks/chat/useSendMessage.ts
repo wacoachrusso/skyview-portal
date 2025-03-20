@@ -84,8 +84,10 @@ export function useSendMessage(
         setMessages((prev) => [...prev, tempAIMessage as Message]);
 
         // Call the AI completion function with timeout handling
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45-second timeout
+        const timeoutId = setTimeout(() => {
+          console.log("AI completion request timed out after 45 seconds");
+          throw new Error("Request timed out");
+        }, 45000); // 45-second timeout
         
         try {
           const { data, error } = await supabase.functions.invoke("chat-completion", {
@@ -93,8 +95,7 @@ export function useSendMessage(
               content: `${content}`,
               subscriptionPlan: userProfile?.subscription_plan || "free",
               assistantId: userProfile?.assistant_id || "default_assistant_id",
-            },
-            signal: controller.signal,
+            }
           });
           
           clearTimeout(timeoutId);
