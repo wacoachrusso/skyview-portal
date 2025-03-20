@@ -1,6 +1,8 @@
+
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { invalidateSessionToken } from "@/services/session/invalidateSession";
 
 export const useLogout = () => {
   const navigate = useNavigate();
@@ -10,37 +12,22 @@ export const useLogout = () => {
     try {
       console.log("Starting logout process...");
       
-      // Get current session first
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get current session token first
+      const sessionToken = localStorage.getItem('session_token');
       
-      if (session?.user) {
-        console.log("Found active session, invalidating...");
-        // Invalidate the current session in our sessions table
-        const { error: sessionError } = await supabase
-          .from('sessions')
-          .update({
-            status: 'invalidated',
-            invalidated_at: new Date().toISOString()
-          })
-          .eq('user_id', session.user.id)
-          .eq('session_token', localStorage.getItem('session_token'));
-
-        if (sessionError) {
-          console.error("Error invalidating session:", sessionError);
-        }
+      // Invalidate the current session in our sessions table
+      if (sessionToken) {
+        console.log("Invalidating current session token:", sessionToken);
+        await invalidateSessionToken(sessionToken);
       }
 
       // Clear all local storage before signing out
       console.log("Clearing local storage...");
       localStorage.clear();
       
-      // Sign out from Supabase (locally first)
-      console.log("Signing out locally...");
-      await supabase.auth.signOut({ scope: 'local' });
-      
-      // Then attempt global sign out
-      console.log("Attempting global sign out...");
-      await supabase.auth.signOut({ scope: 'global' });
+      // Sign out from Supabase
+      console.log("Signing out from Supabase...");
+      await supabase.auth.signOut();
 
       console.log("Logout successful, redirecting to login page...");
       
@@ -50,8 +37,8 @@ export const useLogout = () => {
         variant: "default",
       });
       
-      // Navigate to login page
-      navigate("/login", { replace: true });
+      // Force navigation to login page
+      window.location.href = "/login";
     } catch (error) {
       console.error("Error in logout process:", error);
       
@@ -64,7 +51,8 @@ export const useLogout = () => {
         variant: "default",
       });
       
-      navigate("/login", { replace: true });
+      // Force navigation to login page
+      window.location.href = "/login";
     }
   };
 

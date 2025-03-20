@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut } from "lucide-react
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { useContractHandler } from "@/hooks/useContractHandler";
-import { useAuthManagement } from "@/hooks/useAuthManagement";
+import { useLogout } from "@/hooks/useLogout";
 import { Icons } from "@/components/icons";
 
 interface ChatHeaderProps {
@@ -18,7 +18,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { handleContractClick } = useContractHandler();
-  const { handleSignOut } = useAuthManagement();
+  const { handleLogout } = useLogout();
 
   return (
     <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-top">
@@ -76,7 +76,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleSignOut}
+          onClick={() => handleLogout()}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
         >
           <LogOut className="h-4 w-4" />
