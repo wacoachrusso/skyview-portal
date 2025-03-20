@@ -40,6 +40,8 @@ serve(async (req) => {
       throw new Error(userError?.message || "User not found");
     }
 
+    console.log("User found, proceeding with deletion:", userData.user.email);
+
     // Delete the user from auth.users with hard delete option
     const { error: deleteError } = await supabase.auth.admin.deleteUser(
       userId,
@@ -50,6 +52,16 @@ serve(async (req) => {
     if (deleteError) {
       console.error("Error deleting user:", deleteError);
       throw deleteError;
+    }
+
+    // Verify the user was actually deleted
+    const { data: verifyData, error: verifyError } = await supabase.auth.admin.getUserById(userId);
+    if (verifyError) {
+      console.log("Verification error indicates user was deleted:", verifyError);
+    } else if (verifyData.user) {
+      console.error("WARNING: User still exists after deletion attempt:", verifyData.user.email);
+    } else {
+      console.log("Successfully verified user was deleted");
     }
 
     console.log("Successfully deleted user:", userId);

@@ -4,6 +4,7 @@ import { UsersTable } from "./user-management/UsersTable";
 import { UserDetailsDialog } from "./user-management/UserDetailsDialog";
 import { DeleteUserDialog } from "./user-management/DeleteUserDialog";
 import { DeleteAllUsersButton } from "./user-management/DeleteAllUsersButton";
+import { VerifyCleanupButton } from "./user-management/VerifyCleanupButton";
 
 export const UserManagement = () => {
   const {
@@ -42,7 +43,8 @@ export const UserManagement = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-4 mb-4">
+        <VerifyCleanupButton />
         <DeleteAllUsersButton />
       </div>
     
