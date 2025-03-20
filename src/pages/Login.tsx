@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -149,7 +148,7 @@ const Login = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="glass-morphism rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10">
           {/* Subtle glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/10 to-brand-gold/10 rounded-2xl blur-xl opacity-70 -z-10" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-brand-gold/20 rounded-full blur-xl opacity-75 animate-pulse-subtle" aria-hidden="true" />
           
           <div className="mb-8 flex flex-col items-center">
             <div className="relative mb-6">
