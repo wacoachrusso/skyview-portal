@@ -10,9 +10,11 @@ export const GoogleSignInButton = () => {
   const handleMouseDown = () => setIsPressed(true);
   const handleMouseUp = () => setIsPressed(false);
   
-  const handleClick = async () => {
+  const handleClick = (e: React.MouseEvent) => {
     console.log("Google sign-in button clicked");
-    await handleGoogleSignIn();
+    e.preventDefault(); // Prevent any default behavior
+    e.stopPropagation(); // Prevent event bubbling
+    handleGoogleSignIn();
   };
   
   return (

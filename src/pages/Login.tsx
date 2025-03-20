@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -140,7 +141,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-premium-gradient flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-premium-gradient flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8 overflow-auto">
       {/* Background effects */}
       <div className="absolute inset-0 bg-[url('/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png')] opacity-5 bg-repeat mix-blend-overlay pointer-events-none" aria-hidden="true" />
       <div className="absolute inset-0 bg-gradient-to-br from-brand-navy/50 to-brand-slate/50 pointer-events-none" aria-hidden="true" />

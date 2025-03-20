@@ -61,8 +61,8 @@ export const useGoogleAuth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      setLoading(true);
       console.log("Initiating Google sign in...");
+      setLoading(true);
       
       // Clear any existing session data first to prevent issues
       localStorage.removeItem('session_token');
@@ -100,7 +100,8 @@ export const useGoogleAuth = () => {
             description: "Failed to initialize Google sign in. Please try again.",
           });
         } else {
-          // Manual redirect if automatic redirect doesn't happen
+          // Manual redirect for more reliability - this should ensure the redirect happens
+          console.log("Manually redirecting to:", data.url);
           window.location.href = data.url;
         }
       }
@@ -112,7 +113,10 @@ export const useGoogleAuth = () => {
         description: "An unexpected error occurred. Please try again.",
       });
     } finally {
-      setLoading(false);
+      // Only set loading to false if we're still on this page (we might have redirected)
+      if (document.visibilityState !== 'hidden') {
+        setLoading(false);
+      }
     }
   };
 

@@ -19,15 +19,23 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       setIsTyping(true);
       let index = 0;
       const content = message.content;
+      // Speed up the typing effect significantly (increased to 20ms from 5ms)
       const typingInterval = setInterval(() => {
+        // Process multiple characters at once for faster typing
+        const chunkSize = 12; // Increase this number to speed up even more
+        
         if (index <= content.length) {
-          setDisplayContent(content.slice(0, index));
-          index++;
-        } else {
-          clearInterval(typingInterval);
-          setIsTyping(false);
+          const newIndex = Math.min(index + chunkSize, content.length);
+          setDisplayContent(content.slice(0, newIndex));
+          index = newIndex;
+          
+          // End typing when we reach the end
+          if (index >= content.length) {
+            clearInterval(typingInterval);
+            setIsTyping(false);
+          }
         }
-      }, 5); // Increased typing speed for better user experience
+      }, 20); // Increased interval for better performance
 
       return () => clearInterval(typingInterval);
     } else {
