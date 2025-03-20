@@ -1,7 +1,6 @@
 
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { AuthButtons } from "./AuthButtons";
 import { MobileMenu } from "./MobileMenu";
@@ -11,7 +10,6 @@ export function NavbarContainer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -19,7 +17,7 @@ export function NavbarContainer() {
     const checkAuth = async () => {
       try {
         console.log('Checking auth state in Navbar');
-        setIsLoading(true); // Ensure loading state is set
+        setIsLoading(true);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -50,7 +48,7 @@ export function NavbarContainer() {
             // Redirect to chat if on homepage and profile is complete
             if (window.location.pathname === '/' && profile?.user_type && profile?.airline) {
               console.log('Profile is complete, redirecting to chat');
-              navigate('/chat', { replace: true });
+              window.location.href = '/chat';
             }
           } else {
             console.log('No active session found');
@@ -72,7 +70,7 @@ export function NavbarContainer() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed in NavbarContainer:', event);
       if (mounted) {
-        setIsLoading(true); // Set loading when auth state changes
+        setIsLoading(true);
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in in NavbarContainer:', session.user.email);
           setIsLoggedIn(true);
@@ -88,7 +86,7 @@ export function NavbarContainer() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
@@ -111,17 +109,17 @@ export function NavbarContainer() {
       setIsLoggedIn(!!session);
       setIsLoading(false);
       
-      // If user is logged in, navigate to dashboard, otherwise to home
+      // If user is logged in, navigate to chat, otherwise to home
       if (session) {
-        navigate('/dashboard', { replace: true });
+        window.location.href = '/chat';
       } else {
-        navigate('/', { replace: true });
+        window.location.href = '/';
       }
       
       setIsMobileMenuOpen(false);
     } catch (error) {
       console.error("Unexpected error in logo click handler:", error);
-      navigate('/', { replace: true });
+      window.location.href = '/';
     }
   };
 

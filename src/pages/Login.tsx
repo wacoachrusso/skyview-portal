@@ -104,7 +104,7 @@ const Login = () => {
             description: "You've successfully signed in."
           });
           
-          // Create a new session
+          // Create a new session token for this user
           try {
             const { createNewSession } = await import('@/services/sessionService');
             await createNewSession(data.user.id);
@@ -113,6 +113,7 @@ const Login = () => {
             console.error("Error creating session after login:", sessionError);
           }
           
+          // Redirect to chat instead of dashboard
           navigate("/chat", { replace: true });
         }
       }

@@ -170,7 +170,7 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
-        <Route path="/complete-profile" element={<LazyRoutes.CompleteProfile />} />
+        <Route path="/complete-profile" element={<LazyRoutes.Login />} /> {/* Redirect to login as a fallback */}
         
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         

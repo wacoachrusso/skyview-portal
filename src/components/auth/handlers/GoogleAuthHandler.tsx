@@ -112,9 +112,9 @@ export const GoogleAuthHandler = () => {
           return;
         }
         
-        // Profile is complete, redirect to dashboard
-        console.log("GoogleAuthHandler: Profile complete, redirecting to dashboard");
-        navigate("/dashboard", { replace: true });
+        // Profile is complete, redirect to chat page instead of dashboard
+        console.log("GoogleAuthHandler: Profile complete, redirecting to chat");
+        navigate("/chat", { replace: true });
         
         toast({
           title: "Sign In Successful",
