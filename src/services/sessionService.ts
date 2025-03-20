@@ -51,7 +51,9 @@ export const createNewSession = async (userId: string): Promise<any> => {
         session_token: sessionToken,
         device_info: deviceInfo,
         ip_address: ipAddress,
-        status: 'active'
+        status: 'active',
+        last_activity: new Date().toISOString(),
+        last_api_call: new Date().toISOString() // Track the last API call separately
       }])
       .select()
       .single();
@@ -98,7 +100,9 @@ export const validateSessionToken = async (token: string | null): Promise<boolea
       // Update last activity timestamp
       const { error: updateError } = await supabase
         .from('sessions')
-        .update({ last_activity: new Date().toISOString() })
+        .update({ 
+          last_activity: new Date().toISOString() 
+        })
         .eq('session_token', token);
 
       if (updateError) {
@@ -111,6 +115,31 @@ export const validateSessionToken = async (token: string | null): Promise<boolea
     return !!isValid;
   } catch (error) {
     console.error('Unexpected error validating session:', error);
+    return false;
+  }
+};
+
+// New function to update API call timestamp without validating session
+export const updateSessionApiActivity = async (token: string | null): Promise<boolean> => {
+  if (!token) return false;
+  
+  try {
+    // Update last API call timestamp without validating the session
+    const { error: updateError } = await supabase
+      .from('sessions')
+      .update({ 
+        last_api_call: new Date().toISOString() 
+      })
+      .eq('session_token', token);
+
+    if (updateError) {
+      console.warn('Failed to update API activity timestamp:', updateError);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating API activity:', error);
     return false;
   }
 };

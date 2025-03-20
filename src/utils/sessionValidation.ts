@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { NavigateFunction } from "react-router-dom";
 import { toast as toastFunction } from "@/hooks/use-toast";
+import { createNewSession, updateSessionApiActivity } from "@/services/sessionService";
 
 interface ValidationProps {
   navigate: NavigateFunction;
@@ -44,7 +45,6 @@ export const validateCurrentSession = async ({ navigate, toast }: ValidationProp
           localStorage.setItem('session_token', sessionData.session_token);
         } else {
           // Import dynamically to avoid circular dependencies
-          const { createNewSession } = await import('@/services/sessionService');
           await createNewSession(session.user.id);
         }
       } catch (error) {
@@ -128,6 +128,16 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
       return false;
     }
 
+    // Check if we're in the middle of an API call (Skip other session checks during API calls)
+    const isApiCall = sessionStorage.getItem('api_call_in_progress') === 'true';
+
+    if (isApiCall) {
+      // Just update the API call timestamp without doing further checks
+      console.log("API call in progress, updating activity timestamp only");
+      await updateSessionApiActivity(currentToken);
+      return true;
+    }
+
     // Update the last activity timestamp for the session
     const { error: updateError } = await supabase
       .from('sessions')
@@ -159,6 +169,13 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
     if (!isValid) {
       console.log('Session token invalid or expired');
       return false;
+    }
+
+    // During API calls, don't check for other active sessions to prevent session invalidation
+    const isApiCall = sessionStorage.getItem('api_call_in_progress') === 'true';
+    if (isApiCall) {
+      console.log('API call in progress, skipping other session checks');
+      return true;
     }
 
     // Check for other active sessions

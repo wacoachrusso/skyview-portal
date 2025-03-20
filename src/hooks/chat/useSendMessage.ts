@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Message } from "@/types/chat";
+import { updateSessionApiActivity } from "@/services/sessionService";
 
 /**
  * Hook to handle sending messages and AI responses
@@ -40,6 +41,15 @@ export function useSendMessage(
       console.log("Sending message...");
 
       let tempMessage: Message | null = null;
+
+      // Set the API call flag
+      sessionStorage.setItem('api_call_in_progress', 'true');
+      
+      // Update session activity to prevent timeout during API call
+      const currentToken = localStorage.getItem('session_token');
+      if (currentToken) {
+        await updateSessionApiActivity(currentToken);
+      }
 
       try {
         // Create a temporary message for optimistic update
@@ -107,6 +117,8 @@ export function useSendMessage(
           });
         }
       } finally {
+        // Clear the API call flag
+        sessionStorage.removeItem('api_call_in_progress');
         setIsLoading(false);
         console.log("Message sending completed.");
       }
