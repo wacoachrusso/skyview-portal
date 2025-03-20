@@ -14,17 +14,24 @@ interface ChatListProps {
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
+  const scrollTimeoutRef = useRef<number | null>(null);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-    messagesEndRef.current?.scrollIntoView({ behavior });
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    // Small delay to ensure the DOM has updated
+    scrollTimeoutRef.current = window.setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior });
+      scrollTimeoutRef.current = null;
+    }, 50);
   };
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    // Only auto-scroll if there are new messages
-    const shouldAutoScroll = messages.length > previousMessagesLengthRef.current;
-    
-    if (shouldAutoScroll && messages.length > 0) {
+    // Always scroll on new messages
+    if (messages.length > 0) {
       // Use instant scroll for initial load and smooth for new messages
       const behavior = previousMessagesLengthRef.current === 0 ? "auto" : "smooth";
       scrollToBottom(behavior);
@@ -32,6 +39,13 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
     
     // Update the previous messages length reference
     previousMessagesLengthRef.current = messages.length;
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
   }, [messages]);
 
   return (

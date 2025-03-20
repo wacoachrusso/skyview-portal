@@ -15,7 +15,7 @@ export const useSessionMonitoring = () => {
     console.log("Setting up session monitoring");
     let isMonitoringActive = true;
 
-    // Set up interval to validate session with a more reasonable timing (2 minutes)
+    // Set up interval to validate session with a more reasonable timing (5 minutes)
     const validationInterval = setInterval(async () => {
       // Always skip validation if API call is in progress
       if (sessionStorage.getItem('api_call_in_progress') === 'true' || !isMonitoringActive) {
@@ -33,7 +33,7 @@ export const useSessionMonitoring = () => {
         console.error("Error in session validation:", error);
         // Don't invalidate session on validation errors
       }
-    }, 120000); // Check every 2 minutes instead of 1 minute
+    }, 300000); // Check every 5 minutes instead of 2 minutes
 
     // Set up a listener for beforeunload to clean up API call flag
     const handleBeforeUnload = () => {
@@ -43,6 +43,24 @@ export const useSessionMonitoring = () => {
     
     window.addEventListener('beforeunload', handleBeforeUnload);
 
+    // Set up page transition listener to reset API call flag when navigating
+    const handlePageTransition = () => {
+      // Give a short delay to complete any navigation
+      setTimeout(() => {
+        const apiCallId = sessionStorage.getItem('api_call_id');
+        if (apiCallId) {
+          console.log(`Navigation detected, clearing any stuck API call with ID ${apiCallId}`);
+          sessionStorage.removeItem('api_call_in_progress');
+          sessionStorage.removeItem('api_call_id');
+        }
+      }, 200);
+    };
+    
+    // Use intersection observer as a proxy for page transitions
+    const observer = new IntersectionObserver(handlePageTransition, { threshold: 0.1 });
+    const body = document.querySelector('body');
+    if (body) observer.observe(body);
+    
     // Set up visibility change listener to reset API call flag if page is hidden/shown
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -64,6 +82,7 @@ export const useSessionMonitoring = () => {
       clearInterval(validationInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (body) observer.disconnect();
     };
   }, [navigate, toast]);
 };

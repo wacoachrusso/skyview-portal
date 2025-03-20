@@ -41,6 +41,7 @@ export function useSendMessage(
       console.log("Sending message...");
 
       let tempMessage: Message | null = null;
+      let conversationId: string | null = null;
       
       try {
         // CRITICAL: Set the API call flag BEFORE doing anything else
@@ -57,29 +58,30 @@ export function useSendMessage(
           await updateSessionApiActivity(currentToken);
         }
 
+        // Ensure the conversation exists first before adding any messages
+        conversationId = await ensureConversation(currentUserId, content);
+        if (!conversationId) {
+          throw new Error("Failed to create or get conversation");
+        }
+
         // Create a temporary message for optimistic update
         tempMessage = {
           id: crypto.randomUUID(), // Generate a temporary ID
-          conversation_id: currentConversationId || "",
+          conversation_id: conversationId,
           user_id: currentUserId,
           content: content,
           role: "user",
           created_at: new Date().toISOString(),
         };
 
-        // Add the temporary message to the state
+        // Add the temporary message to the state IMMEDIATELY
         setMessages((prev) => {
           console.log("Adding temporary message:", tempMessage);
           return [...prev, tempMessage as Message];
         });
 
-        // Ensure the conversation exists
-        const conversationId = await ensureConversation(currentUserId, content);
-        if (!conversationId) {
-          throw new Error("Failed to create or get conversation");
-        }
-
         // Insert the user message into the database
+        // Making sure to wait for this operation to complete before proceeding
         await insertUserMessage(content, conversationId);
         console.log("User message inserted.");
 
