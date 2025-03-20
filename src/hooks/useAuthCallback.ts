@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +46,7 @@ export const useAuthCallback = () => {
       if (!profile) {
         // Create a new session token for this user
         try {
-          const { createNewSession } = await import('@/services/sessionService');
+          const { createNewSession } = await import('@/services/session');
           await createNewSession(user.id);
           console.log("Created new session token after profile check");
         } catch (error) {
@@ -60,7 +59,7 @@ export const useAuthCallback = () => {
 
       // Create a new session token for this user before redirecting
       try {
-        const { createNewSession } = await import('@/services/sessionService');
+        const { createNewSession } = await import('@/services/session');
         await createNewSession(user.id);
         console.log("Created new session token before redirect");
       } catch (error) {
