@@ -5,11 +5,7 @@ import * as LazyRoutes from "./LazyRoutes";
 import { ErrorBoundary } from "react-error-boundary";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { SessionCheck } from "@/components/chat/settings/SessionCheck";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   useEffect(() => {
@@ -43,111 +39,14 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
+// Simplified protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <>
-      <SessionCheck />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 };
 
+// Simplified admin route component
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [verifying, setVerifying] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  useEffect(() => {
-    let isMounted = true;
-    
-    const verifyAdminStatus = async () => {
-      try {
-        console.log("Starting admin verification process");
-        
-        const { data } = await supabase.auth.getSession();
-        const session = data?.session;
-        
-        if (!session?.user) {
-          console.log("No session found, redirecting to login");
-          if (isMounted) {
-            navigate('/login');
-          }
-          return;
-        }
-        
-        console.log("Fetching profile data for user:", session.user.id);
-        
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('is_admin, email')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching admin status:", error);
-          if (isMounted) {
-            toast({
-              variant: "destructive",
-              title: "Error",
-              description: "Could not verify admin status"
-            });
-            navigate('/dashboard');
-          }
-          return;
-        }
-        
-        console.log("Admin verification result:", profile);
-        
-        if (!profile?.is_admin) {
-          console.log("User is not an admin, redirecting to dashboard");
-          if (isMounted) {
-            toast({
-              variant: "destructive",
-              title: "Access Denied",
-              description: "You need administrator privileges to access this page."
-            });
-            navigate('/dashboard');
-          }
-          return;
-        }
-        
-        console.log("Admin access confirmed for:", profile.email);
-        if (isMounted) {
-          setIsAdmin(true);
-          setVerifying(false);
-        }
-      } catch (error) {
-        console.error("Error verifying admin status:", error);
-        if (isMounted) {
-          navigate('/dashboard');
-        }
-      }
-    };
-    
-    verifyAdminStatus();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate, toast]);
-
-  if (verifying) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
-          <p>Verifying admin access...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <ProtectedRoute>
-      {children}
-    </ProtectedRoute>
-  );
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 };
 
 export function AppRoutes() {
@@ -171,7 +70,7 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
-        <Route path="/complete-profile" element={<LazyRoutes.Login />} /> {/* Redirect to login as a fallback */}
+        <Route path="/complete-profile" element={<LazyRoutes.Login />} />
         
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
