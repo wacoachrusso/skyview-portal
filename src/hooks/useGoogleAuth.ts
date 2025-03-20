@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,8 +23,18 @@ export const useGoogleAuth = () => {
       setSession(session);
       
       // If user signs in, we'll let the GoogleAuthHandler component handle the redirect
-      if (event === 'SIGNED_IN' && window.location.pathname !== '/auth/callback') {
-        navigate('/auth/callback', { replace: true });
+      if (event === 'SIGNED_IN') {
+        // Only redirect if not already on the callback path
+        if (window.location.pathname !== '/auth/callback') {
+          console.log("Auth state is SIGNED_IN, redirecting to callback page");
+          navigate('/auth/callback', { replace: true });
+        }
+      } else if (event === 'SIGNED_OUT') {
+        // Clear local storage and redirect to login
+        localStorage.removeItem('session_token');
+        localStorage.removeItem('supabase.refresh-token');
+        console.log("Auth state is SIGNED_OUT, redirecting to login page");
+        navigate('/login', { replace: true });
       }
     });
 
@@ -38,9 +47,6 @@ export const useGoogleAuth = () => {
     try {
       setLoading(true);
       console.log("Initiating Google sign in...");
-
-      // Clear any existing session data to avoid conflicts
-      localStorage.removeItem('session_token');
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -78,9 +84,17 @@ export const useGoogleAuth = () => {
   const handleSignOut = async () => {
     try {
       setLoading(true);
+      
+      // Clear session data first
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('supabase.refresh-token');
+      document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      
+      // Then sign out from Supabase
       await supabase.auth.signOut();
       setSession(null);
-      localStorage.clear(); // Clear any stored session data
+      
+      // Navigate to login page
       navigate("/login", { replace: true });
       toast({
         title: "Signed Out",
