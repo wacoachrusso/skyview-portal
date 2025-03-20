@@ -1,68 +1,64 @@
 
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSessionState } from "@/hooks/useSessionState";
+import { useAuthStateHandler } from "@/hooks/useAuthStateHandler";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { validateCurrentSession } from "@/utils/sessionValidation";
+import { validateCurrentSession, checkProfileStatus, validateSessionToken } from "@/utils/sessionValidation";
 import { useSessionMonitoring } from "@/hooks/useSessionMonitoring";
 
 export function SessionCheck() {
+  const { checkCurrentSession } = useSessionState();
+  const { handleAuthStateChange } = useAuthStateHandler();
+  const { initializeSession } = useSessionManagement();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   // Set up continuous session monitoring
   useSessionMonitoring();
 
   useEffect(() => {
-    let mounted = true;
-    
-    const checkAuth = async () => {
+    const setupAuth = async () => {
       try {
-        console.log("Checking auth in SessionCheck component");
+        console.log("Setting up auth and checking session...");
         
-        // Check if we have a valid session
+        // Validate current session
         const session = await validateCurrentSession({ navigate, toast });
-        if (!session && mounted) {
-          console.log("No valid session, redirecting to login");
-          navigate('/login');
-          return;
-        }
-        
-        // If we're at the root and have a valid session, redirect to chat
-        if (window.location.pathname === '/' && mounted && session) {
+        if (!session) return;
+       
+        // Validate session token
+        const currentToken = localStorage.getItem('session_token');
+        const isTokenValid = await validateSessionToken(currentToken, { navigate, toast });
+        if (!isTokenValid) return;
+
+        await checkCurrentSession();
+        await initializeSession();
+
+        // Redirect to chat page if the user is authenticated and on the root route
+        if (window.location.pathname === '/') {
           navigate('/chat');
         }
+
       } catch (error) {
-        console.error("Error in SessionCheck:", error);
-        if (mounted) {
-          toast({
-            variant: "destructive",
-            title: "Session Error",
-            description: "An unexpected error occurred. Please try again."
-          });
-          navigate('/login');
-        }
-      }
-    };
-
-    checkAuth();
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed in SessionCheck:", event);
-      
-      if (event === 'SIGNED_OUT' && mounted) {
-        console.log("User signed out, redirecting to login");
-        localStorage.removeItem('session_token');
+        console.error("Unexpected error in setupAuth:", error);
+        localStorage.clear();
+        await supabase.auth.signOut();
         navigate('/login');
       }
-    });
+    };
+
+    setupAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [checkCurrentSession, handleAuthStateChange, initializeSession, navigate, toast]);
 
   return null;
 }

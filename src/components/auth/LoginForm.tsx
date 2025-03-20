@@ -20,13 +20,6 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
     e.preventDefault();
     await onSubmit(email, password);
   };
-  
-  // Add direct focus handler
-  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    console.log(`Input focused: ${e.target.id}`);
-    // Ensure the input is focused
-    e.target.focus();
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -40,10 +33,9 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-white/5 border-white/10 text-white h-10 z-10"
+            className="bg-white/5 border-white/10 text-white h-10"
             required
             placeholder="Enter your email"
-            onFocus={handleInputFocus}
           />
         </div>
 
@@ -65,15 +57,14 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white/5 border-white/10 text-white h-10 pr-10 z-10"
+              className="bg-white/5 border-white/10 text-white h-10 pr-10"
               required
               placeholder="Enter your password"
-              onFocus={handleInputFocus}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 z-20"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -83,7 +74,7 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
 
       <Button
         type="submit"
-        className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold h-11 z-10"
+        className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold h-11"
         disabled={loading}
       >
         {loading ? "Signing In..." : "Sign In"}

@@ -14,12 +14,42 @@ export const validateCurrentSession = async ({ navigate, toast }: ValidationProp
     
     if (sessionError) {
       console.error("Session error:", sessionError);
+      navigate('/login', { replace: true });
       return false;
     }
 
     if (!session) {
       console.log("No active session found");
+      navigate('/login', { replace: true });
       return false;
+    }
+
+    // Validate the session token
+    const sessionToken = localStorage.getItem('session_token');
+    if (!sessionToken) {
+      console.log("No session token found, creating new session");
+      try {
+        // Create a new session for this user if none exists
+        const { data: sessionData } = await supabase
+          .from('sessions')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (sessionData) {
+          console.log("Found existing active session, using it");
+          localStorage.setItem('session_token', sessionData.session_token);
+        } else {
+          // Import dynamically to avoid circular dependencies
+          const { createNewSession } = await import('@/services/sessionService');
+          await createNewSession(session.user.id);
+        }
+      } catch (error) {
+        console.error("Error handling session token:", error);
+      }
     }
 
     return session;
@@ -39,12 +69,14 @@ export const checkProfileStatus = async (userId: string, { navigate, toast }: Va
 
     if (profileError) {
       console.error("Profile fetch error:", profileError);
+      await supabase.auth.signOut();
+      navigate('/login');
       return false;
     }
 
-    // Check if free trial is exhausted
     if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
-      console.log('Free trial exhausted');
+      console.log('Free trial exhausted, logging out');
+      await supabase.auth.signOut();
       toast({
         title: "Free Trial Ended",
         description: "Please select a subscription plan to continue."
@@ -72,11 +104,17 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
 
     if (validationError) {
       console.error("Error validating session:", validationError);
+      if (navigate) {
+        await handleSessionInvalidation(navigate, toast);
+      }
       return false;
     }
     
     if (!sessionValid) {
       console.log("Session token invalid");
+      if (navigate) {
+        await handleSessionInvalidation(navigate, toast);
+      }
       return false;
     }
 
@@ -84,6 +122,9 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       console.log("No user found or error:", userError);
+      if (navigate) {
+        await handleSessionInvalidation(navigate, toast);
+      }
       return false;
     }
 
@@ -105,21 +146,63 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
   }
 };
 
-// Helper function to handle session invalidation
-export const handleSessionInvalidation = async (navigate: NavigateFunction, toast: typeof toastFunction) => {
-  console.log("Handling session invalidation");
+export const checkActiveSession = async (userId: string, sessionToken: string): Promise<boolean> => {
   try {
-    // Clear session tokens
+    console.log('Checking active session for user:', userId);
+    
+    // Check if the session token exists and is valid
+    const { data: isValid } = await supabase
+      .rpc('is_session_valid', {
+        p_session_token: sessionToken
+      });
+
+    if (!isValid) {
+      console.log('Session token invalid or expired');
+      return false;
+    }
+
+    // Check for other active sessions
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('sessions')
+      .select('session_token, status')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .neq('session_token', sessionToken);
+
+    if (sessionsError) {
+      console.error('Error checking active sessions:', sessionsError);
+      return false;
+    }
+
+    // If there are other active sessions, this session is invalid
+    if (sessions && sessions.length > 0) {
+      console.log('Other active sessions found');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in checkActiveSession:', error);
+    return false;
+  }
+};
+
+const handleSessionInvalidation = async (navigate: NavigateFunction, toast: typeof toastFunction) => {
+  console.log("Invalidating session and logging out user");
+  try {
+    // Clear all local storage and cookies
     localStorage.removeItem('session_token');
+    localStorage.removeItem('supabase.refresh-token');
+    document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
     
-    // Clear all Supabase tokens
-    await supabase.auth.signOut({ scope: 'local' });
+    // Sign out from Supabase
+    await supabase.auth.signOut();
     
-    // Show toast notification if available
+    // Only show toast if it exists
     if (toast) {
       toast({
         title: "Session Ended",
-        description: "Your session has expired. Please sign in again."
+        description: "Please sign in again to continue."
       });
     }
     
@@ -129,5 +212,8 @@ export const handleSessionInvalidation = async (navigate: NavigateFunction, toas
     }
   } catch (error) {
     console.error("Error in handleSessionInvalidation:", error);
+    if (navigate) {
+      navigate('/login', { replace: true });
+    }
   }
 };

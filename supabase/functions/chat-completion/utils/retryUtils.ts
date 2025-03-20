@@ -1,4 +1,3 @@
-
 const DEFAULT_RETRY_COUNT = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 

@@ -1,32 +1,17 @@
 
 import { Button } from "@/components/ui/button";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
-import { useState } from "react";
 
 export const GoogleSignInButton = () => {
   const { handleGoogleSignIn, loading } = useGoogleAuth();
-  const [isPressed, setIsPressed] = useState(false);
-  
-  const handleMouseDown = () => setIsPressed(true);
-  const handleMouseUp = () => setIsPressed(false);
-  
-  // Simplified click handler with focus on reliability
-  const handleClick = () => {
-    console.log("Google sign-in button clicked");
-    handleGoogleSignIn();
-  };
   
   return (
     <Button
       type="button"
       variant="outline"
-      className={`w-full border-white/20 text-white hover:bg-white/10 hover:text-white active:scale-95 transition-all z-20 ${isPressed ? 'bg-white/10 scale-95' : ''}`}
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => setIsPressed(false)}
+      className="w-full border-white/20 text-white hover:bg-white/10 hover:text-white"
+      onClick={handleGoogleSignIn}
       disabled={loading}
-      tabIndex={0}
     >
       {loading ? (
         <div className="flex items-center">

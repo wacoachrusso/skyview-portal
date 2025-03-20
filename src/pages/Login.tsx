@@ -113,7 +113,7 @@ const Login = () => {
             console.error("Error creating session after login:", sessionError);
           }
           
-          // Redirect to chat
+          // Redirect to chat instead of dashboard
           navigate("/chat", { replace: true });
         }
       }
@@ -141,7 +141,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-premium-gradient flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8 overflow-auto">
+    <div className="min-h-screen bg-premium-gradient flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
       {/* Background effects */}
       <div className="absolute inset-0 bg-[url('/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png')] opacity-5 bg-repeat mix-blend-overlay pointer-events-none" aria-hidden="true" />
       <div className="absolute inset-0 bg-gradient-to-br from-brand-navy/50 to-brand-slate/50 pointer-events-none" aria-hidden="true" />
@@ -149,7 +149,7 @@ const Login = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="glass-morphism rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10">
           {/* Subtle glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-brand-gold/20 rounded-full blur-xl opacity-75 animate-pulse-subtle" aria-hidden="true" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/10 to-brand-gold/10 rounded-2xl blur-xl opacity-70 -z-10" />
           
           <div className="mb-8 flex flex-col items-center">
             <div className="relative mb-6">
