@@ -1,7 +1,7 @@
 
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useLayoutEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatListProps {
@@ -21,32 +21,34 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
       clearTimeout(scrollTimeoutRef.current);
     }
     
-    // Small delay to ensure the DOM has updated
+    // Use a very short timeout to ensure DOM updates first
     scrollTimeoutRef.current = window.setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior });
       scrollTimeoutRef.current = null;
-    }, 50);
+    }, 10);
   };
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
+  // Use useLayoutEffect to scroll before browser paints
+  useLayoutEffect(() => {
     // Always scroll on new messages
-    if (messages.length > 0) {
+    if (messages.length > previousMessagesLengthRef.current) {
       // Use instant scroll for initial load and smooth for new messages
       const behavior = previousMessagesLengthRef.current === 0 ? "auto" : "smooth";
       scrollToBottom(behavior);
+      
+      // Update the previous messages length reference
+      previousMessagesLengthRef.current = messages.length;
     }
-    
-    // Update the previous messages length reference
-    previousMessagesLengthRef.current = messages.length;
-    
-    // Cleanup timeout on unmount
+  }, [messages]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
     return () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [messages]);
+  }, []);
 
   return (
     <div className="flex flex-col h-full">

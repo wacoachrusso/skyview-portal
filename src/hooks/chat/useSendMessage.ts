@@ -74,16 +74,31 @@ export function useSendMessage(
           created_at: new Date().toISOString(),
         };
 
-        // Add the temporary message to the state IMMEDIATELY
+        // IMPORTANT: Add the temporary message to the state IMMEDIATELY
+        // This ensures the message appears in the UI right away
         setMessages((prev) => {
-          console.log("Adding temporary message:", tempMessage);
+          console.log("Adding temporary message to UI immediately:", tempMessage);
           return [...prev, tempMessage as Message];
         });
+        
+        // Delay a tiny bit to ensure UI updates before heavy processing
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         // Insert the user message into the database
         // Making sure to wait for this operation to complete before proceeding
-        await insertUserMessage(content, conversationId);
-        console.log("User message inserted.");
+        const actualMessage = await insertUserMessage(content, conversationId);
+        console.log("User message inserted into database:", actualMessage);
+
+        // Replace the temporary message with the actual one (with real ID)
+        if (actualMessage && actualMessage.id) {
+          setMessages((prev) => {
+            return prev.map(msg => 
+              msg.id === tempMessage?.id ? 
+                { ...actualMessage, role: "user" as "user" | "assistant" } : 
+                msg
+            );
+          });
+        }
 
         // Update session activity again before the long-running AI call
         if (currentToken) {
