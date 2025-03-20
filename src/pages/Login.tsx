@@ -14,6 +14,10 @@ const Login = () => {
   useEffect(() => {
     console.log("Login page mounted");
     checkSession();
+    
+    // Clear any potential API call flags when we hit the login page
+    sessionStorage.removeItem('api_call_in_progress');
+    sessionStorage.removeItem('api_call_id');
   }, []);
 
   const checkSession = async () => {
@@ -47,6 +51,15 @@ const Login = () => {
           return;
         }
         
+        // IMPORTANT: Create a new session for this user to ensure we have a valid session token
+        try {
+          const { createNewSession } = await import('@/services/sessionService');
+          await createNewSession(data.session.user.id);
+          console.log("Created new session during login check");
+        } catch (sessionError) {
+          console.error("Error creating session during login check:", sessionError);
+        }
+        
         if (profile && profile.user_type && profile.airline) {
           // Profile is complete, redirect to chat
           navigate("/chat", { replace: true });
@@ -70,6 +83,10 @@ const Login = () => {
   const handleLogin = async (email: string, password?: string) => {
     setLoading(true);
     try {
+      // Clear any API call flags before login
+      sessionStorage.removeItem('api_call_in_progress');
+      sessionStorage.removeItem('api_call_id');
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: password || "",

@@ -1,11 +1,10 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const createNewSession = async (userId: string): Promise<any> => {
   console.log('Creating new session for user:', userId);
   
   try {
-    // First invalidate any existing sessions
+    // First invalidate any existing sessions - forcefully end all other sessions
     const { error: invalidateError } = await supabase
       .rpc('invalidate_other_sessions', {
         p_user_id: userId,
@@ -17,7 +16,7 @@ export const createNewSession = async (userId: string): Promise<any> => {
       // Continue despite error, as this might be the first session
     }
 
-    // Create new session token
+    // Create new session token with a longer expiration (2 hours)
     const sessionToken = crypto.randomUUID();
 
     // Get device info
@@ -43,7 +42,10 @@ export const createNewSession = async (userId: string): Promise<any> => {
       console.warn('Could not fetch IP info:', error);
     }
 
-    // Create new session
+    // Create new session with 2 hour expiration
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 2); // 2 hour expiration
+    
     const { data: session, error: createError } = await supabase
       .from('sessions')
       .insert([{
@@ -52,7 +54,8 @@ export const createNewSession = async (userId: string): Promise<any> => {
         device_info: deviceInfo,
         ip_address: ipAddress,
         status: 'active',
-        last_activity: new Date().toISOString()
+        last_activity: new Date().toISOString(),
+        expires_at: expiresAt.toISOString()
       }])
       .select()
       .single();
@@ -84,6 +87,12 @@ export const validateSessionToken = async (token: string | null): Promise<boolea
   if (!token) return false;
   
   try {
+    // Skip validation during API calls
+    if (sessionStorage.getItem('api_call_in_progress') === 'true') {
+      console.log("API call in progress, skipping token validation");
+      return true;
+    }
+    
     console.log('Validating session token');
     const { data: isValid, error } = await supabase
       .rpc('is_session_valid', {
@@ -118,12 +127,13 @@ export const validateSessionToken = async (token: string | null): Promise<boolea
   }
 };
 
-// New function to update API call timestamp without validating session
+// Update session activity without validation - CRITICAL for API calls
 export const updateSessionApiActivity = async (token: string | null): Promise<boolean> => {
   if (!token) return false;
   
   try {
-    // Just update the last activity timestamp for API calls
+    console.log('Updating session activity during API call');
+    // Just update the last activity timestamp directly without validation
     const { error: updateError } = await supabase
       .from('sessions')
       .update({ 

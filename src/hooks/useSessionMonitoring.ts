@@ -15,11 +15,11 @@ export const useSessionMonitoring = () => {
     console.log("Setting up session monitoring");
     let isMonitoringActive = true;
 
-    // Set up interval to validate session with a more reasonable timing
+    // Set up interval to validate session with a more reasonable timing (2 minutes)
     const validationInterval = setInterval(async () => {
-      // Skip validation if API call is in progress or navigation is happening
+      // Always skip validation if API call is in progress
       if (sessionStorage.getItem('api_call_in_progress') === 'true' || !isMonitoringActive) {
-        console.log("Skipping session validation - operation in progress");
+        console.log("Skipping session monitoring - operation in progress");
         return;
       }
       
@@ -31,21 +31,39 @@ export const useSessionMonitoring = () => {
         }
       } catch (error) {
         console.error("Error in session validation:", error);
+        // Don't invalidate session on validation errors
       }
-    }, 60000); // Check every minute instead of 30 seconds
+    }, 120000); // Check every 2 minutes instead of 1 minute
 
     // Set up a listener for beforeunload to clean up API call flag
     const handleBeforeUnload = () => {
       sessionStorage.removeItem('api_call_in_progress');
+      sessionStorage.removeItem('api_call_id');
     };
     
     window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Set up visibility change listener to reset API call flag if page is hidden/shown
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // When page becomes visible again, check if an API call has been stuck
+        const apiCallId = sessionStorage.getItem('api_call_id');
+        if (apiCallId) {
+          console.log(`Detected potentially stuck API call with ID ${apiCallId}, clearing flag`);
+          sessionStorage.removeItem('api_call_in_progress');
+          sessionStorage.removeItem('api_call_id');
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       console.log("Cleaning up session monitoring");
       isMonitoringActive = false;
       clearInterval(validationInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [navigate, toast]);
 };

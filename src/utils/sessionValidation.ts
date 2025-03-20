@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { NavigateFunction } from "react-router-dom";
 import { toast as toastFunction } from "@/hooks/use-toast";
@@ -95,11 +96,11 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
   if (!currentToken) return false;
 
   try {
-    // Skip full validation if we're in the middle of an API call
+    // Critical: ALWAYS skip full validation during API calls
     const isApiCall = sessionStorage.getItem('api_call_in_progress') === 'true';
     if (isApiCall) {
-      console.log("API call in progress, skipping full session validation");
-      // Just touch the session to keep it alive during API calls
+      console.log("API call in progress, skipping ALL session validation checks");
+      // Just update the timestamp without any validation
       try {
         await updateSessionApiActivity(currentToken);
       } catch (error) {
@@ -162,9 +163,9 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
   try {
     console.log('Checking active session for user:', userId);
     
-    // Skip check during API calls
+    // ALWAYS skip ALL session checks during API calls
     if (sessionStorage.getItem('api_call_in_progress') === 'true') {
-      console.log("API call in progress, skipping active session check");
+      console.log("API call in progress, skipping ALL session checks");
       return true;
     }
     
@@ -189,9 +190,9 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
 const handleSessionInvalidation = async (navigate: NavigateFunction, toast: typeof toastFunction) => {
   console.log("Invalidating session and logging out user");
   try {
-    // Don't invalidate during API calls
+    // CRITICAL: Absolutely never invalidate during API calls
     if (sessionStorage.getItem('api_call_in_progress') === 'true') {
-      console.log("API call in progress, skipping session invalidation");
+      console.log("API call in progress, BLOCKING session invalidation");
       return;
     }
     

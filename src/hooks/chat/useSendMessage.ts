@@ -43,8 +43,13 @@ export function useSendMessage(
       let tempMessage: Message | null = null;
       
       try {
-        // Set the API call flag before making any API calls
+        // CRITICAL: Set the API call flag BEFORE doing anything else
+        // Using a unique identifier to prevent conflicts between multiple calls
+        const apiCallId = Date.now().toString();
         sessionStorage.setItem('api_call_in_progress', 'true');
+        sessionStorage.setItem('api_call_id', apiCallId);
+        
+        console.log(`API call started with ID: ${apiCallId}`);
         
         // Update session activity to prevent timeout during API call
         const currentToken = localStorage.getItem('session_token');
@@ -78,6 +83,11 @@ export function useSendMessage(
         await insertUserMessage(content, conversationId);
         console.log("User message inserted.");
 
+        // Update session activity again before the long-running AI call
+        if (currentToken) {
+          await updateSessionApiActivity(currentToken);
+        }
+
         // Call the AI completion function
         const { data, error } = await supabase.functions.invoke("chat-completion", {
           body: {
@@ -95,6 +105,11 @@ export function useSendMessage(
         if (!data || !data.response) {
           console.error("Invalid response from AI completion:", data);
           throw new Error("Invalid response from chat-completion");
+        }
+
+        // Update session activity one more time after the AI call
+        if (currentToken) {
+          await updateSessionApiActivity(currentToken);
         }
 
         // Insert the AI response
@@ -117,8 +132,17 @@ export function useSendMessage(
           });
         }
       } finally {
-        // Clear the API call flag
-        sessionStorage.removeItem('api_call_in_progress');
+        // CRITICAL: Clear the API call flag with a small delay to ensure all operations complete
+        const apiCallId = sessionStorage.getItem('api_call_id');
+        console.log(`API call with ID ${apiCallId} completed, clearing flag after delay`);
+        
+        // Use a short timeout to ensure any pending requests complete
+        setTimeout(() => {
+          sessionStorage.removeItem('api_call_in_progress');
+          sessionStorage.removeItem('api_call_id');
+          console.log("API call flag cleared");
+        }, 500);
+        
         setIsLoading(false);
         console.log("Message sending completed.");
       }
