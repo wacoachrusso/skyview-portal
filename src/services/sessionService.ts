@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const createNewSession = async (userId: string) => {
@@ -20,9 +19,13 @@ export const createNewSession = async (userId: string) => {
     const sessionToken = crypto.randomUUID();
 
     // Get device info
-    const { data: deviceInfo } = await fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .catch(() => ({ ip: 'unknown' }));
+    let deviceInfo = { ip: 'unknown' };
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      deviceInfo = await response.json();
+    } catch (error) {
+      console.error('Error fetching device info:', error);
+    }
 
     // Create new session
     const { data: session, error: createError } = await supabase
@@ -83,6 +86,11 @@ export const validateSessionToken = async (sessionToken: string) => {
 
 export const updateSessionActivity = async (sessionToken: string) => {
   try {
+    if (!sessionToken) {
+      console.error('Cannot update session activity: No session token provided');
+      return;
+    }
+    
     const { error } = await supabase
       .from('sessions')
       .update({ last_activity: new Date().toISOString() })
@@ -93,5 +101,34 @@ export const updateSessionActivity = async (sessionToken: string) => {
     }
   } catch (error) {
     console.error('Error in updateSessionActivity:', error);
+  }
+};
+
+// Add a new function to refresh the session if needed
+export const refreshSessionIfNeeded = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // If no session or near expiry (within 5 minutes), refresh
+    if (!session || (session.expires_at && new Date(session.expires_at * 1000) <= new Date(Date.now() + 5 * 60 * 1000))) {
+      console.log('Session needs refreshing');
+      
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error('Error refreshing session:', error);
+        return false;
+      }
+      
+      if (data.session) {
+        console.log('Session refreshed successfully');
+        return true;
+      }
+    }
+    
+    return !!session; // Return true if session exists
+  } catch (error) {
+    console.error('Error in refreshSessionIfNeeded:', error);
+    return false;
   }
 };
