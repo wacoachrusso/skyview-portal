@@ -7,14 +7,29 @@ interface AuthCallbackProps {
   toast: typeof toastFunction;
 }
 
-export const handleStripeCheckout = async (priceId: string) => {
+export const handleStripeCheckout = async (priceId: string, email?: string) => {
   console.log('Creating checkout session for plan:', priceId);
+  
+  const { data: { session } } = await supabase.auth.getSession();
+  const userEmail = email || session?.user.email;
+  
+  if (!userEmail) {
+    throw new Error('User email not found');
+  }
+  
+  // Get session token for additional security
+  const sessionToken = localStorage.getItem('session_token');
   
   const response = await supabase.functions.invoke('create-checkout-session', {
     body: JSON.stringify({
       priceId,
       mode: 'subscription',
+      email: userEmail,
+      sessionToken,
     }),
+    headers: session ? {
+      Authorization: `Bearer ${session.access_token}`
+    } : undefined
   });
 
   if (response.error) throw response.error;

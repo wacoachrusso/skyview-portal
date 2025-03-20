@@ -1,61 +1,16 @@
+
 import { PricingCard } from "./PricingCard";
 import { PricingHeader } from "./PricingHeader";
 import { plans } from "./pricingPlans";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePricingCard } from "./pricing-card/usePricingCard";
 
 export function PricingSection() {
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const handlePlanSelection = async (plan: any) => {
-    try {
-      console.log('Plan selected:', plan);
-      
-      // Check if user is already logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.log('User not logged in, redirecting to signup with plan:', plan.name);
-        navigate('/signup', { 
-          state: { 
-            selectedPlan: plan.name.toLowerCase(),
-            priceId: plan.priceId,
-            mode: plan.mode
-          }
-        });
-        return;
-      }
-
-      // For logged-in users, create checkout session directly
-      console.log('Creating checkout session for logged-in user');
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: {
-          priceId: plan.priceId,
-          mode: plan.mode,
-          email: session.user.email
-        }
-      });
-
-      if (error) {
-        console.error('Error creating checkout session:', error);
-        throw error;
-      }
-
-      if (data?.url) {
-        console.log('Redirecting to checkout:', data.url);
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Error handling plan selection:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to process plan selection. Please try again."
-      });
-    }
-  };
+  const { handlePlanSelection } = usePricingCard();
 
   return (
     <section id="pricing-section" className="py-20 relative overflow-hidden">
@@ -75,7 +30,6 @@ export function PricingSection() {
               priceId={plan.priceId}
               mode={plan.mode}
               popular={plan.isPopular}
-              onSelect={() => handlePlanSelection(plan)}
             />
           ))}
         </div>

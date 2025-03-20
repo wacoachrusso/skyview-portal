@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,16 +50,14 @@ export const usePricingHandler = () => {
         email: userEmail
       });
 
-      // Get current session token
+      // Get session token for additional security
       const sessionToken = localStorage.getItem('session_token');
-      if (!sessionToken) {
-        throw new Error('No session token found');
-      }
 
       const response = await supabase.functions.invoke('create-checkout-session', {
         body: JSON.stringify({
           priceId: plan.priceId,
           mode: plan.mode,
+          email: userEmail,
           sessionToken
         }),
         headers: {
