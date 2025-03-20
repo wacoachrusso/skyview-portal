@@ -4,12 +4,8 @@ import { lazy } from "react";
 // Fix lazy loading to handle named exports vs default exports
 export const Index = lazy(() => import("@/pages/Index"));
 
-// For Login component which has a named export
-export const Login = lazy(() => 
-  import("@/pages/Login").then(module => {
-    return { default: module.Login };
-  })
-);
+// For Login component which is now a default export
+export const Login = lazy(() => import("@/pages/Login"));
 
 export const SignUp = lazy(() => import("@/pages/SignUp"));
 export const Chat = lazy(() => import("@/pages/Chat"));
