@@ -3,7 +3,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { ChatSidebar } from "../ChatSidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChatNavbar } from "./ChatNavbar";
 
 interface ChatLayoutProps {
   children: React.ReactNode;
@@ -24,7 +23,6 @@ export function ChatLayout({
 
   return (
     <div className="flex flex-col h-full">
-      <ChatNavbar />
       <div className="flex flex-1 overflow-hidden">
         {!isMobile && (
           <div className="w-64 sm:w-80 flex-shrink-0 border-r border-border">

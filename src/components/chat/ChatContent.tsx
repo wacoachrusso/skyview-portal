@@ -1,3 +1,4 @@
+
 import { Message } from "@/types/chat";
 import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
@@ -75,7 +76,7 @@ export function ChatContent({
 
   return (
     <div className="flex flex-col h-full">
-      <ChatHeader onNewChat={onNewChat || (() => {})} />
+      <ChatHeader onNewChat={onNewChat || (() => {})} isLoading={isLoading} />
       {isOffline && <OfflineAlert offlineError={offlineError || loadError} />}
       <ChatContainer
         messages={displayMessages}
@@ -90,8 +91,8 @@ export function ChatContent({
           onSendMessage={onSendMessage}
           isLoading={isLoading}
           disabled={isOffline || shouldDisableChat}
-          queryCount={userProfile?.query_count || 0} // Pass queryCount
-          subscriptionPlan={userProfile?.subscription_plan || "free"} // Pass subscriptionPlan
+          queryCount={userProfile?.query_count || 0}
+          subscriptionPlan={userProfile?.subscription_plan || "free"}
         />
       </div>
     </div>

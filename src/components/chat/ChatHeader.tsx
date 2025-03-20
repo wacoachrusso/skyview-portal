@@ -1,17 +1,20 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { useContractHandler } from "@/hooks/useContractHandler";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
+import { Icons } from "@/components/icons";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
   onBack?: () => void;
   showBackButton?: boolean;
+  isLoading?: boolean;
 }
 
-export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoading = false }: ChatHeaderProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { handleContractClick } = useContractHandler();
@@ -31,12 +34,18 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false }: ChatHe
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
-        <div className="flex flex-col items-start">
-          <h1 className="text-lg font-semibold text-foreground leading-none"></h1>
+        <div className="flex items-center gap-2">
+          <img 
+            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+            alt="SkyGuide Logo" 
+            className="h-7 w-auto"
+          />
+          <h1 className="text-lg font-semibold text-foreground leading-none">SkyGuide</h1>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
+        {isLoading && <Icons.spinner className="h-4 w-4 mr-2" />}
         <Button
           variant="ghost"
           size="sm"

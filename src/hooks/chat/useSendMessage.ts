@@ -1,3 +1,4 @@
+
 import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -43,8 +44,7 @@ export function useSendMessage(
       let conversationId: string | null = null;
       
       try {
-        // CRITICAL: Set the API call flag BEFORE doing anything else
-        // Using a unique identifier to prevent conflicts between multiple calls
+        // Set the API call flag
         const apiCallId = Date.now().toString();
         sessionStorage.setItem('api_call_in_progress', 'true');
         sessionStorage.setItem('api_call_id', apiCallId);
@@ -57,15 +57,15 @@ export function useSendMessage(
           await updateSessionApiActivity(currentToken);
         }
 
-        // Ensure the conversation exists first before adding any messages
+        // Ensure the conversation exists
         conversationId = await ensureConversation(currentUserId, content);
         if (!conversationId) {
           throw new Error("Failed to create or get conversation");
         }
 
-        // Create a temporary message for optimistic update
+        // Create a temporary message for immediate display
         tempMessage = {
-          id: crypto.randomUUID(), // Generate a temporary ID
+          id: crypto.randomUUID(),
           conversation_id: conversationId,
           user_id: currentUserId,
           content: content,
@@ -73,22 +73,17 @@ export function useSendMessage(
           created_at: new Date().toISOString(),
         };
 
-        // IMPORTANT: Add the temporary message to the state IMMEDIATELY
-        // This ensures the message appears in the UI right away
+        // Add the temporary message to the state immediately
         setMessages((prev) => {
           console.log("Adding temporary message to UI immediately:", tempMessage);
           return [...prev, tempMessage as Message];
         });
         
-        // Delay a tiny bit to ensure UI updates before heavy processing
-        await new Promise(resolve => setTimeout(resolve, 50));
-
         // Insert the user message into the database
-        // Making sure to wait for this operation to complete before proceeding
         const actualMessage = await insertUserMessage(content, conversationId);
         console.log("User message inserted into database:", actualMessage);
 
-        // Replace the temporary message with the actual one (with real ID)
+        // Replace the temporary message with the actual one
         if (actualMessage && actualMessage.id) {
           setMessages((prev) => {
             return prev.map(msg => 
@@ -99,19 +94,42 @@ export function useSendMessage(
           });
         }
 
-        // Update session activity again before the long-running AI call
+        // Update session activity again before the AI call
         if (currentToken) {
           await updateSessionApiActivity(currentToken);
         }
 
-        // Call the AI completion function
-        const { data, error } = await supabase.functions.invoke("chat-completion", {
+        // Add an immediate AI typing indicator message
+        const typingMessage: Message = {
+          id: 'typing-' + Date.now().toString(),
+          conversation_id: conversationId,
+          user_id: null,
+          content: '',
+          role: "assistant",
+          created_at: new Date().toISOString(),
+        };
+
+        setMessages(prev => [...prev, typingMessage]);
+
+        // Set timeout for AI response
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("AI response timeout")), 30000);
+        });
+
+        // Call the AI completion function with timeout
+        const responsePromise = supabase.functions.invoke("chat-completion", {
           body: {
             content: `${content}`,
             subscriptionPlan: userProfile?.subscription_plan || "free",
             assistantId: userProfile?.assistant_id || "default_assistant_id",
           },
         });
+
+        // Race between response and timeout
+        const { data, error } = await Promise.race([
+          responsePromise,
+          timeoutPromise.then(() => ({ data: null, error: new Error("AI response timeout") }))
+        ]) as any;
 
         if (error) {
           console.error("AI completion error:", error);
@@ -123,10 +141,13 @@ export function useSendMessage(
           throw new Error("Invalid response from chat-completion");
         }
 
-        // Update session activity one more time after the AI call
+        // Update session activity once more after the AI call
         if (currentToken) {
           await updateSessionApiActivity(currentToken);
         }
+
+        // Remove the typing indicator message
+        setMessages(prev => prev.filter(msg => msg.id !== typingMessage.id));
 
         // Insert the AI response
         await insertAIMessage(data.response, conversationId);
@@ -135,9 +156,14 @@ export function useSendMessage(
         console.error("Error sending message:", error);
         toast({
           title: "Error",
-          description: "Failed to send message. Please try again.",
+          description: "Failed to send message or receive response. Please try again.",
           variant: "destructive",
-          duration: 2000,
+          duration: 3000,
+        });
+
+        // Remove typing indicator if it exists
+        setMessages((prev) => {
+          return prev.filter((msg) => !msg.id.toString().startsWith('typing-'));
         });
 
         // Remove the temporary message if an error occurs
@@ -148,11 +174,10 @@ export function useSendMessage(
           });
         }
       } finally {
-        // CRITICAL: Clear the API call flag with a small delay to ensure all operations complete
+        // Clear the API call flag with a small delay
         const apiCallId = sessionStorage.getItem('api_call_id');
         console.log(`API call with ID ${apiCallId} completed, clearing flag after delay`);
         
-        // Use a short timeout to ensure any pending requests complete
         setTimeout(() => {
           sessionStorage.removeItem('api_call_in_progress');
           sessionStorage.removeItem('api_call_id');

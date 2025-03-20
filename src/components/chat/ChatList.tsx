@@ -53,13 +53,17 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   return (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 pb-20">
-        <div className="flex flex-col gap-3 p-3 sm:p-5">
-          {messages.map((message) => (
+        <div className="flex flex-col gap-4 p-4 md:p-6">
+          {messages.map((message, index) => (
             <ChatMessage
               key={message.id}
               message={message}
               isCurrentUser={message.user_id === currentUserId}
               onCopy={() => onCopyMessage(message.content)}
+              isLastInGroup={
+                index === messages.length - 1 || 
+                messages[index + 1]?.role !== message.role
+              }
             />
           ))}
           
