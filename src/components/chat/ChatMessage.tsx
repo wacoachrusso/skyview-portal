@@ -12,9 +12,10 @@ interface ChatMessageProps {
   message: Message;
   isCurrentUser: boolean;
   onCopy: () => void;
+  isLastInGroup?: boolean; // Added this optional prop
 }
 
-export function ChatMessage({ message, isCurrentUser, onCopy }: ChatMessageProps) {
+export function ChatMessage({ message, isCurrentUser, onCopy, isLastInGroup }: ChatMessageProps) {
   const [isFlagDialogOpen, setIsFlagDialogOpen] = useState(false);
   const { isSubmittingFeedback, feedback, handleFeedback } = useFeedbackHandling(message.id, isCurrentUser);
 
