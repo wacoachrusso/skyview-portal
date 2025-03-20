@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { handleAuthSession, handlePasswordReset } from "@/utils/auth/sessionHandler";
 import { Icons } from "@/components/icons";
-import { OAuthSignIn } from "@/components/auth/OAuthSignIn";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { createNewSession, validateSessionToken } from "@/services/session";
 
 const Login = () => {
@@ -23,6 +23,16 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const next = searchParams.get("next") ?? "/";
+
+  // Check for error param in URL (from Google auth callback)
+  const errorParam = searchParams.get("error");
+  if (errorParam) {
+    toast({
+      variant: "destructive",
+      title: "Authentication Error",
+      description: errorParam || "Failed to complete authentication. Please try again."
+    });
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,7 +153,7 @@ const Login = () => {
               </span>
             </div>
           </div>
-          <OAuthSignIn />
+          <GoogleSignInButton />
         </CardContent>
         <CardContent className="text-center">
           <Button

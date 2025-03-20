@@ -25,7 +25,7 @@ export const useGoogleAuth = () => {
         // If we have a session but we're on the login page, redirect to dashboard
         if (session && window.location.pathname === '/login') {
           console.log("Already logged in, redirecting to dashboard...");
-          navigate('/dashboard', { replace: true });
+          navigate('/chat', { replace: true });
         }
       } catch (err) {
         console.error("Unexpected error fetching session:", err);
