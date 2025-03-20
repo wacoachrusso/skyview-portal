@@ -1,4 +1,3 @@
-
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,7 +8,7 @@ import { LazyMotion, domAnimation } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { createNewSession, validateSessionToken } from "@/services/sessionService";
+import { createNewSession, validateSessionToken, invalidateSessionToken } from "@/services/session";
 
 const queryClient = new QueryClient({
   defaultOptions: {

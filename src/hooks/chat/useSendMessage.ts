@@ -1,9 +1,8 @@
-
 import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Message } from "@/types/chat";
-import { updateSessionApiActivity } from "@/services/sessionService";
+import { updateSessionApiActivity } from "@/services/session";
 
 /**
  * Hook to handle sending messages and AI responses
