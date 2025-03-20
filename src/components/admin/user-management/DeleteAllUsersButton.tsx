@@ -42,7 +42,7 @@ export const DeleteAllUsersButton = () => {
 
       toast({
         title: "Users Deleted",
-        description: `Successfully deleted ${successCount} users. ${failCount > 0 ? `Failed to delete ${failCount} users.` : ''}`,
+        description: `Successfully deleted ${successCount} users including auth records. ${failCount > 0 ? `Failed to delete ${failCount} users.` : ''}`,
       });
 
       setIsOpen(false);
@@ -85,11 +85,16 @@ export const DeleteAllUsersButton = () => {
                 </p>
                 <ul className="list-disc list-inside text-amber-700 mt-1">
                   <li>User profiles</li>
-                  <li>Authentication data</li>
+                  <li>Authentication data (complete removal from auth system)</li>
                   <li>All conversations and messages</li>
                   <li>Session data</li>
                   <li>Consent records</li>
+                  <li>Contract uploads</li>
+                  <li>Alpha tester information</li>
                 </ul>
+                <p className="text-amber-700 mt-2 font-medium">
+                  Users will be completely removed from the system and their emails will be available for new signups.
+                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>

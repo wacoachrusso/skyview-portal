@@ -90,15 +90,54 @@ serve(async (req) => {
             .delete()
             .eq("user_id", user.id);
 
-          // Delete profile
+          // Delete alpha tester records if they exist
+          await supabase
+            .from("alpha_testers")
+            .delete()
+            .eq("profile_id", user.id);
+
+          // Delete any contract uploads
+          const { data: uploads } = await supabase
+            .from("contract_uploads")
+            .select("file_path")
+            .eq("user_id", user.id);
+            
+          if (uploads && uploads.length > 0) {
+            await supabase.storage
+              .from("contracts")
+              .remove(uploads.map(upload => upload.file_path));
+              
+            await supabase
+              .from("contract_uploads")
+              .delete()
+              .eq("user_id", user.id);
+          }
+
+          // Delete referrals
+          await supabase
+            .from("referrals")
+            .delete()
+            .eq("referrer_id", user.id);
+
+          // Delete release note changes
+          await supabase
+            .from("release_note_changes")
+            .delete()
+            .eq("user_id", user.id);
+
+          // Delete profile - this must be done after all dependent records
           await supabase
             .from("profiles")
             .delete()
             .eq("id", user.id);
         }
 
-        // Delete the user from auth.users
-        const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+        // Make sure we actually delete the user from auth.users by using admin.deleteUser
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(
+          user.id,
+          // Force hard delete to fully remove the user
+          true
+        );
         
         if (deleteError) {
           console.error(`Error deleting user ${user.email}:`, deleteError);

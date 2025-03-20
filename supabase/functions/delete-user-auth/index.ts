@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -39,8 +40,13 @@ serve(async (req) => {
       throw new Error(userError?.message || "User not found");
     }
 
-    // Delete the user from auth.users
-    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+    // Delete the user from auth.users with hard delete option
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(
+      userId,
+      // This second parameter forces a hard delete
+      true
+    );
+    
     if (deleteError) {
       console.error("Error deleting user:", deleteError);
       throw deleteError;
