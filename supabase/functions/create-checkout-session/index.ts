@@ -7,6 +7,11 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
 });
 
+const isTestMode = () => {
+  const key = Deno.env.get('STRIPE_SECRET_KEY') || '';
+  return key.startsWith('sk_test_');
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -17,7 +22,13 @@ serve(async (req) => {
     // Get the request body
     const { priceId, mode, email, sessionToken } = await req.json();
     
-    console.log('Create checkout session request:', { priceId, mode, email });
+    console.log('Create checkout session request:', { 
+      priceId, 
+      mode, 
+      email,
+      isTestMode: isTestMode(),
+      keyPrefix: Deno.env.get('STRIPE_SECRET_KEY')?.substring(0, 8) || 'not-found'
+    });
 
     if (!priceId || !email) {
       return new Response(
@@ -42,12 +53,14 @@ serve(async (req) => {
       client_reference_id: sessionToken || undefined,
       metadata: {
         email: email,
+        environment: isTestMode() ? 'test' : 'production'
       },
     });
 
     console.log('Checkout session created:', { 
       id: session.id, 
-      url: session.url 
+      url: session.url,
+      environment: isTestMode() ? 'test' : 'production'
     });
 
     return new Response(
