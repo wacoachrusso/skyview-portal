@@ -1,8 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 
 // Define a pool of example questions
 const EXAMPLE_QUESTIONS = [
@@ -37,8 +38,21 @@ const EXAMPLE_QUESTIONS = [
   "What are the qualification requirements for international flights?",
 ];
 
+// Helper function to get random unique items from an array
+const getRandomUniqueItems = (array: string[], count: number): string[] => {
+  const shuffled = [...array].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
+
 export function WelcomeMessage() {
   const isMobile = useIsMobile();
+  
+  // Select 3 random questions from the pool
+  // Using useMemo to ensure questions only change on component mount
+  const randomQuestions = useMemo(() => 
+    getRandomUniqueItems(EXAMPLE_QUESTIONS, 3), 
+    []
+  );
   
   return (
     <div className="h-full flex flex-col items-center justify-center px-4 py-8 md:py-12">
@@ -61,6 +75,31 @@ export function WelcomeMessage() {
           <p className="text-sm sm:text-base text-gray-300 text-center mb-6 md:mb-8 max-w-2xl leading-relaxed">
             I'm your contract interpretation assistant. Ask me anything about your union contract, and I'll provide accurate, relevant information to help you understand your rights and benefits.
           </p>
+          
+          {/* Example cards */}
+          <div className="grid w-full gap-4 mb-6 md:mb-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+            <ExampleCard 
+              icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-gold" />}
+              title="Try asking me:"
+              question={randomQuestions[0]}
+              color="brand-gold"
+            />
+            
+            <ExampleCard 
+              icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-purple" />}
+              title="Or ask about:"
+              question={randomQuestions[1]}
+              color="brand-purple"
+            />
+            
+            <ExampleCard 
+              icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-teal" />}
+              title="You can also ask:"
+              question={randomQuestions[2]}
+              color="brand-teal"
+              className={isMobile ? "" : ""}
+            />
+          </div>
           
           {/* CTA Section */}
           <div className="w-full text-center">
@@ -85,6 +124,33 @@ export function WelcomeMessage() {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper component for example cards
+interface ExampleCardProps {
+  icon: React.ReactNode;
+  title: string;
+  question: string;
+  color: string;
+  className?: string;
+}
+
+function ExampleCard({ icon, title, question, color, className = "" }: ExampleCardProps) {
+  return (
+    <div className={`bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:bg-white/10 ${className}`}>
+      <div className="flex gap-3 items-start">
+        <div className={`bg-${color}/20 p-2 rounded-lg`}>
+          {icon}
+        </div>
+        <div className="flex-1">
+          <h3 className="font-medium text-white text-sm mb-1.5">{title}</h3>
+          <p className="text-gray-300 text-xs sm:text-sm">
+            "{question}"
+          </p>
         </div>
       </div>
     </div>
