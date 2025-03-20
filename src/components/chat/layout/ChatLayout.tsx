@@ -36,7 +36,7 @@ export function ChatLayout({
           {isMobile && (
             <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
               <SheetTrigger asChild>
-                <button className="p-2 hover:bg-accent/50 rounded-lg absolute top-2 left-2 z-50">
+                <button className="p-2 hover:bg-accent/50 rounded-lg absolute top-2 left-2 z-[100] bg-background/80 backdrop-blur-sm shadow-sm">
                   <Menu className="h-5 w-5 text-foreground" />
                 </button>
               </SheetTrigger>
