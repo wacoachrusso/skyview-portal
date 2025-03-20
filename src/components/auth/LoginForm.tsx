@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Eye, EyeOff } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LoginFormProps {
   onSubmit: (email: string, password?: string) => Promise<void>;
@@ -15,6 +16,7 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +82,7 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
         {loading ? "Signing In..." : "Sign In"}
       </Button>
 
-      <div className="relative my-6">
+      <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-white/10"></span>
         </div>
@@ -90,6 +92,15 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
       </div>
 
       <GoogleSignInButton />
+
+      <div className="text-center mt-4">
+        <span className="text-sm text-gray-400">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-brand-gold hover:text-brand-gold/80 transition-colors">
+            Sign up
+          </Link>
+        </span>
+      </div>
     </form>
   );
 };

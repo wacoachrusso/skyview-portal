@@ -100,10 +100,14 @@ export const GoogleAuthHandler = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-red-50">
-        <h2 className="text-xl font-semibold text-red-700">Authentication Failed</h2>
-        <p className="mt-2 text-gray-600">{error}</p>
-        <Button className="mt-4" onClick={() => navigate("/login")}>Return to Login</Button>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-red-50 dark:bg-red-900/20">
+        <div className="max-w-md w-full px-6 py-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+          <h2 className="text-xl font-semibold text-red-700 dark:text-red-400 text-center">Authentication Failed</h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-300 text-center">{error}</p>
+          <div className="mt-6 flex justify-center">
+            <Button onClick={() => navigate("/login")}>Return to Login</Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -112,14 +116,14 @@ export const GoogleAuthHandler = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <p className="mt-4 text-gray-600">Authenticating...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-300">Authenticating...</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <p className="text-gray-600">Authentication successful! Redirecting...</p>
+      <p className="text-gray-600 dark:text-gray-300">Authentication successful! Redirecting...</p>
     </div>
   );
 };

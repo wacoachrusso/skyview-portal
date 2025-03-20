@@ -2,20 +2,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { handleAuthSession, handlePasswordReset } from "@/utils/auth/sessionHandler";
-import { Icons } from "@/components/icons";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { createNewSession, validateSessionToken } from "@/services/session";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordResetEmail, setPasswordResetEmail] = useState("");
   const [isPasswordResetting, setIsPasswordResetting] = useState(false);
@@ -23,6 +17,7 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const next = searchParams.get("next") ?? "/";
+  const isMobile = useIsMobile();
 
   // Check for error param in URL (from Google auth callback)
   const errorParam = searchParams.get("error");
@@ -34,13 +29,12 @@ const Login = () => {
     });
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (email: string, password?: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password: password || '',
       });
 
       if (error) {
@@ -107,90 +101,26 @@ const Login = () => {
   };
 
   return (
-    <div className="container grid h-screen w-screen place-items-center">
-      <Card className="w-[400px] bg-card/50 backdrop-blur-sm border border-border/50">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Login</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <form onSubmit={handleLogin}>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            <Button disabled={loading} className="w-full mt-4" type="submit">
-              {loading && (
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Sign In
-            </Button>
-          </form>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <GoogleSignInButton />
-        </CardContent>
-        <CardContent className="text-center">
-          <Button
-            variant="link"
-            onClick={() => navigate("/register")}
-            className="text-sm"
-          >
-            Don't have an account? Register
-          </Button>
-        </CardContent>
-        <CardContent>
-          <form onSubmit={handleForgotPassword} className="grid gap-2">
-            <Label htmlFor="reset-email">Forgot Password?</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="email"
-                id="reset-email"
-                placeholder="Enter your email"
-                value={passwordResetEmail}
-                onChange={(e) => setPasswordResetEmail(e.target.value)}
-                required
-                className="flex-grow"
-              />
-              <Button
-                type="submit"
-                disabled={isPasswordResetting}
-                className="whitespace-nowrap"
-              >
-                {isPasswordResetting && (
-                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Reset
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
+      <div className="w-full max-w-md space-y-6">
+        <div className="flex flex-col items-center justify-center space-y-2 text-center">
+          <img
+            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png"
+            alt="SkyGuide Logo"
+            className="h-12 w-auto mb-4"
+          />
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            Sign in to SkyGuide
+          </h1>
+          <p className="text-sm text-gray-400">
+            Enter your credentials to access your account
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-card-gradient border border-white/10 p-6 shadow-xl backdrop-blur-sm">
+          <LoginForm onSubmit={handleLogin} loading={loading} />
+        </div>
+      </div>
     </div>
   );
 };
