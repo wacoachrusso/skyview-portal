@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { MessageSquareText, Sparkles } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
@@ -47,10 +47,10 @@ const getRandomUniqueItems = (array: string[], count: number): string[] => {
 export function WelcomeMessage() {
   const isMobile = useIsMobile();
   
-  // Select 3 random questions from the pool
+  // Select 1 random question from the pool (reduced from 3)
   // Using useMemo to ensure questions only change on component mount
-  const randomQuestions = useMemo(() => 
-    getRandomUniqueItems(EXAMPLE_QUESTIONS, 3), 
+  const randomQuestion = useMemo(() => 
+    getRandomUniqueItems(EXAMPLE_QUESTIONS, 1)[0], 
     []
   );
   
@@ -76,28 +76,13 @@ export function WelcomeMessage() {
             I'm your contract interpretation assistant. Ask me anything about your union contract, and I'll provide accurate, relevant information to help you understand your rights and benefits.
           </p>
           
-          {/* Example cards */}
-          <div className="grid w-full gap-4 mb-6 md:mb-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+          {/* Single example card (removed the two others) */}
+          <div className="w-full mb-6 md:mb-8">
             <ExampleCard 
-              icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-gold" />}
+              icon={<MessageSquareText className="h-4 w-4 sm:h-5 sm:w-5 text-brand-gold" />}
               title="Try asking me:"
-              question={randomQuestions[0]}
+              question={randomQuestion}
               color="brand-gold"
-            />
-            
-            <ExampleCard 
-              icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-purple" />}
-              title="Or ask about:"
-              question={randomQuestions[1]}
-              color="brand-purple"
-            />
-            
-            <ExampleCard 
-              icon={<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-teal" />}
-              title="You can also ask:"
-              question={randomQuestions[2]}
-              color="brand-teal"
-              className={isMobile ? "" : ""}
             />
           </div>
           
