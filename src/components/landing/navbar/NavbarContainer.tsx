@@ -25,11 +25,6 @@ export function NavbarContainer() {
           if (session?.user) {
             console.log('User is logged in:', session.user.email);
             setIsLoggedIn(true);
-            
-            // Redirect to chat if on homepage
-            if (window.location.pathname === '/') {
-              navigate('/chat');
-            }
           } else {
             console.log('No active session found');
             setIsLoggedIn(false);
@@ -66,7 +61,7 @@ export function NavbarContainer() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');

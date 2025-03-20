@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -80,16 +80,9 @@ export const LoginForm = ({ onSubmit, loading }: LoginFormProps) => {
         {loading ? "Signing In..." : "Sign In"}
       </Button>
 
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/10"></span>
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="px-2 bg-luxury-dark text-gray-400">OR</span>
-        </div>
+      <div className="flex items-center justify-center">
+        <GoogleSignInButton />
       </div>
-
-      <GoogleSignInButton />
     </form>
   );
 };

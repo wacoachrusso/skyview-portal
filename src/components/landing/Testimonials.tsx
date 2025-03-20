@@ -22,10 +22,10 @@ export function Testimonials() {
               years: "15 years of experience"
             },
             {
-              quote: "The instant access to contract information has been a game-changer during trips. Having clear interpretations available anywhere has helped me protect my rights as a union member.",
-              author: "Michael Torres",
-              role: "Flight Attendant, Southwest Airlines",
-              years: "6 years of service"
+              quote: "As a flight attendant, having instant access to contract interpretations and duty rules has been invaluable. This tool has helped me understand my rights better.",
+              author: "Sarah Chen",
+              role: "Senior Flight Attendant, Delta Airlines",
+              years: "8 years of service"
             },
             {
               quote: "The accuracy and quick responses have helped me make informed decisions about my schedule and work-life balance. It's an essential tool for any pilot.",

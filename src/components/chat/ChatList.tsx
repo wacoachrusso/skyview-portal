@@ -2,7 +2,6 @@
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatListProps {
   messages: Message[];
@@ -13,6 +12,7 @@ interface ChatListProps {
 
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -21,8 +21,13 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    // Only auto-scroll if there are new messages
-    const shouldAutoScroll = messages.length > previousMessagesLengthRef.current;
+    // Determine if we should auto-scroll
+    const shouldAutoScroll = 
+      // Auto-scroll if there are new messages
+      messages.length > previousMessagesLengthRef.current ||
+      // Or if we're at the bottom already (within 100px)
+      (containerRef.current && 
+       containerRef.current.scrollHeight - containerRef.current.scrollTop - containerRef.current.clientHeight < 100);
     
     if (shouldAutoScroll && messages.length > 0) {
       // Use instant scroll for initial load and smooth for new messages
@@ -36,8 +41,14 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 pb-20">
-        <div className="flex flex-col gap-3 p-3 sm:p-5">
+      <div 
+        ref={containerRef} 
+        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-20"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        <div className="flex flex-col gap-2 p-2 sm:p-4">
           {messages.map((message) => (
             <ChatMessage
               key={message.id}
@@ -46,25 +57,21 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
               onCopy={() => onCopyMessage(message.content)}
             />
           ))}
-          
           {isLoading && (
-            <div className="flex w-full gap-2 p-2 justify-start animate-fade-in">
-              <div className="flex max-w-[80%] flex-col gap-1 rounded-xl px-3 py-2 sm:px-4 sm:py-2 bg-chat-ai-gradient text-white border border-white/5 shadow-lg">
-                <div className="flex items-center gap-3">
-                  <div className="flex space-x-1">
-                    <div className="animate-pulse w-2 h-2 bg-brand-gold rounded-full"></div>
-                    <div className="animate-pulse w-2 h-2 bg-brand-gold rounded-full delay-150"></div>
-                    <div className="animate-pulse w-2 h-2 bg-brand-gold rounded-full delay-300"></div>
-                  </div>
-                  <span className="text-xs sm:text-sm text-gray-300">Searching the contract...</span>
+            <div className="flex w-full gap-2 p-2 justify-start">
+              <div className="flex max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 sm:px-4 sm:py-2 bg-white/5 text-white">
+                <div className="flex items-center gap-2">
+                  <div className="animate-pulse w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                  <div className="animate-pulse w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full delay-150"></div>
+                  <div className="animate-pulse w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full delay-300"></div>
+                  <span className="text-xs sm:text-sm ml-2">Searching the contract...</span>
                 </div>
               </div>
             </div>
           )}
-          
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }

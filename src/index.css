@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -102,10 +101,8 @@
   nav.fixed-nav {
     padding-top: max(env(safe-area-inset-top), 16px);
     background-color: rgba(26, 54, 93, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   /* Safe area utilities */
@@ -127,52 +124,6 @@
 }
 
 @layer components {
-  .glass-morphism {
-    @apply backdrop-blur-lg bg-white/5 border border-white/10 shadow-lg;
-  }
-  
-  .premium-card {
-    @apply relative overflow-hidden rounded-2xl bg-card-gradient border border-white/10 shadow-xl transition-all duration-300;
-  }
-  
-  .premium-card:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.05),
-      transparent
-    );
-    transition: 0.5s;
-    pointer-events: none;
-  }
-  
-  .premium-card:hover:before {
-    left: 100%;
-  }
-  
-  .premium-button {
-    @apply relative overflow-hidden rounded-lg shadow-lg transition-all duration-300;
-  }
-  
-  .premium-button:after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: opacity 0.3s ease;
-  }
-  
-  .premium-button:hover:after {
-    opacity: 1;
-  }
-  
   .gradient-button {
     @apply relative appearance-none cursor-pointer;
     background: radial-gradient(
@@ -199,9 +150,5 @@
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     pointer-events: none;
-  }
-  
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-brand-gold/90 to-brand-gold/80;
   }
 }

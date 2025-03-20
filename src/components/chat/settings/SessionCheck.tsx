@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionState } from "@/hooks/useSessionState";
@@ -24,9 +23,13 @@ export function SessionCheck() {
       try {
         console.log("Setting up auth and checking session...");
         
+        // Clear any existing session first
+        localStorage.removeItem('session_token');
+        
         // Validate current session
         const session = await validateCurrentSession({ navigate, toast });
         if (!session) return;
+
        
         // Validate session token
         const currentToken = localStorage.getItem('session_token');
@@ -35,11 +38,6 @@ export function SessionCheck() {
 
         await checkCurrentSession();
         await initializeSession();
-
-        // Redirect to chat page if the user is authenticated and on the root route
-        if (window.location.pathname === '/') {
-          navigate('/chat');
-        }
 
       } catch (error) {
         console.error("Unexpected error in setupAuth:", error);

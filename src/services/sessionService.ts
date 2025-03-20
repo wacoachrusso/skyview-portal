@@ -1,134 +1,111 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const createNewSession = async (userId: string) => {
+  console.log('Creating new session for user:', userId);
+  
   try {
-    console.log('Creating new session for user:', userId);
-    
-    // First invalidate any existing sessions
-    const { error: invalidateError } = await supabase
-      .rpc('invalidate_other_sessions', {
-        p_user_id: userId,
-        p_current_session_token: localStorage.getItem('session_token') || ''
-      });
-
-    if (invalidateError) {
-      console.error('Error invalidating existing sessions:', invalidateError);
-    }
-
-    // Create new session token
     const sessionToken = crypto.randomUUID();
+    const refreshToken = crypto.randomUUID();
+    const { data: deviceInfo } = await fetch('https://api.ipify.org?format=json')
+      .then(res => res.json());
 
-    // Get device info
-    let deviceInfo = { ip: 'unknown' };
-    try {
-      const response = await fetch('https://api.ipify.org?format=json');
-      deviceInfo = await response.json();
-    } catch (error) {
-      console.error('Error fetching device info:', error);
-    }
+    // First invalidate any existing active sessions
+    await invalidateAllUserSessions(userId);
 
-    // Create new session
-    const { data: session, error: createError } = await supabase
+    const { data: session, error } = await supabase
       .from('sessions')
       .insert([{
         user_id: userId,
         session_token: sessionToken,
-        device_info: deviceInfo || {},
-        ip_address: deviceInfo?.ip || 'unknown',
+        refresh_token: refreshToken,
+        device_info: deviceInfo,
+        ip_address: deviceInfo?.ip,
         status: 'active'
       }])
       .select()
       .single();
 
-    if (createError) {
-      console.error('Error creating new session:', createError);
-      throw createError;
-    }
-
-    // Store session token
-    localStorage.setItem('session_token', sessionToken);
+    if (error) throw error;
     
-    // Ensure refresh token is stored in both localStorage and secure cookie
-    const { data: { session: authSession } } = await supabase.auth.getSession();
-    if (authSession?.refresh_token) {
-      localStorage.setItem('supabase.refresh-token', authSession.refresh_token);
-      document.cookie = `sb-refresh-token=${authSession.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
-    }
+    // Store tokens securely
+    localStorage.setItem('session_token', sessionToken);
+    document.cookie = `refresh_token=${refreshToken}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
 
-    console.log('New session created successfully');
+    console.log('New session created:', session);
     return session;
   } catch (error) {
-    console.error('Error in createNewSession:', error);
+    console.error('Error creating session:', error);
     throw error;
   }
 };
 
-export const validateSessionToken = async (sessionToken: string) => {
+export const invalidateAllUserSessions = async (userId: string) => {
+  console.log('Invalidating all sessions for user:', userId);
+  
   try {
-    if (!sessionToken) return false;
+    const { error } = await supabase
+      .from('sessions')
+      .update({ 
+        status: 'invalidated',
+        invalidated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId)
+      .eq('status', 'active');
 
-    const { data: isValid, error } = await supabase
-      .rpc('is_session_valid', {
-        p_session_token: sessionToken
+    if (error) throw error;
+    console.log('All previous sessions invalidated');
+  } catch (error) {
+    console.error('Error invalidating sessions:', error);
+    throw error;
+  }
+};
+
+export const refreshSession = async () => {
+  console.log('Attempting to refresh session');
+  const refreshToken = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('refresh_token='))
+    ?.split('=')[1];
+
+  if (!refreshToken) {
+    console.log('No refresh token found');
+    return false;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .rpc('refresh_session', {
+        p_refresh_token: refreshToken
       });
 
-    if (error) {
-      console.error('Error validating session token:', error);
+    if (error || !data?.[0]) {
+      console.error('Error refreshing session:', error);
       return false;
     }
 
-    return isValid;
+    const { session_token, expires_at } = data[0];
+    localStorage.setItem('session_token', session_token);
+    console.log('Session refreshed successfully, expires:', expires_at);
+    return true;
   } catch (error) {
-    console.error('Error in validateSessionToken:', error);
+    console.error('Error in refresh session:', error);
     return false;
   }
 };
 
 export const updateSessionActivity = async (sessionToken: string) => {
+  console.log('Updating session activity');
+  
   try {
-    if (!sessionToken) {
-      console.error('Cannot update session activity: No session token provided');
-      return;
-    }
-    
     const { error } = await supabase
       .from('sessions')
       .update({ last_activity: new Date().toISOString() })
       .eq('session_token', sessionToken);
 
-    if (error) {
-      console.error('Error updating session activity:', error);
-    }
+    if (error) throw error;
+    console.log('Session activity updated');
   } catch (error) {
-    console.error('Error in updateSessionActivity:', error);
-  }
-};
-
-// Add a new function to refresh the session if needed
-export const refreshSessionIfNeeded = async () => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // If no session or near expiry (within 5 minutes), refresh
-    if (!session || (session.expires_at && new Date(session.expires_at * 1000) <= new Date(Date.now() + 5 * 60 * 1000))) {
-      console.log('Session needs refreshing');
-      
-      const { data, error } = await supabase.auth.refreshSession();
-      
-      if (error) {
-        console.error('Error refreshing session:', error);
-        return false;
-      }
-      
-      if (data.session) {
-        console.log('Session refreshed successfully');
-        return true;
-      }
-    }
-    
-    return !!session; // Return true if session exists
-  } catch (error) {
-    console.error('Error in refreshSessionIfNeeded:', error);
-    return false;
+    console.error('Error updating session activity:', error);
+    throw error;
   }
 };
