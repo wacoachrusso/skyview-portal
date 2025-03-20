@@ -41,17 +41,17 @@ export function useSendMessage(
       console.log("Sending message...");
 
       let tempMessage: Message | null = null;
-
-      // Set the API call flag
-      sessionStorage.setItem('api_call_in_progress', 'true');
       
-      // Update session activity to prevent timeout during API call
-      const currentToken = localStorage.getItem('session_token');
-      if (currentToken) {
-        await updateSessionApiActivity(currentToken);
-      }
-
       try {
+        // Set the API call flag before making any API calls
+        sessionStorage.setItem('api_call_in_progress', 'true');
+        
+        // Update session activity to prevent timeout during API call
+        const currentToken = localStorage.getItem('session_token');
+        if (currentToken) {
+          await updateSessionApiActivity(currentToken);
+        }
+
         // Create a temporary message for optimistic update
         tempMessage = {
           id: crypto.randomUUID(), // Generate a temporary ID

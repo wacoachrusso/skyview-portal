@@ -96,6 +96,13 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
   if (!currentToken) return false;
 
   try {
+    // Check if we're in the middle of an API call
+    const isApiCall = sessionStorage.getItem('api_call_in_progress') === 'true';
+    if (isApiCall) {
+      console.log("API call in progress, skipping session validation");
+      return true;
+    }
+
     // First check if the current session token is valid
     const { data: sessionValid, error: validationError } = await supabase
       .rpc('is_session_valid', {
@@ -126,16 +133,6 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
         await handleSessionInvalidation(navigate, toast);
       }
       return false;
-    }
-
-    // Check if we're in the middle of an API call (Skip other session checks during API calls)
-    const isApiCall = sessionStorage.getItem('api_call_in_progress') === 'true';
-
-    if (isApiCall) {
-      // Just update the API call timestamp without doing further checks
-      console.log("API call in progress, updating activity timestamp only");
-      await updateSessionApiActivity(currentToken);
-      return true;
     }
 
     // Update the last activity timestamp for the session
@@ -171,30 +168,11 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
       return false;
     }
 
-    // During API calls, don't check for other active sessions to prevent session invalidation
+    // During API calls, don't check for other active sessions
     const isApiCall = sessionStorage.getItem('api_call_in_progress') === 'true';
     if (isApiCall) {
       console.log('API call in progress, skipping other session checks');
       return true;
-    }
-
-    // Check for other active sessions
-    const { data: sessions, error: sessionsError } = await supabase
-      .from('sessions')
-      .select('session_token, status')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .neq('session_token', sessionToken);
-
-    if (sessionsError) {
-      console.error('Error checking active sessions:', sessionsError);
-      return false;
-    }
-
-    // If there are other active sessions, this session is invalid
-    if (sessions && sessions.length > 0) {
-      console.log('Other active sessions found');
-      return false;
     }
 
     return true;

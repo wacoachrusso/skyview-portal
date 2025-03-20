@@ -52,8 +52,7 @@ export const createNewSession = async (userId: string): Promise<any> => {
         device_info: deviceInfo,
         ip_address: ipAddress,
         status: 'active',
-        last_activity: new Date().toISOString(),
-        last_api_call: new Date().toISOString() // Track the last API call separately
+        last_activity: new Date().toISOString()
       }])
       .select()
       .single();
@@ -124,11 +123,11 @@ export const updateSessionApiActivity = async (token: string | null): Promise<bo
   if (!token) return false;
   
   try {
-    // Update last API call timestamp without validating the session
+    // Just update the last activity timestamp for API calls
     const { error: updateError } = await supabase
       .from('sessions')
       .update({ 
-        last_api_call: new Date().toISOString() 
+        last_activity: new Date().toISOString() 
       })
       .eq('session_token', token);
 
