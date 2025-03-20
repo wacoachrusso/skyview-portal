@@ -14,9 +14,31 @@ export function Logo({ handleLogoClick }: LogoProps) {
       // Check if user is logged in
       const { data: { session } } = await supabase.auth.getSession();
       
-      // If logged in, navigate to dashboard, otherwise to home
-      const targetPath = session ? '/dashboard' : '/';
-      window.location.href = targetPath;
+      if (session) {
+        // Check subscription status
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('subscription_plan, query_count')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profileError) {
+          console.error("Error fetching profile in logo click:", profileError);
+          window.location.href = '/';
+          return;
+        }
+        
+        // Free trial ended - go to homepage with pricing
+        if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+          window.location.href = '/?scrollTo=pricing-section';
+        } else {
+          // Active subscription or trials remaining - go to dashboard
+          window.location.href = '/dashboard';
+        }
+      } else {
+        // Not logged in - go to homepage
+        window.location.href = '/';
+      }
     } catch (error) {
       console.error("Error in logo click:", error);
       window.location.href = '/';

@@ -34,10 +34,10 @@ export function NavbarContainer() {
             console.log('User is logged in:', session.user.email);
             setIsLoggedIn(true);
             
-            // Check if profile is complete before redirecting
+            // Check user's subscription and free trial status
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
-              .select('user_type, airline')
+              .select('user_type, airline, subscription_plan, query_count')
               .eq('id', session.user.id)
               .maybeSingle();
             
@@ -45,10 +45,23 @@ export function NavbarContainer() {
               console.error('Error fetching profile:', profileError);
             }
             
-            // Redirect to chat if on homepage and profile is complete
-            if (window.location.pathname === '/' && profile?.user_type && profile?.airline) {
-              console.log('Profile is complete, redirecting to dashboard');
-              window.location.href = '/dashboard';
+            // Redirect based on subscription status and current page
+            if (window.location.pathname === '/') {
+              if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+                // Free trial ended - stay on homepage but scroll to pricing
+                console.log('Free trial ended, scrolling to pricing section');
+                const pricingSection = document.getElementById('pricing-section');
+                if (pricingSection) {
+                  setTimeout(() => {
+                    pricingSection.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }
+              } else if (profile?.subscription_plan && profile?.subscription_plan !== 'free' && 
+                profile?.subscription_plan !== 'trial_ended' && profile?.user_type && profile?.airline) {
+                // Active subscription and profile complete - redirect to dashboard
+                console.log('Active subscription and profile complete, redirecting to dashboard');
+                window.location.href = '/dashboard';
+              }
             }
           } else {
             console.log('No active session found');
@@ -109,9 +122,26 @@ export function NavbarContainer() {
       setIsLoggedIn(!!session);
       setIsLoading(false);
       
-      // If user is logged in, navigate to dashboard
+      // If user is logged in, check subscription status
       if (session) {
-        window.location.href = '/dashboard';
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('subscription_plan, query_count')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profileError) {
+          console.error("Error fetching profile in logo click:", profileError);
+        }
+        
+        // Free trial ended - go to homepage with pricing
+        if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+          console.log("Free trial ended, going to homepage with pricing");
+          window.location.href = '/?scrollTo=pricing-section';
+        } else {
+          // Active subscription or trials remaining - go to dashboard
+          window.location.href = '/dashboard';
+        }
       } else {
         window.location.href = '/';
       }

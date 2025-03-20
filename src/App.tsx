@@ -38,7 +38,27 @@ function InitialSessionCheck() {
         if (data.session) {
           console.log("Active session found");
           
-          // On login page with active session - redirect to chat
+          // Check user's subscription status
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('subscription_plan, query_count')
+            .eq('id', data.session.user.id)
+            .single();
+            
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            return;
+          }
+          
+          // Free trial ended or not active subscription - redirect to pricing
+          if ((profile?.subscription_plan === 'free' && profile?.query_count >= 1) || 
+              profile?.subscription_plan === 'trial_ended') {
+            console.log("Free trial ended or inactive subscription, redirecting to pricing");
+            navigate('/?scrollTo=pricing-section', { replace: true });
+            return;
+          }
+          
+          // Active subscription or still has free trial - redirect to chat from login pages
           if (window.location.pathname === '/login' || window.location.pathname === '/signup' || window.location.pathname === '/') {
             navigate('/chat', { replace: true });
           }
