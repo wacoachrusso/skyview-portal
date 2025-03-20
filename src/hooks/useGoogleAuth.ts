@@ -24,8 +24,8 @@ export const useGoogleAuth = () => {
         
         // If we have a session but we're on the login page, redirect to dashboard
         if (session && window.location.pathname === '/login') {
-          console.log("Already logged in, redirecting to dashboard...");
-          navigate('/dashboard', { replace: true });
+          console.log("Already logged in, redirecting to chat...");
+          navigate('/chat', { replace: true });
         }
       } catch (err) {
         console.error("Unexpected error fetching session:", err);
@@ -72,7 +72,7 @@ export const useGoogleAuth = () => {
       // Sign out first to ensure a clean state
       await supabase.auth.signOut({ scope: 'local' });
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback?provider=google`,
@@ -91,7 +91,18 @@ export const useGoogleAuth = () => {
           description: error.message || "Failed to sign in with Google.",
         });
       } else {
-        console.log("Google sign in initiated, awaiting redirect...");
+        console.log("Google sign in initiated, awaiting redirect...", data);
+        if (!data.url) {
+          console.error("No redirect URL returned from signInWithOAuth");
+          toast({
+            variant: "destructive",
+            title: "Sign In Failed",
+            description: "Failed to initialize Google sign in. Please try again.",
+          });
+        } else {
+          // Manual redirect if automatic redirect doesn't happen
+          window.location.href = data.url;
+        }
       }
     } catch (error) {
       console.error("Unexpected error during Google sign in:", error);

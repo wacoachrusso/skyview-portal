@@ -112,7 +112,7 @@ const Login = () => {
             console.error("Error creating session after login:", sessionError);
           }
           
-          // Redirect to chat instead of dashboard
+          // Redirect to chat
           navigate("/chat", { replace: true });
         }
       }
