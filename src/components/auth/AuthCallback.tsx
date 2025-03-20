@@ -6,6 +6,7 @@ import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { useAuthCallback } from '@/hooks/useAuthCallback';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { GoogleAuthHandler } from './handlers/GoogleAuthHandler';
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -15,19 +16,31 @@ const AuthCallback = () => {
   const { handleCallback } = useAuthCallback();
   const [processingStatus, setProcessingStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [statusMessage, setStatusMessage] = useState('Processing authentication...');
+  const [isEmailConfirmation, setIsEmailConfirmation] = useState(false);
+  const [isOAuthFlow, setIsOAuthFlow] = useState(false);
   
   useEffect(() => {
     const processCallback = async () => {
-      console.log("Auth callback processing started");
+      console.log("Auth callback processing started with URL params:", Object.fromEntries(searchParams.entries()));
       setProcessingStatus('processing');
       
       try {
         // Check if this is an email confirmation callback
         const email = searchParams.get('email');
         const token_hash = searchParams.get('token_hash');
+        const type = searchParams.get('type');
+        const provider = searchParams.get('provider');
+        
+        // Check if this is a Google OAuth callback
+        if (provider === 'google' || type === 'oauth') {
+          console.log("Detected OAuth callback with provider:", provider || 'unknown');
+          setIsOAuthFlow(true);
+          return; // Let GoogleAuthHandler component handle this
+        }
         
         if (email && token_hash) {
           console.log("Handling email confirmation for:", email);
+          setIsEmailConfirmation(true);
           setStatusMessage('Confirming your email address...');
           
           // Handle email confirmation
@@ -50,7 +63,16 @@ const AuthCallback = () => {
           setStatusMessage('Completing sign-in process...');
           
           // First check if we already have a valid session
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("Session error in callback:", error);
+            setProcessingStatus('error');
+            setStatusMessage('Authentication failed. Please try again.');
+            setTimeout(() => navigate('/login'), 2000);
+            return;
+          }
+          
           if (!session) {
             console.log("No session found in OAuth callback");
             setProcessingStatus('error');
@@ -58,6 +80,8 @@ const AuthCallback = () => {
             setTimeout(() => navigate('/login'), 2000);
             return;
           }
+          
+          console.log("Session found in callback, proceeding with handleCallback");
           
           // Process the OAuth callback
           await handleCallback();
@@ -86,6 +110,11 @@ const AuthCallback = () => {
     
     processCallback();
   }, [searchParams, navigate, handleEmailConfirmation, handleCallback, toast]);
+
+  // If this is a Google OAuth flow, use the specialized handler
+  if (isOAuthFlow) {
+    return <GoogleAuthHandler />;
+  }
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">

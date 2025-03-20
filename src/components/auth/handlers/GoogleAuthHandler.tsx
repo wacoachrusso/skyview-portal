@@ -19,8 +19,8 @@ export const GoogleAuthHandler = () => {
         // Get session to verify user is authenticated
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError || !session) {
-          console.error("No session found:", sessionError || "Session is null");
+        if (sessionError) {
+          console.error("No session found: Error:", sessionError);
           toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -29,10 +29,21 @@ export const GoogleAuthHandler = () => {
           navigate("/login", { replace: true });
           return;
         }
-
-        console.log("GoogleAuthHandler: User authenticated, fetching profile...");
         
-        // Check if user profile exists (for Google sign-ins, profiles aren't created automatically)
+        if (!session) {
+          console.error("No session found: Session is null");
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Failed to authenticate with Google. Please try again.",
+          });
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        console.log("GoogleAuthHandler: User authenticated with ID:", session.user.id);
+        
+        // Check if user profile exists
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -60,7 +71,7 @@ export const GoogleAuthHandler = () => {
             .insert({
               id: session.user.id,
               email: session.user.email,
-              full_name: session.user.user_metadata.full_name || session.user.email,
+              full_name: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email,
               subscription_plan: 'free', // Default plan
               account_status: 'active',
               query_count: 0
@@ -77,15 +88,32 @@ export const GoogleAuthHandler = () => {
             navigate("/login", { replace: true });
             return;
           }
-        } else {
-          console.log("GoogleAuthHandler: Profile found:", profile);
+          
+          // Redirect to complete profile if we just created it
+          console.log("GoogleAuthHandler: Profile created, redirecting to complete profile");
+          
+          // Create a new session record
+          await createNewSession(session.user.id);
+          
+          navigate("/complete-profile", { replace: true });
+          return;
         }
+        
+        console.log("GoogleAuthHandler: Profile found:", profile);
 
         // Create a new session record
         await createNewSession(session.user.id);
-        console.log("GoogleAuthHandler: Session created, redirecting to dashboard");
+        console.log("GoogleAuthHandler: Session created");
 
-        // Redirect to dashboard
+        // Check if profile is complete and redirect accordingly
+        if (!profile.user_type || !profile.airline) {
+          console.log("GoogleAuthHandler: Profile incomplete, redirecting to complete profile");
+          navigate("/complete-profile", { replace: true });
+          return;
+        }
+        
+        // Profile is complete, redirect to dashboard
+        console.log("GoogleAuthHandler: Profile complete, redirecting to dashboard");
         navigate("/dashboard", { replace: true });
         
         toast({
@@ -94,11 +122,16 @@ export const GoogleAuthHandler = () => {
         });
       } catch (error) {
         console.error("GoogleAuthHandler: Unexpected error in auth callback", error);
+        
+        // Try to clean up any session state
+        localStorage.removeItem('session_token');
+        
         toast({
           variant: "destructive",
           title: "Authentication Error",
           description: "An unexpected error occurred. Please try again.",
         });
+        
         navigate("/login", { replace: true });
       } finally {
         setLoading(false);

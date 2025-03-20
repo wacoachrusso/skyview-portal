@@ -24,16 +24,23 @@ export const createNewSession = async (userId: string): Promise<any> => {
     let deviceInfo: Record<string, any> = {
       userAgent: navigator.userAgent,
       platform: navigator.platform,
-      language: navigator.language
+      language: navigator.language,
+      timestamp: new Date().toISOString()
     };
+    
+    let ipAddress = 'unknown';
     
     try {
       const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      deviceInfo.ip = data.ip;
+      if (response.ok) {
+        const data = await response.json();
+        ipAddress = data.ip || 'unknown';
+        deviceInfo.ip = ipAddress;
+      } else {
+        console.warn('Could not fetch IP info:', response.statusText);
+      }
     } catch (error) {
       console.warn('Could not fetch IP info:', error);
-      deviceInfo.ip = 'unknown';
     }
 
     // Create new session
@@ -43,7 +50,7 @@ export const createNewSession = async (userId: string): Promise<any> => {
         user_id: userId,
         session_token: sessionToken,
         device_info: deviceInfo,
-        ip_address: deviceInfo.ip || 'unknown',
+        ip_address: ipAddress,
         status: 'active'
       }])
       .select()

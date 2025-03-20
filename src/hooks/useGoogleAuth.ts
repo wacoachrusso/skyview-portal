@@ -40,9 +40,9 @@ export const useGoogleAuth = () => {
       
       if (event === 'SIGNED_IN') {
         // Only redirect if not already on the callback path
-        if (window.location.pathname !== '/auth/callback') {
+        if (!window.location.pathname.includes('/auth/callback')) {
           console.log("Auth state is SIGNED_IN, redirecting to callback page");
-          navigate('/auth/callback', { replace: true });
+          navigate('/auth/callback?provider=google', { replace: true });
         }
       } else if (event === 'SIGNED_OUT') {
         // Clear all auth-related data and redirect to login
@@ -65,15 +65,17 @@ export const useGoogleAuth = () => {
       console.log("Initiating Google sign in...");
       
       // Clear any existing session data first to prevent issues
-      await supabase.auth.signOut({ scope: 'local' });
       localStorage.removeItem('session_token');
       localStorage.removeItem('supabase.refresh-token');
       document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
       
+      // Sign out first to ensure a clean state
+      await supabase.auth.signOut({ scope: 'local' });
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?provider=google`,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
