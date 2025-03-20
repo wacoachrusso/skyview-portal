@@ -1,121 +1,151 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createNewSession } from "@/services/sessionService";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
-export function GoogleAuthHandler() {
+export const GoogleAuthHandler = () => {
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleOAuthCallback = async () => {
+    const handleAuthCallback = async () => {
       try {
-        console.log("Handling OAuth callback");
         setLoading(true);
+        console.log("GoogleAuthHandler: Processing callback...");
 
-        // 1. Get session from URL
-        const { data, error } = await supabase.auth.getSession();
+        // Get session to verify user is authenticated
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error("Session error:", error);
-          throw new Error("Failed to get session");
+        if (sessionError) {
+          console.error("No session found: Error:", sessionError);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Failed to complete Google sign in. Please try again.",
+          });
+          navigate("/login", { replace: true });
+          return;
+        }
+        
+        if (!session) {
+          console.error("No session found: Session is null");
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Failed to authenticate with Google. Please try again.",
+          });
+          navigate("/login", { replace: true });
+          return;
         }
 
-        if (!data.session) {
-          console.log("No session found in callback");
-          throw new Error("No session found");
-        }
-
-        console.log("Session found:", data.session.user.id);
-
-        // 2. Check if user has a profile
+        console.log("GoogleAuthHandler: User authenticated with ID:", session.user.id);
+        
+        // Check if user profile exists
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('user_type, airline')
-          .eq('id', data.session.user.id)
-          .maybeSingle();
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-        if (profileError) {
+        if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = "No rows found"
           console.error("Error fetching profile:", profileError);
-          throw new Error("Error fetching profile");
-        }
-
-        // 3. Create a session token
-        try {
-          const { createNewSession } = await import('@/services/sessionService');
-          await createNewSession(data.session.user.id);
-          console.log("Created new session token after login");
-        } catch (sessionError) {
-          console.error("Error creating session:", sessionError);
-          throw new Error("Error creating session");
-        }
-
-        // 4. Direct user based on profile status
-        if (profile?.user_type && profile?.airline) {
-          // Profile is complete
-          console.log("Profile complete, redirecting to chat");
           toast({
-            title: "Welcome back!",
-            description: "You've successfully signed in.",
+            variant: "destructive",
+            title: "Profile Error",
+            description: "Failed to load your profile. Please try again.",
           });
-          navigate('/chat', { replace: true });
-        } else if (profile) {
-          // Profile exists but incomplete
-          console.log("Profile incomplete, redirecting to account page");
-          navigate('/account', { replace: true });
-        } else {
-          // No profile, redirect to account to complete profile
-          console.log("No profile found, redirecting to account page");
-          navigate('/account', { replace: true });
+          navigate("/login", { replace: true });
+          return;
         }
-      } catch (err) {
-        console.error("Error in OAuth callback:", err);
-        setError(err.message || "An unexpected error occurred");
+
+        // If no profile exists, create one for Google user
+        if (!profile) {
+          console.log("GoogleAuthHandler: No profile found, creating new profile for Google user");
+          
+          // Create new profile for Google user
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: session.user.id,
+              email: session.user.email,
+              full_name: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email,
+              subscription_plan: 'free', // Default plan
+              account_status: 'active',
+              query_count: 0
+            });
+
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+            toast({
+              variant: "destructive",
+              title: "Profile Creation Error",
+              description: "Failed to create your profile. Please try again.",
+            });
+            await supabase.auth.signOut();
+            navigate("/login", { replace: true });
+            return;
+          }
+          
+          // Redirect to complete profile if we just created it
+          console.log("GoogleAuthHandler: Profile created, redirecting to complete profile");
+          
+          // Create a new session record
+          await createNewSession(session.user.id);
+          
+          navigate("/complete-profile", { replace: true });
+          return;
+        }
+        
+        console.log("GoogleAuthHandler: Profile found:", profile);
+
+        // Create a new session record
+        await createNewSession(session.user.id);
+        console.log("GoogleAuthHandler: Session created");
+
+        // Check if profile is complete and redirect accordingly
+        if (!profile.user_type || !profile.airline) {
+          console.log("GoogleAuthHandler: Profile incomplete, redirecting to complete profile");
+          navigate("/complete-profile", { replace: true });
+          return;
+        }
+        
+        // Profile is complete, redirect to chat page instead of dashboard
+        console.log("GoogleAuthHandler: Profile complete, redirecting to chat");
+        navigate("/chat", { replace: true });
+        
+        toast({
+          title: "Sign In Successful",
+          description: "Welcome back!",
+        });
+      } catch (error) {
+        console.error("GoogleAuthHandler: Unexpected error in auth callback", error);
+        
+        // Try to clean up any session state
+        localStorage.removeItem('session_token');
+        
         toast({
           variant: "destructive",
           title: "Authentication Error",
-          description: err.message || "An unexpected error occurred during sign-in",
+          description: "An unexpected error occurred. Please try again.",
         });
-        navigate('/login', { replace: true });
+        
+        navigate("/login", { replace: true });
       } finally {
         setLoading(false);
       }
     };
 
-    handleOAuthCallback();
+    handleAuthCallback();
   }, [navigate, toast]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-premium-gradient flex items-center justify-center">
-        <div className="text-center glass-morphism rounded-2xl p-8 shadow-2xl border border-white/10">
-          <LoadingSpinner size="large" />
-          <p className="mt-4 text-white text-lg">Completing sign in...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-premium-gradient flex items-center justify-center">
-        <div className="text-center glass-morphism rounded-2xl p-8 shadow-2xl border border-white/10">
-          <h2 className="text-xl font-bold text-white mb-4">Authentication Error</h2>
-          <p className="text-red-300">{error}</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="mt-6 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded transition"
-          >
-            Return to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-700 rounded-full animate-spin"></div>
+      <h2 className="mt-4 text-xl font-semibold">Completing Sign In...</h2>
+      <p className="mt-2 text-gray-600">Please wait while we set up your account.</p>
+    </div>
+  );
+};
