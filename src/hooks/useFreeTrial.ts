@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -26,12 +27,15 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
         console.log("Free trial ended - query count:", profile.query_count);
         setIsTrialEnded(true);
 
+        // Immediately redirect to pricing section when trial has ended
         toast({
           title: "Free Trial Ended",
           description: "Please select a subscription plan to continue.",
           variant: "destructive",
         });
-        navigate("/?scrollTo=pricing-section");
+        
+        // Redirect to home page with pricing section
+        navigate("/?scrollTo=pricing-section", { replace: true });
       } else {
         setIsTrialEnded(false);
       }

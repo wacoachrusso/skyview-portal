@@ -35,15 +35,19 @@ export function useChatAccess(currentUserId: string | null) {
 
     console.log("Fetched profile:", profile);
 
-    // Check if user is on free plan and query_count >= 1
+    // Check if user is on free plan and query_count >= 2
     if (profile?.subscription_plan === "free" && profile?.query_count >= 2) {
-      console.log("Free trial ended, disabling chat...");
+      console.log("Free trial ended, disabling chat and redirecting...");
       setIsChatDisabled(true); // Disable chat
+      
+      // Immediate redirect to pricing section
       toast({
         title: "Free Trial Ended",
         description: "Please select a subscription plan to continue using SkyGuide.",
         duration: 5000,
       });
+      
+      navigate("/?scrollTo=pricing-section", { replace: true });
     }
   }, [currentUserId, navigate, toast]);
 

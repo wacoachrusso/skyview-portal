@@ -1,10 +1,10 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createNewSession } from "@/services/session";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { Button } from "@/components/ui/button";
 
 export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);

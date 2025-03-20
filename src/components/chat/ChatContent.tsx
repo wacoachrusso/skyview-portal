@@ -9,6 +9,8 @@ import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatContentProps {
   messages: Message[];
@@ -27,6 +29,8 @@ export function ChatContent({
   onNewChat,
   isChatDisabled = false,
 }: ChatContentProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const { isOffline, offlineError } = useOfflineStatus();
   const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
   const [userProfile, setUserProfile] = useState<{
@@ -49,25 +53,44 @@ export function ChatContent({
         if (error) throw error;
 
         setUserProfile(profile);
+        
+        // If user is on free plan and has reached the limit, redirect to pricing
+        if (profile.subscription_plan === "free" && profile.query_count >= 2) {
+          console.log("Free trial ended in ChatContent - redirecting");
+          toast({
+            title: "Free Trial Ended",
+            description: "Please select a subscription plan to continue.",
+            variant: "destructive",
+          });
+          navigate("/?scrollTo=pricing-section", { replace: true });
+        }
       } catch (error) {
         console.error("Error fetching user profile:", error);
       }
     };
 
     fetchUserProfile();
-  }, [currentUserId]);
+  }, [currentUserId, navigate, toast]);
 
   // Determine if the chat should be disabled
   const shouldDisableChat = useMemo(() => {
     return isChatDisabled || 
            isTrialEnded || 
-           (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 1);
+           (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2);
   }, [isChatDisabled, isTrialEnded, userProfile]);
 
   // Memoize the display messages
   const displayMessages = useMemo(() => 
-    isOffline ? messages : messages // You might have stored offline messages here
+    isOffline ? messages : messages
   , [isOffline, messages]);
+
+  // Auto-redirect if trial has ended - this is an additional check to ensure redirection works
+  useEffect(() => {
+    if (shouldDisableChat && currentUserId) {
+      console.log("Chat is disabled, redirecting to pricing");
+      navigate("/?scrollTo=pricing-section", { replace: true });
+    }
+  }, [shouldDisableChat, navigate, currentUserId]);
 
   // If the trial has ended or chat is disabled, show the TrialEndedState
   if (shouldDisableChat) {
