@@ -32,8 +32,7 @@ export const useGoogleAuth = () => {
         }
       } else if (event === 'SIGNED_OUT') {
         // Clear local storage and redirect to login
-        localStorage.removeItem('session_token');
-        localStorage.removeItem('supabase.refresh-token');
+        localStorage.clear();
         console.log("Auth state is SIGNED_OUT, redirecting to login page");
         navigate('/login', { replace: true });
       }
@@ -51,8 +50,7 @@ export const useGoogleAuth = () => {
       
       // Clear any existing session data first
       await supabase.auth.signOut({ scope: 'local' });
-      localStorage.removeItem('session_token');
-      localStorage.removeItem('supabase.refresh-token');
+      localStorage.clear();
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -92,8 +90,7 @@ export const useGoogleAuth = () => {
       setLoading(true);
       
       // Clear session data first
-      localStorage.removeItem('session_token');
-      localStorage.removeItem('supabase.refresh-token');
+      localStorage.clear();
       document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
       
       // Then sign out from Supabase

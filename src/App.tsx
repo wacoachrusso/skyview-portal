@@ -31,8 +31,8 @@ function InitialSessionCheck() {
         console.log("Checking initial session on app load");
         
         // First check if we're in a callback route - if so, let the GoogleAuthHandler manage it
-        const pathname = window.location.pathname;
-        if (pathname === '/auth/callback') {
+        const currentPathname = window.location.pathname;
+        if (currentPathname === '/auth/callback') {
           console.log("On auth callback route, letting GoogleAuthHandler manage this");
           return;
         }
@@ -80,7 +80,7 @@ function InitialSessionCheck() {
           if (error) {
             console.error("Error fetching profile:", error);
             // Only redirect to login if not already there
-            if (pathname !== '/login' && pathname !== '/signup') {
+            if (currentPathname !== '/login' && currentPathname !== '/signup') {
               navigate('/login', { replace: true });
             }
             return;
@@ -90,14 +90,14 @@ function InitialSessionCheck() {
             console.log("Profile is complete");
             
             // Only redirect to chat if we're on login, signup, or root
-            if (pathname === '/login' || pathname === '/signup' || pathname === '/') {
+            if (currentPathname === '/login' || currentPathname === '/signup' || currentPathname === '/') {
               console.log("Redirecting to chat");
               navigate('/chat', { replace: true });
             }
           } else if (profile) {
             console.log("Profile exists but is incomplete");
             // Only redirect to signup if not already there
-            if (pathname !== '/signup') {
+            if (currentPathname !== '/signup') {
               console.log("Redirecting to signup");
               navigate('/signup', { 
                 state: { 
@@ -109,11 +109,11 @@ function InitialSessionCheck() {
                 replace: true
               });
             }
-          } else if (pathname !== '/login' && pathname !== '/signup' && pathname !== '/auth/callback') {
+          } else if (currentPathname !== '/login' && currentPathname !== '/signup' && currentPathname !== '/auth/callback') {
             console.log("No profile found, redirecting to login");
             navigate('/login', { replace: true });
           }
-        } else if (pathname !== '/login' && pathname !== '/signup' && pathname !== '/' && pathname !== '/auth/callback') {
+        } else if (currentPathname !== '/login' && currentPathname !== '/signup' && currentPathname !== '/' && currentPathname !== '/auth/callback') {
           // No session and user is trying to access a protected route
           console.log("No active session found, redirecting to login");
           navigate('/login', { replace: true });
@@ -121,7 +121,8 @@ function InitialSessionCheck() {
       } catch (error) {
         console.error("Error checking initial session:", error);
         // Only redirect to login if not already there
-        if (pathname !== '/login' && pathname !== '/signup') {
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/signup') {
           navigate('/login', { replace: true });
         }
       }

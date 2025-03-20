@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -26,9 +27,16 @@ export function NavbarContainer() {
             console.log('User is logged in:', session.user.email);
             setIsLoggedIn(true);
             
-            // Redirect to chat if on homepage
-            if (window.location.pathname === '/') {
-              navigate('/chat');
+            // Check if profile is complete before redirecting
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('user_type, airline')
+              .eq('id', session.user.id)
+              .maybeSingle();
+            
+            // Redirect to chat if on homepage and profile is complete
+            if (window.location.pathname === '/' && profile?.user_type && profile?.airline) {
+              navigate('/chat', { replace: true });
             }
           } else {
             console.log('No active session found');

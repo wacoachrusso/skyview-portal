@@ -44,6 +44,7 @@ export const GoogleAuthHandler = () => {
         try {
           await createNewSession(session.user.id);
           console.log('New session created successfully');
+          localStorage.setItem('currentUserId', session.user.id);
         } catch (error) {
           console.error('Error creating session:', error);
           toast({

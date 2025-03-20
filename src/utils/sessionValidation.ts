@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { NavigateFunction } from "react-router-dom";
 import { toast as toastFunction } from "@/hooks/use-toast";
@@ -63,7 +64,7 @@ export const checkProfileStatus = async (userId: string, { navigate, toast }: Va
   }
 };
 
-export const validateSessionToken = async (currentToken: string | null, { navigate, toast }: ValidationProps) => {
+export const validateSessionToken = async (currentToken: string | null, { navigate, toast }: ValidationProps = {} as ValidationProps): Promise<boolean> => {
   if (!currentToken) return false;
 
   try {
@@ -75,7 +76,9 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
 
     if (validationError || !sessionValid) {
       console.log("Session invalid");
-      await handleSessionInvalidation(navigate, toast);
+      if (navigate) {
+        await handleSessionInvalidation(navigate, toast);
+      }
       return false;
     }
 
@@ -83,7 +86,9 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       console.log("No user found");
-      await handleSessionInvalidation(navigate, toast);
+      if (navigate) {
+        await handleSessionInvalidation(navigate, toast);
+      }
       return false;
     }
 
@@ -103,7 +108,9 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
     // If there are other active sessions, invalidate current session
     if (activeSessions && activeSessions.length > 0) {
       console.log("Other active sessions found, invalidating current session");
-      await handleSessionInvalidation(navigate, toast);
+      if (navigate) {
+        await handleSessionInvalidation(navigate, toast);
+      }
       return false;
     }
 

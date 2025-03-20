@@ -21,10 +21,11 @@ export const createNewSession = async (userId: string): Promise<any> => {
     const sessionToken = crypto.randomUUID();
 
     // Get device info
-    let deviceInfo = {};
+    let deviceInfo: Record<string, string> = {};
     try {
       const response = await fetch('https://api.ipify.org?format=json');
-      deviceInfo = await response.json();
+      const data = await response.json();
+      deviceInfo = data as Record<string, string>;
     } catch (error) {
       console.warn('Could not fetch device info:', error);
       // Continue with minimal device info
@@ -38,7 +39,7 @@ export const createNewSession = async (userId: string): Promise<any> => {
         user_id: userId,
         session_token: sessionToken,
         device_info: deviceInfo,
-        ip_address: deviceInfo?.ip || 'unknown',
+        ip_address: deviceInfo.ip || 'unknown',
         status: 'active'
       }])
       .select()
