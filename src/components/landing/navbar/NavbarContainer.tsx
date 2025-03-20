@@ -2,14 +2,44 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
-import { AuthButtons } from "./AuthButtons";
-import { MobileMenu } from "./MobileMenu";
-import { AskSkyGuideButton } from "./AskSkyGuideButton";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { 
+  LayoutDashboard, 
+  MessageSquare, 
+  LogOut, 
+  User, 
+  Menu, 
+  ChevronDown
+} from "lucide-react";
+import { useLogout } from "@/hooks/useLogout";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { 
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle
+} from "@/components/ui/navigation-menu";
+import { NotificationBell } from "@/components/shared/NotificationBell";
+import { cn } from "@/lib/utils";
 
 export function NavbarContainer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const { handleLogout } = useLogout();
 
   useEffect(() => {
     let mounted = true;
@@ -33,6 +63,7 @@ export function NavbarContainer() {
           if (session?.user) {
             console.log('User is logged in:', session.user.email);
             setIsLoggedIn(true);
+            setUserEmail(session.user.email);
             
             // Check user's subscription and free trial status
             const { data: profile, error: profileError } = await supabase
@@ -87,9 +118,11 @@ export function NavbarContainer() {
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in in NavbarContainer:', session.user.email);
           setIsLoggedIn(true);
+          setUserEmail(session.user.email);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out in NavbarContainer');
           setIsLoggedIn(false);
+          setUserEmail(null);
         }
         setIsLoading(false);
       }
@@ -153,29 +186,158 @@ export function NavbarContainer() {
     }
   };
 
+  const renderDesktopMenu = () => {
+    if (!isLoggedIn) {
+      return (
+        <div className="flex items-center gap-3">
+          <Link to="/login">
+            <Button variant="ghost" size="sm" className="text-gray-200 hover:text-white">
+              Login
+            </Button>
+          </Link>
+          <Button 
+            onClick={scrollToPricing} 
+            size="sm" 
+            className="bg-brand-gold text-brand-navy hover:bg-brand-gold/90"
+          >
+            Sign Up
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-3">
+        <Button 
+          asChild
+          variant="ghost" 
+          size="sm" 
+          className="text-gray-200 hover:text-white"
+        >
+          <Link to="/chat">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Ask SkyGuide
+          </Link>
+        </Button>
+
+        <Button 
+          asChild
+          variant="ghost" 
+          size="sm" 
+          className="text-gray-200 hover:text-white"
+        >
+          <Link to="/dashboard">
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            Dashboard
+          </Link>
+        </Button>
+        
+        <NotificationBell />
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-gray-200 hover:text-white">
+              <User className="mr-2 h-4 w-4" />
+              {userEmail ? userEmail.split('@')[0] : 'Account'}
+              <ChevronDown className="ml-1 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem asChild>
+              <Link to="/account" className="cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                Account Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer focus:text-red-500">
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
+  const renderMobileMenu = () => {
+    return (
+      <div className="md:hidden">
+        {isLoggedIn && (
+          <div className="flex items-center mr-2">
+            <Button 
+              asChild
+              variant="ghost" 
+              size="sm" 
+              className="p-2"
+            >
+              <Link to="/chat">
+                <MessageSquare className="h-5 w-5" />
+              </Link>
+            </Button>
+            <NotificationBell />
+          </div>
+        )}
+        
+        <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="p-2">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {isLoggedIn ? (
+              <>
+                <DropdownMenuItem asChild className="py-2">
+                  <Link to="/dashboard">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="py-2">
+                  <Link to="/account">
+                    <User className="mr-2 h-4 w-4" />
+                    Account Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={handleLogout} 
+                  className="text-red-500 focus:text-red-500 py-2"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem asChild className="py-2">
+                  <Link to="/login">
+                    Login
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={scrollToPricing} className="py-2">
+                  Sign Up
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
   return (
-    <nav className="fixed-nav fixed top-0 left-0 right-0 z-50 border-b border-border/40">
+    <nav className="fixed w-full top-0 left-0 right-0 z-50 border-b border-white/10 bg-background/95 backdrop-blur-md">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-14">
+        <div className="flex justify-between items-center h-16">
           <Logo handleLogoClick={handleLogoClick} />
           
-          {isLoggedIn && !isLoading && <AskSkyGuideButton />}
+          <div className="hidden md:flex items-center">{renderDesktopMenu()}</div>
           
-          <div className="hidden md:flex items-center space-x-4">
-            <AuthButtons 
-              isLoading={isLoading} 
-              isLoggedIn={isLoggedIn} 
-              scrollToPricing={scrollToPricing}
-            />
+          <div className="flex md:hidden items-center">
+            {renderMobileMenu()}
           </div>
-
-          <MobileMenu 
-            isLoggedIn={isLoggedIn}
-            isLoading={isLoading}
-            isMobileMenuOpen={isMobileMenuOpen}
-            setIsMobileMenuOpen={setIsMobileMenuOpen}
-            scrollToPricing={scrollToPricing}
-          />
         </div>
       </div>
     </nav>
