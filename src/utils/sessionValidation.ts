@@ -14,14 +14,42 @@ export const validateCurrentSession = async ({ navigate, toast }: ValidationProp
     
     if (sessionError) {
       console.error("Session error:", sessionError);
-      navigate('/login');
+      navigate('/login', { replace: true });
       return false;
     }
 
     if (!session) {
       console.log("No active session found");
-      navigate('/login');
+      navigate('/login', { replace: true });
       return false;
+    }
+
+    // Validate the session token
+    const sessionToken = localStorage.getItem('session_token');
+    if (!sessionToken) {
+      console.log("No session token found, creating new session");
+      try {
+        // Create a new session for this user if none exists
+        const { data: sessionData } = await supabase
+          .from('sessions')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (sessionData) {
+          console.log("Found existing active session, using it");
+          localStorage.setItem('session_token', sessionData.session_token);
+        } else {
+          // Import dynamically to avoid circular dependencies
+          const { createNewSession } = await import('@/services/sessionService');
+          await createNewSession(session.user.id);
+        }
+      } catch (error) {
+        console.error("Error handling session token:", error);
+      }
     }
 
     return session;
@@ -74,8 +102,16 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
         p_session_token: currentToken
       });
 
-    if (validationError || !sessionValid) {
-      console.log("Session invalid");
+    if (validationError) {
+      console.error("Error validating session:", validationError);
+      if (navigate) {
+        await handleSessionInvalidation(navigate, toast);
+      }
+      return false;
+    }
+    
+    if (!sessionValid) {
+      console.log("Session token invalid");
       if (navigate) {
         await handleSessionInvalidation(navigate, toast);
       }
@@ -83,35 +119,24 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
     }
 
     // Get the current user's ID
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log("No user found");
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.log("No user found or error:", userError);
       if (navigate) {
         await handleSessionInvalidation(navigate, toast);
       }
       return false;
     }
 
-    // Check for other active sessions
-    const { data: activeSessions, error: sessionsError } = await supabase
+    // Update the last activity timestamp for the session
+    const { error: updateError } = await supabase
       .from('sessions')
-      .select('session_token, created_at')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .neq('session_token', currentToken);
+      .update({ last_activity: new Date().toISOString() })
+      .eq('session_token', currentToken)
+      .eq('user_id', user.id);
 
-    if (sessionsError) {
-      console.error("Error checking active sessions:", sessionsError);
-      return false;
-    }
-
-    // If there are other active sessions, invalidate current session
-    if (activeSessions && activeSessions.length > 0) {
-      console.log("Other active sessions found, invalidating current session");
-      if (navigate) {
-        await handleSessionInvalidation(navigate, toast);
-      }
-      return false;
+    if (updateError) {
+      console.error("Error updating session activity:", updateError);
     }
 
     return true;
@@ -164,11 +189,31 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
 
 const handleSessionInvalidation = async (navigate: NavigateFunction, toast: typeof toastFunction) => {
   console.log("Invalidating session and logging out user");
-  localStorage.clear();
-  await supabase.auth.signOut();
-  toast({
-    title: "Session Ended",
-    description: "Your account has been signed in on another device."
-  });
-  navigate('/login');
+  try {
+    // Clear all local storage and cookies
+    localStorage.removeItem('session_token');
+    localStorage.removeItem('supabase.refresh-token');
+    document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+    
+    // Sign out from Supabase
+    await supabase.auth.signOut();
+    
+    // Only show toast if it exists
+    if (toast) {
+      toast({
+        title: "Session Ended",
+        description: "Please sign in again to continue."
+      });
+    }
+    
+    // Redirect to login
+    if (navigate) {
+      navigate('/login', { replace: true });
+    }
+  } catch (error) {
+    console.error("Error in handleSessionInvalidation:", error);
+    if (navigate) {
+      navigate('/login', { replace: true });
+    }
+  }
 };

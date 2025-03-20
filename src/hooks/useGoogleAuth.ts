@@ -13,17 +13,31 @@ export const useGoogleAuth = () => {
   // Listen for authentication state changes
   useEffect(() => {
     const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error fetching session:", error);
+          return;
+        }
+        
+        setSession(session);
+        
+        // If we have a session but we're on the login page, redirect to dashboard
+        if (session && window.location.pathname === '/login') {
+          console.log("Already logged in, redirecting to dashboard...");
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (err) {
+        console.error("Unexpected error fetching session:", err);
+      }
     };
 
     fetchSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed:", event, "Session:", session ? "exists" : "null");
       setSession(session);
       
-      // If user signs in, we'll let the GoogleAuthHandler component handle the redirect
       if (event === 'SIGNED_IN') {
         // Only redirect if not already on the callback path
         if (window.location.pathname !== '/auth/callback') {
@@ -31,9 +45,11 @@ export const useGoogleAuth = () => {
           navigate('/auth/callback', { replace: true });
         }
       } else if (event === 'SIGNED_OUT') {
-        // Clear local storage and redirect to login
-        localStorage.clear();
-        console.log("Auth state is SIGNED_OUT, redirecting to login page");
+        // Clear all auth-related data and redirect to login
+        console.log("Auth state is SIGNED_OUT, clearing data and redirecting to login");
+        localStorage.removeItem('session_token');
+        localStorage.removeItem('supabase.refresh-token');
+        document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
         navigate('/login', { replace: true });
       }
     });
@@ -48,9 +64,11 @@ export const useGoogleAuth = () => {
       setLoading(true);
       console.log("Initiating Google sign in...");
       
-      // Clear any existing session data first
+      // Clear any existing session data first to prevent issues
       await supabase.auth.signOut({ scope: 'local' });
-      localStorage.clear();
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('supabase.refresh-token');
+      document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -89,8 +107,9 @@ export const useGoogleAuth = () => {
     try {
       setLoading(true);
       
-      // Clear session data first
-      localStorage.clear();
+      // Clear all auth-related data
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('supabase.refresh-token');
       document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
       
       // Then sign out from Supabase

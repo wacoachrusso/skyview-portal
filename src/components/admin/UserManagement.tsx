@@ -1,7 +1,9 @@
+
 import { useUserManagement } from "@/hooks/useUserManagement";
 import { UsersTable } from "./user-management/UsersTable";
 import { UserDetailsDialog } from "./user-management/UserDetailsDialog";
 import { DeleteUserDialog } from "./user-management/DeleteUserDialog";
+import { DeleteAllUsersButton } from "./user-management/DeleteAllUsersButton";
 
 export const UserManagement = () => {
   const {
@@ -40,6 +42,10 @@ export const UserManagement = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <DeleteAllUsersButton />
+      </div>
+    
       <UsersTable
         users={activeUsers}
         updatingUser={updatingUser}

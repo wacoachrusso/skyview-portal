@@ -21,15 +21,19 @@ export const createNewSession = async (userId: string): Promise<any> => {
     const sessionToken = crypto.randomUUID();
 
     // Get device info
-    let deviceInfo: Record<string, string> = {};
+    let deviceInfo: Record<string, any> = {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language
+    };
+    
     try {
       const response = await fetch('https://api.ipify.org?format=json');
       const data = await response.json();
-      deviceInfo = data as Record<string, string>;
+      deviceInfo.ip = data.ip;
     } catch (error) {
-      console.warn('Could not fetch device info:', error);
-      // Continue with minimal device info
-      deviceInfo = { ip: 'unknown' };
+      console.warn('Could not fetch IP info:', error);
+      deviceInfo.ip = 'unknown';
     }
 
     // Create new session
@@ -93,6 +97,8 @@ export const validateSessionToken = async (token: string | null): Promise<boolea
       if (updateError) {
         console.warn('Failed to update session activity:', updateError);
       }
+    } else {
+      console.log('Session token is invalid or expired');
     }
 
     return !!isValid;
