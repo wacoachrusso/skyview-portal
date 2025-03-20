@@ -1,3 +1,4 @@
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +9,8 @@ import { NotificationDialog } from "./notifications/NotificationDialog";
 import { NotificationItem } from "./notifications/NotificationItem";
 import { NotificationBellButton } from "./notifications/NotificationBellButton";
 import { useNotificationState } from "@/hooks/notifications/useNotificationState";
+import { useEffect } from "react";
+import { clearNotificationBadge } from "@/utils/pushNotifications";
 
 export const NotificationBell = () => {
   const {
@@ -31,7 +34,19 @@ export const NotificationBell = () => {
   const handleOpenChange = (isOpen: boolean) => {
     console.log('Dropdown open state changing to:', isOpen);
     setOpen(isOpen);
+    
+    // Clear app badge when opening notifications
+    if (isOpen) {
+      clearNotificationBadge();
+    }
   };
+
+  // Clear badge when unreadCount becomes 0
+  useEffect(() => {
+    if (unreadCount === 0) {
+      clearNotificationBadge();
+    }
+  }, [unreadCount]);
 
   return (
     <>

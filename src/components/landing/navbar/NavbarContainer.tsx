@@ -5,6 +5,7 @@ import { Logo } from "./Logo";
 import { AuthButtons } from "./AuthButtons";
 import { MobileMenu } from "./MobileMenu";
 import { AskSkyGuideButton } from "./AskSkyGuideButton";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 
 export function NavbarContainer() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -159,7 +160,11 @@ export function NavbarContainer() {
         <div className="flex justify-between items-center h-14">
           <Logo handleLogoClick={handleLogoClick} />
           
-          {isLoggedIn && !isLoading && <AskSkyGuideButton />}
+          <div className="flex items-center gap-2">
+            {isLoggedIn && !isLoading && <AskSkyGuideButton />}
+            
+            {isLoggedIn && !isLoading && <NotificationBell />}
+          </div>
           
           <div className="hidden md:flex items-center space-x-4">
             <AuthButtons 

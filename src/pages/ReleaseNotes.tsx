@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -49,7 +50,7 @@ const ReleaseNotes = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
       console.error("Failed to mark notifications as read:", error);
