@@ -29,7 +29,7 @@ const Login = () => {
       }
       
       if (data.session) {
-        console.log("Session found, redirecting to chat");
+        console.log("Session found, checking profile");
         
         // Get user profile to determine where to redirect
         const { data: profile, error: profileError } = await supabase
@@ -40,10 +40,19 @@ const Login = () => {
           
         console.log("Profile check result:", { profile, error: profileError });
         
-        if (profileError) {
+        if (profileError && profileError.code !== "PGRST116") {
           console.error("Error fetching profile:", profileError);
           setCheckingSession(false);
           return;
+        }
+
+        try {
+          // Create or update session token
+          const { createNewSession } = await import('@/services/sessionService');
+          await createNewSession(data.session.user.id);
+          console.log("Created/updated session token");
+        } catch (sessionError) {
+          console.error("Error with session:", sessionError);
         }
         
         if (profile && profile.user_type && profile.airline) {
@@ -51,10 +60,10 @@ const Login = () => {
           navigate("/chat", { replace: true });
         } else if (profile) {
           // Profile exists but incomplete
-          navigate("/complete-profile", { replace: true });
+          navigate("/account", { replace: true });
         } else {
           // No profile found
-          navigate("/complete-profile", { replace: true });
+          navigate("/account", { replace: true });
         }
       } else {
         console.log("Session check result: No session");
@@ -97,23 +106,30 @@ const Login = () => {
           });
           await supabase.auth.signOut();
           navigate('/forgot-password');
-        } else {
-          toast({
-            title: "Welcome back!",
-            description: "You've successfully signed in."
-          });
-          
-          // Create a new session token for this user
-          try {
-            const { createNewSession } = await import('@/services/sessionService');
-            await createNewSession(data.user.id);
-            console.log("Created new session after login");
-          } catch (sessionError) {
-            console.error("Error creating session after login:", sessionError);
-          }
-          
-          // Redirect to chat instead of dashboard
+          return;
+        }
+        
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in."
+        });
+        
+        // Create a new session token for this user
+        try {
+          const { createNewSession } = await import('@/services/sessionService');
+          await createNewSession(data.user.id);
+          console.log("Created new session after login");
+        } catch (sessionError) {
+          console.error("Error creating session after login:", sessionError);
+        }
+        
+        // Redirect based on profile completeness
+        if (profile?.user_type && profile?.airline) {
           navigate("/chat", { replace: true });
+        } else if (profile) {
+          navigate("/account", { replace: true });
+        } else {
+          navigate("/account", { replace: true });
         }
       }
     } catch (error) {

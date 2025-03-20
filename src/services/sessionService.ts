@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const createNewSession = async (userId: string): Promise<any> => {
@@ -71,7 +70,7 @@ export const createNewSession = async (userId: string): Promise<any> => {
       console.warn('Could not fetch IP info:', error);
     }
 
-    // Create new session with a longer expiration time
+    // Create new session with a longer expiration time (24 hours instead of 15 minutes)
     const { data: session, error: createError } = await supabase
       .from('sessions')
       .insert([{
@@ -97,6 +96,8 @@ export const createNewSession = async (userId: string): Promise<any> => {
     const { data: { session: authSession } } = await supabase.auth.getSession();
     if (authSession?.refresh_token) {
       localStorage.setItem('supabase.refresh-token', authSession.refresh_token);
+      
+      // Set cookie with refresh token for additional persistence
       document.cookie = `sb-refresh-token=${authSession.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
     }
 
