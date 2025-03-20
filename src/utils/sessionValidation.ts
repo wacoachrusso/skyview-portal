@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { NavigateFunction } from "react-router-dom";
 import { toast as toastFunction } from "@/hooks/use-toast";
@@ -104,9 +103,6 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
 
     if (validationError) {
       console.error("Error validating session:", validationError);
-      if (navigate) {
-        await handleSessionInvalidation(navigate, toast);
-      }
       return false;
     }
     
@@ -122,13 +118,11 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       console.log("No user found or error:", userError);
-      if (navigate) {
-        await handleSessionInvalidation(navigate, toast);
-      }
       return false;
     }
 
-    // Update the last activity timestamp for the session
+    // Instead of checking for other active sessions on every validation,
+    // only update the last activity timestamp
     const { error: updateError } = await supabase
       .from('sessions')
       .update({ last_activity: new Date().toISOString() })
@@ -161,25 +155,6 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
       return false;
     }
 
-    // Check for other active sessions
-    const { data: sessions, error: sessionsError } = await supabase
-      .from('sessions')
-      .select('session_token, status')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .neq('session_token', sessionToken);
-
-    if (sessionsError) {
-      console.error('Error checking active sessions:', sessionsError);
-      return false;
-    }
-
-    // If there are other active sessions, this session is invalid
-    if (sessions && sessions.length > 0) {
-      console.log('Other active sessions found');
-      return false;
-    }
-
     return true;
   } catch (error) {
     console.error('Error in checkActiveSession:', error);
@@ -190,13 +165,14 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
 const handleSessionInvalidation = async (navigate: NavigateFunction, toast: typeof toastFunction) => {
   console.log("Invalidating session and logging out user");
   try {
-    // Clear all local storage and cookies
+    // Don't clear all local storage, just the session-related items
     localStorage.removeItem('session_token');
-    localStorage.removeItem('supabase.refresh-token');
-    document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
     
-    // Sign out from Supabase
-    await supabase.auth.signOut();
+    // Keep the refresh token to allow for possible silent re-auth
+    // const refreshToken = localStorage.getItem('supabase.refresh-token');
+    
+    // Sign out from Supabase but keep the local session
+    await supabase.auth.signOut({ scope: 'local' });
     
     // Only show toast if it exists
     if (toast) {

@@ -5,7 +5,35 @@ export const createNewSession = async (userId: string): Promise<any> => {
   console.log('Creating new session for user:', userId);
   
   try {
-    // First invalidate any existing sessions
+    // First check if there's already an active session for this user
+    const { data: existingSessions, error: checkError } = await supabase
+      .from('sessions')
+      .select('session_token, created_at')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1);
+      
+    if (checkError) {
+      console.error('Error checking existing sessions:', checkError);
+    } else if (existingSessions && existingSessions.length > 0) {
+      console.log('Found existing active session, using it');
+      localStorage.setItem('session_token', existingSessions[0].session_token);
+      
+      // Update last activity timestamp
+      const { error: updateError } = await supabase
+        .from('sessions')
+        .update({ last_activity: new Date().toISOString() })
+        .eq('session_token', existingSessions[0].session_token);
+        
+      if (updateError) {
+        console.warn('Failed to update session activity:', updateError);
+      }
+      
+      return existingSessions[0];
+    }
+
+    // Only invalidate other sessions if we're creating a new one
     const { error: invalidateError } = await supabase
       .rpc('invalidate_other_sessions', {
         p_user_id: userId,
@@ -43,7 +71,7 @@ export const createNewSession = async (userId: string): Promise<any> => {
       console.warn('Could not fetch IP info:', error);
     }
 
-    // Create new session
+    // Create new session with a longer expiration time
     const { data: session, error: createError } = await supabase
       .from('sessions')
       .insert([{
@@ -51,7 +79,8 @@ export const createNewSession = async (userId: string): Promise<any> => {
         session_token: sessionToken,
         device_info: deviceInfo,
         ip_address: ipAddress,
-        status: 'active'
+        status: 'active',
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours expiration
       }])
       .select()
       .single();
