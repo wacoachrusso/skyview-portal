@@ -47,8 +47,8 @@ export function NavbarContainer() {
             
             // Redirect to chat if on homepage and profile is complete
             if (window.location.pathname === '/' && profile?.user_type && profile?.airline) {
-              console.log('Profile is complete, redirecting to chat');
-              window.location.href = '/chat';
+              console.log('Profile is complete, redirecting to dashboard');
+              window.location.href = '/dashboard';
             }
           } else {
             console.log('No active session found');
@@ -109,9 +109,9 @@ export function NavbarContainer() {
       setIsLoggedIn(!!session);
       setIsLoading(false);
       
-      // If user is logged in, navigate to chat, otherwise to home
+      // If user is logged in, navigate to dashboard
       if (session) {
-        window.location.href = '/chat';
+        window.location.href = '/dashboard';
       } else {
         window.location.href = '/';
       }

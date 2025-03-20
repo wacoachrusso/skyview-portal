@@ -14,12 +14,12 @@ export function Logo({ handleLogoClick }: LogoProps) {
       // Check if user is logged in
       const { data: { session } } = await supabase.auth.getSession();
       
-      // If logged in, navigate to chat, otherwise to home
-      const targetPath = session ? '/chat' : '/';
-      window.location.href = targetPath; // Using direct location change to avoid React Router issues
+      // If logged in, navigate to dashboard, otherwise to home
+      const targetPath = session ? '/dashboard' : '/';
+      window.location.href = targetPath;
     } catch (error) {
       console.error("Error in logo click:", error);
-      window.location.href = '/'; // Fallback to home
+      window.location.href = '/';
     }
   };
   
