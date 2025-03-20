@@ -1,9 +1,10 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
-export const createNewSession = async (userId: string) => {
+export const createNewSession = async (userId: string): Promise<any> => {
+  console.log('Creating new session for user:', userId);
+  
   try {
-    console.log('Creating new session for user:', userId);
-    
     // First invalidate any existing sessions
     const { error: invalidateError } = await supabase
       .rpc('invalidate_other_sessions', {
@@ -13,18 +14,21 @@ export const createNewSession = async (userId: string) => {
 
     if (invalidateError) {
       console.error('Error invalidating existing sessions:', invalidateError);
+      // Continue despite error, as this might be the first session
     }
 
     // Create new session token
     const sessionToken = crypto.randomUUID();
 
     // Get device info
-    let deviceInfo = { ip: 'unknown' };
+    let deviceInfo = {};
     try {
       const response = await fetch('https://api.ipify.org?format=json');
       deviceInfo = await response.json();
     } catch (error) {
-      console.error('Error fetching device info:', error);
+      console.warn('Could not fetch device info:', error);
+      // Continue with minimal device info
+      deviceInfo = { ip: 'unknown' };
     }
 
     // Create new session
@@ -33,7 +37,7 @@ export const createNewSession = async (userId: string) => {
       .insert([{
         user_id: userId,
         session_token: sessionToken,
-        device_info: deviceInfo || {},
+        device_info: deviceInfo,
         ip_address: deviceInfo?.ip || 'unknown',
         status: 'active'
       }])
@@ -63,13 +67,14 @@ export const createNewSession = async (userId: string) => {
   }
 };
 
-export const validateSessionToken = async (sessionToken: string) => {
+export const validateSessionToken = async (token: string | null): Promise<boolean> => {
+  if (!token) return false;
+  
   try {
-    if (!sessionToken) return false;
-
+    console.log('Validating session token');
     const { data: isValid, error } = await supabase
       .rpc('is_session_valid', {
-        p_session_token: sessionToken
+        p_session_token: token
       });
 
     if (error) {
@@ -77,58 +82,69 @@ export const validateSessionToken = async (sessionToken: string) => {
       return false;
     }
 
-    return isValid;
+    if (isValid) {
+      // Update last activity timestamp
+      const { error: updateError } = await supabase
+        .from('sessions')
+        .update({ last_activity: new Date().toISOString() })
+        .eq('session_token', token);
+
+      if (updateError) {
+        console.warn('Failed to update session activity:', updateError);
+      }
+    }
+
+    return !!isValid;
   } catch (error) {
-    console.error('Error in validateSessionToken:', error);
+    console.error('Unexpected error validating session:', error);
     return false;
   }
 };
 
-export const updateSessionActivity = async (sessionToken: string) => {
+export const invalidateSessionToken = async (token: string | null): Promise<boolean> => {
+  if (!token) return false;
+  
   try {
-    if (!sessionToken) {
-      console.error('Cannot update session activity: No session token provided');
-      return;
-    }
-    
+    console.log('Invalidating session token');
     const { error } = await supabase
       .from('sessions')
-      .update({ last_activity: new Date().toISOString() })
-      .eq('session_token', sessionToken);
+      .update({ 
+        status: 'invalidated',
+        invalidated_at: new Date().toISOString()
+      })
+      .eq('session_token', token);
 
     if (error) {
-      console.error('Error updating session activity:', error);
+      console.error('Error invalidating session token:', error);
+      return false;
     }
+
+    return true;
   } catch (error) {
-    console.error('Error in updateSessionActivity:', error);
+    console.error('Unexpected error invalidating session:', error);
+    return false;
   }
 };
 
-// Add a new function to refresh the session if needed
-export const refreshSessionIfNeeded = async () => {
+export const invalidateAllUserSessions = async (userId: string): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // If no session or near expiry (within 5 minutes), refresh
-    if (!session || (session.expires_at && new Date(session.expires_at * 1000) <= new Date(Date.now() + 5 * 60 * 1000))) {
-      console.log('Session needs refreshing');
-      
-      const { data, error } = await supabase.auth.refreshSession();
-      
-      if (error) {
-        console.error('Error refreshing session:', error);
-        return false;
-      }
-      
-      if (data.session) {
-        console.log('Session refreshed successfully');
-        return true;
-      }
+    console.log('Invalidating all sessions for user:', userId);
+    const { error } = await supabase
+      .from('sessions')
+      .update({ 
+        status: 'invalidated',
+        invalidated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error invalidating all user sessions:', error);
+      return false;
     }
-    
-    return !!session; // Return true if session exists
+
+    return true;
   } catch (error) {
-    console.error('Error in refreshSessionIfNeeded:', error);
+    console.error('Unexpected error invalidating all user sessions:', error);
     return false;
   }
 };

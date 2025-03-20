@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,11 @@ export const useGoogleAuth = () => {
     try {
       setLoading(true);
       console.log("Initiating Google sign in...");
+      
+      // Clear any existing session data first
+      await supabase.auth.signOut({ scope: 'local' });
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('supabase.refresh-token');
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",

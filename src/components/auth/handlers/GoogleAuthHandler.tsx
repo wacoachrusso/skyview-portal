@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +12,11 @@ export const GoogleAuthHandler = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      console.log('Handling Google auth callback');
+      console.log('GoogleAuthHandler: Handling auth callback');
       try {
+        // Clear any existing session data from localStorage
+        localStorage.removeItem('session_token');
+        
         // Get current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -39,6 +43,7 @@ export const GoogleAuthHandler = () => {
         // Create a new session and save token to localStorage
         try {
           await createNewSession(session.user.id);
+          console.log('New session created successfully');
         } catch (error) {
           console.error('Error creating session:', error);
           toast({
@@ -51,10 +56,6 @@ export const GoogleAuthHandler = () => {
           return;
         }
         
-        // Extract user data from the session
-        const { email, user_metadata } = session.user;
-        const fullName = user_metadata?.full_name || user_metadata?.name || "";
-
         // Check if the user has a profile in the profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -76,37 +77,23 @@ export const GoogleAuthHandler = () => {
         
         // If profile does not exist, create it
         if (!profile) {
-          console.log('Profile does not exist, creating profile');
-          const { error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              id: session.user.id,
-              email: email,
-              full_name: fullName,
-              subscription_plan: 'free',
-              email_notifications: true,
-              push_notifications: true,
-              account_status: 'active'
-            });
-
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            toast({
-              variant: "destructive",
-              title: "Profile Creation Error",
-              description: createError.message || "Failed to create your profile.",
-              duration: 5000
-            });
-            navigate('/login', { replace: true });
-            return;
-          }
+          console.log('Profile does not exist, redirecting to signup to complete profile');
           
+          const { email, user_metadata } = session.user;
+          const fullName = user_metadata?.full_name || user_metadata?.name || "";
+          
+          // Redirect to signup to complete profile
           toast({
             title: "Welcome!",
             description: "Please complete your profile to get started."
           });
           navigate('/signup', {
-            state: { userId: session.user.id, email, fullName, isGoogleSignIn: true },
+            state: { 
+              userId: session.user.id, 
+              email, 
+              fullName, 
+              isGoogleSignIn: true 
+            },
             replace: true
           });
           return;
@@ -120,7 +107,12 @@ export const GoogleAuthHandler = () => {
             description: "Please complete your profile to get started."
           });
           navigate('/signup', {
-            state: { userId: session.user.id, email, fullName, isGoogleSignIn: true },
+            state: { 
+              userId: session.user.id, 
+              email: session.user.email, 
+              fullName: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "", 
+              isGoogleSignIn: true 
+            },
             replace: true
           });
           return;
