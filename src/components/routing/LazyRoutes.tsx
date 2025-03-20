@@ -5,7 +5,7 @@ import { lazy } from "react";
 export const Index = lazy(() => import("@/pages/Index"));
 
 // For Login component which is now a default export
-export const Login = lazy(() => import("@/pages/Login"));
+export const Login = lazy(() => import("@/pages/Login").then(module => ({ default: module.default })));
 
 export const SignUp = lazy(() => import("@/pages/SignUp"));
 export const Chat = lazy(() => import("@/pages/Chat"));

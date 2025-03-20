@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createNewSession } from "@/services/session";
@@ -110,3 +111,15 @@ export const GoogleAuthHandler = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p className="mt-4 text-gray-600">Authenticating...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <p className="text-gray-600">Authentication successful! Redirecting...</p>
+    </div>
+  );
+};

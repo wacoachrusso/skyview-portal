@@ -22,7 +22,6 @@ const queryClient = new QueryClient({
 // Simplified InitialSessionCheck component
 function InitialSessionCheck() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   
   useEffect(() => {
     const checkInitialSession = async () => {
@@ -59,8 +58,13 @@ function InitialSessionCheck() {
       }
     };
     
-    checkInitialSession();
-  }, [navigate, toast]);
+    // Delay the session check to ensure components are rendered first
+    const timer = setTimeout(() => {
+      checkInitialSession();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [navigate]);
   
   return null;
 }
