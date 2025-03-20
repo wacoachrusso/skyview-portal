@@ -8,6 +8,7 @@ import { handleAuthSession, handlePasswordReset } from "@/utils/auth/sessionHand
 import { createNewSession, validateSessionToken } from "@/services/session";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { handleSignIn } from "@/utils/signInUtils";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -30,31 +31,35 @@ const Login = () => {
   }
 
   const handleLogin = async (email: string, password?: string) => {
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Please provide both email and password.",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: password || '',
-      });
-
-      if (error) {
-        console.error("Login error:", error);
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: error.message || "Invalid credentials. Please try again.",
-        });
-      } else {
-        console.log("Login successful:", data);
+      const success = await handleSignIn(email, password);
+      
+      if (success) {
+        console.log("Login successful");
         toast({
           title: "Login Successful",
           description: "You have successfully logged in.",
         });
 
-        if (data.user) {
-          await handleAuthSession(data.user.id, createNewSession, navigate);
+        // Get current user after successful login
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          await handleAuthSession(user.id, createNewSession, navigate);
           navigate(next);
         }
+      } else {
+        setLoading(false);
       }
     } catch (error) {
       console.error("Unexpected error during login:", error);
@@ -63,7 +68,6 @@ const Login = () => {
         title: "Login Error",
         description: "An unexpected error occurred. Please try again.",
       });
-    } finally {
       setLoading(false);
     }
   };

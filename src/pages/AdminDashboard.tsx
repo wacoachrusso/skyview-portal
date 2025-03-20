@@ -11,6 +11,7 @@ import { NotificationManager } from "@/components/admin/NotificationManager";
 import { AlphaTesters } from "@/components/admin/AlphaTesters";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SetPasswordPanel } from "@/components/admin/SetPasswordPanel";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -26,6 +27,12 @@ const AdminDashboard = () => {
           <LayoutDashboard className="h-4 w-4" />
           Go to Dashboard
         </Button>
+      </div>
+
+      {/* Account Settings Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
+        <SetPasswordPanel />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
