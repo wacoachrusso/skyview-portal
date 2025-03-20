@@ -1,14 +1,24 @@
-import { Link } from "react-router-dom";
+
+import { Link, useNavigate } from "react-router-dom";
 
 interface LogoProps {
-  handleLogoClick: (e: React.MouseEvent) => void;
+  handleLogoClick?: (e: React.MouseEvent) => void;
 }
 
 export function Logo({ handleLogoClick }: LogoProps) {
+  const navigate = useNavigate();
+  
+  const defaultLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/', { replace: true });
+  };
+  
+  const logoClickHandler = handleLogoClick || defaultLogoClick;
+
   return (
     <Link 
       to="/"
-      onClick={handleLogoClick}
+      onClick={logoClickHandler}
       className="flex items-center gap-2 hover:opacity-80 transition-opacity"
       aria-label="Return to SkyGuide homepage"
     >

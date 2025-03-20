@@ -1,11 +1,12 @@
+
 import { useState } from "react";
 import { Conversation } from "@/types/chat";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DownloadDialog } from "./DownloadDialog";
-import { useDownloadChat } from "@/hooks/useDownloadChat";
 import { ConversationMetadata } from "./conversation/ConversationMetadata";
 import { ConversationIcon } from "./conversation/ConversationIcon";
 import { ConversationTitle } from "./conversation/ConversationTitle";
+import { DownloadHandler } from "./conversation/DownloadHandler";
+import { useConversationInteraction } from "./conversation/useConversationInteraction";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -30,49 +31,46 @@ export function ConversationItem({
   isChecked,
   onCheckChange,
 }: ConversationItemProps) {
-  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
-  const { downloadChat, downloadInProgress } = useDownloadChat();
-
-  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (showCheckbox) {
-      onCheckChange?.(!isChecked);
-    } else {
-      if (!downloadInProgress) {
-        onSelect(conversation.id);
-      }
-    }
-  };
+  const [downloadInProgress, setDownloadInProgress] = useState(false);
+  
+  // Custom hook for handling conversation interaction
+  const { handleInteraction } = useConversationInteraction({
+    conversationId: conversation.id,
+    showCheckbox,
+    downloadInProgress,
+    onSelect,
+    onCheckChange,
+    isChecked
+  });
 
   const handleToggleOffline = async (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
+    // If already offline, just toggle it off
     if (isOffline) {
       onToggleOffline(e, conversation.id);
       return;
     }
 
-    setShowPermissionDialog(true);
+    // Access the DownloadHandler element to trigger the dialog
+    const handler = document.querySelector(`[data-testid="download-handler-${conversation.id}"]`);
+    if (handler) {
+      // Update the download in progress state from the handler
+      setDownloadInProgress(handler.getAttribute('data-download-in-progress') === 'true');
+      // Trigger the dialog
+      (handler as HTMLElement).click();
+    }
   };
 
-  const handleDownloadConfirmed = async () => {
-    setShowPermissionDialog(false);
-
-    try {
-      const success = await downloadChat(conversation.id, conversation.title);
-      if (success) {
-        const mockEvent = new MouseEvent("click", {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-        }) as unknown as React.MouseEvent;
-        onToggleOffline(mockEvent, conversation.id);
-      }
-    } catch (error) {
-      console.error("Error during download:", error);
+  const handleDownloadComplete = (success: boolean) => {
+    if (success) {
+      const mockEvent = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      }) as unknown as React.MouseEvent;
+      onToggleOffline(mockEvent, conversation.id);
     }
   };
 
@@ -113,10 +111,10 @@ export function ConversationItem({
         </div>
       </div>
 
-      <DownloadDialog
-        open={showPermissionDialog}
-        onOpenChange={setShowPermissionDialog}
-        onConfirm={handleDownloadConfirmed}
+      <DownloadHandler
+        conversationId={conversation.id}
+        title={conversation.title}
+        onDownloadComplete={handleDownloadComplete}
       />
     </>
   );

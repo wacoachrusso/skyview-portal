@@ -5,7 +5,7 @@ export const DashboardLogo = () => {
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate('/', { state: { fromDashboard: true } });
+    navigate('/', { replace: true });
   };
 
   return (
