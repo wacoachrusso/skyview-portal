@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +36,21 @@ export const GoogleAuthHandler = () => {
 
         console.log('Session found for user:', session.user.email);
         
+        // Create a new session and save token to localStorage
+        try {
+          await createNewSession(session.user.id);
+        } catch (error) {
+          console.error('Error creating session:', error);
+          toast({
+            variant: "destructive",
+            title: "Session Error",
+            description: "Failed to create user session.",
+            duration: 5000
+          });
+          navigate('/login', { replace: true });
+          return;
+        }
+        
         // Extract user data from the session
         const { email, user_metadata } = session.user;
         const fullName = user_metadata?.full_name || user_metadata?.name || "";
@@ -59,9 +73,6 @@ export const GoogleAuthHandler = () => {
           navigate('/login', { replace: true });
           return;
         }
-
-        // Create a new session
-        await createNewSession(session.user.id);
         
         // If profile does not exist, create it
         if (!profile) {
