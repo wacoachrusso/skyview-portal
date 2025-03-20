@@ -6,7 +6,8 @@ import { useAuthStateHandler } from "@/hooks/useAuthStateHandler";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { validateCurrentSession, checkProfileStatus, validateSessionToken } from "@/utils/sessionValidation";
+import { validateCurrentSession, validateSessionToken } from "@/utils/session";
+import { checkProfileStatus } from "@/utils/session";
 import { useSessionMonitoring } from "@/hooks/useSessionMonitoring";
 
 export function SessionCheck() {

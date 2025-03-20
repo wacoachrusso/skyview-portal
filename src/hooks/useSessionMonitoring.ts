@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { validateSessionToken } from "@/utils/sessionValidation";
+import { validateSessionToken } from "@/utils/session";
 
 export const useSessionMonitoring = () => {
   const navigate = useNavigate();
