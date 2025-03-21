@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useChat } from "@/hooks/useChat";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
-import { ChatContainer } from "@/components/chat/ChatContainer";
+import ChatContainer from "@/components/chat/ChatContainer";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { OfflineAlert } from "@/components/chat/OfflineAlert";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
@@ -59,20 +59,7 @@ export default function Chat() {
             <TrialEndedState />
           ) : (
             <>
-              <ChatContainer
-                messages={messages}
-                currentUserId={currentUserId || ""}
-                isLoading={isLoading}
-                onCopyMessage={handleCopyMessage}
-                onSelectQuestion={setSelectedQuestion}
-              />
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                queryCount={userProfile?.query_count || 0}
-                subscriptionPlan={userProfile?.subscription_plan}
-                selectedQuestion={selectedQuestion}
-              />
+              <ChatContainer />
             </>
           )}
         </ChatLayout>
