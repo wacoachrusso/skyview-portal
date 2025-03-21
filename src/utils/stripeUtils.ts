@@ -18,12 +18,19 @@ export const createStripeCheckoutSession = async ({
 }: CreateCheckoutSessionProps): Promise<string> => {
   console.log('Creating Stripe checkout session:', { priceId, email, planType });
   
-  // Store the selected plan in localStorage for use after payment
+  // Store the selected plan and auth state in localStorage for use after payment
   localStorage.setItem('selected_plan', planType);
+  localStorage.setItem('payment_in_progress', 'true');
+  
+  // Store current auth tokens to ensure we can recover the session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    localStorage.setItem('auth_access_token', session.access_token);
+    localStorage.setItem('auth_refresh_token', session.refresh_token);
+    console.log('Saved auth tokens for post-payment recovery');
+  }
   
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
     if (!session) {
       console.log('No active session, will use email-based flow');
     } else {
@@ -43,7 +50,8 @@ export const createStripeCheckoutSession = async ({
         metadata: {
           plan_type: planType,
           is_new_user: !session,
-          user_id: session?.user?.id || null
+          user_id: session?.user?.id || null,
+          access_token: session?.access_token || null
         }
       }),
       headers: session ? {

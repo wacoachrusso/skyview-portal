@@ -26,31 +26,51 @@ function InitialSessionCheck() {
       try {
         console.log("Checking initial session on app load");
         
+        // Check if user was in the middle of a payment flow
+        const paymentInProgress = localStorage.getItem('payment_in_progress') === 'true';
+        const postPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
+        
+        if ((paymentInProgress || postPayment) && window.location.pathname === '/login') {
+          console.log("Payment flow interrupted, attempting to recover session");
+          
+          // Try to restore session from saved tokens
+          const savedAccessToken = localStorage.getItem('auth_access_token');
+          const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+          
+          if (savedAccessToken && savedRefreshToken) {
+            console.log("Found saved auth tokens, attempting to restore session");
+            
+            const { data: sessionData, error: restoreError } = await supabase.auth.setSession({
+              access_token: savedAccessToken,
+              refresh_token: savedRefreshToken
+            });
+            
+            if (restoreError) {
+              console.error("Error restoring session from saved tokens:", restoreError);
+              // Clear payment flags to prevent login loops
+              localStorage.removeItem('payment_in_progress');
+              localStorage.removeItem('postPaymentConfirmation');
+              localStorage.removeItem('auth_access_token');
+              localStorage.removeItem('auth_refresh_token');
+            } else if (sessionData.session) {
+              console.log("Successfully restored session after payment");
+              navigate('/chat', { replace: true });
+              return;
+            }
+          } else {
+            // We need to clear these flags if no session can be recovered
+            console.log("No saved tokens found after payment, clearing flags");
+            localStorage.removeItem('payment_in_progress');
+            localStorage.removeItem('postPaymentConfirmation');
+            localStorage.removeItem('selected_plan');
+          }
+        }
+        
         // Skip specific routes that handle their own auth
         if (window.location.pathname === '/auth/callback' || 
             window.location.pathname.includes('/stripe-callback')) {
           console.log("Skipping session check for auth callback route");
           return;
-        }
-        
-        // Check for post-payment flow
-        const isPostPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
-        if (isPostPayment && window.location.pathname === '/login') {
-          console.log("Post-payment user landed on login page - attempting to recover session");
-          
-          // Try to get current session 
-          const { data: { session } } = await supabase.auth.getSession(); 
-          
-          if (session?.user) {
-            console.log("Found session after payment, redirecting to chat");
-            navigate('/chat', { replace: true });
-            return;
-          } else {
-            // We need to clear these flags if no session is found to prevent login loops
-            console.log("No session found after payment, clearing flags");
-            localStorage.removeItem('postPaymentConfirmation');
-            localStorage.removeItem('selected_plan');
-          }
         }
         
         // Basic session check
@@ -60,7 +80,7 @@ function InitialSessionCheck() {
           console.log("Active session found for user:", data.session.user.email);
           
           // Check if user just completed payment
-          if (isPostPayment) {
+          if (postPayment) {
             console.log("Post-payment user with active session, redirecting to chat");
             navigate('/chat', { replace: true });
             return;

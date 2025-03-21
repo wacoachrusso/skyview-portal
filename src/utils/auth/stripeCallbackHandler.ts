@@ -21,7 +21,31 @@ export const handleStripeCallback = async (
   console.log("Processing Stripe payment callback with session ID:", sessionId);
   
   try {
-    // First check if user already exists and is logged in
+    // Check for saved auth tokens from pre-payment
+    const savedAccessToken = localStorage.getItem('auth_access_token');
+    const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+    
+    if (savedAccessToken && savedRefreshToken) {
+      console.log("Found saved auth tokens, attempting to restore session");
+      
+      // Try to restore the session with the saved tokens
+      const { data: sessionData, error: restoreError } = await supabase.auth.setSession({
+        access_token: savedAccessToken,
+        refresh_token: savedRefreshToken
+      });
+      
+      if (restoreError) {
+        console.error("Error restoring session from saved tokens:", restoreError);
+      } else if (sessionData.session) {
+        console.log("Successfully restored session from saved tokens");
+      }
+      
+      // Clean up saved tokens regardless of outcome
+      localStorage.removeItem('auth_access_token');
+      localStorage.removeItem('auth_refresh_token');
+    }
+    
+    // First check if user is logged in
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     console.log("Session check result:", { 
       hasSession: !!session,
@@ -42,8 +66,9 @@ export const handleStripeCallback = async (
           .from('profiles')
           .update({
             subscription_status: 'active',
-            // Determine plan type from session data
-            subscription_plan: sessionId.includes('monthly') ? 'monthly' : 'annual'
+            // Determine plan type from session data or localStorage
+            subscription_plan: localStorage.getItem('selected_plan') || 
+              (sessionId.includes('monthly') ? 'monthly' : 'annual')
           })
           .eq('id', session.user.id);
         
@@ -57,8 +82,10 @@ export const handleStripeCallback = async (
         await createNewSession(session.user.id);
         console.log("Created new session token after payment");
         
-        // Set flag to show welcome message
+        // Set flags to show welcome message and remove payment flags
         localStorage.setItem('subscription_activated', 'true');
+        localStorage.removeItem('payment_in_progress');
+        localStorage.removeItem('postPaymentConfirmation');
         
         toast({
           title: "Payment Successful",
@@ -76,8 +103,6 @@ export const handleStripeCallback = async (
     }
 
     // For users who aren't already logged in, handle pending signup
-
-    // Fetch pending signup data with retry logic
     let pendingSignup = null;
     let pendingSignupError = null;
     

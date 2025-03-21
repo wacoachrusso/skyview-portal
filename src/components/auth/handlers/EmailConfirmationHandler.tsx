@@ -14,6 +14,30 @@ export const EmailConfirmationHandler = () => {
       try {
         console.log("Email confirmation handler running");
         
+        // First check for saved auth tokens (from payment flow)
+        const savedAccessToken = localStorage.getItem('auth_access_token');
+        const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+        
+        if (savedAccessToken && savedRefreshToken) {
+          console.log("Found saved auth tokens, attempting to restore session");
+          
+          // Try to restore the session with the saved tokens
+          const { data: sessionData, error: restoreError } = await supabase.auth.setSession({
+            access_token: savedAccessToken,
+            refresh_token: savedRefreshToken
+          });
+          
+          if (restoreError) {
+            console.error("Error restoring session from saved tokens:", restoreError);
+          } else if (sessionData.session) {
+            console.log("Successfully restored session from saved tokens");
+          }
+          
+          // Clean up saved tokens regardless of outcome
+          localStorage.removeItem('auth_access_token');
+          localStorage.removeItem('auth_refresh_token');
+        }
+        
         // Get current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
@@ -67,6 +91,7 @@ export const EmailConfirmationHandler = () => {
             // Clean up localStorage
             localStorage.removeItem('postPaymentConfirmation');
             localStorage.removeItem('selected_plan');
+            localStorage.removeItem('payment_in_progress');
             
             // Set flag to show welcome message in app
             localStorage.setItem('subscription_activated', 'true');
