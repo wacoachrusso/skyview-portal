@@ -13,7 +13,8 @@ const stripe = (() => {
     console.log('[create-checkout-session] Initializing Stripe with key prefix:', key.substring(0, 7) + '...');
     return new Stripe(key, {
       apiVersion: '2023-10-16',
-      httpClient: Stripe.createFetchHttpClient(), // Explicitly use fetch client
+      httpClient: Stripe.createFetchHttpClient(),
+      maxNetworkRetries: 3, // Add retry capability to Stripe
     });
   } catch (error) {
     console.error('[create-checkout-session] Failed to initialize Stripe:', error);
@@ -24,6 +25,21 @@ const stripe = (() => {
 const isTestMode = () => {
   const key = Deno.env.get('STRIPE_SECRET_KEY') || '';
   return key.startsWith('sk_test_');
+};
+
+// Verify Stripe is properly initialized before serving
+if (!stripe) {
+  console.error('[create-checkout-session] CRITICAL ERROR: Stripe failed to initialize');
+}
+
+// Function to validate Stripe key format
+const isValidStripeKey = (key: string | undefined): boolean => {
+  if (!key) return false;
+  // Test mode key format
+  const testKeyRegex = /^sk_test_[a-zA-Z0-9]{24,}$/;
+  // Live mode key format
+  const liveKeyRegex = /^sk_live_[a-zA-Z0-9]{24,}$/;
+  return testKeyRegex.test(key) || liveKeyRegex.test(key);
 };
 
 serve(async (req) => {
@@ -43,6 +59,24 @@ serve(async (req) => {
           error: 'Payment service configuration error', 
           details: 'The payment service is not properly configured',
           code: 'stripe_not_initialized'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    // Verify Stripe Key format
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!isValidStripeKey(stripeKey)) {
+      console.error('[create-checkout-session] Invalid Stripe key format:', 
+                    stripeKey ? stripeKey.substring(0, 7) + '...' : 'undefined');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Payment service configuration error', 
+          details: 'The Stripe API key is not in the correct format',
+          code: 'invalid_stripe_key_format'
         }),
         { 
           status: 500, 
@@ -136,24 +170,27 @@ serve(async (req) => {
       );
     }
 
-    // Double-check Stripe key
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeKey) {
-      console.error('[create-checkout-session] STRIPE_SECRET_KEY is not set');
+    // Verify Stripe connectivity before attempting to create a session
+    try {
+      // Make a simple API call to verify connectivity
+      await stripe.balance.retrieve();
+      console.log('[create-checkout-session] Successfully connected to Stripe API');
+    } catch (connectError) {
+      console.error('[create-checkout-session] Failed to connect to Stripe API:', connectError);
       return new Response(
         JSON.stringify({ 
-          error: 'Payment service configuration error', 
-          details: 'The payment service is not properly configured',
-          code: 'missing_stripe_key'
+          error: 'Payment service connectivity error', 
+          details: 'Unable to connect to the payment service. Please try again later.',
+          code: 'stripe_connectivity_error'
         }),
         { 
-          status: 500, 
+          status: 503, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    console.log('[create-checkout-session] Stripe key prefix:', stripeKey.substring(0, 7) + '...');
+    console.log('[create-checkout-session] Stripe key prefix:', stripeKey?.substring(0, 7) + '...');
 
     // Determine base URL for success and cancel URLs
     const baseUrl = origin || 'https://skyguide.site';

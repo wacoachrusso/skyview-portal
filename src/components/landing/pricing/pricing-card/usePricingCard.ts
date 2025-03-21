@@ -37,12 +37,12 @@ export const usePricingCard = () => {
     try {
       console.log('Starting plan selection in usePricingCard for:', name, 'with priceId:', priceId);
       
-      // Show processing toast immediately with longer duration (120 seconds)
+      // Show processing toast immediately with longer duration (180 seconds)
       processingToast = toast({
         variant: "default",
         title: "Processing",
         description: "Preparing your checkout session...",
-        duration: 120000, // 120 seconds (2 minutes)
+        duration: 180000, // 3 minutes
       });
       
       // Check if user is logged in
@@ -153,19 +153,20 @@ export const usePricingCard = () => {
             description: "Authentication required. Please log in and try again.",
           });
           navigate('/login', { state: { returnTo: 'pricing' } });
-        } else if (error.message?.includes('network')) {
+        } else if (error.message?.includes('network') || error.message?.includes('timed out')) {
           toast({
             variant: "destructive",
             title: "Connection Error",
             description: "Network error. Please check your connection and try again.",
           });
         } else if (error.message?.includes('temporarily unavailable') || 
-                  error.message?.includes('maintenance')) {
+                  error.message?.includes('maintenance') ||
+                  error.message?.includes('configuration issues')) {
           
           toast({
             variant: "destructive",
             title: "Service Temporarily Unavailable",
-            description: "The payment service is temporarily down for maintenance. Please try again in a few minutes.",
+            description: "The payment service is temporarily unavailable. Please try again in a few minutes or contact support if the issue persists.",
           });
         } else if (error.message?.includes('Edge Function') || 
                   error.message?.includes('non-2xx status code')) {
@@ -173,7 +174,7 @@ export const usePricingCard = () => {
           toast({
             variant: "destructive",
             title: "Service Error",
-            description: "We're experiencing technical difficulties with our payment processor. Please try again later.",
+            description: "We're experiencing technical difficulties with our payment processor. Please try again later or contact support.",
           });
         } else {
           toast({

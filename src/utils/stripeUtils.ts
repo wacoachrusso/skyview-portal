@@ -66,12 +66,14 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
         throw new Error('Invalid price ID format. Please try a different plan or contact support.');
       }
       
-      // Make 3 attempts to create the checkout session with a small delay between attempts
+      // Make 5 attempts to create the checkout session with a small delay between attempts
       let lastError = null;
+      const MAX_ATTEMPTS = 5;
+      const RETRY_DELAY = 1500; // 1.5 seconds between retries
       
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         try {
-          console.log(`Checkout attempt ${attempt}/3 for price ID: ${priceId}`);
+          console.log(`Checkout attempt ${attempt}/${MAX_ATTEMPTS} for price ID: ${priceId}`);
           
           // For better debugging, log all inputs
           const requestBody = {
@@ -87,12 +89,24 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
             sessionToken: requestBody.sessionToken ? 'PRESENT (not shown)' : 'MISSING'
           });
           
-          const response = await supabase.functions.invoke('create-checkout-session', {
+          // Calculate a reasonable timeout for the request based on the attempt number
+          const timeoutMs = 5000 + (attempt * 1500); // Increase timeout with each attempt
+          
+          // Create a timeout promise
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error(`Request timed out after ${timeoutMs}ms`)), timeoutMs);
+          });
+          
+          // Create the actual request promise
+          const requestPromise = supabase.functions.invoke('create-checkout-session', {
             body: JSON.stringify(requestBody),
             headers: {
               Authorization: authHeader
             }
           });
+          
+          // Race the request against the timeout
+          const response = await Promise.race([requestPromise, timeoutPromise]) as any;
 
           console.log(`Attempt ${attempt} response:`, response);
 
@@ -109,9 +123,9 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
             }
             
             // For server errors, wait and retry
-            if (attempt < 3) {
+            if (attempt < MAX_ATTEMPTS) {
               console.log(`Waiting before attempt ${attempt + 1}...`);
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
               continue;
             }
             
@@ -146,8 +160,8 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
           }
           
           // For potentially transient errors, wait and retry if not the last attempt
-          if (attempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+          if (attempt < MAX_ATTEMPTS) {
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
             continue;
           }
           
@@ -164,7 +178,7 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
       console.error('Error in createStripeCheckoutSession:', error);
       
       // Check if it's a network error
-      if (error.message?.includes('NetworkError') || error.message?.includes('network')) {
+      if (error.message?.includes('NetworkError') || error.message?.includes('network') || error.message?.includes('timed out')) {
         throw new Error('Network error when connecting to payment processor. Please check your connection and try again.');
       }
       
