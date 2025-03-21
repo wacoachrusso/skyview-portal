@@ -13,24 +13,24 @@ const isTestMode = () => {
 };
 
 serve(async (req) => {
+  console.log('[create-checkout-session] Request received:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('[create-checkout-session] Request received:', req.method);
-    
-    // Extract authorization header for debugging
-    const authHeader = req.headers.get('Authorization');
-    console.log('[create-checkout-session] Auth header present:', !!authHeader);
+    // Extract authorization header
+    const authHeader = req.headers.get('Authorization') || '';
+    console.log('[create-checkout-session] Auth header length:', authHeader.length);
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.error('[create-checkout-session] Missing or invalid authorization header');
       return new Response(
         JSON.stringify({ 
-          error: 'Missing or invalid authorization header',
-          details: 'Authorization header with Bearer token is required'
+          error: 'Authentication error',
+          details: 'Missing or invalid authorization header' 
         }),
         { 
           status: 401, 
@@ -39,12 +39,10 @@ serve(async (req) => {
       );
     }
 
-    // Parse request data
-    const requestData = await req.text();
-    console.log('[create-checkout-session] Request body length:', requestData.length);
-    
+    // Parse request body
     let jsonBody;
     try {
+      const requestData = await req.text();
       jsonBody = JSON.parse(requestData);
       console.log('[create-checkout-session] Request data:', {
         priceId: jsonBody.priceId,
