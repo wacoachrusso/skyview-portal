@@ -1,3 +1,4 @@
+
 import { Json } from "./base.types";
 import { NotificationType } from "./base.types";
 
@@ -208,5 +209,47 @@ export interface ReleaseNotesTable {
     release_date?: string | null;
     title?: string;
     version?: string;
+  };
+}
+
+export interface ScheduledEmailsTable {
+  Row: {
+    id: string;
+    email: string;
+    name: string | null;
+    subject: string;
+    message: string;
+    email_type: string;
+    scheduled_for: string;
+    status: string;
+    created_at: string;
+    processed_at: string | null;
+    metadata: Json | null;
+  };
+  Insert: {
+    id?: string;
+    email: string;
+    name?: string | null;
+    subject: string;
+    message: string;
+    email_type: string;
+    scheduled_for: string;
+    status?: string;
+    created_at?: string;
+    processed_at?: string | null;
+    metadata?: Json | null;
+  };
+  Update: {
+    id?: string;
+    email?: string;
+    name?: string | null;
+    subject?: string;
+    message?: string;
+    email_type?: string;
+    scheduled_for?: string;
+    status?: string;
+    created_at?: string;
+    processed_at?: string | null;
+    metadata?: Json | null;
   };
 }

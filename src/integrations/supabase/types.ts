@@ -623,6 +623,48 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_emails: {
+        Row: {
+          created_at: string
+          email: string
+          email_type: string
+          id: string
+          message: string
+          metadata: Json | null
+          name: string | null
+          processed_at: string | null
+          scheduled_for: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          email_type: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          name?: string | null
+          processed_at?: string | null
+          scheduled_for: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          email_type?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          name?: string | null
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string | null
@@ -759,6 +801,10 @@ export type Database = {
           p_session_token: string
         }
         Returns: boolean
+      }
+      process_email_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       refresh_session: {
         Args: {

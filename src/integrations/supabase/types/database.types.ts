@@ -1,3 +1,4 @@
+
 import { NotificationType } from "./base.types";
 import {
   ConversationsTable,
@@ -6,6 +7,7 @@ import {
   ProfilesTable,
   ReleaseNoteChangesTable,
   ReleaseNotesTable,
+  ScheduledEmailsTable,
 } from "./tables.types";
 import { UnionRepresentativesTable } from "./union-representatives.types";
 import { DisclaimerConsentsTable } from "./disclaimer.types";
@@ -21,6 +23,7 @@ export interface Database {
       release_notes: ReleaseNotesTable;
       union_representatives: UnionRepresentativesTable;
       disclaimer_consents: DisclaimerConsentsTable;
+      scheduled_emails: ScheduledEmailsTable;
     };
     Views: {
       [_ in never]: never;

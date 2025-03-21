@@ -19,3 +19,9 @@ verify_jwt = false
 
 [functions.send-password-reset.import_map]
 imports = {}
+
+[functions.process-email-queue]
+verify_jwt = false
+
+[functions.process-email-queue.import_map]
+imports = {}
