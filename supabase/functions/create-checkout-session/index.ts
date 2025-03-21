@@ -19,52 +19,66 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Request received:', req.method);
     console.log('Request headers:', JSON.stringify([...req.headers.entries()]));
     
-    // Verify JWT token from Supabase Auth
+    // Extract and verify authorization
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Missing or invalid authorization header');
+    if (!authHeader) {
+      console.error('Missing authorization header');
       return new Response(
         JSON.stringify({ 
-          error: 'Missing or invalid authorization',
-          details: 'Please sign in to continue'
+          error: 'Missing authorization header',
+          details: 'Authorization header is required'
         }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
     // Get the request body
-    const requestBody = await req.text();
-    console.log('Request body:', requestBody);
+    const requestData = await req.text();
+    console.log('Request body received, length:', requestData.length);
     
     let jsonBody;
     try {
-      jsonBody = JSON.parse(requestBody);
+      jsonBody = JSON.parse(requestData);
+      console.log('Parsed request data:', {
+        priceId: jsonBody.priceId,
+        mode: jsonBody.mode,
+        hasEmail: !!jsonBody.email,
+        origin: jsonBody.origin
+      });
     } catch (error) {
       console.error('Invalid JSON in request body:', error);
       return new Response(
-        JSON.stringify({ error: 'Invalid request format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: 'Invalid request format',
+          details: error.message 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
     
-    const { priceId, mode, email, sessionToken } = jsonBody;
+    const { priceId, mode, email, sessionToken, origin } = jsonBody;
     
-    console.log('Create checkout session request:', { 
-      priceId, 
-      mode, 
-      email,
-      hasSessionToken: !!sessionToken,
-      isTestMode: isTestMode(),
-      keyPrefix: Deno.env.get('STRIPE_SECRET_KEY')?.substring(0, 8) || 'not-found'
-    });
-
+    // Validate required fields
     if (!priceId || !email) {
       console.error('Missing required fields:', { hasPriceId: !!priceId, hasEmail: !!email });
       return new Response(
-        JSON.stringify({ error: 'Price ID and email are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: 'Missing required fields', 
+          details: 'Price ID and email are required' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
@@ -73,26 +87,32 @@ serve(async (req) => {
     if (!stripeKey) {
       console.error('STRIPE_SECRET_KEY is not set');
       return new Response(
-        JSON.stringify({ error: 'Payment service not properly configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: 'Payment service configuration error', 
+          details: 'The payment service is not properly configured' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
+    // Determine base URL for success and cancel URLs
+    const baseUrl = origin || 'https://skyguide.site';
+    console.log('Using base URL for redirects:', baseUrl);
+
     // Create the checkout session
-    let session;
     try {
-      // Fetch origin dynamically from the request if needed
-      const origin = req.headers.get('origin') || 'https://skyguide.site';
-      const cancelUrl = `${origin}/?scrollTo=pricing-section`;
-      const successUrl = `${origin}/auth/callback?session_id={CHECKOUT_SESSION_ID}`;
+      const successUrl = `${baseUrl}/auth/callback?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${baseUrl}/?scrollTo=pricing-section`;
       
       console.log('Creating checkout session with URLs:', { 
         successUrl,
-        cancelUrl,
-        origin
+        cancelUrl
       });
       
-      session = await stripe.checkout.sessions.create({
+      const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
           {
@@ -110,6 +130,19 @@ serve(async (req) => {
           environment: isTestMode() ? 'test' : 'production'
         },
       });
+
+      console.log('Checkout session created:', { 
+        id: session.id, 
+        hasUrl: !!session.url
+      });
+
+      return new Response(
+        JSON.stringify({ url: session.url }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     } catch (stripeError) {
       console.error('Stripe API error:', stripeError);
       return new Response(
@@ -118,28 +151,23 @@ serve(async (req) => {
           details: stripeError.message,
           code: stripeError.code || 'unknown'
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
-
-    console.log('Checkout session created:', { 
-      id: session.id, 
-      url: session.url,
-      environment: isTestMode() ? 'test' : 'production'
-    });
-
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   } catch (error) {
-    console.error('Error creating checkout session:', error);
+    console.error('Unhandled error in create-checkout-session:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Internal server error',
+        error: 'Server error',
         message: error.message || 'An unexpected error occurred'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
