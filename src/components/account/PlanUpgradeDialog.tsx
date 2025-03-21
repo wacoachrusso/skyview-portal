@@ -81,7 +81,7 @@ export function PlanUpgradeDialog({
                 replaced by the {formatPlanName(targetPlan)} plan ({priceInfo.newPrice}).
               </li>
               {targetPlan === "annual" && (
-                <li>
+                <li className="font-semibold text-brand-gold">
                   You will be charged the full {priceInfo.newPrice} amount today.
                 </li>
               )}
@@ -90,8 +90,21 @@ export function PlanUpgradeDialog({
                 By continuing, you agree to the updated billing terms for your
                 subscription.
               </li>
+              {targetPlan === "annual" && (
+                <li>
+                  Annual plans offer significant savings compared to monthly billing.
+                </li>
+              )}
             </ul>
           </div>
+
+          {targetPlan === "annual" && (
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 p-3 rounded-md">
+              <p className="text-sm text-green-800 dark:text-green-300">
+                <span className="font-medium">Annual billing:</span> You'll be charged once per year instead of monthly. This saves you money compared to the monthly plan.
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
@@ -108,7 +121,7 @@ export function PlanUpgradeDialog({
             disabled={isProcessing}
             className="bg-brand-gold hover:bg-brand-gold/90 text-black"
           >
-            {isProcessing ? "Processing..." : `Confirm Upgrade`}
+            {isProcessing ? "Processing..." : targetPlan === "annual" ? "Confirm & Pay Now" : "Confirm Upgrade"}
           </Button>
         </DialogFooter>
       </DialogContent>

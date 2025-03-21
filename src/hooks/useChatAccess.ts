@@ -17,6 +17,7 @@ export function useChatAccess(currentUserId: string | null) {
     // IMPORTANT: Check for admin or post-payment state
     if (localStorage.getItem('user_is_admin') === 'true' || 
         localStorage.getItem('subscription_activated') === 'true') {
+      console.log("Admin or post-payment user detected, enabling chat");
       setIsChatDisabled(false);
       return;
     }
@@ -44,8 +45,12 @@ export function useChatAccess(currentUserId: string | null) {
     
     // Admin users always have access
     if (profile?.is_admin) {
+      console.log("Admin user detected, enabling chat");
       setIsChatDisabled(false);
+      localStorage.setItem('user_is_admin', 'true');
       return;
+    } else {
+      localStorage.removeItem('user_is_admin');
     }
 
     // Check if user is on free plan and query_count >= 2
@@ -62,6 +67,7 @@ export function useChatAccess(currentUserId: string | null) {
       });
     } else {
       // Ensure chat is enabled for valid users
+      console.log("User has valid access, enabling chat");
       setIsChatDisabled(false);
     }
   }, [currentUserId, navigate, toast]);

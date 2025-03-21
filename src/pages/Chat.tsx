@@ -81,6 +81,7 @@ export default function Chat() {
   // Handle question selection - just set the text in the input box
   // without automatically sending the message
   const handleQuestionSelect = (question: string) => {
+    console.log("Question selected:", question);
     setSelectedQuestion(question);
     // Removed the call to handleSelectQuestion to prevent auto-sending
   };
@@ -92,7 +93,8 @@ export default function Chat() {
       messagesCount: messages.length,
       isLoading,
       currentConversationId,
-      showWelcome
+      showWelcome,
+      isChatDisabled: false
     });
   }, [currentUserId, messages.length, isLoading, currentConversationId, showWelcome]);
 
@@ -114,6 +116,7 @@ export default function Chat() {
             error={error}
             showWelcome={showWelcome}
             currentConversationId={currentConversationId}
+            isChatDisabled={false} // Explicitly set to false to ensure chat is enabled
           >
             <div className="flex flex-col h-full">
               <ChatContainer

@@ -29,6 +29,16 @@ export function ChatInput({
   // Determine if the chat input should be disabled - simplified logic to prevent unwanted disabling
   const isInputDisabled = disabled || isLoading;
 
+  // Add debug logging
+  useEffect(() => {
+    console.log("ChatInput rendering with:", {
+      isLoading,
+      disabled,
+      isInputDisabled,
+      message: message.length > 0 ? "Has content" : "Empty"
+    });
+  }, [isLoading, disabled, isInputDisabled, message]);
+
   // Handle selectedQuestion changes
   useEffect(() => {
     if (selectedQuestion && !isInputDisabled) {

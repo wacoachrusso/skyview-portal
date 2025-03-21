@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function useChatMessages(currentUserId: string | null) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
 
@@ -45,6 +45,8 @@ export function useChatMessages(currentUserId: string | null) {
       return;
     }
 
+    console.log("Handling message:", { messageContent, conversationId: currentConversationId });
+
     // First add a user message
     const userMessage = {
       conversation_id: currentConversationId,
@@ -54,6 +56,8 @@ export function useChatMessages(currentUserId: string | null) {
     };
 
     try {
+      setIsLoading(true);
+      
       // Insert user message
       const { data: userData, error: userError } = await supabase
         .from('messages')
@@ -64,6 +68,7 @@ export function useChatMessages(currentUserId: string | null) {
       if (userError) {
         console.error("Error sending user message:", userError);
         setError(userError as any);
+        setIsLoading(false);
         return;
       }
 
@@ -73,10 +78,9 @@ export function useChatMessages(currentUserId: string | null) {
         { ...userData, role: userData.role as "user" | "assistant" }
       ]);
 
-      // Now simulate AI response
-      setIsLoading(true);
+      console.log("User message sent successfully", userData);
       
-      // Simulate AI thinking time
+      // Now simulate AI response
       setTimeout(async () => {
         // Create AI response
         const aiMessage = {
@@ -97,6 +101,8 @@ export function useChatMessages(currentUserId: string | null) {
             console.error("Error sending AI message:", aiError);
             setError(aiError as any);
           } else if (aiData) {
+            console.log("AI response sent successfully", aiData);
+            
             // Ensure the typed message is added to state
             setMessages(prevMessages => [
               ...prevMessages, 
