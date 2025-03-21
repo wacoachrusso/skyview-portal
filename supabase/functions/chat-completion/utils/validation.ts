@@ -141,22 +141,46 @@ function convertToHtmlTable(tableLines: string[]): string {
 export function containsNonContractContent(content: string): boolean {
   if (!content) return false;
   
-  // List of keywords that might indicate non-contract questions
+  // More specifically target non-contract topics
   const nonContractKeywords = [
-    'weather',
-    'stock',
-    'sports',
-    'news',
-    'movie',
-    'restaurant',
-    'recipe',
-    'game',
-    'travel',
-    'vacation',
-    'hotel',
-    'flight'
+    'weather forecast',
+    'stock market',
+    'sports game',
+    'movie review',
+    'restaurant recommendation',
+    'food recipe',
+    'video game',
+    'vacation planning',
+    'hotel booking',
+    'flight booking'
   ];
 
-  const contentLower = content.toLowerCase();
-  return nonContractKeywords.some(keyword => contentLower.includes(keyword));
+  // Aviation and union contract related terms that should NOT trigger the filter
+  const contractRelatedTerms = [
+    'flight', 'pay', 'rest', 'layover', 'schedule', 'assignment',
+    'duty', 'reserve', 'sick leave', 'vacation', 'holiday',
+    'cancel', 'delay', 'overtime', 'per diem', 'pilot', 'crew',
+    'aircraft', 'training', 'benefits', 'pay rate', 'contract',
+    'union', 'seniority', 'base', 'bid', 'international', 'domestic',
+    'hours', 'compensation', 'meal', 'hotel', 'accomodation',
+    'deadhead', 'minimum guarantee', 'reroute', 'time off',
+    'grievance', 'furlough', 'leaves', 'rights', 'insurance'
+  ];
+
+  // Check for exact matches of non-contract keywords
+  const contentLower = ' ' + content.toLowerCase() + ' '; // Add spaces to ensure we match whole words
+  
+  // Check if the content contains any non-contract keywords
+  const containsNonContract = nonContractKeywords.some(keyword => {
+    // Check for whole word or phrase match
+    return contentLower.includes(' ' + keyword.toLowerCase() + ' ');
+  });
+  
+  // If the content contains a contract-related term, allow it even if it might have matched a non-contract keyword
+  const containsContractTerm = contractRelatedTerms.some(term => {
+    return contentLower.includes(term.toLowerCase());
+  });
+  
+  // Return true only if there's a non-contract keyword AND no contract-related terms
+  return containsNonContract && !containsContractTerm;
 }
