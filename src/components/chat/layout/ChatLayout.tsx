@@ -22,7 +22,7 @@ export function ChatLayout({
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex h-full w-full overflow-hidden">
       {!isMobile && (
         <div className="w-64 sm:w-80 flex-shrink-0 border-r border-border">
           <ChatSidebar 

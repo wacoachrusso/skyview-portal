@@ -6,7 +6,6 @@ import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { useProfileVerification } from "@/hooks/useProfileVerification";
 import { useChatAvailability } from "@/hooks/useChatAvailability";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { TrialEndedState } from "./TrialEndedState";
 
 interface ChatContentProps {
@@ -44,12 +43,12 @@ export function ChatContent({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-background">
       <ChatHeader onNewChat={onNewChat} />
       
-      <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col w-full">
         {children ? children : (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto w-full">
             <p className="text-center text-muted-foreground p-4">
               Start a conversation with the AI assistant.
             </p>
