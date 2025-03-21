@@ -29,14 +29,14 @@ export const usePricingCard = () => {
     }
 
     try {
-      console.log('Starting plan selection in usePricingCard for:', name);
+      console.log('Starting plan selection in usePricingCard for:', name, 'with priceId:', priceId);
       
-      // Show processing toast immediately
+      // Show processing toast immediately with longer duration
       const processingToast = toast({
         variant: "default",
         title: "Processing",
         description: "Preparing your checkout session...",
-        duration: 30000, // 30 seconds
+        duration: 60000, // 60 seconds
       });
       
       // Check if user is logged in
@@ -67,7 +67,8 @@ export const usePricingCard = () => {
         return;
       }
 
-      // Perform a session refresh to ensure we have a fresh token
+      // Force a session refresh to ensure we have a fresh token
+      console.log('Refreshing session before checkout');
       const { error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError) {
         console.error('Failed to refresh session:', refreshError);
@@ -81,9 +82,23 @@ export const usePricingCard = () => {
         return;
       }
 
-      const userEmail = session.user.email;
+      // Get updated session data
+      const { data: { session: refreshedSession } } = await supabase.auth.getSession();
+      if (!refreshedSession) {
+        console.error('No session after refresh');
+        processingToast.dismiss();
+        toast({
+          variant: "destructive",
+          title: "Session Error",
+          description: "Could not retrieve your session. Please log in again.",
+        });
+        navigate('/login', { state: { returnTo: 'pricing' } });
+        return;
+      }
+
+      const userEmail = refreshedSession.user.email;
       if (!userEmail) {
-        console.error('User email not found in session:', session);
+        console.error('User email not found in session:', refreshedSession);
         processingToast.dismiss();
         toast({
           variant: "destructive",
@@ -94,10 +109,11 @@ export const usePricingCard = () => {
       }
 
       // Get session token for additional security
-      const sessionToken = localStorage.getItem('session_token') || '';
+      const sessionToken = localStorage.getItem('session_token') || refreshedSession.refresh_token || '';
       
       // Call the utility function to create checkout session
       try {
+        console.log('Creating checkout session with priceId:', priceId);
         const checkoutUrl = await createStripeCheckoutSession({
           priceId,
           email: userEmail,
@@ -114,7 +130,10 @@ export const usePricingCard = () => {
         let errorMessage = "Failed to process plan selection. Please try again.";
         
         // Customize error message based on error type
-        if (error.message?.includes('Authentication') || error.message?.includes('session') || error.message?.includes('token')) {
+        if (error.message?.includes('Authentication') || 
+            error.message?.includes('session') || 
+            error.message?.includes('token') || 
+            error.message?.includes('log in')) {
           errorMessage = "Authentication required. Please log in and try again.";
           toast({
             variant: "destructive",
@@ -128,6 +147,12 @@ export const usePricingCard = () => {
             variant: "destructive",
             title: "Connection Error",
             description: errorMessage,
+          });
+        } else if (error.message?.includes('2xx') || error.message?.includes('edge function')) {
+          toast({
+            variant: "destructive",
+            title: "Server Error",
+            description: "The payment service is currently unavailable. Please try again later or contact support.",
           });
         } else {
           toast({

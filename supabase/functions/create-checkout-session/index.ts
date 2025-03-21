@@ -23,7 +23,7 @@ serve(async (req) => {
   try {
     // Extract authorization header
     const authHeader = req.headers.get('Authorization') || '';
-    console.log('[create-checkout-session] Auth header length:', authHeader.length);
+    console.log('[create-checkout-session] Auth header prefix:', authHeader.substring(0, 15) + '...');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.error('[create-checkout-session] Missing or invalid authorization header');
@@ -43,11 +43,14 @@ serve(async (req) => {
     let jsonBody;
     try {
       const requestData = await req.text();
+      console.log('[create-checkout-session] Raw request data:', requestData.substring(0, 100) + '...');
+      
       jsonBody = JSON.parse(requestData);
       console.log('[create-checkout-session] Request data:', {
         priceId: jsonBody.priceId,
         mode: jsonBody.mode,
         hasEmail: !!jsonBody.email,
+        hasToken: !!jsonBody.sessionToken,
         origin: jsonBody.origin
       });
     } catch (error) {
@@ -100,6 +103,8 @@ serve(async (req) => {
       );
     }
 
+    console.log('[create-checkout-session] Stripe key prefix:', stripeKey.substring(0, 7) + '...');
+
     // Determine base URL for success and cancel URLs
     const baseUrl = origin || 'https://skyguide.site';
     console.log('[create-checkout-session] Using base URL:', baseUrl);
@@ -146,12 +151,16 @@ serve(async (req) => {
         }
       );
     } catch (stripeError) {
-      console.error('[create-checkout-session] Stripe API error:', stripeError);
+      console.error('[create-checkout-session] Stripe API error:', stripeError.message);
+      if (stripeError.type) {
+        console.error('[create-checkout-session] Stripe error type:', stripeError.type);
+      }
       return new Response(
         JSON.stringify({ 
           error: 'Payment processor error', 
           details: stripeError.message,
-          code: stripeError.code || 'unknown'
+          code: stripeError.code || 'unknown',
+          type: stripeError.type || 'unknown'
         }),
         { 
           status: 400, 

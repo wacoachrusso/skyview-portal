@@ -25,21 +25,36 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
       throw new Error('Authentication required. Please log in before proceeding.');
     }
     
+    // Force a session refresh to ensure we have the freshest token possible
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.error('Error refreshing session:', refreshError);
+      throw new Error('Could not refresh your session. Please log in again.');
+    }
+
+    // Get the refreshed session
+    const { data: { session: refreshedSession } } = await supabase.auth.getSession();
+    if (!refreshedSession || !refreshedSession.access_token) {
+      console.error('No valid session after refresh');
+      window.location.href = '/login?redirect=pricing';
+      throw new Error('Authentication session invalid. Please log in again.');
+    }
+    
     // Set API call flag to prevent session validation interference
     sessionStorage.setItem('api_call_in_progress', 'true');
     
     try {
       // Ensure we have a valid auth token
-      if (!session.access_token) {
+      if (!refreshedSession.access_token) {
         console.error('No access token found in session');
         window.location.href = '/login?redirect=pricing';
         throw new Error('Authentication token missing. Please log in again.');
       }
       
       // Prepare auth header with session access token
-      const authHeader = `Bearer ${session.access_token}`;
+      const authHeader = `Bearer ${refreshedSession.access_token}`;
       console.log('Using auth token for checkout request, token prefix:', 
-        session.access_token.substring(0, 5) + '...');
+        refreshedSession.access_token.substring(0, 5) + '...');
       
       // Get the current origin for handling redirects
       const origin = window.location.origin;
@@ -50,7 +65,7 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
           priceId: priceId,
           mode: 'subscription',
           email: email.trim().toLowerCase(),
-          sessionToken: sessionToken || session.refresh_token || '',
+          sessionToken: sessionToken || refreshedSession.refresh_token || '',
           origin: origin
         }),
         headers: {
