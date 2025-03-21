@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +6,6 @@ import { MicButton } from "./MicButton";
 import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContractHandler } from "@/hooks/useContractHandler";
-
 interface ChatInputProps {
   onSendMessage: (content: string) => Promise<void>;
   isLoading?: boolean;
@@ -16,23 +14,25 @@ interface ChatInputProps {
   subscriptionPlan?: string;
   selectedQuestion?: string;
 }
-
 export function ChatInput({
   onSendMessage,
   isLoading,
   disabled,
   queryCount = 0,
   subscriptionPlan = "free",
-  selectedQuestion,
+  selectedQuestion
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const isSubmittingRef = useRef(false);
-  const { handleContractClick } = useContractHandler();
+  const {
+    handleContractClick
+  } = useContractHandler();
 
   // Determine if the chat input should be disabled
-  const isInputDisabled =
-    disabled || isLoading || (subscriptionPlan === "free" && queryCount >= 1);
+  const isInputDisabled = disabled || isLoading || subscriptionPlan === "free" && queryCount >= 1;
 
   // Handle selectedQuestion changes
   useEffect(() => {
@@ -40,17 +40,14 @@ export function ChatInput({
       setMessage(selectedQuestion);
     }
   }, [selectedQuestion, isInputDisabled]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || isLoading || isInputDisabled || isSubmittingRef.current) return;
-
     const messageContent = message.trim();
     setMessage(""); // Clear input immediately after submission
-    
+
     // Prevent double submissions
     isSubmittingRef.current = true;
-
     try {
       console.log("Submitting message:", messageContent);
       await onSendMessage(messageContent);
@@ -62,66 +59,31 @@ export function ChatInput({
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
-        duration: 2000,
+        duration: 2000
       });
     } finally {
       isSubmittingRef.current = false;
     }
   };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
-  return (
-    <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background z-10">
+  return <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background z-10">
       <form onSubmit={handleSubmit} className="p-4">
         <div className="relative flex items-center">
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              isInputDisabled
-                ? "Chat unavailable while offline or trial ended"
-                : "Ask about your contract..."
-            }
-            className="min-h-[60px] w-full pr-[160px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
-            disabled={isInputDisabled}
-            aria-label="Chat input"
-            aria-describedby="chat-input-description"
-          />
+          <Textarea value={message} onChange={e => setMessage(e.target.value)} onKeyDown={handleKeyDown} placeholder={isInputDisabled ? "Chat unavailable while offline or trial ended" : "Ask about your contract..."} className="min-h-[60px] w-full pr-[160px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0" disabled={isInputDisabled} aria-label="Chat input" aria-describedby="chat-input-description" />
           <div className="absolute right-2 flex items-center space-x-1 h-full pr-1">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 px-2 text-xs"
-              onClick={handleContractClick}
-              title="View Contract"
-            >
-              <FileText className="h-3.5 w-3.5 mr-1" />
-              <span>Contract</span>
-            </Button>
-            <MicButton
-              onRecognized={setMessage}
-              disabled={isInputDisabled}
-            />
-            <SendButton
-              isLoading={isLoading}
-              disabled={!message.trim() || isInputDisabled}
-            />
+            
+            <MicButton onRecognized={setMessage} disabled={isInputDisabled} />
+            <SendButton isLoading={isLoading} disabled={!message.trim() || isInputDisabled} />
           </div>
         </div>
       </form>
-      <p
-        id="chat-input-description"
-        className="text-xs text-muted-foreground/70 text-center pb-2"
-      >
+      <p id="chat-input-description" className="text-xs text-muted-foreground/70 text-center pb-2">
         SkyGuide can make mistakes. Check important info.
       </p>
-    </div>
-  );
+    </div>;
 }
