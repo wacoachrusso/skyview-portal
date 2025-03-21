@@ -1,8 +1,12 @@
+
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SubscriptionStatusTracker } from "./SubscriptionStatusTracker";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SubscriptionInfoProps {
   profile: any;
@@ -11,6 +15,93 @@ interface SubscriptionInfoProps {
 }
 
 export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }: SubscriptionInfoProps) => {
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  const formatPlanName = (plan: string) => {
+    return plan.charAt(0).toUpperCase() + plan.slice(1);
+  };
+
+  const handleChangePlan = async (newPlan: string) => {
+    if (newPlan === profile.subscription_plan) {
+      toast({
+        title: "Already Subscribed",
+        description: `You are already on the ${formatPlanName(profile.subscription_plan)} plan.`,
+      });
+      return;
+    }
+    
+    // For free users upgrading to paid plan
+    if (profile.subscription_plan === 'free' || profile.subscription_plan === 'trial_ended') {
+      onPlanChange(newPlan);
+      return;
+    }
+    
+    // For paid users changing between plans or downgrading
+    setIsUpdating(true);
+    
+    try {
+      // Send plan change request to server
+      const { data, error } = await supabase.functions.invoke('send-plan-change-email', {
+        body: {
+          email: profile.email,
+          oldPlan: profile.subscription_plan,
+          newPlan: newPlan,
+          fullName: profile.full_name || 'User'
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Update local profile data
+      await supabase
+        .from('profiles')
+        .update({
+          subscription_plan: newPlan
+        })
+        .eq('id', profile.id);
+      
+      toast({
+        title: "Plan Updated",
+        description: `Your subscription has been changed to the ${formatPlanName(newPlan)} plan.`,
+      });
+      
+      // Redirect to pricing to complete payment if upgrading from monthly to annual
+      if (profile.subscription_plan === 'monthly' && newPlan === 'annual') {
+        onPlanChange(newPlan);
+      }
+    } catch (error) {
+      console.error('Error changing plan:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update your subscription. Please try again or contact support.",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const getButtonLabel = () => {
+    if (profile.subscription_plan === 'monthly') {
+      return "Upgrade to Annual";
+    } else if (profile.subscription_plan === 'annual') {
+      return "Switch to Monthly";
+    } else {
+      return "Upgrade Plan";
+    }
+  };
+
+  const getTargetPlan = () => {
+    if (profile.subscription_plan === 'monthly') {
+      return "annual";
+    } else if (profile.subscription_plan === 'annual') {
+      return "monthly";
+    } else {
+      return "monthly"; // Default for free users
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card className="bg-white/95 shadow-xl">
@@ -22,6 +113,10 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
             <div className="grid grid-cols-3 items-center gap-4">
               <span className="font-medium text-brand-navy">Current Plan:</span>
               <span className="col-span-2 text-gray-700 capitalize">{profile?.subscription_plan || 'Free'}</span>
+            </div>
+            <div className="grid grid-cols-3 items-center gap-4">
+              <span className="font-medium text-brand-navy">Status:</span>
+              <span className="col-span-2 text-gray-700 capitalize">{profile?.subscription_status || 'Inactive'}</span>
             </div>
             <div className="grid grid-cols-3 items-center gap-4">
               <span className="font-medium text-brand-navy">Queries Used:</span>
@@ -41,25 +136,28 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-brand-navy">Plan Management</h3>
-            {profile?.subscription_plan === 'free' ? (
+            {profile?.subscription_plan === 'free' || profile?.subscription_plan === 'trial_ended' ? (
               <Button
                 onClick={() => onPlanChange('paid')}
                 className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors"
+                disabled={isUpdating}
               >
                 Upgrade Plan
               </Button>
             ) : (
               <div className="space-y-2">
                 <Button
-                  onClick={() => onPlanChange('change')}
+                  onClick={() => handleChangePlan(getTargetPlan())}
                   className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors"
+                  disabled={isUpdating}
                 >
-                  Change Plan
+                  {isUpdating ? "Updating..." : getButtonLabel()}
                 </Button>
                 <Button
                   onClick={onCancelSubscription}
                   variant="destructive"
                   className="w-full transition-colors"
+                  disabled={isUpdating}
                 >
                   Cancel Subscription
                 </Button>
@@ -69,7 +167,7 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
         </CardContent>
       </Card>
       
-      {profile?.subscription_plan !== 'free' && (
+      {profile?.subscription_plan !== 'free' && profile?.subscription_plan !== 'trial_ended' && (
         <SubscriptionStatusTracker profile={profile} />
       )}
     </div>

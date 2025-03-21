@@ -20,6 +20,7 @@ export const useAccountActions = (userId: string | undefined): UseAccountActions
         .from('profiles')
         .update({
           subscription_plan: 'free',
+          subscription_status: 'inactive',
           query_count: 0,
           last_query_timestamp: new Date().toISOString()
         })
@@ -28,6 +29,29 @@ export const useAccountActions = (userId: string | undefined): UseAccountActions
       if (error) {
         console.error("Error updating subscription:", error);
         throw error;
+      }
+      
+      // Send email notification about subscription cancellation
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', userId)
+          .single();
+          
+        if (profileData) {
+          await supabase.functions.invoke('send-plan-change-email', {
+            body: {
+              email: profileData.email,
+              oldPlan: 'paid',
+              newPlan: 'free',
+              fullName: profileData.full_name || 'User'
+            }
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending cancellation email:', emailError);
+        // Non-critical error, continue with the cancellation process
       }
       
       toast({
@@ -64,7 +88,8 @@ export const useAccountActions = (userId: string | undefined): UseAccountActions
         .from('profiles')
         .update({
           account_status: 'deleted',
-          subscription_plan: 'free'
+          subscription_plan: 'free',
+          subscription_status: 'inactive'
         })
         .eq('id', userId);
         

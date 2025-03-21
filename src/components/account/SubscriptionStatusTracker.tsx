@@ -1,3 +1,4 @@
+
 import { format, addMonths, addYears } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -6,12 +7,13 @@ interface SubscriptionStatusTrackerProps {
   profile: {
     subscription_plan: string;
     last_query_timestamp: string | null;
+    subscription_status?: string;
   };
 }
 
 export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTrackerProps) => {
   const getSubscriptionInfo = () => {
-    if (!profile.last_query_timestamp || profile.subscription_plan === 'free') {
+    if (!profile.last_query_timestamp || profile.subscription_plan === 'free' || profile.subscription_status !== 'active') {
       return {
         startDate: new Date(),
         endDate: new Date(),
@@ -35,7 +37,7 @@ export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTracker
 
   const { startDate, endDate, progress, daysLeft } = getSubscriptionInfo();
 
-  if (profile.subscription_plan === 'free') {
+  if (profile.subscription_plan === 'free' || profile.subscription_status !== 'active') {
     return null;
   }
 
