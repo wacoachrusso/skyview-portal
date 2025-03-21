@@ -45,11 +45,11 @@ export function ChatContent({
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full">
       <ChatHeader onNewChat={onNewChat} />
       
       {children ? (
-        <div className="flex-1 flex flex-col relative">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {children}
         </div>
       ) : (

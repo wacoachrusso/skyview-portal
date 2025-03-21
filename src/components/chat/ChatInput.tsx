@@ -68,7 +68,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-border/50 mt-auto sticky bottom-0 bg-background">
+    <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background z-10">
       <form onSubmit={handleSubmit} className="p-4">
         <div className="relative flex items-center">
           <Textarea

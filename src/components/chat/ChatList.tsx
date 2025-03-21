@@ -51,8 +51,8 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   }, []);
 
   return (
-    <ScrollArea className="flex-1">
-      <div className="flex flex-col gap-4 p-4 pb-2">
+    <div className="flex flex-col h-full">
+      <div className="flex flex-col gap-4 p-4 pb-20">
         {messages.map((message, index) => (
           <ChatMessage
             key={message.id}
@@ -83,6 +83,6 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
         
         <div ref={messagesEndRef} />
       </div>
-    </ScrollArea>
+    </div>
   );
 }
