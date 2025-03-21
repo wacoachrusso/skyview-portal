@@ -11,47 +11,56 @@ export function Logo({ handleLogoClick }: LogoProps) {
     e.preventDefault();
     
     try {
+      // First check for post-payment state
+      const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
+      
+      if (isPostPayment) {
+        console.log("Post-payment state detected in Logo, going to chat");
+        window.location.href = '/chat';
+        return;
+      }
+      
       // Check if user is logged in
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (session) {
-        // Check subscription status
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('subscription_plan, subscription_status, query_count')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (profileError) {
-          console.error("Error fetching profile in logo click:", profileError);
-          window.location.href = '/';
-          return;
-        }
-        
-        console.log("User profile in Logo:", profile);
-        
-        // Check if the user has an active paid subscription
-        if (profile?.subscription_status === 'active' && 
-            profile?.subscription_plan !== 'free' && 
-            profile?.subscription_plan !== 'trial_ended') {
-          // User has an active paid subscription, go to dashboard
-          console.log("User has active subscription, going to dashboard");
-          window.location.href = '/dashboard';
-          return;
-        }
-        
-        // Free trial ended or inactive subscription - go to homepage with pricing
-        if ((profile?.subscription_plan === 'free' && profile?.query_count >= 1) ||
-            (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
-          console.log("Free trial ended or inactive subscription, going to pricing");
-          window.location.href = '/?scrollTo=pricing-section';
-        } else {
-          // Free trial remaining - go to dashboard
-          window.location.href = '/dashboard';
-        }
-      } else {
-        // Not logged in - go to homepage
+      if (!session) {
+        console.log("No active session, going to homepage");
         window.location.href = '/';
+        return;
+      }
+      
+      // Check subscription status
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_plan, subscription_status, query_count')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (profileError) {
+        console.error("Error fetching profile in logo click:", profileError);
+        window.location.href = '/';
+        return;
+      }
+      
+      console.log("User profile in Logo:", profile);
+      
+      // Check for active paid subscription first
+      if (profile?.subscription_status === 'active' && 
+          profile?.subscription_plan !== 'free' && 
+          profile?.subscription_plan !== 'trial_ended') {
+        console.log("User has active subscription, going to dashboard/chat");
+        window.location.href = '/chat';
+        return;
+      }
+      
+      // Free trial ended or inactive subscription - go to homepage with pricing
+      if ((profile?.subscription_plan === 'free' && profile?.query_count >= 2) ||
+          (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
+        console.log("Free trial ended or inactive subscription, going to pricing");
+        window.location.href = '/?scrollTo=pricing-section';
+      } else {
+        // Free trial remaining - go to dashboard
+        window.location.href = '/dashboard';
       }
     } catch (error) {
       console.error("Error in logo click:", error);

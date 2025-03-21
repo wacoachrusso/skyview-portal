@@ -45,6 +45,35 @@ export function ChatContent({
       if (!currentUserId) return;
 
       try {
+        // Check for post-payment condition first
+        const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
+        
+        if (isPostPayment) {
+          console.log("Post-payment state detected in ChatContent, ensuring status is updated");
+          
+          // Update user profile to mark subscription as active
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              subscription_status: 'active',
+              subscription_plan: localStorage.getItem('selected_plan') || 'monthly'
+            })
+            .eq('id', currentUserId);
+            
+          if (updateError) {
+            console.error("Error updating profile after payment:", updateError);
+          } else {
+            console.log("Profile updated with active subscription in ChatContent");
+          }
+          
+          // Clear payment flags regardless of outcome to avoid loops
+          setTimeout(() => {
+            localStorage.removeItem('subscription_activated');
+            localStorage.removeItem('selected_plan');
+            localStorage.removeItem('payment_in_progress');
+          }, 1000);
+        }
+
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("subscription_plan, subscription_status, query_count")
@@ -56,31 +85,24 @@ export function ChatContent({
         console.log("User profile in ChatContent:", profile);
         setUserProfile(profile);
         
-        // Check subscription status after successful payment
-        const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
-        
-        if (isPostPayment) {
-          console.log("Post-payment state detected, clearing flags");
+        // IMPORTANT: Only check for free trial end or inactive subscription if not in post-payment state
+        if (!isPostPayment) {
+          // Clear post-payment flags if they exist to avoid confusion
           localStorage.removeItem('subscription_activated');
+          localStorage.removeItem('selected_plan');
+          localStorage.removeItem('payment_in_progress');
           
-          // If we have an active subscription, ensure we don't redirect
-          if (profile.subscription_status === 'active' && 
-              profile.subscription_plan !== 'free' && 
-              profile.subscription_plan !== 'trial_ended') {
-            return;
+          // If user is on free plan and has reached the limit, redirect to pricing
+          if ((profile.subscription_plan === "free" && profile.query_count >= 2) || 
+              (profile.subscription_status === 'inactive' && profile.subscription_plan !== 'free')) {
+            console.log("Free trial ended or inactive subscription in ChatContent - redirecting");
+            toast({
+              title: "Subscription Required",
+              description: "Please select a subscription plan to continue.",
+              variant: "destructive",
+            });
+            navigate("/?scrollTo=pricing-section", { replace: true });
           }
-        }
-        
-        // If user is on free plan and has reached the limit, redirect to pricing
-        if ((profile.subscription_plan === "free" && profile.query_count >= 2) || 
-            (profile.subscription_status === 'inactive' && profile.subscription_plan !== 'free')) {
-          console.log("Free trial ended or inactive subscription in ChatContent - redirecting");
-          toast({
-            title: "Subscription Required",
-            description: "Please select a subscription plan to continue.",
-            variant: "destructive",
-          });
-          navigate("/?scrollTo=pricing-section", { replace: true });
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -92,6 +114,11 @@ export function ChatContent({
 
   // Determine if the chat should be disabled
   const shouldDisableChat = useMemo(() => {
+    // Skip all checks if we're in post-payment state
+    if (localStorage.getItem('subscription_activated') === 'true') {
+      return false;
+    }
+    
     return isChatDisabled || 
            isTrialEnded || 
            (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2) ||
@@ -103,8 +130,13 @@ export function ChatContent({
     isOffline ? messages : messages
   , [isOffline, messages]);
 
-  // Auto-redirect if trial has ended - this is an additional check to ensure redirection works
+  // Auto-redirect if trial has ended
   useEffect(() => {
+    // Skip redirect if in post-payment state
+    if (localStorage.getItem('subscription_activated') === 'true') {
+      return;
+    }
+    
     if (shouldDisableChat && currentUserId) {
       console.log("Chat is disabled, redirecting to pricing");
       navigate("/?scrollTo=pricing-section", { replace: true });

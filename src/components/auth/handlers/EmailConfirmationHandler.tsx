@@ -47,6 +47,25 @@ export const EmailConfirmationHandler = () => {
           } else if (sessionData.session) {
             authRestored = true;
             console.log("Successfully restored session from saved tokens");
+            
+            // If post-payment confirmation, update subscription status immediately
+            const isPostPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
+            if (isPostPayment && sessionData.session.user.id) {
+              // Update user's profile to mark subscription as active
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ 
+                  subscription_status: 'active',
+                  subscription_plan: localStorage.getItem('selected_plan') || 'monthly'
+                })
+                .eq('id', sessionData.session.user.id);
+                
+              if (updateError) {
+                console.error("Error updating profile after payment:", updateError);
+              } else {
+                console.log("Profile updated with subscription status: active");
+              }
+            }
           }
           
           // Clean up saved tokens regardless of outcome
@@ -94,9 +113,7 @@ export const EmailConfirmationHandler = () => {
               .update({ 
                 subscription_status: 'active',
                 // If we know the plan type from localStorage
-                ...(localStorage.getItem('selected_plan') && {
-                  subscription_plan: localStorage.getItem('selected_plan')
-                })
+                subscription_plan: localStorage.getItem('selected_plan') || 'monthly'
               })
               .eq('id', session.user.id);
               
@@ -109,13 +126,14 @@ export const EmailConfirmationHandler = () => {
             // Set cookies for additional persistence
             document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
             document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+            document.cookie = `session_user_id=${session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
             
             // Clean up localStorage
             localStorage.removeItem('postPaymentConfirmation');
             localStorage.removeItem('selected_plan');
             localStorage.removeItem('payment_in_progress');
             
-            // Set flag to show welcome message in app
+            // Set flag to show welcome message in app and identify post-payment state
             localStorage.setItem('subscription_activated', 'true');
             
             toast({

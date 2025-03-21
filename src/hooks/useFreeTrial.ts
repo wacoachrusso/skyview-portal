@@ -15,6 +15,15 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
 
     try {
       console.log("Checking free trial status for user:", currentUserId);
+      
+      // Check for post-payment condition first
+      const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
+      if (isPostPayment) {
+        console.log("Post-payment state detected, skipping trial status check");
+        setIsTrialEnded(false);
+        return;
+      }
+      
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("subscription_plan, subscription_status, query_count")
@@ -26,11 +35,11 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
       // Log the profile for debugging
       console.log("User profile in useFreeTrial:", profile);
 
-      // Check if the user has an active paid subscription
+      // IMPORTANT: Check for active paid subscription first
+      // A user with an active status and non-free plan has full access
       if (profile?.subscription_status === 'active' && 
-          profile?.subscription_plan !== 'free' && 
-          profile?.subscription_plan !== 'trial_ended') {
-        // User has an active paid subscription, they can use the app
+          (profile?.subscription_plan !== 'free' && 
+           profile?.subscription_plan !== 'trial_ended')) {
         console.log("User has active subscription:", profile.subscription_plan);
         setIsTrialEnded(false);
         return;
@@ -41,15 +50,17 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
         console.log("Free trial ended - query count:", profile.query_count);
         setIsTrialEnded(true);
 
-        // Immediately redirect to pricing section when trial has ended
-        toast({
-          title: "Free Trial Ended",
-          description: "Please select a subscription plan to continue.",
-          variant: "destructive",
-        });
-        
-        // Redirect to home page with pricing section
-        navigate("/?scrollTo=pricing-section", { replace: true });
+        // Don't redirect immediately after payment
+        if (!isPostPayment) {
+          toast({
+            title: "Free Trial Ended",
+            description: "Please select a subscription plan to continue.",
+            variant: "destructive",
+          });
+          
+          // Redirect to home page with pricing section
+          navigate("/?scrollTo=pricing-section", { replace: true });
+        }
       } else {
         setIsTrialEnded(false);
       }
