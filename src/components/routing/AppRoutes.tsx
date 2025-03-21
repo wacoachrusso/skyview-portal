@@ -41,8 +41,41 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
-// Simplified protected route component
+// Simplified protected route component with admin check
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Check if user is logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log("No session found in ProtectedRoute, redirecting to login");
+          navigate("/login");
+          return;
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error in ProtectedRoute:", error);
+        navigate("/login");
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
   return <>{children}</>;
 };
 
@@ -55,6 +88,16 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
+        // First check if we have a cached admin status
+        const cachedAdminStatus = localStorage.getItem('user_is_admin') === 'true';
+        
+        if (cachedAdminStatus) {
+          console.log("User is admin according to localStorage");
+          setIsAdmin(true);
+          setIsLoading(false);
+          return;
+        }
+        
         setIsLoading(true);
         // Check if user is logged in
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -84,7 +127,8 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        // User is admin
+        // User is admin - update cache and state
+        localStorage.setItem('user_is_admin', 'true');
         setIsAdmin(true);
       } catch (error) {
         console.error("Error checking admin status:", error);

@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -185,8 +186,6 @@ export function SessionCheck() {
         }
 
         // For non-payment flows: Regular session check
-
-        // For non-payment flows: Regular session check
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
@@ -212,6 +211,14 @@ export function SessionCheck() {
             console.log("[SessionCheck] Admin user detected, bypassing subscription checks");
             // Store admin status in localStorage for quick access
             localStorage.setItem('user_is_admin', 'true');
+            
+            // IMPORTANT FIX: Don't redirect if already on a valid admin page
+            if (window.location.pathname === '/' || 
+                window.location.pathname === '/login' ||
+                window.location.pathname.includes('scrollTo=pricing')) {
+              console.log("[SessionCheck] Admin not on admin page, redirecting to chat");
+              navigate('/chat');
+            }
             return;
           } else {
             // Ensure admin flag is removed for non-admin users

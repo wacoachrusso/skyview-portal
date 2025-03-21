@@ -31,7 +31,15 @@ export function Logo({ handleLogoClick }: LogoProps) {
         return;
       }
       
-      // Ensure we have the latest profile data for redirect decisions
+      // Check if user is admin first - admins always go to chat or admin page
+      const isAdmin = localStorage.getItem('user_is_admin') === 'true';
+      if (isAdmin) {
+        console.log("[Logo] Admin user detected in logo click, redirecting to chat");
+        window.location.href = '/chat';
+        return;
+      }
+      
+      // For non-admin users: Ensure we have the latest profile data for redirect decisions
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('subscription_plan, subscription_status, query_count')

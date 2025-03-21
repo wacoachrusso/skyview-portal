@@ -1,3 +1,4 @@
+
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -159,6 +160,35 @@ function InitialSessionCheck() {
         if (data.session) {
           console.log("Active session found for user:", data.session.user.email);
           
+          // Check if user is admin
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_admin, subscription_plan, subscription_status, query_count')
+            .eq('id', data.session.user.id)
+            .single();
+            
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            return;
+          }
+          
+          // Admin users should be redirected to chat when on homepage/login
+          if (profile?.is_admin) {
+            console.log("Admin user detected in initial session check");
+            localStorage.setItem('user_is_admin', 'true');
+            
+            if (window.location.pathname === '/login' || 
+                window.location.pathname === '/signup' || 
+                window.location.pathname === '/') {
+              console.log("Admin on auth page, redirecting to chat");
+              navigate('/chat', { replace: true });
+              return;
+            }
+            return;
+          } else {
+            localStorage.removeItem('user_is_admin');
+          }
+          
           // Check if user just completed payment
           if (postPayment) {
             console.log("Post-payment user with active session");
@@ -175,18 +205,6 @@ function InitialSessionCheck() {
               localStorage.removeItem('subscription_activated');
               return;
             }
-          }
-          
-          // Check user's subscription status
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('subscription_plan, subscription_status, query_count')
-            .eq('id', data.session.user.id)
-            .single();
-            
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            return;
           }
           
           console.log("User profile:", profile);
