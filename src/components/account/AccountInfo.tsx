@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { ChangePasswordForm } from "@/components/auth/password-reset/ChangePassw
 import { EmailDisplay } from "./EmailDisplay";
 import { ExternalLink } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AccountFormFields } from "./AccountFormFields";
 
 interface AccountInfoProps {
   userEmail: string | null;
@@ -180,143 +182,66 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
 
   return (
     <div className="space-y-6">
-  {/* Account Information Card */}
-  <Card className="bg-white/95 shadow-xl">
-    <CardHeader className="flex flex-row items-center justify-between">
-      <CardTitle className="text-brand-navy">Account Information</CardTitle>
-      <Button
-        variant="outline"
-        onClick={() => {
-          if (isEditing) {
-            handleSubmit();
-          } else {
-            setIsEditing(true);
-          }
-        }}
-      >
-        {isEditing ? 'Save Changes' : 'Edit Profile'}
-      </Button>
-    </CardHeader>
-    <CardContent className="space-y-4">
-      {/* Full Name and Email Fields */}
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Full Name</label>
-          <input
-            type="text"
-            name="full_name"
-            value={formData.full_name}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white shadow-sm focus:border-brand-navy focus:ring-brand-navy sm:text-sm p-2"
-            disabled={!isEditing}
-            placeholder="Enter your full name"
+      {/* Account Information Card */}
+      <Card className="bg-white/95 shadow-xl">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-brand-navy">Account Information</CardTitle>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (isEditing) {
+                handleSubmit();
+              } else {
+                setIsEditing(true);
+              }
+            }}
+          >
+            {isEditing ? 'Save Changes' : 'Edit Profile'}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <AccountFormFields 
+            isEditing={isEditing}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            profile={profile}
+            hasSetAirlineAndJobRole={hasSetAirlineAndJobRole}
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            value={userEmail || ''}
-            readOnly
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white shadow-sm focus:border-brand-navy focus:ring-brand-navy sm:text-sm p-2"
-            disabled
-          />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Job Role and Airline Fields */}
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Job Role</label>
-          <Select
-            value={formData.user_type}
-            onValueChange={(value) => handleSelectChange('user_type', value)}
-            disabled={!isEditing || hasSetAirlineAndJobRole}
-          >
-            <SelectTrigger className="w-full bg-gray-800 text-white">
-              <SelectValue placeholder="Select job role" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 text-white">
-              {jobRoles.map((role) => (
-                <SelectItem key={role} value={role} className="hover:bg-gray-700">
-                  {role}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Airline</label>
-          <Select
-            value={formData.airline}
-            onValueChange={(value) => handleSelectChange('airline', value)}
-            disabled={!isEditing || hasSetAirlineAndJobRole}
-          >
-            <SelectTrigger className="w-full bg-gray-800 text-white">
-              <SelectValue placeholder="Select airline" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 text-white">
-              {airlines.map((airline) => (
-                <SelectItem
-                  key={airline}
-                  value={airline}
-                  className="hover:bg-gray-700"
-                  disabled={isAirlineDisabled(airline)}
+      {/* Change Password Card */}
+      <Card className={`bg-white/95 shadow-xl ${isPasswordChangeRequired ? 'border-2 border-brand-navy' : ''}`}>
+        <CardHeader>
+          <CardTitle className="text-brand-navy">
+            Change Your Password
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isPasswordChangeRequired ? (
+            <div className="text-gray-600 mb-4">
+              Please change your temporary password to continue using your account.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-gray-600">
+                You can change your password at any time to keep your account secure.
+              </div>
+              <div className="text-sm text-gray-500 flex items-center gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Need help? Contact us at{" "}
+                <a 
+                  href="mailto:alpha@skyguide.site" 
+                  className="text-brand-navy hover:underline"
                 >
-                  {airline}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Employee ID</label>
-          <input
-            type="text"
-            name="employee_id"
-            value={formData.employee_id}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white shadow-sm focus:border-brand-navy focus:ring-brand-navy sm:text-sm p-2"
-            disabled={!isEditing}
-            placeholder="Enter your employee ID"
-          />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-
-  {/* Change Password Card */}
-  <Card className={`bg-white/95 shadow-xl ${isPasswordChangeRequired ? 'border-2 border-brand-navy' : ''}`}>
-    <CardHeader>
-      <CardTitle className="text-brand-navy">
-        Change Your Password
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      {isPasswordChangeRequired ? (
-        <div className="text-gray-600 mb-4">
-          Please change your temporary password to continue using your account.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="text-gray-600">
-            You can change your password at any time to keep your account secure.
-          </div>
-          <div className="text-sm text-gray-500 flex items-center gap-2">
-            <ExternalLink className="h-4 w-4" />
-            Need help? Contact us at{" "}
-            <a 
-              href="mailto:alpha@skyguide.site" 
-              className="text-brand-navy hover:underline"
-            >
-              alpha@skyguide.site
-            </a>
-          </div>
-        </div>
-      )}
-      <ChangePasswordForm />
-    </CardContent>
-  </Card>
-</div>
+                  alpha@skyguide.site
+                </a>
+              </div>
+            </div>
+          )}
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
+    </div>
   );
 };

@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut } from "lucide-react";
+import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut, UserCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate, Link } from "react-router-dom";
 import { useContractHandler } from "@/hooks/useContractHandler";
@@ -64,6 +64,18 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
           <Link to="/dashboard">
             <LayoutDashboard className="h-4 w-4" />
             <span className="ml-2 hidden md:inline">Dashboard</span>
+          </Link>
+        </Button>
+        {/* Add Account Button */}
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center"
+        >
+          <Link to="/account">
+            <UserCircle className="h-4 w-4" />
+            <span className="ml-2 hidden md:inline">Account</span>
           </Link>
         </Button>
         <Button
