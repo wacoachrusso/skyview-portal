@@ -1,6 +1,6 @@
 
 import { Quote, Check } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface MessageContentProps {
   message: {
@@ -14,6 +14,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   const [displayContent, setDisplayContent] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (message.role === "assistant") {
@@ -21,6 +22,12 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       setIsComplete(false);
       let index = 0;
       const content = message.content;
+      
+      // Calculate the content height at the beginning to avoid layout shifts
+      if (contentRef.current) {
+        contentRef.current.style.minHeight = `${Math.max(100, content.length / 5)}px`;
+      }
+      
       const typingInterval = setInterval(() => {
         if (index <= content.length) {
           setDisplayContent(content.slice(0, index));
@@ -29,6 +36,11 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
           clearInterval(typingInterval);
           setIsTyping(false);
           setIsComplete(true);
+          
+          // Reset the min height after typing is done
+          if (contentRef.current) {
+            contentRef.current.style.minHeight = "auto";
+          }
         }
       }, 5); // Increased typing speed for better user experience
 
@@ -57,7 +69,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   };
 
   return (
-    <div className="whitespace-pre-wrap break-words">
+    <div className="whitespace-pre-wrap break-words" ref={contentRef}>
       {formatContent(displayContent)}
       {isTyping && (
         <span className="inline-block w-1 h-4 ml-1 bg-current animate-pulse" />
