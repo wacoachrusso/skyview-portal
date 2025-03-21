@@ -71,6 +71,11 @@ export default function Chat() {
     }
   };
 
+  // Wrapper function to handle message copying that returns a Promise
+  const handleCopyMessageWrapper = async (content: string): Promise<void> => {
+    return handleCopyMessage(content);
+  };
+
   return (
     <div className="flex flex-col h-screen w-full">
       <ChatNavbar />
@@ -95,7 +100,7 @@ export default function Chat() {
               messages={messages}
               currentUserId={currentUserId}
               isLoading={isLoading}
-              onCopyMessage={handleCopyMessage}
+              onCopyMessage={handleCopyMessageWrapper}
               onSelectQuestion={handleSelectQuestion}
             />
           </ChatContent>
