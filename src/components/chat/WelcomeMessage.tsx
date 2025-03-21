@@ -1,9 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, FileText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Link } from "react-router-dom";
 import { useMemo } from "react";
+import { useContractHandler } from "@/hooks/useContractHandler";
 
 // Define a pool of example questions
 const EXAMPLE_QUESTIONS = [
@@ -50,6 +50,7 @@ interface WelcomeMessageProps {
 
 export function WelcomeMessage({ onSelectQuestion }: WelcomeMessageProps) {
   const isMobile = useIsMobile();
+  const { handleContractClick } = useContractHandler();
   
   // Select random questions from the pool
   // Using useMemo to ensure questions only change on component mount
@@ -109,18 +110,17 @@ export function WelcomeMessage({ onSelectQuestion }: WelcomeMessageProps) {
             )}
           </div>
           
-          {/* CTA Section - Only showing Dashboard button */}
+          {/* View Contract Button - Replaced Dashboard button */}
           <div className="w-full text-center">
             <div className="flex justify-center items-center">
               <Button
-                asChild
                 variant="outline"
                 size="sm"
                 className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white"
+                onClick={(e) => handleContractClick(e)}
               >
-                <Link to="/dashboard">
-                  Go to Dashboard
-                </Link>
+                <FileText className="mr-2 h-4 w-4" />
+                View Contract
               </Button>
             </div>
           </div>

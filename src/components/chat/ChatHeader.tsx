@@ -1,9 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut, UserCircle } from "lucide-react";
+import { ArrowLeft, Plus, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate, Link } from "react-router-dom";
-import { useContractHandler } from "@/hooks/useContractHandler";
 import { useLogout } from "@/hooks/useLogout";
 import { Icons } from "@/components/icons";
 
@@ -17,7 +16,6 @@ interface ChatHeaderProps {
 export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoading = false }: ChatHeaderProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { handleContractClick } = useContractHandler();
   const { handleLogout } = useLogout();
 
   return (
@@ -46,15 +44,6 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
 
       <div className="flex items-center gap-2">
         {isLoading && <Icons.spinner className="h-4 w-4 mr-2" />}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleContractClick}
-          className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
-        >
-          <FileText className="h-4 w-4" />
-          <span className="ml-2 hidden sm:inline">View Contract</span>
-        </Button>
         <Button
           asChild
           variant="ghost"
