@@ -1,3 +1,4 @@
+
 import { NavigateFunction } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as toastFunction } from "@/hooks/use-toast";
@@ -84,11 +85,11 @@ export const handleProfileRedirect = async (
     return;
   }
 
-  // Handle paid plan checkout
+  // Handle paid plan checkout with updated price IDs
   console.log('Paid plan user, redirecting to checkout');
   const priceId = profile.subscription_plan === 'monthly'
-    ? 'price_1QcfUFA8w17QmjsPe9KXKFpT'
-    : 'price_1QcfWYA8w17QmjsPZ22koqjj';
+    ? 'price_1QWo82A8w17QmjsPQcSBW70E'  // Updated monthly price ID
+    : 'price_1QWo82A8w17QmjsPTfOBk9Og';  // Updated annual price ID
 
   try {
     await handleStripeCheckout(priceId);
@@ -103,8 +104,8 @@ export const handleSelectedPlan = async (
 ) => {
   if (selectedPlan && selectedPlan !== 'free') {
     const priceId = selectedPlan.toLowerCase() === 'monthly' 
-      ? 'price_1QcfUFA8w17QmjsPe9KXKFpT' 
-      : 'price_1QcfWYA8w17QmjsPZ22koqjj';
+      ? 'price_1QWo82A8w17QmjsPQcSBW70E'  // Updated monthly price ID
+      : 'price_1QWo82A8w17QmjsPTfOBk9Og';  // Updated annual price ID
 
     try {
       const success = await handleStripeCheckout(priceId);
