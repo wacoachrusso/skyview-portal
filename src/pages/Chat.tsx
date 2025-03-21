@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { ChatContent } from "@/components/chat/ChatContent";
@@ -10,13 +10,13 @@ import { useConversationManager } from "@/hooks/useConversationManager";
 import { useWelcomeState } from "@/hooks/useWelcomeState";
 import { useChatClipboard } from "@/utils/clipboardUtils";
 import { useQuestionHandler } from "@/hooks/useQuestionHandler";
-import { useState } from 'react';
 import { ChatInput } from "@/components/chat/ChatInput";
 
 export default function Chat() {
   const { currentUserId } = useUserProfile();
   const [searchParams] = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   
   const {
     messages,
@@ -33,7 +33,7 @@ export default function Chat() {
     selectConversation
   } = useConversationManager(currentUserId);
   
-  const { showWelcome } = useWelcomeState(currentConversationId);
+  const { showWelcome, setShowWelcome } = useWelcomeState(currentConversationId);
   const { handleCopyMessage } = useChatClipboard();
   
   const conversationIdFromParams = searchParams.get('conversationId');
@@ -64,8 +64,8 @@ export default function Chat() {
     createNewConversation();
   };
 
-  // Handle sending a message, creating a wrapper to match expected prop type
-  const handleMessageSend = (content: string) => {
+  // Handle sending a message with proper Promise return
+  const handleMessageSend = (content: string): Promise<void> => {
     if (currentConversationId) {
       return handleSendMessage(content, currentConversationId);
     }
@@ -76,8 +76,6 @@ export default function Chat() {
   const handleCopyMessageWrapper = async (content: string): Promise<void> => {
     return handleCopyMessage(content);
   };
-
-  const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   
   // Handle question selection with state update
   const handleQuestionSelect = (question: string) => {
@@ -97,7 +95,7 @@ export default function Chat() {
           <ChatContent
             messages={messages}
             currentUserId={currentUserId}
-            isLoading={isLoading}
+            isLoading={false} // Force isLoading to false to prevent infinite spinner
             onSendMessage={handleMessageSend}
             onNewChat={handleNewChat}
             error={error}
@@ -107,8 +105,8 @@ export default function Chat() {
             <div className="flex flex-col h-full">
               <ChatContainer
                 messages={messages}
-                currentUserId={currentUserId}
-                isLoading={isLoading}
+                currentUserId={currentUserId || ""}
+                isLoading={false} // Force isLoading to false to prevent infinite spinner
                 onCopyMessage={handleCopyMessageWrapper}
                 onSelectQuestion={handleQuestionSelect}
               />

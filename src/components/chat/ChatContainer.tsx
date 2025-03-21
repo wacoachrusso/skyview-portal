@@ -3,12 +3,13 @@ import { Message } from "@/types/chat";
 import { ChatList } from "./ChatList";
 import { WelcomeMessage } from "./WelcomeMessage";
 import { motion } from "framer-motion";
+import { LoadingSpinner } from "../shared/LoadingSpinner";
 
 interface ChatContainerProps {
   messages: Message[];
   currentUserId: string;
   isLoading?: boolean;
-  onCopyMessage: (content: string) => void;
+  onCopyMessage: (content: string) => Promise<void>;
   onSelectQuestion?: (question: string) => void;
 }
 
@@ -21,8 +22,8 @@ export function ChatContainer({
 }: ChatContainerProps) {
   console.log('ChatContainer rendering with messages:', messages);
   
-  // Only show welcome message if there are no messages and not loading
-  const showWelcomeMessage = messages.length === 0 && !isLoading;
+  // Only show welcome message if there are no messages
+  const showWelcomeMessage = messages.length === 0;
 
   return (
     <motion.div 
@@ -31,7 +32,11 @@ export function ChatContainer({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {showWelcomeMessage ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center h-full">
+          <LoadingSpinner size="md" />
+        </div>
+      ) : showWelcomeMessage ? (
         <WelcomeMessage onSelectQuestion={onSelectQuestion} />
       ) : (
         <ChatList
