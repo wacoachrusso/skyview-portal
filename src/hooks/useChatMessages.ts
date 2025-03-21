@@ -42,21 +42,26 @@ export function useChatMessages(currentUserId: string | null) {
   const handleSendMessage = async (messageContent: string, currentConversationId: string) => {
     if (!currentUserId || !currentConversationId) {
       console.error("User or conversation ID is missing.");
+      toast({
+        title: "Error",
+        description: "Unable to send message. Please try again.",
+        variant: "destructive",
+        duration: 2000,
+      });
       return;
     }
 
     console.log("Handling message:", { messageContent, conversationId: currentConversationId });
-
-    // First add a user message
-    const userMessage = {
-      conversation_id: currentConversationId,
-      user_id: currentUserId,
-      content: messageContent,
-      role: 'user' as "user" | "assistant"  // Explicitly type as "user"
-    };
+    setIsLoading(true);
 
     try {
-      setIsLoading(true);
+      // First add a user message
+      const userMessage = {
+        conversation_id: currentConversationId,
+        user_id: currentUserId,
+        content: messageContent,
+        role: 'user' as "user" | "assistant"
+      };
       
       // Insert user message
       const { data: userData, error: userError } = await supabase
@@ -67,12 +72,10 @@ export function useChatMessages(currentUserId: string | null) {
 
       if (userError) {
         console.error("Error sending user message:", userError);
-        setError(userError as any);
-        setIsLoading(false);
-        return;
+        throw userError;
       }
 
-      // Ensure the typed message is added to state
+      // Ensure the typed message is added to state immediately
       setMessages(prevMessages => [
         ...prevMessages, 
         { ...userData, role: userData.role as "user" | "assistant" }
@@ -80,46 +83,81 @@ export function useChatMessages(currentUserId: string | null) {
 
       console.log("User message sent successfully", userData);
       
-      // Now simulate AI response
-      setTimeout(async () => {
-        // Create AI response
-        const aiMessage = {
-          conversation_id: currentConversationId,
-          user_id: currentUserId,
-          content: "I'm sorry, but I can only answer questions directly related to your union contract's terms, policies, or provisions. For other topics, please contact appropriate resources or refocus your question on contract-related matters.",
-          role: 'assistant' as "user" | "assistant"  // Explicitly type as "assistant"
-        };
+      // Now call the AI assistant for response
+      // Add a temporary typing indicator message
+      const typingId = `typing-${Date.now()}`;
+      const typingMessage = {
+        id: typingId,
+        conversation_id: currentConversationId,
+        user_id: null,
+        content: "",
+        role: 'assistant' as "user" | "assistant",
+        created_at: new Date().toISOString(),
+      };
+      
+      // Show typing indicator
+      setMessages(prevMessages => [...prevMessages, typingMessage]);
+      
+      // Call the AI chat completion function
+      const { data, error } = await supabase.functions.invoke("chat-completion", {
+        body: {
+          content: messageContent,
+          subscriptionPlan: "annual", // Default to annual for full features
+          assistantId: "default_assistant_id" // Use default assistant
+        },
+      });
 
-        try {
-          const { data: aiData, error: aiError } = await supabase
-            .from('messages')
-            .insert([aiMessage])
-            .select('*')
-            .single();
+      // Remove typing indicator
+      setMessages(prevMessages => prevMessages.filter(msg => msg.id !== typingId));
 
-          if (aiError) {
-            console.error("Error sending AI message:", aiError);
-            setError(aiError as any);
-          } else if (aiData) {
-            console.log("AI response sent successfully", aiData);
-            
-            // Ensure the typed message is added to state
-            setMessages(prevMessages => [
-              ...prevMessages, 
-              { ...aiData, role: aiData.role as "user" | "assistant" }
-            ]);
-          }
-        } catch (err) {
-          console.error("Unexpected error sending AI message:", err);
-          setError(err instanceof Error ? err : new Error('An unexpected error occurred'));
-        } finally {
-          setIsLoading(false);
-        }
-      }, 1500);
+      if (error) {
+        console.error("Error getting AI response:", error);
+        throw error;
+      }
+
+      if (!data || !data.response) {
+        throw new Error("Invalid response from AI completion");
+      }
+
+      // Create AI response message
+      const aiMessage = {
+        conversation_id: currentConversationId,
+        user_id: null,
+        content: data.response,
+        role: 'assistant' as "user" | "assistant"
+      };
+
+      // Insert AI message into database
+      const { data: aiData, error: aiError } = await supabase
+        .from('messages')
+        .insert([aiMessage])
+        .select('*')
+        .single();
+
+      if (aiError) {
+        console.error("Error sending AI message:", aiError);
+        throw aiError;
+      }
+
+      // Add AI message to state
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { ...aiData, role: aiData.role as "user" | "assistant" }
+      ]);
+
+      console.log("AI response sent successfully");
 
     } catch (err) {
-      console.error("Unexpected error in message flow:", err);
+      console.error("Error in message flow:", err);
       setError(err instanceof Error ? err : new Error('An unexpected error occurred'));
+      
+      toast({
+        title: "Error",
+        description: "Failed to get a response. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
       setIsLoading(false);
     }
   };

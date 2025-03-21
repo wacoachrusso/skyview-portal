@@ -18,7 +18,7 @@ interface ChatInputProps {
 export function ChatInput({
   onSendMessage,
   isLoading,
-  disabled = false, // Ensure default is false
+  disabled = false,
   queryCount = 0,
   subscriptionPlan = "free",
   selectedQuestion,
@@ -26,7 +26,7 @@ export function ChatInput({
   const [message, setMessage] = useState("");
   const { toast } = useToast();
 
-  // Determine if the chat input should be disabled - simplified logic to prevent unwanted disabling
+  // Simplified logic to prevent unwanted disabling
   const isInputDisabled = disabled || isLoading;
 
   // Add debug logging
@@ -48,13 +48,13 @@ export function ChatInput({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isLoading || isInputDisabled) return;
+    if (!message.trim() || isLoading) return;
 
+    console.log("Submitting message:", message.trim());
     const messageContent = message.trim();
     setMessage(""); // Clear input immediately after submission
 
     try {
-      console.log("Submitting message:", messageContent);
       await onSendMessage(messageContent);
     } catch (error) {
       console.error("Error sending message:", error);

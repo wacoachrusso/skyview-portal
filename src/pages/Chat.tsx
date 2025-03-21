@@ -61,16 +61,40 @@ export default function Chat() {
   };
 
   // Handle new chat button click
-  const handleNewChat = () => {
-    createNewConversation();
+  const handleNewChat = async () => {
+    if (!currentUserId) return;
+    
+    const newConversationId = await createNewConversation(currentUserId);
+    if (newConversationId) {
+      setCurrentConversationId(newConversationId);
+      setMessages([]);
+      setShowWelcome(true);
+    }
   };
 
   // Handle sending a message with proper Promise return
-  const handleMessageSend = (content: string): Promise<void> => {
-    if (currentConversationId) {
-      return handleSendMessage(content, currentConversationId);
+  const handleMessageSend = async (content: string): Promise<void> => {
+    console.log("Chat page: handleMessageSend called with content:", content);
+    
+    if (!currentConversationId) {
+      // If no conversation exists yet, create one first
+      if (!currentUserId) return Promise.reject(new Error("No user ID"));
+      
+      console.log("Creating new conversation for message");
+      const newConversationId = await createNewConversation(currentUserId);
+      if (newConversationId) {
+        console.log("New conversation created:", newConversationId);
+        setCurrentConversationId(newConversationId);
+        setShowWelcome(false);
+        return handleSendMessage(content, newConversationId);
+      }
+      return Promise.reject(new Error("Failed to create conversation"));
     }
-    return Promise.resolve();
+    
+    // Use existing conversation
+    console.log("Using existing conversation:", currentConversationId);
+    setShowWelcome(false);
+    return handleSendMessage(content, currentConversationId);
   };
 
   // Proper Promise-returning wrapper function for handleCopyMessage
@@ -83,7 +107,6 @@ export default function Chat() {
   const handleQuestionSelect = (question: string) => {
     console.log("Question selected:", question);
     setSelectedQuestion(question);
-    // Removed the call to handleSelectQuestion to prevent auto-sending
   };
 
   // Log current state to help with debugging
@@ -93,8 +116,7 @@ export default function Chat() {
       messagesCount: messages.length,
       isLoading,
       currentConversationId,
-      showWelcome,
-      isChatDisabled: false
+      showWelcome
     });
   }, [currentUserId, messages.length, isLoading, currentConversationId, showWelcome]);
 
@@ -110,19 +132,19 @@ export default function Chat() {
           <ChatContent
             messages={messages}
             currentUserId={currentUserId}
-            isLoading={false} // Force isLoading to false to prevent infinite spinner
+            isLoading={isLoading}
             onSendMessage={handleMessageSend}
             onNewChat={handleNewChat}
             error={error}
             showWelcome={showWelcome}
             currentConversationId={currentConversationId}
-            isChatDisabled={false} // Explicitly set to false to ensure chat is enabled
+            isChatDisabled={false}
           >
             <div className="flex flex-col h-full">
               <ChatContainer
                 messages={messages}
                 currentUserId={currentUserId || ""}
-                isLoading={false} // Force isLoading to false to prevent infinite spinner
+                isLoading={isLoading}
                 onCopyMessage={handleCopyMessageWrapper}
                 onSelectQuestion={handleQuestionSelect}
               />
@@ -130,7 +152,7 @@ export default function Chat() {
                 onSendMessage={handleMessageSend}
                 isLoading={isLoading}
                 selectedQuestion={selectedQuestion}
-                disabled={false} // Explicitly set disabled to false to ensure the input is enabled
+                disabled={false}
               />
             </div>
           </ChatContent>
