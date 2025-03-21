@@ -56,6 +56,69 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     },
   },
   {
+    id: "new-user-welcome",
+    name: "New User Welcome",
+    description: "Comprehensive welcome email for new users",
+    getContent: () => {
+      return getBaseEmailTemplate(`
+        <h1 style="color: #1a365d;">Welcome aboard, Jane Smith! 🎉</h1>
+        
+        <p>We're thrilled to have you join the SkyGuide community! You've taken the first step towards enhancing your aviation career journey.</p>
+        
+        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 25px 0;">
+          <h2 style="color: #1a365d; margin-top: 0;">Getting Started with SkyGuide</h2>
+          <ol style="padding-left: 20px;">
+            <li style="margin-bottom: 12px;">
+              <strong>Access your dashboard</strong> - This is your central hub for all SkyGuide features
+            </li>
+            <li style="margin-bottom: 12px;">
+              <strong>Start a conversation</strong> - Ask questions about your union contract terms
+            </li>
+            <li style="margin-bottom: 12px;">
+              <strong>Explore past conversations</strong> - All your previous queries are saved for future reference
+            </li>
+            <li style="margin-bottom: 12px;">
+              <strong>Check notifications</strong> - We'll keep you updated on important information
+            </li>
+          </ol>
+        </div>
+        
+        <h2 style="color: #1a365d; margin-top: 25px;">Here's what you can look forward to:</h2>
+        
+        <ul style="list-style-type: none; padding: 0;">
+          <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+            ✈️ <strong>Expert Guidance:</strong> Clear explanations of your union contract terms
+          </li>
+          <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+            📱 <strong>24/7 Accessibility:</strong> Get answers to your questions anytime, anywhere
+          </li>
+          <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+            🎯 <strong>Precise Information:</strong> Find exactly what you need with our smart search
+          </li>
+          <li style="margin: 15px 0; padding-left: 25px; position: relative;">
+            🔄 <strong>Regular Updates:</strong> Stay current with the latest information
+          </li>
+        </ul>
+
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+          <h3 style="color: #1a365d; margin-top: 0;">Ready to get started?</h3>
+          <p>Simply log in to your account to begin exploring. Our team is here to support you every step of the way!</p>
+          <div style="text-align: center; margin-top: 15px;">
+            <a href="https://skyguide.site/dashboard" 
+              style="display: inline-block; background-color: #fbbf24; color: #1a365d; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Go to My Dashboard
+            </a>
+          </div>
+        </div>
+
+        <p style="margin-top: 25px;">Have questions? Need help getting started? Just reply to this email - we're here to help!</p>
+        
+        <p>Blue skies ahead,<br>The SkyGuide Team</p>
+      `);
+    },
+    defaultParams: {},
+  },
+  {
     id: "subscription-feedback",
     name: "Subscription Feedback",
     description: "Sent to users to request feedback on their subscription",
@@ -127,7 +190,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     description: "Sent when a user changes their subscription plan",
     getContent: () => {
       return getBaseEmailTemplate(`
-        <h1 style="color: #2D3748; font-size: 24px; font-weight: bold; margin: 0 0 20px;">Hello Sam,</h1>
+        <h1 style="color: #1a365d; font-size: 24px; font-weight: bold; margin: 0 0 20px;">Hello Sam,</h1>
         
         <p>Great choice on switching to our annual plan! Here's what you get:</p>
         <ul style="list-style-type: none; padding-left: 0;">
@@ -139,7 +202,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
         
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://skyguide.site/dashboard" 
-             style="display: inline-block; background-color: #0F172A; border-radius: 8px; padding: 12px 25px; color: white; text-decoration: none; font-weight: bold;">
+             style="display: inline-block; background-color: #fbbf24; border-radius: 8px; padding: 12px 25px; color: #1a365d; text-decoration: none; font-weight: bold;">
             Explore Premium Features
           </a>
         </div>

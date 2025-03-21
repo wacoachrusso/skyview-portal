@@ -25,3 +25,9 @@ verify_jwt = false
 
 [functions.process-email-queue.import_map]
 imports = {}
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-welcome-email.import_map]
+imports = {}

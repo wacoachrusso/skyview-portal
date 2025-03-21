@@ -1,3 +1,4 @@
+
 import { EmailTemplate } from './types.ts';
 
 export const buildEmailHtml = (template: EmailTemplate, fullName: string = "User"): string => {
@@ -29,7 +30,7 @@ export const buildEmailHtml = (template: EmailTemplate, fullName: string = "User
                         </tr>
                         <tr>
                           <td style="font-family: sans-serif; font-size: 16px; vertical-align: top;">
-                            <h1 style="color: #2D3748; font-size: 24px; font-weight: bold; margin: 0 0 20px;">Hello ${fullName},</h1>
+                            <h1 style="color: #1a365d; font-size: 24px; font-weight: bold; margin: 0 0 20px;">Hello ${fullName},</h1>
                             ${template.mainContent}
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary" style="border-collapse: separate; width: 100%; box-sizing: border-box; margin-top: 30px;">
                               <tbody>
@@ -38,8 +39,8 @@ export const buildEmailHtml = (template: EmailTemplate, fullName: string = "User
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; width: auto;">
                                       <tbody>
                                         <tr>
-                                          <td style="font-family: sans-serif; font-size: 16px; vertical-align: top; border-radius: 8px; text-align: center; background-color: #0F172A;">
-                                            <a href="https://skyguide.site/dashboard" target="_blank" style="border: solid 1px #0F172A; border-radius: 8px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 16px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; background-color: #0F172A; border-color: #0F172A; color: #ffffff;">${template.callToAction}</a>
+                                          <td style="font-family: sans-serif; font-size: 16px; vertical-align: top; border-radius: 8px; text-align: center; background-color: #fbbf24;">
+                                            <a href="https://skyguide.site/dashboard" target="_blank" style="border: solid 1px #fbbf24; border-radius: 8px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 16px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; background-color: #fbbf24; border-color: #fbbf24; color: #1a365d;">${template.callToAction}</a>
                                           </td>
                                         </tr>
                                       </tbody>
