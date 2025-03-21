@@ -28,7 +28,6 @@ export default function Chat() {
   const { copyToClipboard } = useCopyToClipboard();
 
   const handleCopyMessage = (content: string) => {
-    // Use browser's clipboard API
     copyToClipboard(content);
   };
 
@@ -66,7 +65,7 @@ export default function Chat() {
         ) : isFreeTrialExhausted ? (
           <TrialEndedState />
         ) : (
-          <>
+          <div className="flex flex-col h-full">
             <ChatContainer
               messages={messages}
               currentUserId={currentUserId || ""}
@@ -81,7 +80,7 @@ export default function Chat() {
               subscriptionPlan={userProfile?.subscription_plan}
               selectedQuestion={selectedQuestion}
             />
-          </>
+          </div>
         )}
       </ChatContent>
     </ChatLayout>
