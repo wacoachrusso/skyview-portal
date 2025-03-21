@@ -14,6 +14,8 @@ interface FormData {
   airline: string;
   employee_id: string;
   assistant_id: string;
+  address: string;
+  phone_number: string;
   [key: string]: string;
 }
 
@@ -28,6 +30,8 @@ export const useAccountForm = (profile: ProfileData | null) => {
     airline: profile?.airline || '',
     employee_id: profile?.employee_id || '',
     assistant_id: profile?.assistant_id || '',
+    address: profile?.address || '',
+    phone_number: profile?.phone_number || '',
   });
 
   useEffect(() => {
