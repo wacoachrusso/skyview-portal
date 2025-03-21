@@ -1,3 +1,4 @@
+
 import { Menu, MessageSquare } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -7,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface MobileMenuProps {
   isLoggedIn: boolean;
@@ -42,12 +44,14 @@ export function MobileMenu({
         onOpenChange={setIsMobileMenuOpen}
       >
         <DropdownMenuTrigger asChild>
-          <button
-            className="p-2 text-foreground hover:bg-accent rounded-md transition-colors"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 p-0"
             aria-label="Toggle menu"
           >
             <Menu className="h-5 w-5" />
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end"

@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, LayoutDashboard } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 
 interface LoggedInButtonsProps {
@@ -26,7 +27,7 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
   }
 
   return (
-    <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
+    <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-3'}`}>
       {!isMobile && <NotificationBell />}
       
       <Button
@@ -35,9 +36,9 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
         size="sm"
         className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
       >
-        <Link to="/account">
-          <User className="mr-2 h-4 w-4" />
-          Account
+        <Link to="/dashboard">
+          <LayoutDashboard className="mr-2 h-4 w-4" />
+          Dashboard
         </Link>
       </Button>
       
@@ -47,8 +48,9 @@ export function LoggedInButtons({ isMobile = false, showChatOnly = false, handle
         variant={isMobile ? "ghost" : "default"}
         className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
       >
-        <Link to="/dashboard">
-          Dashboard
+        <Link to="/account">
+          <User className="mr-2 h-4 w-4" />
+          Account
         </Link>
       </Button>
 

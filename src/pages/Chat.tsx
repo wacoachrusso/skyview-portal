@@ -7,7 +7,6 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { OfflineAlert } from "@/components/chat/OfflineAlert";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { TrialEndedState } from "@/components/chat/TrialEndedState";
-import { ChatContent } from "@/components/chat/ChatContent";
 import { ChatNavbar } from "@/components/chat/layout/ChatNavbar";
 
 export default function Chat() {

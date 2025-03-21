@@ -1,3 +1,4 @@
+
 import { useLocation } from "react-router-dom";
 import { DashboardLogo } from "./DashboardLogo";
 import { DesktopNav } from "./DesktopNav";
@@ -17,7 +18,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <DashboardLogo />
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center">
             <DesktopNav isAccountPage={isAccountPage} onSignOut={onSignOut} />
             <MobileNav isAccountPage={isAccountPage} onSignOut={onSignOut} />
           </div>

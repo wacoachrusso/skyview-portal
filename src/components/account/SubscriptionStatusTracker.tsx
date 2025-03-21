@@ -22,14 +22,21 @@ export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTracker
       };
     }
 
-    const startDate = new Date(profile.last_query_timestamp);
+    // For more accurate dates, use the current date if no timestamp is available
+    // or if we're showing a new subscription
+    const startDate = profile.last_query_timestamp 
+      ? new Date(profile.last_query_timestamp) 
+      : new Date();
+    
+    // Calculate end date based on subscription plan
     const endDate = profile.subscription_plan === 'monthly' 
       ? addMonths(startDate, 1)
       : addYears(startDate, 1);
     
+    // Calculate progress percentage and days left
     const totalDuration = endDate.getTime() - startDate.getTime();
     const elapsed = Date.now() - startDate.getTime();
-    const progress = Math.min(Math.round((elapsed / totalDuration) * 100), 100);
+    const progress = Math.min(Math.max(0, Math.round((elapsed / totalDuration) * 100)), 100);
     const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 
     return { startDate, endDate, progress, daysLeft };
@@ -37,6 +44,7 @@ export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTracker
 
   const { startDate, endDate, progress, daysLeft } = getSubscriptionInfo();
 
+  // If not on an active paid plan, don't show the tracker
   if (profile.subscription_plan === 'free' || profile.subscription_status !== 'active') {
     return null;
   }

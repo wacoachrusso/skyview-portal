@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, MessageSquare, Menu } from "lucide-react";
@@ -19,6 +20,7 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
     <div className="flex md:hidden items-center space-x-3">
       <div className="flex items-center space-x-2">
         <NotificationBell />
+        
         <Button 
           asChild
           variant="ghost"
@@ -36,7 +38,7 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
           <Button 
             variant="ghost" 
             size="sm"
-            className="text-foreground/70 hover:text-foreground"
+            className="h-8 w-8 p-0"
           >
             <Menu className="h-5 w-5" />
           </Button>
