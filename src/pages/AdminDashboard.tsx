@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ReleaseNotesAdmin } from "@/components/admin/ReleaseNotesAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, MessageSquare } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Mail } from "lucide-react";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { NotificationManager } from "@/components/admin/NotificationManager";
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SetPasswordPanel } from "@/components/admin/SetPasswordPanel";
 import { EmailQueueManager } from "@/components/admin/EmailQueueManager";
+import { EmailTemplatePreview } from "@/components/admin/EmailTemplatePreview";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -62,6 +63,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="release-notes">Release Notes</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="emails">Email Queue</TabsTrigger>
+          <TabsTrigger value="email-templates">
+            <Mail className="h-4 w-4 mr-2" />
+            Email Templates
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview"><SystemStats /></TabsContent>
@@ -70,6 +75,7 @@ const AdminDashboard = () => {
         <TabsContent value="release-notes"><ReleaseNotesAdmin /></TabsContent>
         <TabsContent value="notifications"><NotificationManager /></TabsContent>
         <TabsContent value="emails"><EmailQueueManager /></TabsContent>
+        <TabsContent value="email-templates"><EmailTemplatePreview /></TabsContent>
       </Tabs>
     </div>
   );
