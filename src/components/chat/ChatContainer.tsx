@@ -1,12 +1,13 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatNavbar } from "./layout/ChatNavbar";
 import { ChatLayout } from "./layout/ChatLayout";
 import { ChatContent } from "./ChatContent";
 
 export default function ChatContainer() {
+  const { user } = useUser();
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,31 +57,21 @@ export default function ChatContainer() {
   };
 
   const handleSendMessage = async (messageContent: string) => {
-    if (!currentConversationId) {
-      console.error("Conversation ID is missing.");
-      return;
-    }
-
-    // Get user ID from the session
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    
-    if (!userId) {
-      console.error("User ID is missing.");
+    if (!user || !currentConversationId) {
+      console.error("User or conversation ID is missing.");
       return;
     }
 
     const newMessage = {
       conversation_id: currentConversationId,
-      user_id: userId,
+      sender_id: user.id,
       content: messageContent,
-      role: 'user' // Add the required 'role' field
     };
 
     try {
       const { data, error } = await supabase
         .from('messages')
-        .insert(newMessage)
+        .insert([newMessage])
         .select('*')
         .single();
 
@@ -115,6 +106,7 @@ export default function ChatContainer() {
           <ChatContent
             messages={filteredMessages}
             isLoading={isLoading}
+            error={error}
             onSendMessage={handleSendMessage}
             showWelcome={showWelcome}
             currentConversationId={currentConversationId}
