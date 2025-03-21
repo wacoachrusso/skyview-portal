@@ -7,8 +7,6 @@ import { SubscriptionStatusTracker } from "./SubscriptionStatusTracker";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { PlanUpgradeDialog } from "./PlanUpgradeDialog";
-import { plans } from "@/components/landing/pricing/pricingPlans";
 
 interface SubscriptionInfoProps {
   profile: any;
@@ -19,21 +17,9 @@ interface SubscriptionInfoProps {
 export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }: SubscriptionInfoProps) => {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [showPlanUpgradeDialog, setShowPlanUpgradeDialog] = useState(false);
-  const [targetPlan, setTargetPlan] = useState("");
   
   const formatPlanName = (plan: string) => {
     return plan.charAt(0).toUpperCase() + plan.slice(1);
-  };
-
-  const getPriceInfo = () => {
-    const currentPlanObj = plans.find(p => p.name.toLowerCase() === profile.subscription_plan);
-    const targetPlanObj = plans.find(p => p.name.toLowerCase() === targetPlan);
-    
-    return {
-      currentPrice: currentPlanObj?.price || "$4.99/month",
-      newPrice: targetPlanObj?.price || "$49.88/year",
-    };
   };
 
   const handleChangePlan = async (newPlan: string) => {
@@ -51,14 +37,7 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
       return;
     }
     
-    // For paid users changing between plans, show dialog first
-    setTargetPlan(newPlan);
-    setShowPlanUpgradeDialog(true);
-  };
-  
-  const handleConfirmPlanChange = async () => {
-    if (!targetPlan) return;
-    
+    // For paid users changing between plans or downgrading
     setIsUpdating(true);
     
     try {
@@ -67,7 +46,7 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
         body: {
           email: profile.email,
           oldPlan: profile.subscription_plan,
-          newPlan: targetPlan,
+          newPlan: newPlan,
           fullName: profile.full_name || 'User'
         }
       });
@@ -78,18 +57,18 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
       await supabase
         .from('profiles')
         .update({
-          subscription_plan: targetPlan
+          subscription_plan: newPlan
         })
         .eq('id', profile.id);
       
       toast({
         title: "Plan Updated",
-        description: `Your subscription has been changed to the ${formatPlanName(targetPlan)} plan.`,
+        description: `Your subscription has been changed to the ${formatPlanName(newPlan)} plan.`,
       });
       
       // Redirect to pricing to complete payment if upgrading from monthly to annual
-      if (profile.subscription_plan === 'monthly' && targetPlan === 'annual') {
-        onPlanChange(targetPlan);
+      if (profile.subscription_plan === 'monthly' && newPlan === 'annual') {
+        onPlanChange(newPlan);
       }
     } catch (error) {
       console.error('Error changing plan:', error);
@@ -100,7 +79,6 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
       });
     } finally {
       setIsUpdating(false);
-      setShowPlanUpgradeDialog(false);
     }
   };
 
@@ -121,12 +99,6 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
       return "monthly";
     } else {
       return "monthly"; // Default for free users
-    }
-  };
-
-  const closePlanUpgradeDialog = () => {
-    if (!isUpdating) {
-      setShowPlanUpgradeDialog(false);
     }
   };
 
@@ -198,16 +170,6 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
       {profile?.subscription_plan !== 'free' && profile?.subscription_plan !== 'trial_ended' && (
         <SubscriptionStatusTracker profile={profile} />
       )}
-      
-      {/* Plan Upgrade Dialog */}
-      <PlanUpgradeDialog
-        open={showPlanUpgradeDialog}
-        onClose={closePlanUpgradeDialog}
-        onConfirm={handleConfirmPlanChange}
-        currentPlan={profile?.subscription_plan || 'free'}
-        targetPlan={targetPlan}
-        priceInfo={getPriceInfo()}
-      />
     </div>
   );
 };

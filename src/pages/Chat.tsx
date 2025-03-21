@@ -1,127 +1,207 @@
-
-import { useEffect, useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
+import { ChatNavbar } from "@/components/chat/layout/ChatNavbar";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { ChatContent } from "@/components/chat/ChatContent";
 import { ChatContainer } from "@/components/chat/ChatContainer";
+import { useClipboard } from "@/hooks/useClipboard";
+import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useChatMessages } from "@/hooks/useChatMessages";
-import { useConversationManager } from "@/hooks/useConversationManager";
-import { useWelcomeState } from "@/hooks/useWelcomeState";
-import { useChatClipboard } from "@/utils/clipboardUtils";
-import { useQuestionHandler } from "@/hooks/useQuestionHandler";
-import { ChatInput } from "@/components/chat/ChatInput";
+import { Message } from '@/types/chat';
 
 export default function Chat() {
   const { currentUserId } = useUserProfile();
   const [searchParams] = useSearchParams();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [showWelcome, setShowWelcome] = useState<boolean>(true);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<string>("");
-  
-  const {
-    messages,
-    isLoading,
-    error,
-    fetchMessages,
-    handleSendMessage
-  } = useChatMessages(currentUserId);
-  
-  const {
-    currentConversationId,
-    setCurrentConversationId,
-    createNewConversation,
-    selectConversation
-  } = useConversationManager(currentUserId);
-  
-  const { showWelcome, setShowWelcome } = useWelcomeState(currentConversationId);
-  const { handleCopyMessage } = useChatClipboard();
+  const { copy } = useClipboard();
+  const { toast } = useToast();
   
   const conversationIdFromParams = searchParams.get('conversationId');
-  
-  // Handle question selection - modified to only populate the input
-  // without automatically sending the message
-  const { handleSelectQuestion } = useQuestionHandler(
-    currentConversationId,
-    createNewConversation,
-    handleSendMessage
-  );
 
-  // Load conversation from URL params
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+        setError(error as any);
+      } else {
+        setMessages(data || []);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching messages:", err);
+      setError(err instanceof Error ? err : new Error('An unexpected error occurred'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (conversationIdFromParams) {
       setCurrentConversationId(conversationIdFromParams);
       fetchMessages(conversationIdFromParams);
+      setShowWelcome(false);
     }
-  }, [conversationIdFromParams, fetchMessages, setCurrentConversationId]);
+  }, [conversationIdFromParams, fetchMessages]);
 
-  // Handle conversation selection from sidebar
   const handleSelectConversation = (conversationId: string) => {
-    selectConversation(conversationId);
+    setCurrentConversationId(conversationId);
     fetchMessages(conversationId);
-  };
-
-  // Handle new chat button click
-  const handleNewChat = async () => {
-    if (!currentUserId) return;
-    
-    const newConversationId = await createNewConversation(currentUserId);
-    if (newConversationId) {
-      setCurrentConversationId(newConversationId);
-      // We don't have setMessages in this component
-      setShowWelcome(true);
-    }
-  };
-
-  // Handle sending a message with proper Promise return
-  const handleMessageSend = async (content: string): Promise<void> => {
-    console.log("Chat page: handleMessageSend called with content:", content);
-    
-    if (!currentConversationId) {
-      // If no conversation exists yet, create one first
-      if (!currentUserId) return Promise.reject(new Error("No user ID"));
-      
-      console.log("Creating new conversation for message");
-      const newConversationId = await createNewConversation(currentUserId, content);
-      if (newConversationId) {
-        console.log("New conversation created:", newConversationId);
-        setCurrentConversationId(newConversationId);
-        setShowWelcome(false);
-        return handleSendMessage(content, newConversationId);
-      }
-      return Promise.reject(new Error("Failed to create conversation"));
-    }
-    
-    // Use existing conversation
-    console.log("Using existing conversation:", currentConversationId);
     setShowWelcome(false);
-    return handleSendMessage(content, currentConversationId);
   };
 
-  // Proper Promise-returning wrapper function for handleCopyMessage
-  const handleCopyMessageWrapper = async (content: string): Promise<void> => {
-    return handleCopyMessage(content);
-  };
-  
-  // Handle question selection - just set the text in the input box
-  // without automatically sending the message
-  const handleQuestionSelect = (question: string) => {
-    console.log("Question selected:", question);
-    setSelectedQuestion(question);
-  };
-
-  // Log current state to help with debugging
-  useEffect(() => {
-    console.log("[Chat] Rendering with state:", {
-      currentUserId,
-      messagesCount: messages.length,
-      isLoading,
-      currentConversationId,
-      showWelcome
+  const handleCopyMessage = (content: string) => {
+    copy(content);
+    toast({
+      title: "Copied to clipboard",
+      description: "Message content copied to clipboard",
+      duration: 2000,
     });
-  }, [currentUserId, messages.length, isLoading, currentConversationId, showWelcome]);
+  };
+
+  const handleSendMessage = async (messageContent: string) => {
+    if (!currentUserId || !currentConversationId) {
+      console.error("User or conversation ID is missing.");
+      return;
+    }
+
+    // First add a user message
+    const userMessage: Partial<Message> = {
+      conversation_id: currentConversationId,
+      user_id: currentUserId,
+      content: messageContent,
+      role: 'user'
+    };
+
+    try {
+      // Insert user message
+      const { data: userData, error: userError } = await supabase
+        .from('messages')
+        .insert([userMessage])
+        .select('*')
+        .single();
+
+      if (userError) {
+        console.error("Error sending user message:", userError);
+        setError(userError as any);
+        return;
+      }
+
+      setMessages(prevMessages => [...prevMessages, userData as Message]);
+
+      // Now simulate AI response
+      setIsLoading(true);
+      
+      // Simulate AI thinking time
+      setTimeout(async () => {
+        // Create AI response
+        const aiMessage: Partial<Message> = {
+          conversation_id: currentConversationId,
+          user_id: currentUserId,
+          content: "I'm sorry, but I can only answer questions directly related to your union contract's terms, policies, or provisions. For other topics, please contact appropriate resources or refocus your question on contract-related matters.",
+          role: 'assistant'
+        };
+
+        try {
+          const { data: aiData, error: aiError } = await supabase
+            .from('messages')
+            .insert([aiMessage])
+            .select('*')
+            .single();
+
+          if (aiError) {
+            console.error("Error sending AI message:", aiError);
+            setError(aiError as any);
+          } else {
+            setMessages(prevMessages => [...prevMessages, aiData as Message]);
+          }
+        } catch (err) {
+          console.error("Unexpected error sending AI message:", err);
+          setError(err instanceof Error ? err : new Error('An unexpected error occurred'));
+        } finally {
+          setIsLoading(false);
+        }
+      }, 1500);
+
+    } catch (err) {
+      console.error("Unexpected error in message flow:", err);
+      setError(err instanceof Error ? err : new Error('An unexpected error occurred'));
+      setIsLoading(false);
+    }
+  };
+
+  const handleSelectQuestion = (question: string) => {
+    // If no conversation exists yet, create one
+    if (!currentConversationId) {
+      createNewConversation(question);
+    } else {
+      // Otherwise just send the message in the current conversation
+      handleSendMessage(question);
+    }
+  };
+
+  const createNewConversation = async (initialMessage?: string) => {
+    if (!currentUserId) {
+      console.error("User ID is missing");
+      return;
+    }
+
+    try {
+      // Create a new conversation
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversations')
+        .insert([{ 
+          user_id: currentUserId,
+          title: initialMessage ? initialMessage.substring(0, 50) : 'New Chat' 
+        }])
+        .select('*')
+        .single();
+
+      if (conversationError) {
+        console.error("Error creating conversation:", conversationError);
+        setError(conversationError as any);
+        return;
+      }
+
+      // Set the new conversation as current
+      setCurrentConversationId(conversationData.id);
+      setMessages([]);
+      setShowWelcome(false);
+
+      // If there's an initial message, send it
+      if (initialMessage) {
+        setTimeout(() => {
+          handleSendMessage(initialMessage);
+        }, 100);
+      }
+    } catch (err) {
+      console.error("Unexpected error creating conversation:", err);
+      setError(err instanceof Error ? err : new Error('An unexpected error occurred'));
+    }
+  };
+
+  const handleNewChat = () => {
+    createNewConversation();
+  };
 
   return (
     <div className="flex flex-col h-screen w-full">
+      <ChatNavbar 
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
       <div className="flex flex-1 overflow-hidden">
         <ChatLayout
           isSidebarOpen={isSidebarOpen}
@@ -133,28 +213,19 @@ export default function Chat() {
             messages={messages}
             currentUserId={currentUserId}
             isLoading={isLoading}
-            onSendMessage={handleMessageSend}
+            onSendMessage={handleSendMessage}
             onNewChat={handleNewChat}
             error={error}
             showWelcome={showWelcome}
             currentConversationId={currentConversationId}
-            isChatDisabled={false}
           >
-            <div className="flex flex-col h-full">
-              <ChatContainer
-                messages={messages}
-                currentUserId={currentUserId || ""}
-                isLoading={isLoading}
-                onCopyMessage={handleCopyMessageWrapper}
-                onSelectQuestion={handleQuestionSelect}
-              />
-              <ChatInput 
-                onSendMessage={handleMessageSend}
-                isLoading={isLoading}
-                selectedQuestion={selectedQuestion}
-                disabled={false}
-              />
-            </div>
+            <ChatContainer
+              messages={messages}
+              currentUserId={currentUserId}
+              isLoading={isLoading}
+              onCopyMessage={handleCopyMessage}
+              onSelectQuestion={handleSelectQuestion}
+            />
           </ChatContent>
         </ChatLayout>
       </div>

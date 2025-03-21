@@ -18,7 +18,7 @@ interface ChatInputProps {
 export function ChatInput({
   onSendMessage,
   isLoading,
-  disabled = false,
+  disabled,
   queryCount = 0,
   subscriptionPlan = "free",
   selectedQuestion,
@@ -26,18 +26,9 @@ export function ChatInput({
   const [message, setMessage] = useState("");
   const { toast } = useToast();
 
-  // Simplified logic to prevent unwanted disabling
-  const isInputDisabled = disabled || isLoading;
-
-  // Add debug logging
-  useEffect(() => {
-    console.log("ChatInput rendering with:", {
-      isLoading,
-      disabled,
-      isInputDisabled,
-      message: message.length > 0 ? "Has content" : "Empty"
-    });
-  }, [isLoading, disabled, isInputDisabled, message]);
+  // Determine if the chat input should be disabled
+  const isInputDisabled =
+    disabled || isLoading || (subscriptionPlan === "free" && queryCount >= 1);
 
   // Handle selectedQuestion changes
   useEffect(() => {
@@ -48,21 +39,17 @@ export function ChatInput({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isLoading) return;
+    if (!message.trim() || isLoading || isInputDisabled) return;
 
-    console.log("Submitting message:", message.trim());
     const messageContent = message.trim();
-    
+    setMessage(""); // Clear input immediately after submission
+
     try {
-      // Clear input immediately to provide better UX feedback
-      setMessage("");
-      
-      // No toast notification - removed as requested
-      
+      console.log("Submitting message:", messageContent);
       await onSendMessage(messageContent);
     } catch (error) {
       console.error("Error sending message:", error);
-      // Only restore the message if there was an error
+      // Restore the message if there was an error
       setMessage(messageContent);
       toast({
         title: "Error",
@@ -88,7 +75,11 @@ export function ChatInput({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about your contract..."
+            placeholder={
+              isInputDisabled
+                ? "Chat unavailable while offline or trial ended"
+                : "Ask about your contract..."
+            }
             className="min-h-[60px] w-full pr-[120px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
             disabled={isInputDisabled}
             aria-label="Chat input"
