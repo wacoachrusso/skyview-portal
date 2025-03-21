@@ -1,5 +1,21 @@
 
+# Project Configuration
 project_id = "xnlzqsoujwsffoxhhybk"
 
-[process-email-queue]
-verify_jwt = true
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54323
+
+[studio]
+enabled = true
+port = 54323
+
+[functions.send-password-reset]
+verify_jwt = false
+
+[functions.send-password-reset.import_map]
+imports = {}
