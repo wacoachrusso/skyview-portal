@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { SendButton } from "./SendButton";
 import { MicButton } from "./MicButton";
 import { useToast } from "@/hooks/use-toast";
+import { FileText } from "lucide-react";
+import { useContractHandler } from "@/hooks/useContractHandler";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => Promise<void>;
@@ -25,6 +27,7 @@ export function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const { toast } = useToast();
+  const { handleContractClick } = useContractHandler();
 
   // Determine if the chat input should be disabled
   const isInputDisabled =
@@ -69,7 +72,18 @@ export function ChatInput({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background z-10">
-      <form onSubmit={handleSubmit} className="p-4">
+      <div className="flex items-center justify-between px-4 pt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs h-8 bg-background/80 hover:bg-background/60"
+          onClick={handleContractClick}
+        >
+          <FileText className="h-3.5 w-3.5 mr-1" />
+          View Contract
+        </Button>
+      </div>
+      <form onSubmit={handleSubmit} className="p-4 pt-2">
         <div className="relative flex items-center">
           <Textarea
             value={message}
