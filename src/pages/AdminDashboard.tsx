@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ReleaseNotesAdmin } from "@/components/admin/ReleaseNotesAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, MessageSquare } from "lucide-react";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { NotificationManager } from "@/components/admin/NotificationManager";
@@ -19,14 +19,32 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
 
+  // Ensure admin status is set in localStorage
+  useEffect(() => {
+    localStorage.setItem('user_is_admin', 'true');
+  }, []);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2">
-          <LayoutDashboard className="h-4 w-4" />
-          Go to Dashboard
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/dashboard")} 
+            className="gap-2"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Go to Dashboard
+          </Button>
+          <Button 
+            onClick={() => navigate("/chat")} 
+            className="gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Go to Chat
+          </Button>
+        </div>
       </div>
 
       {/* Account Settings Section */}

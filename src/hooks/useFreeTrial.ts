@@ -16,6 +16,14 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
     try {
       console.log("[useFreeTrial] Checking free trial status for user:", currentUserId);
       
+      // Check if user is admin first - most important!
+      const isAdmin = localStorage.getItem('user_is_admin') === 'true';
+      if (isAdmin) {
+        console.log("[useFreeTrial] Admin user detected, bypassing ALL trial checks");
+        setIsTrialEnded(false);
+        return;
+      }
+      
       // CRITICAL: Check for post-payment condition early and skip all checks
       // This is the most important condition - if we're in post-payment state, 
       // we MUST bypass all trial/subscription checks
@@ -49,7 +57,7 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
       // Only if we're not in post-payment state, proceed with regular checks
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("subscription_plan, subscription_status, query_count")
+        .select("subscription_plan, subscription_status, query_count, is_admin")
         .eq("id", currentUserId)
         .single();
 
@@ -59,6 +67,14 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
       }
 
       console.log("[useFreeTrial] User profile:", profile);
+      
+      // Check if user is admin
+      if (profile?.is_admin) {
+        console.log("[useFreeTrial] Admin user detected, bypassing subscription checks");
+        localStorage.setItem('user_is_admin', 'true');
+        setIsTrialEnded(false);
+        return;
+      }
 
       // CRITICAL: Check for active paid subscription first
       // This is the second most important condition
