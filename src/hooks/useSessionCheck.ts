@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ export const useSessionCheck = () => {
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: number;
 
     const checkSession = async () => {
       try {
@@ -82,10 +84,19 @@ export const useSessionCheck = () => {
     };
 
     checkSession();
+    
+    // Add a safety timeout to prevent infinite loading state
+    timeoutId = window.setTimeout(() => {
+      if (mounted && isLoading) {
+        console.log("Session check timeout triggered - resetting loading state");
+        setIsLoading(false);
+      }
+    }, 5000); // 5-second safety timeout
 
     return () => {
       console.log("Session check cleanup");
       mounted = false;
+      clearTimeout(timeoutId);
     };
   }, [navigate, toast]);
 

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendButton } from "./SendButton";
@@ -25,6 +25,7 @@ export function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const { toast } = useToast();
+  const isSubmittingRef = useRef(false);
 
   // Determine if the chat input should be disabled
   const isInputDisabled =
@@ -39,10 +40,13 @@ export function ChatInput({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isLoading || isInputDisabled) return;
+    if (!message.trim() || isLoading || isInputDisabled || isSubmittingRef.current) return;
 
     const messageContent = message.trim();
     setMessage(""); // Clear input immediately after submission
+    
+    // Prevent double submissions
+    isSubmittingRef.current = true;
 
     try {
       console.log("Submitting message:", messageContent);
@@ -57,6 +61,8 @@ export function ChatInput({
         variant: "destructive",
         duration: 2000,
       });
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 

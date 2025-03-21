@@ -18,9 +18,30 @@ const Account = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [mounted, setMounted] = useState(true);
+  const [timeoutOccurred, setTimeoutOccurred] = useState(false);
+
+  // Add safety timeout to prevent infinite loading
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      if (mounted && isLoading) {
+        console.log("Account page loading timeout triggered");
+        setTimeoutOccurred(true);
+      }
+    }, 5000); // 5-second safety timeout
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
 
   useEffect(() => {
     setMounted(true);
+    
+    // If we hit the timeout but have a userEmail, try to load basic data
+    if (timeoutOccurred && userEmail && !profile) {
+      console.log("Loading basic account data after timeout");
+      // Continue showing the page with minimal data rather than infinite loading
+    }
     
     const checkAlphaTester = async () => {
       if (!profile?.id || !mounted) return;
@@ -48,7 +69,7 @@ const Account = () => {
     return () => {
       setMounted(false);
     };
-  }, [profile?.id]);
+  }, [profile?.id, timeoutOccurred, userEmail]);
 
   const handlePlanChange = (newPlan: string) => {
     navigate('/?scrollTo=pricing-section');
@@ -67,14 +88,35 @@ const Account = () => {
     navigate('/refunds', { state: { fromCancellation: true } });
   };
 
-  // Add explicit loading state to prevent flickering
-  if (isLoading) {
+  // Show fallback content if loading takes too long
+  if (isLoading && !timeoutOccurred) {
     console.log("Account page is loading...");
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
         <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
           <LoadingSpinner size="lg" />
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback content if loading times out
+  if (timeoutOccurred && !profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
+        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
+          <h2 className="text-xl font-semibold mb-4 text-white">Loading your account...</h2>
+          <p className="text-muted-foreground mb-6">This is taking longer than expected.</p>
+          <div className="flex gap-4">
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh Page
+            </Button>
+            <Button onClick={() => navigate('/dashboard')} variant="default">
+              Return to Dashboard
+            </Button>
+          </div>
         </div>
       </div>
     );

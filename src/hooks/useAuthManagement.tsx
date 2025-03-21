@@ -1,14 +1,34 @@
+
 import { useSessionCheck } from "./useSessionCheck";
 import { useAuthState } from "./useAuthState";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 export const useAuthManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isLoading } = useSessionCheck();
+  const { isLoading: sessionLoading } = useSessionCheck();
   const { userEmail } = useAuthState();
+  const [isLoading, setIsLoading] = useState(sessionLoading);
+
+  // Add a safety mechanism to prevent indefinite loading
+  useEffect(() => {
+    let timeoutId: number;
+    
+    if (sessionLoading) {
+      timeoutId = window.setTimeout(() => {
+        setIsLoading(false);
+      }, 3000); // 3-second safety timeout
+    } else {
+      setIsLoading(sessionLoading);
+    }
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [sessionLoading]);
 
   const handleSignOut = async () => {
     try {
