@@ -41,6 +41,23 @@ const AuthCallback = () => {
           // Import and use the Stripe callback handler
           const { handleStripeCallback } = await import('@/utils/auth/stripeCallbackHandler');
           await handleStripeCallback(sessionId, navigate);
+          
+          // After payment, send a thank you email via Resend
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              await supabase.functions.invoke('send-payment-confirmation', {
+                body: { 
+                  email: session.user.email,
+                  userId: session.user.id
+                }
+              });
+              console.log("Payment confirmation email sent");
+            }
+          } catch (emailError) {
+            console.error("Failed to send payment confirmation email:", emailError);
+          }
+          
           return; // Let the Stripe handler take over the flow
         }
         
@@ -82,7 +99,7 @@ const AuthCallback = () => {
             } else {
               // Regular flow - clear flag and redirect
               localStorage.removeItem('login_in_progress');
-              // Redirect to chat page instead of login
+              // Always redirect to chat page instead of login
               setTimeout(() => navigate('/chat'), 1500);
             }
           } else {

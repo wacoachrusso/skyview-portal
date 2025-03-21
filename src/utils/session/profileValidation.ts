@@ -19,10 +19,12 @@ export const checkProfileStatus = async (userId: string, { navigate, toast }: Va
     if (profileError) {
       console.error("Profile fetch error:", profileError);
       
-      navigate('/login');
+      // Don't automatically navigate to login, just return false
       return false;
     }
 
+    // Only redirect to pricing if user has exhausted free trial
+    // and they're actually trying to use the chat
     if (profile?.subscription_plan === 'free' && profile?.query_count >= 2) {
       console.log('Free trial exhausted, redirecting to pricing');
       
@@ -30,7 +32,11 @@ export const checkProfileStatus = async (userId: string, { navigate, toast }: Va
         title: "Free Trial Ended",
         description: "Please select a subscription plan to continue."
       });
-      navigate('/?scrollTo=pricing-section');
+      
+      // Only navigate if not already on the pricing page
+      if (!window.location.href.includes('pricing-section')) {
+        navigate('/?scrollTo=pricing-section');
+      }
       return false;
     }
 

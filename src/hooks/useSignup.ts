@@ -115,13 +115,20 @@ export const useSignup = () => {
         // Continue with signup even if email fails
       }
 
-      toast({
-        title: "Account created",
-        description: isGoogleSignIn 
-          ? "Successfully!" 
-          : "Please check your email to verify your account.",
-        duration: 30000
-      });
+      // Only show email confirmation toast for non-Google sign-ins who need to verify email
+      if (!isGoogleSignIn) {
+        toast({
+          title: "Account created",
+          description: "Please check your email to verify your account.",
+          duration: 10000
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: "Welcome to SkyGuide!",
+          duration: 5000
+        });
+      }
 
       // Direct users to chat page immediately after signup
       navigate("/chat");
