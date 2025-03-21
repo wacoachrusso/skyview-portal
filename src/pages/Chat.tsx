@@ -7,8 +7,8 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { OfflineAlert } from "@/components/chat/OfflineAlert";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { TrialEndedState } from "@/components/chat/TrialEndedState";
-import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { ChatContent } from "@/components/chat/ChatContent";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 export default function Chat() {
   const {
@@ -25,10 +25,11 @@ export default function Chat() {
   const { isOffline } = useOfflineStatus();
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { copyToClipboard } = useCopyToClipboard();
 
   const handleCopyMessage = (content: string) => {
     // Use browser's clipboard API
-    navigator.clipboard.writeText(content);
+    copyToClipboard(content);
   };
 
   const handleSendMessage = async (content: string) => {
@@ -52,10 +53,6 @@ export default function Chat() {
       onSelectConversation={handleSelectConversation}
       currentConversationId={currentConversationId}
     >
-      <ChatSidebar 
-        currentConversationId={currentConversationId}
-        onSelectConversation={handleSelectConversation}
-      />
       <ChatContent
         messages={messages}
         currentUserId={currentUserId || ""}
