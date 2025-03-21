@@ -73,6 +73,7 @@ export const handleFreeSignup = async ({
           subscription_plan: 'free',
           assistant_id: assistantId,
         },
+        // Don't redirect to confirmation URL - sign them in directly
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });

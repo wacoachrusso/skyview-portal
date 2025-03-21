@@ -24,7 +24,7 @@ export const useSignup = () => {
     formData: SignupFormData,
     selectedPlan: string,
     priceId?: string,
-    isGoogleSignIn: boolean = false // Flag to check if the user signed in with Google
+    isGoogleSignIn: boolean = false
   ) => {
     if (loading) return;
     setLoading(true);
@@ -88,7 +88,7 @@ export const useSignup = () => {
       console.log("Proceeding with free plan signup");
       const signupResult = await handleFreeSignup({
         ...signupData,
-        isGoogleSignIn, // Pass isGoogleSignIn flag
+        isGoogleSignIn,
       });
 
       if (!signupResult) {
@@ -115,12 +115,12 @@ export const useSignup = () => {
         // Continue with signup even if email fails
       }
 
-      // Only show email confirmation toast for non-Google sign-ins who need to verify email
+      // Show appropriate toast message based on sign-in method
       if (!isGoogleSignIn) {
         toast({
           title: "Account created",
-          description: "Please check your email to verify your account.",
-          duration: 10000
+          description: "Welcome to SkyGuide!",
+          duration: 5000
         });
       } else {
         toast({

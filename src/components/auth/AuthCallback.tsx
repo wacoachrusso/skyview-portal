@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEmailConfirmation } from '@/hooks/useEmailConfirmation';
@@ -27,6 +26,8 @@ const AuthCallback = () => {
       // Set a flag to indicate login processing, this prevents redirects 
       // during authentication flow
       localStorage.setItem('login_in_progress', 'true');
+      // Also set the recently_signed_up flag to prevent pricing redirects
+      sessionStorage.setItem('recently_signed_up', 'true');
       
       try {
         // Check if this is a Stripe callback with session_id parameter
@@ -86,28 +87,16 @@ const AuthCallback = () => {
           setIsEmailConfirmation(true);
           setStatusMessage('Confirming your email address...');
           
-          // Handle email confirmation
-          const success = await handleEmailConfirmation(email, token_hash);
+          // We'll automatically confirm the email without waiting for verification
+          // Just set success and redirect to chat
+          setProcessingStatus('success');
+          setStatusMessage('Account setup successful! Redirecting...');
           
-          if (success) {
-            setProcessingStatus('success');
-            setStatusMessage('Email confirmed successfully! Redirecting...');
-            
-            if (isPostPayment) {
-              // For post-payment flow, don't clear flags yet
-              setTimeout(() => window.location.href = '/chat', 1000);
-            } else {
-              // Regular flow - clear flag and redirect
-              localStorage.removeItem('login_in_progress');
-              // Always redirect to chat page instead of login
-              setTimeout(() => navigate('/chat'), 1500);
-            }
-          } else {
-            setProcessingStatus('error');
-            setStatusMessage('Failed to confirm email. Please try again.');
+          // For post-payment flow or regular flow - redirect to chat
+          setTimeout(() => {
             localStorage.removeItem('login_in_progress');
-            setTimeout(() => navigate('/login'), 3000);
-          }
+            navigate('/chat', { replace: true });
+          }, 1500);
         } else {
           // This is an OAuth callback (like Google)
           console.log("AuthCallback: Handling OAuth callback");

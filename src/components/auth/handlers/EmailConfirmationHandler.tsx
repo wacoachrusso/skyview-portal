@@ -71,6 +71,26 @@ export const EmailConfirmationHandler = () => {
               } else {
                 console.log("EmailConfirmationHandler: Profile updated with subscription status: active");
               }
+              
+              // Send subscription confirmation email
+              try {
+                const planType = localStorage.getItem('selected_plan') || 'monthly';
+                const { error: emailError } = await supabase.functions.invoke('send-subscription-confirmation', {
+                  body: { 
+                    email: sessionData.session.user.email,
+                    name: sessionData.session.user.user_metadata?.full_name || 'Valued Customer',
+                    plan: planType
+                  }
+                });
+                
+                if (emailError) {
+                  console.error("EmailConfirmationHandler: Error sending subscription confirmation email:", emailError);
+                } else {
+                  console.log("EmailConfirmationHandler: Subscription confirmation email sent successfully");
+                }
+              } catch (emailError) {
+                console.error("EmailConfirmationHandler: Failed to send subscription confirmation email:", emailError);
+              }
             }
           }
           
@@ -163,7 +183,7 @@ export const EmailConfirmationHandler = () => {
             return;
           }
         } else {
-          // Non-payment related email confirmation, go to chat instead of dashboard
+          // Non-payment related, regular sign-up, go to chat instead of dashboard
           localStorage.removeItem('login_in_progress');
           navigate('/chat', { replace: true });
         }

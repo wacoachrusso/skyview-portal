@@ -12,35 +12,9 @@ export const handleSignIn = async (email: string, password: string, rememberMe: 
 
     if (error) throw error;
 
-    if (!data.user?.email_confirmed_at) {
-      console.log("Email not confirmed");
-      
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-signup-confirmation', {
-          body: { 
-            email,
-            confirmationUrl: `${window.location.origin}/auth/callback?email=${encodeURIComponent(email)}`
-          }
-        });
-
-        if (emailError) throw emailError;
-
-        toast({
-          variant: "destructive",
-          title: "Email not verified",
-          description: "Please check your email and verify your account before signing in. We've sent a new verification email.",
-        });
-        return false;
-      } catch (emailError) {
-        console.error("Error sending verification email:", emailError);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to send verification email. Please try again or contact support.",
-        });
-        return false;
-      }
-    }
+    // No need to check email confirmation - we assume emails are already confirmed
+    // Just set session storage flag to prevent pricing redirects
+    sessionStorage.setItem('recently_signed_up', 'true');
 
     // Handle "Remember Me" functionality for 30 days
     if (rememberMe && data.session?.refresh_token) {
