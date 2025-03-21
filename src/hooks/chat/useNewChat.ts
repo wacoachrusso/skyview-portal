@@ -17,15 +17,22 @@ export function useNewChat(
   // Start a new chat
   const startNewChat = useCallback(async () => {
     try {
-      setMessages([]);
-      setIsLoading(false);
-      setCurrentConversationId(null);
-
+      // Set loading state to prevent UI flickering
+      setIsLoading(true);
+      
+      // First create the new conversation if user is logged in
       if (currentUserId) {
         const newConversationId = await createNewConversation(currentUserId);
+        // Only after we have the new ID and it's ready, we clear the old messages
+        // This prevents the UI from briefly showing empty state before new content loads
         if (newConversationId) {
+          setMessages([]);
           setCurrentConversationId(newConversationId);
         }
+      } else {
+        // If no user, just clear messages
+        setMessages([]);
+        setCurrentConversationId(null);
       }
     } catch (error) {
       toast({
@@ -34,6 +41,9 @@ export function useNewChat(
         variant: "destructive",
         duration: 2000,
       });
+    } finally {
+      // Always turn off loading when done
+      setIsLoading(false);
     }
   }, [createNewConversation, currentUserId, setCurrentConversationId, setMessages, setIsLoading, toast]);
 
