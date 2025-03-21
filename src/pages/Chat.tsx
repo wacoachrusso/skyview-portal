@@ -73,9 +73,6 @@ export default function Chat() {
               onCopyMessage={handleCopyMessage}
               onSelectQuestion={setSelectedQuestion}
             />
-            <div className="pb-32">
-              {/* This div ensures space at the bottom for the fixed input */}
-            </div>
             <ChatInput
               onSendMessage={handleSendMessage}
               isLoading={isLoading}

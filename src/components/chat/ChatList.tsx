@@ -2,7 +2,6 @@
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef, useLayoutEffect } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatListProps {
   messages: Message[];
@@ -51,8 +50,8 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-4 p-4 pb-20">
+    <div className="absolute inset-0 overflow-y-auto pb-32">
+      <div className="flex flex-col gap-4 p-4">
         {messages.map((message, index) => (
           <ChatMessage
             key={message.id}

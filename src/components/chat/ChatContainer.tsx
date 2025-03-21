@@ -24,7 +24,7 @@ export function ChatContainer({
   const showWelcomeMessage = messages.length === 0 && !isLoading;
 
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 overflow-hidden relative">
       {showWelcomeMessage ? (
         <WelcomeMessage onSelectQuestion={onSelectQuestion} />
       ) : (
