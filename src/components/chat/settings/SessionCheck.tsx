@@ -249,11 +249,10 @@ export function SessionCheck() {
           }
         }
 
-        // If user is authenticated and on the root route or login page, redirect to chat
-        if ((window.location.pathname === '/' || window.location.pathname === '/login') && 
+        // If user is authenticated and on the root route, redirect to chat
+        if (window.location.pathname === '/' && 
             !window.location.href.includes('scrollTo=pricing') && 
             !localStorage.getItem('payment_in_progress')) {
-          console.log("[SessionCheck] User authenticated and on root/login page, redirecting to chat");
           navigate('/chat');
         }
       } catch (error) {

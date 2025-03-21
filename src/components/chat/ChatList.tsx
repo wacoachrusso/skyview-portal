@@ -1,10 +1,8 @@
 
-import { useEffect, useRef } from "react";
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
-import { useClipboard } from "@/hooks/useClipboard";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useLayoutEffect } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatListProps {
   messages: Message[];
@@ -14,69 +12,79 @@ interface ChatListProps {
 }
 
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
-  console.log('ChatList rendering with messages:', messages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { copy } = useClipboard();
-  const { toast } = useToast();
+  const previousMessagesLengthRef = useRef<number>(0);
+  const scrollTimeoutRef = useRef<number | null>(null);
 
-  // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
-
-  const handleCopyMessage = (content: string) => {
-    copy(content);
-    toast({
-      title: "Copied to clipboard",
-      description: "Message content copied to clipboard",
-      duration: 2000,
-    });
-    if (onCopyMessage) {
-      onCopyMessage(content);
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
     }
+    
+    // Use a very short timeout to ensure DOM updates first
+    scrollTimeoutRef.current = window.setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior });
+      scrollTimeoutRef.current = null;
+    }, 10);
   };
 
-  // Group messages by role to determine if a message is the last in its group
-  // This would be useful for styling consecutive messages from the same sender
-  const groupedMessages = messages.reduce((acc, message, index) => {
-    const prevMessage = index > 0 ? messages[index - 1] : null;
-    const isNewGroup = !prevMessage || prevMessage.role !== message.role;
-    
-    if (isNewGroup) {
-      acc.push([message]);
-    } else {
-      acc[acc.length - 1].push(message);
+  // Use useLayoutEffect to scroll before browser paints
+  useLayoutEffect(() => {
+    // Always scroll on new messages
+    if (messages.length > previousMessagesLengthRef.current) {
+      // Use instant scroll for initial load and smooth for new messages
+      const behavior = previousMessagesLengthRef.current === 0 ? "auto" : "smooth";
+      scrollToBottom(behavior);
+      
+      // Update the previous messages length reference
+      previousMessagesLengthRef.current = messages.length;
     }
-    
-    return acc;
-  }, [] as Message[][]);
+  }, [messages]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col space-y-2 p-4 overflow-y-auto">
-      {groupedMessages.flatMap((group, groupIndex) => 
-        group.map((message, messageIndex) => {
-          const isCurrentUser = message.role === "user";
-          const isLastInGroup = messageIndex === group.length - 1;
-          
-          return (
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-1 pb-20">
+        <div className="flex flex-col gap-4 p-4 md:p-6">
+          {messages.map((message, index) => (
             <ChatMessage
               key={message.id}
               message={message}
-              isCurrentUser={isCurrentUser}
-              onCopy={() => handleCopyMessage(message.content)}
-              isLastInGroup={isLastInGroup}
+              isCurrentUser={message.user_id === currentUserId}
+              onCopy={() => onCopyMessage(message.content)}
+              isLastInGroup={
+                index === messages.length - 1 || 
+                messages[index + 1]?.role !== message.role
+              }
             />
-          );
-        })
-      )}
-      
-      {isLoading && (
-        <div className="flex justify-center my-4">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          ))}
+          
+          {isLoading && (
+            <div className="flex w-full gap-2 p-2 justify-start animate-fade-in">
+              <div className="flex max-w-[80%] flex-col gap-1 rounded-xl px-3 py-2 sm:px-4 sm:py-2 bg-chat-ai-gradient text-white border border-white/5 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="flex space-x-1">
+                    <div className="animate-pulse w-2 h-2 bg-brand-gold rounded-full"></div>
+                    <div className="animate-pulse w-2 h-2 bg-brand-gold rounded-full delay-150"></div>
+                    <div className="animate-pulse w-2 h-2 bg-brand-gold rounded-full delay-300"></div>
+                  </div>
+                  <span className="text-xs sm:text-sm text-gray-300">Searching the contract...</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
         </div>
-      )}
-      
-      <div ref={messagesEndRef} />
+      </ScrollArea>
     </div>
   );
 }
