@@ -1,23 +1,22 @@
 
+import { ReactNode } from "react";
 import { Message } from "@/types/chat";
-import { ChatInput } from "./ChatInput";
 import { ChatHeader } from "./ChatHeader";
-import { ChatContainer } from "./ChatContainer";
-import { OfflineAlert } from "./OfflineAlert";
-import { TrialEndedState } from "./TrialEndedState";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { useProfileVerification } from "@/hooks/useProfileVerification";
 import { useChatAvailability } from "@/hooks/useChatAvailability";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { TrialEndedState } from "./TrialEndedState";
 
 interface ChatContentProps {
   messages: Message[];
-  currentUserId: string | null;
+  currentUserId: string;
   isLoading?: boolean;
   onSendMessage: (content: string) => Promise<void>;
   onNewChat?: () => void;
   isChatDisabled?: boolean;
+  children?: ReactNode;
 }
 
 export function ChatContent({
@@ -27,6 +26,7 @@ export function ChatContent({
   onSendMessage,
   onNewChat,
   isChatDisabled = false,
+  children,
 }: ChatContentProps) {
   const { isOffline, offlineError } = useOfflineStatus();
   const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
@@ -48,20 +48,13 @@ export function ChatContent({
     <div className="flex flex-col h-full overflow-hidden bg-background">
       <ChatHeader onNewChat={onNewChat} />
       
-      {isOffline && <OfflineAlert offlineError={offlineError} />}
-      
-      <ChatContainer 
-        messages={messages} 
-        isLoading={isLoading} 
-        currentUserId={currentUserId || ""}
-        onCopyMessage={copyToClipboard}
-      />
-      
-      <ChatInput 
-        onSendMessage={onSendMessage} 
-        isLoading={isLoading} 
-        disabled={isChatDisabled}
-      />
+      {children ? children : (
+        <div className="flex-1 overflow-y-auto">
+          <p className="text-center text-muted-foreground p-4">
+            Start a conversation with the AI assistant.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

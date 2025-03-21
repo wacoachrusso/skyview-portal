@@ -59,16 +59,16 @@ export function WelcomeMessage({ onSelectQuestion }: WelcomeMessageProps) {
   );
   
   return (
-    <div className="h-full flex flex-col items-center justify-center px-4 py-4 overflow-y-auto">
-      <div className="max-w-3xl w-full rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl bg-gradient-to-br from-[#1A2035] to-[#2A304A] border border-white/10 animate-fade-in">
+    <div className="h-full flex flex-col items-center justify-center px-2 py-2 overflow-y-auto">
+      <div className="max-w-3xl w-full rounded-2xl p-3 sm:p-5 md:p-6 shadow-xl bg-gradient-to-br from-[#1A2035] to-[#2A304A] border border-white/10 animate-fade-in">
         <div className="flex flex-col items-center">
           {/* Logo and header */}
-          <div className="mb-3 md:mb-4 relative">
+          <div className="mb-2 md:mb-3 relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-brand-gold/20 rounded-full blur-xl opacity-75 animate-pulse-subtle" aria-hidden="true" />
             <img
               src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png"
               alt="SkyGuide Logo"
-              className="h-10 md:h-14 w-auto relative animate-float"
+              className="h-8 md:h-12 w-auto relative animate-float"
             />
           </div>
           
@@ -76,7 +76,7 @@ export function WelcomeMessage({ onSelectQuestion }: WelcomeMessageProps) {
             Welcome to <span className="text-gradient">SkyGuide</span>
           </h1>
           
-          <p className="text-xs sm:text-sm text-gray-300 text-center mb-3 md:mb-4 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-300 text-center mb-3 max-w-2xl leading-relaxed">
             I'm your contract interpretation assistant. Ask me anything about your union contract, and I'll provide accurate, relevant information to help you understand your rights and benefits.
           </p>
           

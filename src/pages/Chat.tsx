@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useClipboard } from "@chakra-ui/hooks";
 import { useChat } from "@/hooks/useChat";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { ChatContainer } from "@/components/chat/ChatContainer";
@@ -19,18 +18,25 @@ export default function Chat() {
     sendMessage,
     startNewChat,
     userProfile,
+    currentConversationId,
+    setCurrentConversationId
   } = useChat();
 
   const { isOffline } = useOfflineStatus();
-  const { onCopy } = useClipboard();
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleCopyMessage = (content: string) => {
-    onCopy(content);
+    // Use browser's clipboard API instead of Chakra's hook
+    navigator.clipboard.writeText(content);
   };
 
   const handleSendMessage = async (content: string) => {
     await sendMessage(content);
+  };
+
+  const handleSelectConversation = (conversationId: string) => {
+    setCurrentConversationId(conversationId);
   };
 
   // Determine if the user is on a free plan and has exhausted their queries
@@ -39,12 +45,23 @@ export default function Chat() {
     (userProfile?.query_count || 0) >= 2;
 
   return (
-    <ChatLayout>
+    <ChatLayout 
+      isSidebarOpen={isSidebarOpen}
+      setIsSidebarOpen={setIsSidebarOpen}
+      onSelectConversation={handleSelectConversation}
+      currentConversationId={currentConversationId}
+    >
       <ChatSidebar 
-        startNewChat={startNewChat} 
-        userProfile={userProfile}
+        currentConversationId={currentConversationId}
+        onSelectConversation={handleSelectConversation}
       />
-      <ChatContent>
+      <ChatContent
+        messages={messages}
+        currentUserId={currentUserId || ""}
+        isLoading={isLoading}
+        onSendMessage={handleSendMessage}
+        onNewChat={startNewChat}
+      >
         {isOffline ? (
           <OfflineAlert />
         ) : isFreeTrialExhausted ? (
@@ -53,7 +70,7 @@ export default function Chat() {
           <>
             <ChatContainer
               messages={messages}
-              currentUserId={currentUserId}
+              currentUserId={currentUserId || ""}
               isLoading={isLoading}
               onCopyMessage={handleCopyMessage}
               onSelectQuestion={setSelectedQuestion}
