@@ -37,12 +37,12 @@ export const usePricingCard = () => {
     try {
       console.log('Starting plan selection in usePricingCard for:', name, 'with priceId:', priceId);
       
-      // Show processing toast immediately with longer duration (180 seconds)
+      // Show processing toast immediately with longer duration (5 minutes)
       processingToast = toast({
         variant: "default",
         title: "Processing",
         description: "Preparing your checkout session...",
-        duration: 180000, // 3 minutes
+        duration: 300000, // 5 minutes
       });
       
       // Check if user is logged in

@@ -90,7 +90,7 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
           });
           
           // Calculate a reasonable timeout for the request based on the attempt number
-          const timeoutMs = 5000 + (attempt * 1500); // Increase timeout with each attempt
+          const timeoutMs = 8000 + (attempt * 2000); // Increase timeout with each attempt
           
           // Create a timeout promise
           const timeoutPromise = new Promise((_, reject) => {
@@ -161,7 +161,7 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
           
           // For potentially transient errors, wait and retry if not the last attempt
           if (attempt < MAX_ATTEMPTS) {
-            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * 1.5)); // Increase delay for subsequent attempts
             continue;
           }
           

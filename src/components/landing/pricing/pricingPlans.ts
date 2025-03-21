@@ -1,3 +1,4 @@
+
 export const plans = [
   {
     name: "Free Trial",
@@ -30,7 +31,7 @@ export const plans = [
     buttonText: "Get Started",
     gradient: "bg-gradient-to-br from-brand-navy via-brand-navy to-brand-slate",
     isPopular: true,
-    priceId: "price_1QcfWYA8w17QmjsPZ22koqjj",
+    priceId: "price_1Qcwb9A8w17QmjsPVkX20dZJ", // Updated to test price ID
     mode: "subscription"
   },
   {
@@ -48,7 +49,7 @@ export const plans = [
     ],
     buttonText: "Best Value",
     gradient: "bg-gradient-to-br from-brand-gold/20 to-brand-gold/10",
-    priceId: "price_1QcfUFA8w17QmjsPe9KXKFpT",
+    priceId: "price_1Qcwc1A8w17QmjsPAcTITJvv", // Updated to test price ID
     mode: "subscription"
   }
 ];

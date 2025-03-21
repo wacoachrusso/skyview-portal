@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import Stripe from 'https://esm.sh/stripe@12.18.0?target=deno';
 
+// Initialize Stripe with proper error handling
 const stripe = (() => {
   try {
     const key = Deno.env.get('STRIPE_SECRET_KEY');
