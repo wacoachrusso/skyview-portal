@@ -69,7 +69,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
             <div className="flex-1">{part}</div>
           </div>
         );
-      } else if (part.includes('No specific contract reference was found')) {
+      } else if (part.includes('No specific contract reference')) {
         // Handle the "no reference found" message
         return (
           <div key={index} className="flex items-start gap-2 my-3 p-3 text-amber-300 bg-amber-950/20 rounded-md border-l-4 border-amber-500/50 italic">
@@ -103,12 +103,12 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       
       return (
         <div key={key} className="my-4 w-full overflow-x-auto">
-          <Table>
+          <Table className="border-collapse">
             {isHeaderRow && (
               <TableHeader>
                 <TableRow>
                   {headers.map((header, i) => (
-                    <TableHead key={i}>{header}</TableHead>
+                    <TableHead key={i} className="text-white bg-brand-navy/80">{header}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -117,7 +117,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
               {dataRows.map((row, rowIndex) => {
                 const cells = row.match(/<td>(.*?)<\/td>/gs)?.map(c => c.replace(/<\/?td>/g, '')) || [];
                 return (
-                  <TableRow key={rowIndex}>
+                  <TableRow key={rowIndex} className="even:bg-gray-50/5">
                     {cells.map((cell, cellIndex) => (
                       <TableCell key={cellIndex}>{cell}</TableCell>
                     ))}

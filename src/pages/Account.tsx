@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
@@ -10,6 +9,7 @@ import { SubscriptionInfo } from "@/components/account/SubscriptionInfo";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { CancelSubscriptionDialog } from "@/components/account/CancelSubscriptionDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 const Account = () => {
   const navigate = useNavigate();
@@ -20,7 +20,6 @@ const Account = () => {
   const [mounted, setMounted] = useState(true);
   const [timeoutOccurred, setTimeoutOccurred] = useState(false);
 
-  // Add safety timeout to prevent infinite loading
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       if (mounted && isLoading) {
@@ -37,10 +36,8 @@ const Account = () => {
   useEffect(() => {
     setMounted(true);
     
-    // If we hit the timeout but have a userEmail, try to load basic data
     if (timeoutOccurred && userEmail && !profile) {
       console.log("Loading basic account data after timeout");
-      // Continue showing the page with minimal data rather than infinite loading
     }
     
     const checkAlphaTester = async () => {
@@ -53,7 +50,6 @@ const Account = () => {
           .eq('profile_id', profile.id)
           .maybeSingle();
 
-        // Show password change form for alpha testers with temporary passwords
         if (alphaTester?.temporary_password && mounted) {
           setShowPasswordChange(true);
         }
@@ -88,7 +84,6 @@ const Account = () => {
     navigate('/refunds', { state: { fromCancellation: true } });
   };
 
-  // Show fallback content if loading takes too long
   if (isLoading && !timeoutOccurred) {
     console.log("Account page is loading...");
     return (
@@ -101,7 +96,6 @@ const Account = () => {
     );
   }
 
-  // Fallback content if loading times out
   if (timeoutOccurred && !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">

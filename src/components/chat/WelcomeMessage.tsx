@@ -1,8 +1,8 @@
+
 import { Button } from "@/components/ui/button";
-import { Sparkles, FileText } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMemo } from "react";
-import { useContractHandler } from "@/hooks/useContractHandler";
 
 // Define a pool of example questions
 const EXAMPLE_QUESTIONS = [
@@ -29,9 +29,6 @@ export function WelcomeMessage({
   onSelectQuestion
 }: WelcomeMessageProps) {
   const isMobile = useIsMobile();
-  const {
-    handleContractClick
-  } = useContractHandler();
 
   // Select random questions from the pool
   // Using useMemo to ensure questions only change on component mount
@@ -62,11 +59,11 @@ export function WelcomeMessage({
             {!isMobile && <ExampleCard icon={<Sparkles className="h-4 w-4 text-brand-teal" />} title="You can also ask:" question={randomQuestions[2]} color="brand-teal" onClick={onSelectQuestion} />}
           </div>
           
-          {/* View Contract Button - Replaced Dashboard button */}
+          {/* Note about contract button */}
           <div className="w-full text-center">
-            <div className="flex justify-center items-center">
-              
-            </div>
+            <p className="text-xs text-gray-400">
+              Use the Contract button in the chat input bar to view your full contract.
+            </p>
           </div>
         </div>
       </div>
