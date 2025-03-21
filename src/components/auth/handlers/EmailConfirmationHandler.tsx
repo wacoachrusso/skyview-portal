@@ -37,7 +37,12 @@ export const EmailConfirmationHandler = () => {
             // If we have the user ID, try alternate method
             if (savedUserId && savedEmail) {
               console.log("Attempting alternate session restoration with user ID:", savedUserId);
-              // We could potentially implement another restoration method here if needed
+              // Try refreshing the session
+              const { error: refreshError } = await supabase.auth.refreshSession();
+              if (!refreshError) {
+                authRestored = true;
+                console.log("Successfully restored session via refresh method");
+              }
             }
           } else if (sessionData.session) {
             authRestored = true;
@@ -101,6 +106,10 @@ export const EmailConfirmationHandler = () => {
               console.log("Profile updated with subscription status: active");
             }
             
+            // Set cookies for additional persistence
+            document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+            document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+            
             // Clean up localStorage
             localStorage.removeItem('postPaymentConfirmation');
             localStorage.removeItem('selected_plan');
@@ -114,8 +123,9 @@ export const EmailConfirmationHandler = () => {
               description: "Your account is now ready to use with full access.",
             });
             
-            // CRITICAL: Use window.location for a full page reload to ensure clean state
+            // Force a full page reload to ensure clean application state
             window.location.href = `${window.location.origin}/chat`;
+            return;
           } catch (error) {
             console.error("Error in post-payment processing:", error);
             toast({
@@ -124,6 +134,7 @@ export const EmailConfirmationHandler = () => {
             });
             // Fall back to direct navigation if needed
             window.location.href = `${window.location.origin}/chat`;
+            return;
           }
         } else {
           // Non-payment related email confirmation, go to dashboard

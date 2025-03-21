@@ -18,7 +18,7 @@ export function Logo({ handleLogoClick }: LogoProps) {
         // Check subscription status
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('subscription_plan, query_count')
+          .select('subscription_plan, subscription_status, query_count')
           .eq('id', session.user.id)
           .single();
           
@@ -28,11 +28,25 @@ export function Logo({ handleLogoClick }: LogoProps) {
           return;
         }
         
-        // Free trial ended - go to homepage with pricing
-        if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+        console.log("User profile in Logo:", profile);
+        
+        // Check if the user has an active paid subscription
+        if (profile?.subscription_status === 'active' && 
+            profile?.subscription_plan !== 'free' && 
+            profile?.subscription_plan !== 'trial_ended') {
+          // User has an active paid subscription, go to dashboard
+          console.log("User has active subscription, going to dashboard");
+          window.location.href = '/dashboard';
+          return;
+        }
+        
+        // Free trial ended or inactive subscription - go to homepage with pricing
+        if ((profile?.subscription_plan === 'free' && profile?.query_count >= 1) ||
+            (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
+          console.log("Free trial ended or inactive subscription, going to pricing");
           window.location.href = '/?scrollTo=pricing-section';
         } else {
-          // Active subscription or trials remaining - go to dashboard
+          // Free trial remaining - go to dashboard
           window.location.href = '/dashboard';
         }
       } else {

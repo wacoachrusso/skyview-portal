@@ -35,6 +35,7 @@ export function ChatContent({
   const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
   const [userProfile, setUserProfile] = useState<{
     subscription_plan: string;
+    subscription_status: string;
     query_count: number;
   } | null>(null);
 
@@ -46,19 +47,36 @@ export function ChatContent({
       try {
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("subscription_plan, query_count")
+          .select("subscription_plan, subscription_status, query_count")
           .eq("id", currentUserId)
           .single();
 
         if (error) throw error;
 
+        console.log("User profile in ChatContent:", profile);
         setUserProfile(profile);
         
+        // Check subscription status after successful payment
+        const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
+        
+        if (isPostPayment) {
+          console.log("Post-payment state detected, clearing flags");
+          localStorage.removeItem('subscription_activated');
+          
+          // If we have an active subscription, ensure we don't redirect
+          if (profile.subscription_status === 'active' && 
+              profile.subscription_plan !== 'free' && 
+              profile.subscription_plan !== 'trial_ended') {
+            return;
+          }
+        }
+        
         // If user is on free plan and has reached the limit, redirect to pricing
-        if (profile.subscription_plan === "free" && profile.query_count >= 2) {
-          console.log("Free trial ended in ChatContent - redirecting");
+        if ((profile.subscription_plan === "free" && profile.query_count >= 2) || 
+            (profile.subscription_status === 'inactive' && profile.subscription_plan !== 'free')) {
+          console.log("Free trial ended or inactive subscription in ChatContent - redirecting");
           toast({
-            title: "Free Trial Ended",
+            title: "Subscription Required",
             description: "Please select a subscription plan to continue.",
             variant: "destructive",
           });
@@ -76,7 +94,8 @@ export function ChatContent({
   const shouldDisableChat = useMemo(() => {
     return isChatDisabled || 
            isTrialEnded || 
-           (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2);
+           (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2) ||
+           (userProfile?.subscription_status === 'inactive' && userProfile?.subscription_plan !== 'free');
   }, [isChatDisabled, isTrialEnded, userProfile]);
 
   // Memoize the display messages

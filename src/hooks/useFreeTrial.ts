@@ -17,12 +17,26 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
       console.log("Checking free trial status for user:", currentUserId);
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("subscription_plan, query_count")
+        .select("subscription_plan, subscription_status, query_count")
         .eq("id", currentUserId)
         .single();
 
       if (error) throw error;
 
+      // Log the profile for debugging
+      console.log("User profile in useFreeTrial:", profile);
+
+      // Check if the user has an active paid subscription
+      if (profile?.subscription_status === 'active' && 
+          profile?.subscription_plan !== 'free' && 
+          profile?.subscription_plan !== 'trial_ended') {
+        // User has an active paid subscription, they can use the app
+        console.log("User has active subscription:", profile.subscription_plan);
+        setIsTrialEnded(false);
+        return;
+      }
+
+      // Check if free trial is ended
       if (profile?.subscription_plan === "free" && profile?.query_count >= 2) {
         console.log("Free trial ended - query count:", profile.query_count);
         setIsTrialEnded(true);
