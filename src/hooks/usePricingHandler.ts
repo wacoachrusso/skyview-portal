@@ -9,12 +9,20 @@ export const usePricingHandler = () => {
 
   const handlePlanSelection = async (plan: any) => {
     try {
+      console.log('Starting plan selection process for:', plan.name);
+      
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('Session error:', sessionError);
-        throw new Error('Authentication error');
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please log in again to continue.",
+        });
+        navigate('/login');
+        return;
       }
       
       if (!session) {
@@ -44,14 +52,16 @@ export const usePricingHandler = () => {
         throw new Error('User email not found');
       }
 
+      // Get session token for additional security
+      const sessionToken = localStorage.getItem('session_token') || '';
+      console.log('Session token available:', !!sessionToken);
+
       console.log('Making request to create-checkout-session with:', {
         priceId: plan.priceId,
         mode: plan.mode,
-        email: userEmail
+        email: userEmail,
+        hasSessionToken: !!sessionToken
       });
-
-      // Get session token for additional security
-      const sessionToken = localStorage.getItem('session_token');
 
       const response = await supabase.functions.invoke('create-checkout-session', {
         body: JSON.stringify({
@@ -68,22 +78,25 @@ export const usePricingHandler = () => {
       console.log('Checkout session response:', response);
 
       if (response.error) {
-        throw new Error(response.error.message);
+        console.error('Error from checkout session:', response.error);
+        throw new Error(response.error.message || 'Failed to create checkout session');
       }
 
-      const { data: { url } } = response;
+      const { data } = response;
       
-      if (url) {
-        window.location.href = url;
+      if (data?.url) {
+        console.log('Redirecting to checkout URL:', data.url);
+        window.location.href = data.url;
       } else {
-        throw new Error('No checkout URL received');
+        console.error('No checkout URL received:', data);
+        throw new Error('No checkout URL received from payment processor');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error: any) {
+      console.error('Plan selection error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to process payment. Please try again.",
+        description: error.message || "Failed to process plan selection. Please try again.",
       });
     }
   };

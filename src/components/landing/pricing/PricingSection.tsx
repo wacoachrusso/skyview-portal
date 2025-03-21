@@ -2,15 +2,10 @@
 import { PricingCard } from "./PricingCard";
 import { PricingHeader } from "./PricingHeader";
 import { plans } from "./pricingPlans";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { usePricingCard } from "./pricing-card/usePricingCard";
+import { usePricingHandler } from "@/hooks/usePricingHandler";
 
 export function PricingSection() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { handlePlanSelection } = usePricingCard();
+  const { handlePlanSelection } = usePricingHandler();
 
   return (
     <section id="pricing-section" className="py-20 relative overflow-hidden">

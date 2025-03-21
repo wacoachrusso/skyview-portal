@@ -14,16 +14,33 @@ export const usePricingCard = () => {
     onSelect?: () => Promise<void>
   ) => {
     if (onSelect) {
-      await onSelect();
+      try {
+        await onSelect();
+      } catch (error: any) {
+        console.error('Custom onSelect handler error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to process custom selection. Please try again.",
+        });
+      }
       return;
     }
 
     try {
+      console.log('Starting plan selection in usePricingCard for:', name);
+      
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw new Error('Authentication error');
+        console.error('Session error in usePricingCard:', sessionError);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please log in again to continue.",
+        });
+        navigate('/login');
+        return;
       }
       
       if (!session) {
@@ -45,17 +62,20 @@ export const usePricingCard = () => {
 
       const userEmail = session.user.email;
       if (!userEmail) {
-        throw new Error('User email not found');
+        console.error('User email not found in session:', session);
+        throw new Error('User email not found. Please update your profile.');
       }
 
-      console.log('Making request to create-checkout-session with:', {
+      // Get session token for additional security
+      const sessionToken = localStorage.getItem('session_token') || '';
+      console.log('Session token available in usePricingCard:', !!sessionToken);
+
+      console.log('Making request to create-checkout-session from usePricingCard with:', {
         priceId,
         mode,
-        email: userEmail
+        email: userEmail,
+        hasSessionToken: !!sessionToken
       });
-
-      // Get session token for additional security
-      const sessionToken = localStorage.getItem('session_token');
 
       // Make the request to create a checkout session
       const response = await supabase.functions.invoke('create-checkout-session', {
@@ -70,25 +90,28 @@ export const usePricingCard = () => {
         }
       });
 
-      console.log('Checkout session response:', response);
+      console.log('Checkout session response in usePricingCard:', response);
 
       if (response.error) {
-        throw new Error(response.error.message);
+        console.error('Error from checkout session in usePricingCard:', response.error);
+        throw new Error(response.error.message || 'Failed to create checkout session');
       }
 
-      const { data: { url } } = response;
+      const { data } = response;
       
-      if (url) {
-        window.location.href = url;
+      if (data?.url) {
+        console.log('Redirecting to checkout URL from usePricingCard:', data.url);
+        window.location.href = data.url;
       } else {
-        throw new Error('No checkout URL received');
+        console.error('No checkout URL received in usePricingCard:', data);
+        throw new Error('No checkout URL received from payment processor');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error: any) {
+      console.error('Error in usePricingCard:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to process payment. Please try again.",
+        description: error.message || "Failed to process plan selection. Please try again.",
       });
     }
   };

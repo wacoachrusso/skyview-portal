@@ -10,15 +10,28 @@ interface AuthCallbackProps {
 export const handleStripeCheckout = async (priceId: string, email?: string) => {
   console.log('Creating checkout session for plan:', priceId);
   
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError) {
+    console.error('Session error in handleStripeCheckout:', sessionError);
+    throw new Error('Authentication error. Please log in again.');
+  }
+  
+  if (!session) {
+    console.error('No session found in handleStripeCheckout');
+    throw new Error('Authentication required. Please log in.');
+  }
+  
   const userEmail = email || session?.user.email;
   
   if (!userEmail) {
-    throw new Error('User email not found');
+    console.error('User email not found in handleStripeCheckout');
+    throw new Error('User email not found. Please update your profile.');
   }
   
   // Get session token for additional security
-  const sessionToken = localStorage.getItem('session_token');
+  const sessionToken = localStorage.getItem('session_token') || '';
+  console.log('Session token available in handleStripeCheckout:', !!sessionToken);
   
   const response = await supabase.functions.invoke('create-checkout-session', {
     body: JSON.stringify({
@@ -32,15 +45,22 @@ export const handleStripeCheckout = async (priceId: string, email?: string) => {
     } : undefined
   });
 
-  if (response.error) throw response.error;
-  const { data: { url } } = response;
+  if (response.error) {
+    console.error('Error in handleStripeCheckout:', response.error);
+    throw new Error(response.error.message || 'Failed to create checkout session');
+  }
+  
+  const { data } = response;
+  const url = data?.url;
   
   if (url) {
-    console.log('Redirecting to checkout:', url);
+    console.log('Redirecting to checkout from handleStripeCheckout:', url);
     window.location.href = url;
     return true;
   }
-  return false;
+  
+  console.error('No checkout URL received in handleStripeCheckout:', data);
+  throw new Error('No checkout URL received from payment processor');
 };
 
 export const handleProfileRedirect = async (
