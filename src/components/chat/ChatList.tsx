@@ -14,7 +14,6 @@ interface ChatListProps {
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<number | null>(null);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -52,12 +51,9 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <ScrollArea 
-        className="flex-1 h-full w-full" 
-        ref={scrollAreaRef}
-      >
-        <div className="flex flex-col gap-4 p-4 md:p-6 pb-8">
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-1 pb-20">
+        <div className="flex flex-col gap-4 p-4 md:p-6">
           {messages.map((message, index) => (
             <ChatMessage
               key={message.id}

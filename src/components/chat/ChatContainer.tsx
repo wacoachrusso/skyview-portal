@@ -26,7 +26,7 @@ export function ChatContainer({
 
   return (
     <motion.div 
-      className="flex-1 flex flex-col h-full overflow-hidden"
+      className="flex-1 overflow-y-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
