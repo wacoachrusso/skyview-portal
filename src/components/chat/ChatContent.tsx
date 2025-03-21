@@ -10,26 +10,26 @@ import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { TrialEndedState } from "./TrialEndedState";
 
 interface ChatContentProps {
-  messages: Message[];
-  currentUserId: string;
+  messages?: Message[];
+  currentUserId?: string;
   isLoading?: boolean;
-  onSendMessage: (content: string) => Promise<void>;
+  onSendMessage?: (content: string) => Promise<void>;
   onNewChat?: () => void;
   isChatDisabled?: boolean;
   children?: ReactNode;
 }
 
 export function ChatContent({
-  messages,
-  currentUserId,
-  isLoading,
+  messages = [],
+  currentUserId = "",
+  isLoading = false,
   onSendMessage,
   onNewChat,
   isChatDisabled = false,
   children,
 }: ChatContentProps) {
-  const { isOffline, offlineError } = useOfflineStatus();
-  const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
+  const { isOffline } = useOfflineStatus();
+  const { isTrialEnded } = useFreeTrial(currentUserId, isOffline);
   const { userProfile } = useProfileVerification(currentUserId, isOffline);
   const { shouldDisableChat } = useChatAvailability(
     isChatDisabled,
@@ -37,10 +37,9 @@ export function ChatContent({
     userProfile,
     currentUserId
   );
-  const { copyToClipboard } = useCopyToClipboard();
 
   // If the trial has ended or chat is disabled, show the TrialEndedState
-  if (shouldDisableChat) {
+  if (shouldDisableChat && !children) {
     return <TrialEndedState />;
   }
 
@@ -48,13 +47,15 @@ export function ChatContent({
     <div className="flex flex-col h-full overflow-hidden bg-background">
       <ChatHeader onNewChat={onNewChat} />
       
-      {children ? children : (
-        <div className="flex-1 overflow-y-auto">
-          <p className="text-center text-muted-foreground p-4">
-            Start a conversation with the AI assistant.
-          </p>
-        </div>
-      )}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {children ? children : (
+          <div className="flex-1 overflow-y-auto">
+            <p className="text-center text-muted-foreground p-4">
+              Start a conversation with the AI assistant.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
