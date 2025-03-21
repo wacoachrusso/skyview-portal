@@ -37,12 +37,12 @@ export const usePricingCard = () => {
     try {
       console.log('Starting plan selection in usePricingCard for:', name, 'with priceId:', priceId);
       
-      // Show processing toast immediately with longer duration (90 seconds)
+      // Show processing toast immediately with longer duration (120 seconds)
       processingToast = toast({
         variant: "default",
         title: "Processing",
         description: "Preparing your checkout session...",
-        duration: 90000, // 90 seconds
+        duration: 120000, // 120 seconds (2 minutes)
       });
       
       // Check if user is logged in
@@ -159,14 +159,13 @@ export const usePricingCard = () => {
             title: "Connection Error",
             description: "Network error. Please check your connection and try again.",
           });
-        } else if (error.message?.includes('payment service') || 
-                  error.message?.includes('unavailable') || 
-                  error.message?.includes('try again later')) {
+        } else if (error.message?.includes('temporarily unavailable') || 
+                  error.message?.includes('maintenance')) {
           
           toast({
             variant: "destructive",
-            title: "Service Unavailable",
-            description: "The payment service is currently unavailable. Please try again later or contact support.",
+            title: "Service Temporarily Unavailable",
+            description: "The payment service is temporarily down for maintenance. Please try again in a few minutes.",
           });
         } else if (error.message?.includes('Edge Function') || 
                   error.message?.includes('non-2xx status code')) {
@@ -174,7 +173,7 @@ export const usePricingCard = () => {
           toast({
             variant: "destructive",
             title: "Service Error",
-            description: "The payment service is experiencing technical difficulties. Please try again later.",
+            description: "We're experiencing technical difficulties with our payment processor. Please try again later.",
           });
         } else {
           toast({

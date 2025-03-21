@@ -73,14 +73,22 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
         try {
           console.log(`Checkout attempt ${attempt}/3 for price ID: ${priceId}`);
           
+          // For better debugging, log all inputs
+          const requestBody = {
+            priceId: priceId,
+            mode: 'subscription',
+            email: email.trim().toLowerCase(),
+            sessionToken: sessionToken || refreshedSession.refresh_token || '',
+            origin: origin
+          };
+          
+          console.log(`Attempt ${attempt} request body:`, {
+            ...requestBody,
+            sessionToken: requestBody.sessionToken ? 'PRESENT (not shown)' : 'MISSING'
+          });
+          
           const response = await supabase.functions.invoke('create-checkout-session', {
-            body: JSON.stringify({
-              priceId: priceId,
-              mode: 'subscription',
-              email: email.trim().toLowerCase(),
-              sessionToken: sessionToken || refreshedSession.refresh_token || '',
-              origin: origin
-            }),
+            body: JSON.stringify(requestBody),
             headers: {
               Authorization: authHeader
             }
@@ -105,6 +113,11 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
               console.log(`Waiting before attempt ${attempt + 1}...`);
               await new Promise(resolve => setTimeout(resolve, 2000));
               continue;
+            }
+            
+            // For the last attempt, throw a more specific error if possible
+            if (response.error.message?.includes('Edge Function')) {
+              throw new Error('The Stripe checkout service is currently unavailable. This could be due to maintenance or configuration issues. Please try again in a few minutes.');
             }
             
             throw new Error(response.error.message || 'Failed to create checkout session');
@@ -166,9 +179,9 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
 
       // Special handling for edge function errors
       if (error.message?.includes('Edge Function') || 
-          error.message?.includes('non-2xx status')) {
+          error.message?.includes('non-2xx status code')) {
         
-        throw new Error('The payment service is currently unavailable. Please try again later or contact support.');
+        throw new Error('The Stripe checkout service is temporarily unavailable. This is likely a temporary issue. Please try again in a few minutes or contact support if the problem persists.');
       }
       
       throw error;

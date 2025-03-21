@@ -13,6 +13,7 @@ const stripe = (() => {
     console.log('[create-checkout-session] Initializing Stripe with key prefix:', key.substring(0, 7) + '...');
     return new Stripe(key, {
       apiVersion: '2023-10-16',
+      httpClient: Stripe.createFetchHttpClient(), // Explicitly use fetch client
     });
   } catch (error) {
     console.error('[create-checkout-session] Failed to initialize Stripe:', error);
@@ -73,7 +74,7 @@ serve(async (req) => {
     let jsonBody;
     try {
       const requestData = await req.text();
-      console.log('[create-checkout-session] Raw request data:', requestData.substring(0, 100) + '...');
+      console.log('[create-checkout-session] Raw request data length:', requestData.length);
       
       jsonBody = JSON.parse(requestData);
       console.log('[create-checkout-session] Request data:', {
@@ -135,7 +136,7 @@ serve(async (req) => {
       );
     }
 
-    // Check if Stripe key is valid
+    // Double-check Stripe key
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeKey) {
       console.error('[create-checkout-session] STRIPE_SECRET_KEY is not set');
@@ -158,7 +159,7 @@ serve(async (req) => {
     const baseUrl = origin || 'https://skyguide.site';
     console.log('[create-checkout-session] Using base URL:', baseUrl);
 
-    // Create the checkout session
+    // Create the checkout session with error handling
     try {
       const successUrl = `${baseUrl}/auth/callback?session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${baseUrl}/?scrollTo=pricing-section`;
@@ -169,8 +170,11 @@ serve(async (req) => {
       });
       
       // Try to fetch the price first to verify it exists
+      let price;
       try {
-        const price = await stripe.prices.retrieve(priceId);
+        console.log('[create-checkout-session] Verifying price:', priceId);
+        price = await stripe.prices.retrieve(priceId);
+        
         console.log('[create-checkout-session] Successfully retrieved price:', { 
           id: price.id,
           active: price.active,
@@ -192,7 +196,20 @@ serve(async (req) => {
           );
         }
       } catch (priceError) {
-        console.error('[create-checkout-session] Failed to retrieve price:', priceError.message);
+        console.error('[create-checkout-session] Failed to retrieve price:', priceError);
+        if (priceError.type === 'StripeAuthenticationError') {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Payment service authentication error', 
+              details: 'The payment service credentials are invalid',
+              code: 'stripe_auth_error'
+            }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
         return new Response(
           JSON.stringify({ 
             error: 'Price not found', 
@@ -205,6 +222,8 @@ serve(async (req) => {
           }
         );
       }
+      
+      console.log('[create-checkout-session] Creating checkout session with price:', priceId);
       
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -230,6 +249,21 @@ serve(async (req) => {
         hasUrl: !!session.url
       });
 
+      if (!session.url) {
+        console.error('[create-checkout-session] Missing session URL in response');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Payment service error', 
+            details: 'No checkout URL was generated',
+            code: 'no_checkout_url'
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
       return new Response(
         JSON.stringify({ url: session.url }),
         { 
@@ -238,7 +272,7 @@ serve(async (req) => {
         }
       );
     } catch (stripeError) {
-      console.error('[create-checkout-session] Stripe API error:', stripeError.message);
+      console.error('[create-checkout-session] Stripe API error:', stripeError);
       if (stripeError.type) {
         console.error('[create-checkout-session] Stripe error type:', stripeError.type);
       }
@@ -263,7 +297,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Payment processor error', 
-          details: stripeError.message,
+          details: stripeError.message || 'Unknown stripe error',
           code: stripeError.code || 'unknown',
           type: stripeError.type || 'unknown'
         }),
