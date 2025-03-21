@@ -13,6 +13,13 @@ export function useChatAccess(currentUserId: string | null) {
     if (!currentUserId) return;
     
     console.log("Checking access...");
+    
+    // IMPORTANT: Check for admin or post-payment state
+    if (localStorage.getItem('user_is_admin') === 'true' || 
+        localStorage.getItem('subscription_activated') === 'true') {
+      setIsChatDisabled(false);
+      return;
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -24,7 +31,7 @@ export function useChatAccess(currentUserId: string | null) {
     // Fetch user profile to check subscription plan and query count
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("subscription_plan, query_count")
+      .select("subscription_plan, query_count, is_admin")
       .eq("id", session.user.id)
       .single();
 
@@ -34,20 +41,28 @@ export function useChatAccess(currentUserId: string | null) {
     }
 
     console.log("Fetched profile:", profile);
+    
+    // Admin users always have access
+    if (profile?.is_admin) {
+      setIsChatDisabled(false);
+      return;
+    }
 
     // Check if user is on free plan and query_count >= 2
     if (profile?.subscription_plan === "free" && profile?.query_count >= 2) {
-      console.log("Free trial ended, disabling chat and redirecting...");
-      setIsChatDisabled(true); // Disable chat
+      console.log("Free trial ended, redirecting...");
       
-      // Immediate redirect to pricing section
+      // Don't disable chat immediately, just redirect
+      navigate("/?scrollTo=pricing-section", { replace: true });
+      
       toast({
         title: "Free Trial Ended",
         description: "Please select a subscription plan to continue using SkyGuide.",
         duration: 5000,
       });
-      
-      navigate("/?scrollTo=pricing-section", { replace: true });
+    } else {
+      // Ensure chat is enabled for valid users
+      setIsChatDisabled(false);
     }
   }, [currentUserId, navigate, toast]);
 

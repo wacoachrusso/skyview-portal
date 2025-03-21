@@ -85,6 +85,17 @@ export default function Chat() {
     // Removed the call to handleSelectQuestion to prevent auto-sending
   };
 
+  // Log current state to help with debugging
+  useEffect(() => {
+    console.log("[Chat] Rendering with state:", {
+      currentUserId,
+      messagesCount: messages.length,
+      isLoading,
+      currentConversationId,
+      showWelcome
+    });
+  }, [currentUserId, messages.length, isLoading, currentConversationId, showWelcome]);
+
   return (
     <div className="flex flex-col h-screen w-full">
       <div className="flex flex-1 overflow-hidden">
