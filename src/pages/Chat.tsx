@@ -27,12 +27,13 @@ export default function Chat() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleCopyMessage = (content: string) => {
-    // Use browser's clipboard API instead of Chakra's hook
+    // Use browser's clipboard API
     navigator.clipboard.writeText(content);
   };
 
   const handleSendMessage = async (content: string) => {
     await sendMessage(content);
+    setSelectedQuestion(""); // Reset selected question after sending
   };
 
   const handleSelectConversation = (conversationId: string) => {
@@ -61,6 +62,7 @@ export default function Chat() {
         isLoading={isLoading}
         onSendMessage={handleSendMessage}
         onNewChat={startNewChat}
+        isChatDisabled={isFreeTrialExhausted}
       >
         {isOffline ? (
           <OfflineAlert />

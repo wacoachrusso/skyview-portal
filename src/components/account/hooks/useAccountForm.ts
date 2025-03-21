@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,8 +12,6 @@ interface FormData {
   full_name: string;
   user_type: string;
   airline: string;
-  address: string;
-  phone_number: string;
   employee_id: string;
   assistant_id: string;
   [key: string]: string;
@@ -28,8 +26,6 @@ export const useAccountForm = (profile: ProfileData | null) => {
     full_name: profile?.full_name || '',
     user_type: profile?.user_type || '',
     airline: profile?.airline || '',
-    address: profile?.address || '',
-    phone_number: profile?.phone_number || '',
     employee_id: profile?.employee_id || '',
     assistant_id: profile?.assistant_id || '',
   });
@@ -95,8 +91,7 @@ export const useAccountForm = (profile: ProfileData | null) => {
   const isProfileComplete = () => {
     return formData.full_name &&
            formData.user_type &&
-           formData.airline &&
-           formData.employee_id;
+           formData.airline;
   };
 
   const handleSubmit = async () => {
@@ -108,7 +103,7 @@ export const useAccountForm = (profile: ProfileData | null) => {
       toast({
         variant: "destructive",
         title: "Required Fields Missing",
-        description: "Please fill out your full name, job title, airline, and employee ID.",
+        description: "Please fill out your full name, job title, and airline.",
       });
       return;
     }

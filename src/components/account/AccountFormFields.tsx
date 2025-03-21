@@ -7,8 +7,6 @@ interface AccountFormFieldsProps {
     full_name: string;
     user_type: string;
     airline: string;
-    address: string;
-    phone_number: string;
     employee_id: string;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -27,9 +25,7 @@ export const AccountFormFields = ({
     { name: "full_name", label: "Full Name", required: true },
     { name: "user_type", label: "Job Title", required: true, disableAfterSet: true }, // Add disableAfterSet flag
     { name: "airline", label: "Airline", required: true, disableAfterSet: true }, // Add disableAfterSet flag
-    { name: "employee_id", label: "Employee ID", required: true },
-    { name: "address", label: "Address", optional: true },
-    { name: "phone_number", label: "Phone Number", optional: true },
+    { name: "employee_id", label: "Employee ID", optional: true },
   ];
 
   return (
