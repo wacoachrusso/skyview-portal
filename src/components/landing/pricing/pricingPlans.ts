@@ -31,7 +31,8 @@ export const plans = [
     buttonText: "Get Started",
     gradient: "bg-gradient-to-br from-brand-navy via-brand-navy to-brand-slate",
     isPopular: true,
-    priceId: "price_1QWo82A8w17QmjsPQcSBW70E", // Updated with your test price ID
+    productId: "prod_RqwLRdp61vDfQK", // Monthly product ID
+    priceId: "price_1QWo82A8w17QmjsPQcSBW70E", // This should be replaced with your actual price ID
     mode: "subscription"
   },
   {
@@ -49,7 +50,8 @@ export const plans = [
     ],
     buttonText: "Best Value",
     gradient: "bg-gradient-to-br from-brand-gold/20 to-brand-gold/10",
-    priceId: "price_1QWo82A8w17QmjsPTfOBk9Og", // Updated with your test price ID
+    productId: "prod_RqwMrl4svIqPOB", // Annual product ID
+    priceId: "price_1QWo82A8w17QmjsPTfOBk9Og", // This should be replaced with your actual price ID
     mode: "subscription"
   }
 ];
