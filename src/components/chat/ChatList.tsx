@@ -52,8 +52,8 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 h-full">
-        <div className="flex flex-col gap-4 p-4 md:p-6">
+      <ScrollArea className="flex-1">
+        <div className="flex flex-col gap-4 p-4 md:p-6 pb-2">
           {messages.map((message, index) => (
             <ChatMessage
               key={message.id}
