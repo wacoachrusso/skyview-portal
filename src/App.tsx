@@ -29,19 +29,24 @@ function InitialSessionCheck() {
         // Check if user was in the middle of a payment flow
         const paymentInProgress = localStorage.getItem('payment_in_progress') === 'true';
         const postPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
+        const subscriptionActivated = localStorage.getItem('subscription_activated') === 'true';
         
-        if ((paymentInProgress || postPayment) && window.location.pathname === '/login') {
+        // If we're at the login page but we have payment flags, attempt to recover the session
+        if ((paymentInProgress || postPayment || subscriptionActivated) && 
+            (window.location.pathname === '/login' || window.location.pathname === '/')) {
           console.log("Payment flow interrupted, attempting to recover session");
           
           // Try to restore session from saved tokens
           const savedAccessToken = localStorage.getItem('auth_access_token');
           const savedRefreshToken = localStorage.getItem('auth_refresh_token');
           const savedUserId = localStorage.getItem('auth_user_id');
+          const sessionToken = localStorage.getItem('session_token');
           
           if (savedAccessToken && savedRefreshToken) {
             console.log("Found saved auth tokens, attempting to restore session");
             
             try {
+              // First try: Use setSession with saved tokens
               const { data: sessionData, error: restoreError } = await supabase.auth.setSession({
                 access_token: savedAccessToken,
                 refresh_token: savedRefreshToken
@@ -49,24 +54,74 @@ function InitialSessionCheck() {
               
               if (restoreError) {
                 console.error("Error restoring session from saved tokens:", restoreError);
-                // Another attempt with refresh
-                const { error: refreshError } = await supabase.auth.refreshSession();
                 
-                if (!refreshError && savedUserId) {
-                  console.log("Successfully recovered session after payment");
+                // Second try: Use refreshSession
+                const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                
+                if (refreshError) {
+                  console.error("Error refreshing session:", refreshError);
+                  
+                  // Third try: Try to get session from cookies
+                  const { data: cookieSession } = await supabase.auth.getSession();
+                  
+                  if (cookieSession.session) {
+                    console.log("Successfully recovered session from cookies");
+                    
+                    // Create a new session token if we have a user ID
+                    if (cookieSession.session.user.id && sessionToken) {
+                      try {
+                        const { createNewSession } = await import('@/services/session');
+                        await createNewSession(cookieSession.session.user.id);
+                        console.log("Created new session token after recovery");
+                      } catch (sessionErr) {
+                        console.error("Error creating session token:", sessionErr);
+                      }
+                    }
+                    
+                    window.location.href = `${window.location.origin}/chat`;
+                    return;
+                  }
+                } else if (refreshData.session) {
+                  console.log("Successfully recovered session via refresh");
+                  
+                  // Create a new session token if we have a user ID
+                  if (refreshData.session.user.id) {
+                    try {
+                      const { createNewSession } = await import('@/services/session');
+                      await createNewSession(refreshData.session.user.id);
+                      console.log("Created new session token after refresh");
+                    } catch (sessionErr) {
+                      console.error("Error creating session token:", sessionErr);
+                    }
+                  }
+                  
                   window.location.href = `${window.location.origin}/chat`;
                   return;
                 }
                 
-                // Clear payment flags to prevent login loops
+                // All restoration attempts failed, clear payment flags
+                console.log("All session restoration attempts failed, clearing flags");
                 localStorage.removeItem('payment_in_progress');
                 localStorage.removeItem('postPaymentConfirmation');
+                localStorage.removeItem('subscription_activated');
                 localStorage.removeItem('auth_access_token');
                 localStorage.removeItem('auth_refresh_token');
                 localStorage.removeItem('auth_user_id');
                 localStorage.removeItem('auth_user_email');
               } else if (sessionData.session) {
                 console.log("Successfully restored session after payment");
+                
+                // Create a new session token if we have a user ID
+                if (sessionData.session.user.id) {
+                  try {
+                    const { createNewSession } = await import('@/services/session');
+                    await createNewSession(sessionData.session.user.id);
+                    console.log("Created new session token after restoration");
+                  } catch (sessionErr) {
+                    console.error("Error creating session token:", sessionErr);
+                  }
+                }
+                
                 window.location.href = `${window.location.origin}/chat`;
                 return;
               }
@@ -75,6 +130,7 @@ function InitialSessionCheck() {
               // Clear all flags
               localStorage.removeItem('payment_in_progress');
               localStorage.removeItem('postPaymentConfirmation');
+              localStorage.removeItem('subscription_activated');
               localStorage.removeItem('auth_access_token');
               localStorage.removeItem('auth_refresh_token');
               localStorage.removeItem('auth_user_id');
@@ -85,6 +141,7 @@ function InitialSessionCheck() {
             console.log("No saved tokens found after payment, clearing flags");
             localStorage.removeItem('payment_in_progress');
             localStorage.removeItem('postPaymentConfirmation');
+            localStorage.removeItem('subscription_activated');
             localStorage.removeItem('selected_plan');
           }
         }
@@ -104,9 +161,20 @@ function InitialSessionCheck() {
           
           // Check if user just completed payment
           if (postPayment) {
-            console.log("Post-payment user with active session, redirecting to chat");
-            window.location.href = `${window.location.origin}/chat`;
-            return;
+            console.log("Post-payment user with active session");
+            // Only redirect if not already on the chat page
+            if (window.location.pathname !== '/chat') {
+              console.log("Redirecting to chat page");
+              window.location.href = `${window.location.origin}/chat`;
+              return;
+            } else {
+              // Already on chat page, clear the flags to prevent future redirects
+              console.log("Already on chat page, clearing post-payment flags");
+              localStorage.removeItem('postPaymentConfirmation');
+              localStorage.removeItem('payment_in_progress');
+              localStorage.removeItem('subscription_activated');
+              return;
+            }
           }
           
           // Check user's subscription status
@@ -124,7 +192,7 @@ function InitialSessionCheck() {
           console.log("User profile:", profile);
           
           // Free trial ended or not active subscription - redirect to pricing
-          if ((profile?.subscription_plan === 'free' && profile?.query_count >= 1) || 
+          if ((profile?.subscription_plan === 'free' && profile?.query_count >= 2) || 
               profile?.subscription_status === 'inactive' ||
               profile?.subscription_plan === 'trial_ended') {
             console.log("Free trial ended or inactive subscription, redirecting to pricing");

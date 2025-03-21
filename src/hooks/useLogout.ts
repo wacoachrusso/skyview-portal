@@ -37,8 +37,8 @@ export const useLogout = () => {
         variant: "default",
       });
       
-      // Force navigation to login page
-      window.location.href = "/login";
+      // Use React Router navigation instead of window.location for smoother transition
+      navigate("/login", { replace: true });
     } catch (error) {
       console.error("Error in logout process:", error);
       
@@ -51,8 +51,8 @@ export const useLogout = () => {
         variant: "default",
       });
       
-      // Force navigation to login page
-      window.location.href = "/login";
+      // Use React Router navigation instead of window.location for smoother transition
+      navigate("/login", { replace: true });
     }
   };
 

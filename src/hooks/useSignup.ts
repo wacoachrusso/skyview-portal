@@ -93,6 +93,26 @@ export const useSignup = () => {
       if (!signupResult) {
         throw new Error("Signup failed. Please try again.");
       }
+      
+      // Send welcome email
+      try {
+        console.log("Sending welcome email to:", formData.email);
+        const { error: emailError } = await supabase.functions.invoke('send-free-trial-welcome', {
+          body: { 
+            email: formData.email,
+            name: formData.fullName
+          }
+        });
+
+        if (emailError) {
+          console.error("Error sending welcome email:", emailError);
+        } else {
+          console.log("Welcome email sent successfully");
+        }
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Continue with signup even if email fails
+      }
 
       
         toast({

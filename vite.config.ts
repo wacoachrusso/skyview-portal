@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: true,
-      port: 8080,
+      port: 3000,
       strictPort: true,
       headers: {
         'Access-Control-Allow-Origin': '*',
@@ -34,7 +34,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       headers: {
         'Access-Control-Allow-Origin': '*',
-      }
+      },
+      // Remove open configuration to prevent browser auto-opening issues
     },
     build: {
       sourcemap: true,

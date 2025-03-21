@@ -188,10 +188,26 @@ export const handleStripeCallback = async (
         // CRITICAL STEP 7: Force a full page reload to the chat page for clean state
         // Add a short delay to ensure all state is properly updated
         console.log("[stripeCallbackHandler] Waiting before redirect to ensure state is updated");
+        
+        // Store the session token in localStorage for additional persistence
+        localStorage.setItem('session_token_backup', localStorage.getItem('session_token') || '');
+        
+        // Set a flag to indicate successful payment and subscription activation
+        localStorage.setItem('subscription_activated', 'true');
+        
+        // Ensure we have the latest tokens stored
+        localStorage.setItem('auth_access_token', session.access_token);
+        localStorage.setItem('auth_refresh_token', session.refresh_token);
+        localStorage.setItem('auth_user_id', session.user.id);
+        localStorage.setItem('auth_user_email', session.user.email || '');
+        
         setTimeout(() => {
           console.log("[stripeCallbackHandler] Now redirecting to chat page");
+          // Add a special flag to indicate this is a direct redirect from payment
+          // This will help prevent redirect loops
+          localStorage.setItem('direct_payment_redirect', 'true');
           window.location.href = `${window.location.origin}/chat`;
-        }, 1500);
+        }, 2000); // Increased delay to ensure all state is updated
         
         return null;
       } catch (error) {

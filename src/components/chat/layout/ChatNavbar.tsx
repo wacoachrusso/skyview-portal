@@ -142,6 +142,8 @@ export function ChatNavbar() {
 
 // Helper component for new chat button
 function PlusCircleButton() {
+  const navigate = useNavigate();
+  
   return (
     <Button
       asChild
@@ -151,8 +153,8 @@ function PlusCircleButton() {
     >
       <Link to="#" onClick={(e) => {
         e.preventDefault();
-        // TODO: Implement new chat functionality
-        window.location.href = '/chat';
+        // Use React Router navigation instead of window.location for smoother transition
+        navigate('/chat');
       }}>
         <PlusCircle className="mr-2 h-4 w-4" />
         New Chat

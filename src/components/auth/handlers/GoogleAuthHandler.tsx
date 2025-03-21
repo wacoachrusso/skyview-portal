@@ -83,7 +83,18 @@ export const GoogleAuthHandler = () => {
         // Create session and redirect
         await createNewSession(session.user.id);
         toast({ title: "Sign In Successful", description: "Welcome back!" });
-        navigate("/chat", { replace: true });
+        
+        // Check if user is admin and redirect to admin dashboard
+        if (profile.is_admin) {
+          console.log("Admin user detected, redirecting to admin dashboard");
+          // Store admin status in localStorage for quick access
+          localStorage.setItem('user_is_admin', 'true');
+          navigate("/admin", { replace: true });
+        } else {
+          // Ensure admin flag is removed for non-admin users
+          localStorage.removeItem('user_is_admin');
+          navigate("/chat", { replace: true });
+        }
 
       } catch (error) {
         console.error("GoogleAuthHandler: Unexpected error in auth callback", error);

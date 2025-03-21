@@ -34,7 +34,7 @@ export function useChatState(
       }
 
       // If the user is on a free plan and has reached the query limit
-      if (profile?.subscription_plan === "free" && profile?.query_count >= 1) {
+      if (profile?.subscription_plan === "free" && profile?.query_count >= 2) {
         setIsChatDisabled(true); // Disable chat
         toast({
           title: "Free Trial Ended",

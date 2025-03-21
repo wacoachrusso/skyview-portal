@@ -44,6 +44,7 @@ export const handleFreeSignup = async ({
         user_type: jobTitle.toLowerCase(),
         airline: airline.toLowerCase(),
         subscription_plan: 'free',
+        query_count: 0,
         assistant_id: assistantId,
       })
       .select()

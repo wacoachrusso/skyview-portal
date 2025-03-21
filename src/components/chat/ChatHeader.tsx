@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, LayoutDashboard, FileText, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useContractHandler } from "@/hooks/useContractHandler";
 import { useLogout } from "@/hooks/useLogout";
 import { Icons } from "@/components/icons";
@@ -56,13 +56,15 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
           <span className="ml-2 hidden sm:inline">View Contract</span>
         </Button>
         <Button
+          asChild
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/dashboard')}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center"
         >
-          <LayoutDashboard className="h-4 w-4" />
-          <span className="ml-2 hidden md:inline">Dashboard</span>
+          <Link to="/dashboard">
+            <LayoutDashboard className="h-4 w-4" />
+            <span className="ml-2 hidden md:inline">Dashboard</span>
+          </Link>
         </Button>
         <Button
           variant="ghost"
@@ -76,7 +78,10 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleLogout()}
+          onClick={(e) => {
+            e.preventDefault();
+            handleLogout();
+          }}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
         >
           <LogOut className="h-4 w-4" />

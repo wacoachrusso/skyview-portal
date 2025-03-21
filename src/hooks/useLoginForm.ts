@@ -147,8 +147,12 @@ export const useLoginForm = () => {
       // Decide where to redirect based on admin status
       if (userData?.is_admin) {
         console.log("User is an admin, redirecting to admin dashboard");
+        // Store admin status in localStorage for quick access
+        localStorage.setItem('user_is_admin', 'true');
         navigate("/admin");
       } else {
+        // Ensure admin flag is removed for non-admin users
+        localStorage.removeItem('user_is_admin');
         // Regular user flow - check profile completeness
         if (userData?.user_type && userData?.airline) {
           console.log("Profile complete, redirecting to dashboard");

@@ -29,6 +29,18 @@ const AuthCallback = () => {
       localStorage.setItem('login_in_progress', 'true');
       
       try {
+        // Check if this is a Stripe callback with session_id parameter
+        const sessionId = searchParams.get('session_id');
+        if (sessionId) {
+          console.log("AuthCallback: Stripe payment callback detected with session ID:", sessionId);
+          setStatusMessage('Completing your payment...');
+          
+          // Import and use the Stripe callback handler
+          const { handleStripeCallback } = await import('@/utils/auth/stripeCallbackHandler');
+          await handleStripeCallback(sessionId, navigate);
+          return; // Let the Stripe handler take over the flow
+        }
+        
         // Check if this is a special post-payment flow (marked by postPaymentConfirmation flag)
         const isPostPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
         if (isPostPayment) {

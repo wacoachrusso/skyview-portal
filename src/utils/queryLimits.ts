@@ -17,7 +17,7 @@ export const checkQueryLimit = async (userId: string): Promise<{ canQuery: boole
     }
 
     // Check query count for free users
-    if (profile.query_count >= 2) {
+    if (profile.query_count >= 1) {
       return {
         canQuery: false,
         message: "You've reached your free trial limit. Please upgrade to continue querying."

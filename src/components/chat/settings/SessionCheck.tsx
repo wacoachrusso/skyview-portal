@@ -15,6 +15,28 @@ export function SessionCheck() {
         // MOST CRITICAL CHECK: First check for post-payment state
         // This must override all other checks
         const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
+        const isDirectPaymentRedirect = localStorage.getItem('direct_payment_redirect') === 'true';
+        
+        // Check if we're already on the chat page and in post-payment state
+        // This prevents the redirect loop that causes flashing
+        if (isPostPayment && window.location.pathname === '/chat') {
+          console.log("[SessionCheck] Already on chat page with post-payment state, skipping redirect");
+          // Clear the post-payment flag to prevent future redirects
+          // But only do this if we're already on the chat page
+          localStorage.removeItem('subscription_activated');
+          localStorage.removeItem('postPaymentConfirmation');
+          localStorage.removeItem('payment_in_progress');
+          localStorage.removeItem('direct_payment_redirect');
+          return;
+        }
+        
+        // If this is a direct redirect from payment and we're on the chat page,
+        // don't do any further processing to avoid redirect loops
+        if (isDirectPaymentRedirect && window.location.pathname === '/chat') {
+          console.log("[SessionCheck] Direct payment redirect detected, skipping further processing");
+          localStorage.removeItem('direct_payment_redirect');
+          return;
+        }
         
         if (isPostPayment) {
           console.log("[SessionCheck] CRITICAL: Post-payment state detected");
@@ -155,10 +177,14 @@ export function SessionCheck() {
           console.log("[SessionCheck] Waiting briefly before redirecting to chat page");
           setTimeout(() => {
             console.log("[SessionCheck] Now navigating to chat page");
-            navigate('/chat');
+            // Use window.location.href instead of navigate to force a full page reload
+            // This helps clear any stale state that might be causing the flashing
+            window.location.href = `${window.location.origin}/chat`;
           }, 1500);
           return;
         }
+
+        // For non-payment flows: Regular session check
 
         // For non-payment flows: Regular session check
         const { data: { session } } = await supabase.auth.getSession();
@@ -169,10 +195,10 @@ export function SessionCheck() {
           return;
         }
 
-        // Check subscription status
+        // Check subscription status and admin status
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('subscription_status, subscription_plan, query_count')
+          .select('subscription_status, subscription_plan, query_count, is_admin')
           .eq('id', session.user.id)
           .single();
           
@@ -180,6 +206,17 @@ export function SessionCheck() {
           console.error("[SessionCheck] Error fetching profile:", profileError);
         } else {
           console.log("[SessionCheck] User profile:", profile);
+          
+          // Check if user is admin - admins bypass subscription checks
+          if (profile?.is_admin) {
+            console.log("[SessionCheck] Admin user detected, bypassing subscription checks");
+            // Store admin status in localStorage for quick access
+            localStorage.setItem('user_is_admin', 'true');
+            return;
+          } else {
+            // Ensure admin flag is removed for non-admin users
+            localStorage.removeItem('user_is_admin');
+          }
           
           // Deliberately SKIP redirect for free trials during login
           if (localStorage.getItem('login_in_progress') === 'true') {

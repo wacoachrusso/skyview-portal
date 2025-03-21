@@ -35,10 +35,10 @@ export function NavbarContainer() {
             console.log('User is logged in:', session.user.email);
             setIsLoggedIn(true);
             
-            // Check user's subscription and free trial status
+            // Check user's subscription, free trial status, and admin status
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
-              .select('user_type, airline, subscription_plan, query_count')
+              .select('user_type, airline, subscription_plan, query_count, is_admin')
               .eq('id', session.user.id)
               .maybeSingle();
             
@@ -46,9 +46,22 @@ export function NavbarContainer() {
               console.error('Error fetching profile:', profileError);
             }
             
-            // Redirect based on subscription status and current page
-            if (window.location.pathname === '/') {
-              if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+            // Admin users bypass subscription checks
+            if (profile?.is_admin) {
+              console.log('Admin user detected, bypassing subscription checks');
+              // Only redirect admin if they're on the homepage or login page
+              if (window.location.pathname === '/' || window.location.pathname === '/login') {
+                console.log('Admin on homepage or login page, redirecting to admin dashboard');
+                window.location.href = '/admin';
+                return; // Exit early to prevent further checks for admin users
+              }
+              // Always return early for admin users to prevent any subscription checks
+              setIsLoading(false);
+              return;
+            }
+            // Redirect based on subscription status and current page for non-admin users
+            else if (window.location.pathname === '/') {
+              if (profile?.subscription_plan === 'free' && profile?.query_count >= 2) {
                 // Free trial ended - stay on homepage but scroll to pricing
                 console.log('Free trial ended, scrolling to pricing section');
                 const pricingSection = document.getElementById('pricing-section');
@@ -123,11 +136,11 @@ export function NavbarContainer() {
       setIsLoggedIn(!!session);
       setIsLoading(false);
       
-      // If user is logged in, check subscription status
+      // If user is logged in, check admin status and subscription status
       if (session) {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('subscription_plan, query_count')
+          .select('subscription_plan, query_count, is_admin')
           .eq('id', session.user.id)
           .single();
           
@@ -135,8 +148,13 @@ export function NavbarContainer() {
           console.error("Error fetching profile in logo click:", profileError);
         }
         
+        // Admin users always go to admin dashboard
+        if (profile?.is_admin) {
+          console.log("Admin user detected in logo click, redirecting to admin dashboard");
+          window.location.href = '/admin';
+        }
         // Free trial ended - go to homepage with pricing
-        if (profile?.subscription_plan === 'free' && profile?.query_count >= 1) {
+        else if (profile?.subscription_plan === 'free' && profile?.query_count >= 2) {
           console.log("Free trial ended, going to homepage with pricing");
           window.location.href = '/?scrollTo=pricing-section';
         } else {
