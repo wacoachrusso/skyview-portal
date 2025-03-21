@@ -44,10 +44,14 @@ const getRandomUniqueItems = (array: string[], count: number): string[] => {
   return shuffled.slice(0, count);
 };
 
-export function WelcomeMessage() {
+interface WelcomeMessageProps {
+  onSelectQuestion?: (question: string) => void;
+}
+
+export function WelcomeMessage({ onSelectQuestion }: WelcomeMessageProps) {
   const isMobile = useIsMobile();
   
-  // Select 3 random questions from the pool
+  // Select random questions from the pool
   // Using useMemo to ensure questions only change on component mount
   const randomQuestions = useMemo(() => 
     getRandomUniqueItems(EXAMPLE_QUESTIONS, isMobile ? 2 : 3), 
@@ -55,24 +59,24 @@ export function WelcomeMessage() {
   );
   
   return (
-    <div className="h-full flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
+    <div className="h-full flex flex-col items-center justify-center px-4 py-4 overflow-y-auto">
       <div className="max-w-3xl w-full rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl bg-gradient-to-br from-[#1A2035] to-[#2A304A] border border-white/10 animate-fade-in">
         <div className="flex flex-col items-center">
           {/* Logo and header */}
-          <div className="mb-4 md:mb-6 relative">
+          <div className="mb-3 md:mb-4 relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-brand-gold/20 rounded-full blur-xl opacity-75 animate-pulse-subtle" aria-hidden="true" />
             <img
               src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png"
               alt="SkyGuide Logo"
-              className="h-12 md:h-16 w-auto relative animate-float"
+              className="h-10 md:h-14 w-auto relative animate-float"
             />
           </div>
           
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 md:mb-3 text-center">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 text-center">
             Welcome to <span className="text-gradient">SkyGuide</span>
           </h1>
           
-          <p className="text-xs sm:text-sm text-gray-300 text-center mb-4 md:mb-6 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-300 text-center mb-3 md:mb-4 max-w-2xl leading-relaxed">
             I'm your contract interpretation assistant. Ask me anything about your union contract, and I'll provide accurate, relevant information to help you understand your rights and benefits.
           </p>
           
@@ -83,6 +87,7 @@ export function WelcomeMessage() {
               title="Try asking me:"
               question={randomQuestions[0]}
               color="brand-gold"
+              onClick={onSelectQuestion}
             />
             
             <ExampleCard 
@@ -90,6 +95,7 @@ export function WelcomeMessage() {
               title="Or ask about:"
               question={randomQuestions[1]}
               color="brand-purple"
+              onClick={onSelectQuestion}
             />
             
             {!isMobile && (
@@ -98,6 +104,7 @@ export function WelcomeMessage() {
                 title="You can also ask:"
                 question={randomQuestions[2]}
                 color="brand-teal"
+                onClick={onSelectQuestion}
               />
             )}
           </div>
@@ -130,11 +137,21 @@ interface ExampleCardProps {
   question: string;
   color: string;
   className?: string;
+  onClick?: (question: string) => void;
 }
 
-function ExampleCard({ icon, title, question, color, className = "" }: ExampleCardProps) {
+function ExampleCard({ icon, title, question, color, className = "", onClick }: ExampleCardProps) {
+  const handleClick = () => {
+    if (onClick) {
+      onClick(question);
+    }
+  };
+
   return (
-    <div className={`bg-white/5 rounded-xl p-3 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:bg-white/10 ${className}`}>
+    <div 
+      className={`bg-white/5 rounded-xl p-3 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:bg-white/10 ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      onClick={handleClick}
+    >
       <div className="flex gap-2 items-start">
         <div className={`bg-${color}/20 p-1.5 rounded-lg`}>
           {icon}

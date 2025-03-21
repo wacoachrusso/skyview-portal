@@ -9,13 +9,15 @@ interface ChatContainerProps {
   currentUserId: string;
   isLoading?: boolean;
   onCopyMessage: (content: string) => void;
+  onSelectQuestion?: (question: string) => void;
 }
 
 export function ChatContainer({ 
   messages, 
   currentUserId, 
   isLoading, 
-  onCopyMessage 
+  onCopyMessage,
+  onSelectQuestion
 }: ChatContainerProps) {
   console.log('ChatContainer rendering with messages:', messages);
   
@@ -30,7 +32,7 @@ export function ChatContainer({
       transition={{ duration: 0.3 }}
     >
       {showWelcomeMessage ? (
-        <WelcomeMessage />
+        <WelcomeMessage onSelectQuestion={onSelectQuestion} />
       ) : (
         <ChatList
           messages={messages}

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,9 +15,10 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [authUser, setAuthUser] = useState<User | null>(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    isMounted.current = true;
 
     const loadProfile = async () => {
       try {
@@ -28,7 +29,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         
         if (userError) {
           console.error("Error getting user:", userError);
-          if (isMounted) {
+          if (isMounted.current) {
             setIsLoading(false);
           }
           navigate('/login');
@@ -37,14 +38,14 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         
         if (!user) {
           console.log("No authenticated user found");
-          if (isMounted) {
+          if (isMounted.current) {
             setIsLoading(false);
           }
           navigate('/login');
           return;
         }
         
-        if (isMounted) {
+        if (isMounted.current) {
           setAuthUser(user);
           setUserEmail(user.email);
         }
@@ -66,8 +67,12 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         // Check if profile is marked as deleted and reactivate if needed
         if (profileByIdData && profileByIdData.account_status === 'deleted') {
           console.log("Found deleted account by ID, attempting reactivation");
-          if (isMounted) {
-            const reactivatedProfile = await reactivateAccount(profileByIdData);
+          
+          if (!isMounted.current) return;
+          
+          const reactivatedProfile = await reactivateAccount(profileByIdData);
+          
+          if (isMounted.current) {
             if (reactivatedProfile) {
               setProfile(reactivatedProfile);
             }
@@ -94,8 +99,12 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
             // Found profile by email
             if (profileByEmailData.account_status === 'deleted') {
               console.log("Found deleted account by email, attempting reactivation");
-              if (isMounted) {
-                const reactivatedProfile = await reactivateAccount(profileByEmailData);
+              
+              if (!isMounted.current) return;
+              
+              const reactivatedProfile = await reactivateAccount(profileByEmailData);
+              
+              if (isMounted.current) {
                 if (reactivatedProfile) {
                   setProfile(reactivatedProfile);
                 }
@@ -113,11 +122,15 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               
             if (updateError) {
               console.error("Error updating profile ID:", updateError);
-              if (isMounted) {
+              if (isMounted.current) {
                 setIsLoading(false);
               }
             } else {
               console.log("Updated profile ID to match auth ID");
+              
+              // Check if component is still mounted before continuing
+              if (!isMounted.current) return;
+              
               // Refetch profile with updated ID
               const { data: updatedProfile } = await supabase
                 .from('profiles')
@@ -125,7 +138,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
                 .eq('id', user.id)
                 .single();
                 
-              if (isMounted) {
+              if (isMounted.current) {
                 setProfile(updatedProfile);
                 setIsLoading(false);
               }
@@ -133,13 +146,13 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
             return;
           } else {
             console.log("No profile found by email either");
-            if (isMounted) {
+            if (isMounted.current) {
               setIsLoading(false);
             }
           }
         } else if (profileByIdData) {
           // Active profile found by ID
-          if (isMounted) {
+          if (isMounted.current) {
             setProfile(profileByIdData);
             setIsLoading(false);
           }
@@ -147,7 +160,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         }
         
         // If we get here, no valid profile was found
-        if (isMounted) {
+        if (isMounted.current) {
           console.log("No valid profile found, redirecting to onboarding");
           setIsLoading(false);
           toast({
@@ -159,7 +172,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         
       } catch (error) {
         console.error('Error loading profile:', error);
-        if (isMounted) {
+        if (isMounted.current) {
           toast({
             variant: "destructive",
             title: "Error",
@@ -174,7 +187,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
     
     // Cleanup function to prevent state updates on unmounted component
     return () => {
-      isMounted = false;
+      isMounted.current = false;
     };
   }, [navigate, toast, reactivateAccount]);
 

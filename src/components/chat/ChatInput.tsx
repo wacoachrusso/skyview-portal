@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendButton } from "./SendButton";
@@ -9,16 +10,18 @@ interface ChatInputProps {
   onSendMessage: (content: string) => Promise<void>;
   isLoading?: boolean;
   disabled?: boolean;
-  queryCount?: number; // Add queryCount prop
-  subscriptionPlan?: string; // Add subscriptionPlan prop
+  queryCount?: number;
+  subscriptionPlan?: string;
+  selectedQuestion?: string;
 }
 
 export function ChatInput({
   onSendMessage,
   isLoading,
   disabled,
-  queryCount = 0, // Default to 0
-  subscriptionPlan = "free", // Default to "free"
+  queryCount = 0,
+  subscriptionPlan = "free",
+  selectedQuestion,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const { toast } = useToast();
@@ -26,6 +29,13 @@ export function ChatInput({
   // Determine if the chat input should be disabled
   const isInputDisabled =
     disabled || isLoading || (subscriptionPlan === "free" && queryCount >= 1);
+
+  // Handle selectedQuestion changes
+  useEffect(() => {
+    if (selectedQuestion && !isInputDisabled) {
+      setMessage(selectedQuestion);
+    }
+  }, [selectedQuestion, isInputDisabled]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

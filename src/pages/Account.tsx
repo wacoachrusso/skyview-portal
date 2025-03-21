@@ -25,15 +25,19 @@ const Account = () => {
     const checkAlphaTester = async () => {
       if (!profile?.id || !mounted) return;
 
-      const { data: alphaTester } = await supabase
-        .from('alpha_testers')
-        .select('*')
-        .eq('profile_id', profile.id)
-        .maybeSingle();
+      try {
+        const { data: alphaTester } = await supabase
+          .from('alpha_testers')
+          .select('*')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
 
-      // Show password change form for alpha testers with temporary passwords
-      if (alphaTester?.temporary_password && mounted) {
-        setShowPasswordChange(true);
+        // Show password change form for alpha testers with temporary passwords
+        if (alphaTester?.temporary_password && mounted) {
+          setShowPasswordChange(true);
+        }
+      } catch (error) {
+        console.error("Error checking alpha tester status:", error);
       }
     };
 
@@ -63,7 +67,9 @@ const Account = () => {
     navigate('/refunds', { state: { fromCancellation: true } });
   };
 
+  // Add explicit loading state to prevent flickering
   if (isLoading) {
+    console.log("Account page is loading...");
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
         <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
@@ -75,6 +81,7 @@ const Account = () => {
   }
 
   if (!profile) {
+    console.log("No profile found for account page");
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
         <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
@@ -88,6 +95,7 @@ const Account = () => {
     );
   }
 
+  console.log("Account page rendering with profile:", profile.id);
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
       <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
