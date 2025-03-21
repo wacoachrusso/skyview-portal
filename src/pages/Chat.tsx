@@ -67,7 +67,8 @@ export default function Chat() {
     const newConversationId = await createNewConversation(currentUserId);
     if (newConversationId) {
       setCurrentConversationId(newConversationId);
-      setMessages([]);
+      // This was causing the error - we don't have setMessages in this component
+      // setMessages([]);
       setShowWelcome(true);
     }
   };
