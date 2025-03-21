@@ -5,6 +5,7 @@ import { ChatMessage } from "./ChatMessage";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatListProps {
   messages: Message[];
@@ -21,7 +22,12 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use a short timeout to ensure the DOM has been updated before scrolling
+    const scrollTimeout = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    
+    return () => clearTimeout(scrollTimeout);
   }, [messages.length]);
 
   const handleCopyMessage = (content: string) => {
@@ -46,31 +52,33 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   }, [] as Message[][]);
 
   return (
-    <div className="flex flex-col space-y-2 p-4 overflow-y-auto">
-      {groupedMessages.flatMap((group, groupIndex) => 
-        group.map((message, messageIndex) => {
-          const isCurrentUser = message.role === "user";
-          const isLastInGroup = messageIndex === group.length - 1;
-          
-          return (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              isCurrentUser={isCurrentUser}
-              onCopy={() => handleCopyMessage(message.content)}
-              isLastInGroup={isLastInGroup}
-            />
-          );
-        })
-      )}
-      
-      {isLoading && (
-        <div className="flex justify-center my-4">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      )}
-      
-      <div ref={messagesEndRef} />
-    </div>
+    <ScrollArea className="h-full w-full">
+      <div className="flex flex-col space-y-2 p-4">
+        {groupedMessages.flatMap((group, groupIndex) => 
+          group.map((message, messageIndex) => {
+            const isCurrentUser = message.role === "user";
+            const isLastInGroup = messageIndex === group.length - 1;
+            
+            return (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                isCurrentUser={isCurrentUser}
+                onCopy={() => handleCopyMessage(message.content)}
+                isLastInGroup={isLastInGroup}
+              />
+            );
+          })
+        )}
+        
+        {isLoading && (
+          <div className="flex justify-center my-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} className="h-10" />
+      </div>
+    </ScrollArea>
   );
 }

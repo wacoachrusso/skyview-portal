@@ -32,7 +32,7 @@ export function ChatContainer({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {isLoading ? (
+      {isLoading && messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <LoadingSpinner size="md" />
         </div>

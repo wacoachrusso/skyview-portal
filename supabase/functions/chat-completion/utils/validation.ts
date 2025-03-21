@@ -18,6 +18,12 @@ export function cleanResponse(response: string): string {
     '<b>$1 $2</b>'
   );
   
+  // Add additional highlighting for contract references
+  cleanedResponse = cleanedResponse.replace(
+    /\b(contract|agreement|provision|clause)\s+(\d+(\.\d+)*)/gi,
+    '<b>$1 $2</b>'
+  );
+  
   // Clean up any markdown artifacts that might be present
   cleanedResponse = cleanedResponse.replace(/```/g, '');
   

@@ -67,8 +67,7 @@ export default function Chat() {
     const newConversationId = await createNewConversation(currentUserId);
     if (newConversationId) {
       setCurrentConversationId(newConversationId);
-      // This was causing the error - we don't have setMessages in this component
-      // setMessages([]);
+      // We don't have setMessages in this component
       setShowWelcome(true);
     }
   };
@@ -82,7 +81,7 @@ export default function Chat() {
       if (!currentUserId) return Promise.reject(new Error("No user ID"));
       
       console.log("Creating new conversation for message");
-      const newConversationId = await createNewConversation(currentUserId);
+      const newConversationId = await createNewConversation(currentUserId, content);
       if (newConversationId) {
         console.log("New conversation created:", newConversationId);
         setCurrentConversationId(newConversationId);

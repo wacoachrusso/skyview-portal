@@ -52,13 +52,22 @@ export function ChatInput({
 
     console.log("Submitting message:", message.trim());
     const messageContent = message.trim();
-    setMessage(""); // Clear input immediately after submission
-
+    
     try {
+      // Clear input immediately to provide better UX feedback
+      setMessage("");
+      
+      // Display toast to indicate search is in progress
+      toast({
+        title: "Searching Contract",
+        description: "Looking for relevant information...",
+        duration: 3000,
+      });
+      
       await onSendMessage(messageContent);
     } catch (error) {
       console.error("Error sending message:", error);
-      // Restore the message if there was an error
+      // Only restore the message if there was an error
       setMessage(messageContent);
       toast({
         title: "Error",

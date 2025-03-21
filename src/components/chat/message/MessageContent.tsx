@@ -40,6 +40,9 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   }, [message.content, message.role]);
 
   const formatContent = (content: string) => {
+    if (!content) return null;
+    
+    // Process REF tags first
     const parts = content.split(/(\[REF\].*?\[\/REF\])/g);
     
     return parts.map((part, index) => {
@@ -48,11 +51,13 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
         return (
           <div key={index} className="flex items-start gap-2 my-3 p-2 text-pink-300 bg-pink-950/20 rounded-md border-l-4 border-pink-500/50">
             <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
-            <em className="italic">{quote}</em>
+            <em className="italic" dangerouslySetInnerHTML={{ __html: quote }} />
           </div>
         );
       }
-      return <span key={index}>{part}</span>;
+      
+      // Process regular text, preserving HTML formatting like <b> tags
+      return <span key={index} dangerouslySetInnerHTML={{ __html: part }} />;
     });
   };
 
