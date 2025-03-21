@@ -45,100 +45,123 @@ export function ChatContent({
       if (!currentUserId) return;
 
       try {
-        // Check for post-payment condition first
+        console.log("[ChatContent] Fetching profile for user:", currentUserId);
+        
+        // CRITICAL: Check for post-payment condition first
         const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
         
         if (isPostPayment) {
-          console.log("ChatContent: Post-payment state detected, ensuring status updated");
+          console.log("[ChatContent] Post-payment state detected");
           
-          // Delay this process slightly to ensure we have a valid session
-          setTimeout(async () => {
-            // Update user profile to mark subscription as active
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ 
-                subscription_status: 'active',
-                subscription_plan: localStorage.getItem('selected_plan') || 'monthly'
-              })
-              .eq('id', currentUserId);
-              
-            if (updateError) {
-              console.error("ChatContent: Error updating profile after payment:", updateError);
-            } else {
-              console.log("ChatContent: Profile updated with active subscription");
-            }
-          }, 1000);
+          // Wait briefly to ensure other components have had time to process
+          // the post-payment state and update the profile
+          console.log("[ChatContent] Waiting briefly before checking profile");
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Don't clear post-payment flags yet - they're needed elsewhere
-        }
+          // Fetch the profile to verify it's been updated
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("subscription_plan, subscription_status, query_count")
+            .eq("id", currentUserId)
+            .single();
 
-        // Fetch the profile regardless of payment state
+          if (error) {
+            console.error("[ChatContent] Error fetching profile after payment:", error);
+            // Don't throw error, proceed with verification
+          } else if (profile) {
+            console.log("[ChatContent] Profile after payment:", profile);
+            setUserProfile(profile);
+            
+            // Verify subscription was properly updated
+            if (profile.subscription_status !== 'active' || 
+                profile.subscription_plan === 'free' ||
+                profile.subscription_plan === 'trial_ended') {
+              
+              console.log("[ChatContent] Subscription not properly updated, applying fix");
+              
+              // Perform an emergency fix - update profile again
+              try {
+                const planType = localStorage.getItem('selected_plan') || 'monthly';
+                const { error: updateError } = await supabase
+                  .from("profiles")
+                  .update({
+                    subscription_status: 'active',
+                    subscription_plan: planType
+                  })
+                  .eq("id", currentUserId);
+                  
+                if (updateError) {
+                  console.error("[ChatContent] Error in emergency profile update:", updateError);
+                } else {
+                  console.log("[ChatContent] Emergency profile update successful");
+                  
+                  // Update local state to reflect the change
+                  setUserProfile({
+                    ...profile,
+                    subscription_status: 'active',
+                    subscription_plan: planType
+                  });
+                }
+              } catch (e) {
+                console.error("[ChatContent] Exception in emergency update:", e);
+              }
+            }
+          }
+          
+          // Clear payment flags after a successful verification
+          // But use a delay to ensure all components have processed the state
+          const clearFlags = () => {
+            console.log("[ChatContent] Clearing post-payment flags");
+            localStorage.removeItem('subscription_activated');
+            localStorage.removeItem('selected_plan');
+            localStorage.removeItem('payment_in_progress');
+            localStorage.removeItem('login_in_progress');
+            localStorage.removeItem('auth_access_token');
+            localStorage.removeItem('auth_refresh_token');
+            localStorage.removeItem('auth_user_id');
+            localStorage.removeItem('auth_user_email');
+          };
+          
+          // Set a longer timeout to clear flags - much longer than in previous versions
+          setTimeout(clearFlags, 10000); // 10 seconds
+          return;
+        }
+        
+        // For non-payment flow: Standard profile fetch
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("subscription_plan, subscription_status, query_count")
           .eq("id", currentUserId)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("[ChatContent] Error fetching user profile:", error);
+          return;
+        }
 
-        console.log("ChatContent: User profile:", profile);
+        console.log("[ChatContent] User profile:", profile);
         setUserProfile(profile);
         
-        // Only check for free trial end if:
-        // 1. Not in post-payment state
-        // 2. No login in progress
-        // 3. Not on homepage already
-        if (!isPostPayment && 
-            !localStorage.getItem('login_in_progress') && 
-            (profile.subscription_plan === "free" && profile.query_count >= 2) && 
-            window.location.pathname !== '/') {
-          console.log("ChatContent: Free trial ended - redirecting to pricing");
+        // Skip trial end check during login/payment processes
+        const skipCheck = 
+          localStorage.getItem('login_in_progress') === 'true' || 
+          localStorage.getItem('payment_in_progress') === 'true';
+        
+        if (!skipCheck && profile.subscription_plan === "free" && profile.query_count >= 2) {
+          console.log("[ChatContent] Free trial ended, redirecting to pricing");
           toast({
             title: "Subscription Required",
             description: "Please select a subscription plan to continue.",
             variant: "destructive",
           });
-          // Clear temporary flags now that we're redirecting
-          localStorage.removeItem('login_in_progress');
           navigate("/?scrollTo=pricing-section", { replace: true });
         }
-        
-        // Only when we know we're staying on this page and everything is good,
-        // we can clear the post-payment state
-        if (isPostPayment && 
-            profile.subscription_status === 'active' && 
-            profile.subscription_plan !== 'free' &&
-            window.location.pathname === '/chat') {
-          // Clear payment flags after a delay to ensure other components have processed them
-          setTimeout(() => {
-            console.log("ChatContent: All good, clearing payment flags after 3 seconds");
-            localStorage.removeItem('subscription_activated');
-            localStorage.removeItem('selected_plan');
-            localStorage.removeItem('payment_in_progress');
-            localStorage.removeItem('login_in_progress');
-          }, 3000);
-        }
       } catch (error) {
-        console.error("ChatContent: Error fetching user profile:", error);
+        console.error("[ChatContent] Error fetching user profile:", error);
       }
     };
 
     fetchUserProfile();
-    
-    // Set up a timer to clear flags after 1 minute as a fallback
-    const safetyClearTimeout = setTimeout(() => {
-      if (localStorage.getItem('subscription_activated') === 'true' &&
-          window.location.pathname === '/chat') {
-        console.log("ChatContent: Safety timeout clearing payment flags");
-        localStorage.removeItem('subscription_activated');
-        localStorage.removeItem('selected_plan');
-        localStorage.removeItem('payment_in_progress');
-        localStorage.removeItem('login_in_progress');
-      }
-    }, 60000); // 1 minute safety timeout
-    
-    return () => clearTimeout(safetyClearTimeout);
-    
   }, [currentUserId, navigate, toast]);
 
   // Determine if the chat should be disabled
@@ -154,21 +177,17 @@ export function ChatContent({
            (userProfile?.subscription_status === 'inactive' && userProfile?.subscription_plan !== 'free');
   }, [isChatDisabled, isTrialEnded, userProfile]);
 
-  // Memoize the display messages
-  const displayMessages = useMemo(() => 
-    isOffline ? messages : messages
-  , [isOffline, messages]);
-
   // Auto-redirect if trial has ended
   useEffect(() => {
-    // Skip redirect if in post-payment state
+    // Skip redirect if in special states
     if (localStorage.getItem('subscription_activated') === 'true' ||
-        localStorage.getItem('login_in_progress') === 'true') {
+        localStorage.getItem('login_in_progress') === 'true' ||
+        localStorage.getItem('payment_in_progress') === 'true') {
       return;
     }
     
     if (shouldDisableChat && currentUserId) {
-      console.log("ChatContent: Chat is disabled, redirecting to pricing");
+      console.log("[ChatContent] Chat is disabled, redirecting to pricing");
       navigate("/?scrollTo=pricing-section", { replace: true });
     }
   }, [shouldDisableChat, navigate, currentUserId]);
@@ -179,26 +198,18 @@ export function ChatContent({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <ChatHeader onNewChat={onNewChat || (() => {})} isLoading={isLoading} />
-      {isOffline && <OfflineAlert offlineError={offlineError || loadError} />}
-      <ChatContainer
-        messages={displayMessages}
-        currentUserId={currentUserId || ""}
-        isLoading={isLoading}
-        onCopyMessage={(content) => {
-          navigator.clipboard.writeText(content);
-        }}
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      <ChatHeader onNewChat={onNewChat} />
+      
+      {isOffline && <OfflineAlert error={offlineError} />}
+      
+      <ChatContainer messages={messages} isLoading={isLoading} />
+      
+      <ChatInput 
+        onSendMessage={onSendMessage} 
+        isLoading={isLoading} 
+        disabled={isChatDisabled}
       />
-      <div className="flex-shrink-0">
-        <ChatInput
-          onSendMessage={onSendMessage}
-          isLoading={isLoading}
-          disabled={isOffline || shouldDisableChat}
-          queryCount={userProfile?.query_count || 0}
-          subscriptionPlan={userProfile?.subscription_plan || "free"}
-        />
-      </div>
     </div>
   );
 }

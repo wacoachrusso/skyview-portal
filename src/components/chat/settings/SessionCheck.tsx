@@ -10,93 +10,166 @@ export function SessionCheck() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        console.log("SessionCheck: Checking session status...");
+        console.log("[SessionCheck] Checking session status...");
         
-        // Check for post-payment state - MOST IMPORTANT
+        // MOST CRITICAL CHECK: First check for post-payment state
+        // This must override all other checks
         const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
         
-        // If this is post-payment, we need to ensure we have a valid session
         if (isPostPayment) {
-          console.log("SessionCheck: Post-payment state detected, ensuring valid session");
+          console.log("[SessionCheck] CRITICAL: Post-payment state detected");
           
-          // Get the current session
-          const { data: { session } } = await supabase.auth.getSession();
+          // Get the current session - try multiple methods for maximum reliability
+          let session = null;
           
-          if (!session) {
-            console.error("SessionCheck: No session found after payment - attempting to restore");
-            
-            // Try to restore from saved tokens
-            const savedRefreshToken = localStorage.getItem('supabase.refresh-token');
-            if (savedRefreshToken) {
-              console.log("SessionCheck: Found saved refresh token, attempting to restore");
-              try {
-                const { error: refreshError } = await supabase.auth.refreshSession();
-                if (refreshError) {
-                  console.error("SessionCheck: Failed to refresh session:", refreshError);
-                  // Continue with normal flow below
-                } else {
-                  console.log("SessionCheck: Successfully refreshed session");
-                }
-              } catch (refreshErr) {
-                console.error("SessionCheck: Error in refresh attempt:", refreshErr);
-              }
-            }
-            
-            // Re-check session after refresh attempt
-            const { data: { session: refreshedSession } } = await supabase.auth.getSession();
-            
-            if (!refreshedSession) {
-              console.error("SessionCheck: Still no session after refresh attempts");
-              // Important: Do NOT clear subscription_activated flag here yet
-              // Just navigate to login
-              navigate('/login');
-              return;
-            }
-            
-            console.log("SessionCheck: Session restored successfully");
+          // Method 1: Get session from auth
+          try {
+            const { data } = await supabase.auth.getSession();
+            session = data.session;
+            console.log("[SessionCheck] Session method 1 result:", !!session);
+          } catch (e) {
+            console.error("[SessionCheck] Error in session method 1:", e);
           }
           
-          // Critical: Update profile to mark subscription as active right away
+          // Method 2: Try to refresh session if method 1 failed
+          if (!session) {
+            try {
+              console.log("[SessionCheck] No session found, attempting refresh");
+              const { data: refreshData } = await supabase.auth.refreshSession();
+              session = refreshData.session;
+              console.log("[SessionCheck] Session refresh result:", !!session);
+            } catch (refreshErr) {
+              console.error("[SessionCheck] Error in session refresh:", refreshErr);
+            }
+          }
+          
+          // Method 3: Try to restore from saved tokens
+          if (!session) {
+            try {
+              console.log("[SessionCheck] Attempting token restoration");
+              const savedAccessToken = localStorage.getItem('auth_access_token');
+              const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+              
+              if (savedAccessToken && savedRefreshToken) {
+                console.log("[SessionCheck] Found saved tokens, attempting restoration");
+                const { data: tokenData } = await supabase.auth.setSession({
+                  access_token: savedAccessToken,
+                  refresh_token: savedRefreshToken
+                });
+                session = tokenData.session;
+                console.log("[SessionCheck] Token restoration result:", !!session);
+              }
+            } catch (tokenErr) {
+              console.error("[SessionCheck] Error in token restoration:", tokenErr);
+            }
+          }
+          
+          // If we still don't have a session, try one more approach with cookies
+          if (!session) {
+            try {
+              console.log("[SessionCheck] Checking for session cookies");
+              
+              // Try to get tokens from cookies
+              const getCookie = (name: string) => {
+                const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                return match ? match[2] : null;
+              };
+              
+              const cookieAccessToken = getCookie('sb-access-token');
+              const cookieRefreshToken = getCookie('sb-refresh-token');
+              
+              if (cookieAccessToken && cookieRefreshToken) {
+                console.log("[SessionCheck] Found cookie tokens, attempting restoration");
+                const { data: cookieData } = await supabase.auth.setSession({
+                  access_token: cookieAccessToken,
+                  refresh_token: cookieRefreshToken
+                });
+                session = cookieData.session;
+                console.log("[SessionCheck] Cookie restoration result:", !!session);
+              }
+            } catch (cookieErr) {
+              console.error("[SessionCheck] Error in cookie restoration:", cookieErr);
+            }
+          }
+          
+          // Last resort: If we still don't have a session, redirect to login
+          if (!session) {
+            console.error("[SessionCheck] CRITICAL: Could not restore session after payment");
+            // Do NOT clear the subscription_activated flag since this will be needed when they login again
+            // Just store a temporary flag to indicate we need to restore the subscription state after login
+            localStorage.setItem('pending_subscription_activation', 'true');
+            
+            // Notify user clearly
+            toast({
+              title: "Session Expired",
+              description: "Please log in again to access your subscription.",
+              duration: 8000,
+            });
+            
+            navigate('/login');
+            return;
+          }
+          
+          // If we have a session, update profile immediately with subscription data
           const userId = session?.user?.id;
           if (userId) {
-            console.log("SessionCheck: Updating user profile with active subscription");
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ 
-                subscription_status: 'active',
-                subscription_plan: localStorage.getItem('selected_plan') || 'monthly'
-              })
-              .eq('id', userId);
-              
-            if (updateError) {
-              console.error("SessionCheck: Error updating profile:", updateError);
-            } else {
-              console.log("SessionCheck: Profile updated with active subscription");
-              
-              // Do NOT clear flags yet - keep them for other components
-              // Only set additional cookies for persistence
-              if (session) {
-                document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
-                document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+            console.log("[SessionCheck] Updating profile subscription status for user:", userId);
+            
+            const selectedPlan = localStorage.getItem('selected_plan') || 'monthly';
+            console.log("[SessionCheck] Setting subscription plan to:", selectedPlan);
+            
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                console.log(`[SessionCheck] Profile update attempt ${attempt}`);
+                const { error: updateError } = await supabase
+                  .from('profiles')
+                  .update({ 
+                    subscription_status: 'active',
+                    subscription_plan: selectedPlan
+                  })
+                  .eq('id', userId);
+                  
+                if (updateError) {
+                  console.error(`[SessionCheck] Error updating profile (attempt ${attempt}):`, updateError);
+                  if (attempt < 3) await new Promise(r => setTimeout(r, 1000)); // Wait 1s before retry
+                } else {
+                  console.log("[SessionCheck] Profile successfully updated with active subscription");
+                  break; // Success, exit retry loop
+                }
+              } catch (updateErr) {
+                console.error(`[SessionCheck] Exception in profile update (attempt ${attempt}):`, updateErr);
+                if (attempt < 3) await new Promise(r => setTimeout(r, 1000)); // Wait 1s before retry
               }
+            }
+              
+            // Set tokens in cookies for added persistence - critical for keeping session between page loads
+            if (session) {
+              document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+              document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+              document.cookie = `session_user_id=${session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+              console.log("[SessionCheck] Session tokens stored in cookies for persistence");
             }
           }
           
-          // Navigate to chat WITHOUT clearling local storage yet
-          navigate('/chat');
+          // Wait briefly to ensure profile update completes, then navigate to chat
+          console.log("[SessionCheck] Waiting briefly before redirecting to chat page");
+          setTimeout(() => {
+            console.log("[SessionCheck] Now navigating to chat page");
+            navigate('/chat');
+          }, 1500);
           return;
         }
 
-        // Regular session check for all scenarios
+        // For non-payment flows: Regular session check
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          console.log("SessionCheck: No active session found");
+          console.log("[SessionCheck] No active session found, redirecting to login");
           navigate('/login');
           return;
         }
 
-        // Check subscription status after successful session verification
+        // Check subscription status
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('subscription_status, subscription_plan, query_count')
@@ -104,16 +177,21 @@ export function SessionCheck() {
           .single();
           
         if (profileError) {
-          console.error("SessionCheck: Error fetching profile:", profileError);
+          console.error("[SessionCheck] Error fetching profile:", profileError);
         } else {
-          console.log("SessionCheck: User profile:", profile);
+          console.log("[SessionCheck] User profile:", profile);
           
-          // Only redirect if explicitly NOT active AND not free
-          // This is to prevent redirect loops during login/signup
+          // Deliberately SKIP redirect for free trials during login
+          if (localStorage.getItem('login_in_progress') === 'true') {
+            console.log("[SessionCheck] Skipping redirect check during login process");
+            return;
+          }
+          
+          // Only redirect if explicitly inactive AND not free
           if (profile?.subscription_status === 'inactive' && 
               profile?.subscription_plan !== 'free' && 
               profile?.subscription_plan !== 'trial_ended') {
-            console.log("SessionCheck: Subscription inactive, redirecting to pricing");
+            console.log("[SessionCheck] Subscription inactive, redirecting to pricing");
             navigate('/?scrollTo=pricing-section');
             return;
           }
@@ -121,7 +199,7 @@ export function SessionCheck() {
           // Check for free trial ended condition separately
           if (profile?.subscription_plan === 'free' && profile?.query_count >= 2 && 
               window.location.pathname !== '/' && !localStorage.getItem('login_in_progress')) {
-            console.log("SessionCheck: Free trial ended, redirecting to pricing");
+            console.log("[SessionCheck] Free trial ended, redirecting to pricing");
             navigate('/?scrollTo=pricing-section');
             return;
           }
@@ -134,7 +212,7 @@ export function SessionCheck() {
           navigate('/chat');
         }
       } catch (error) {
-        console.error("SessionCheck error:", error);
+        console.error("[SessionCheck] Error:", error);
         navigate('/login');
       }
     };
@@ -143,16 +221,35 @@ export function SessionCheck() {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("[SessionCheck] Auth state changed:", event);
+      
+      // Check for pending subscription activation
+      const pendingActivation = localStorage.getItem('pending_subscription_activation') === 'true';
       
       if (event === 'SIGNED_OUT' || !session) {
-        navigate('/login');
+        if (!pendingActivation) {
+          navigate('/login');
+        }
       }
-      // Do not navigate on SIGNED_IN during the post-payment flow
-      else if (event === 'SIGNED_IN' && !localStorage.getItem('subscription_activated') && 
-               !localStorage.getItem('payment_in_progress')) {
-        // Only navigate if not in post-payment flow
-        navigate('/chat');
+      // For sign-in events
+      else if (event === 'SIGNED_IN') {
+        // Handle pending subscription activation if needed
+        if (pendingActivation) {
+          console.log("[SessionCheck] Detected pending subscription activation after sign in");
+          localStorage.removeItem('pending_subscription_activation');
+          
+          // Use the saved subscription data to update user profile
+          localStorage.setItem('subscription_activated', 'true');
+          
+          // Wait briefly then call checkSession again to process the post-payment flow
+          setTimeout(checkSession, 1000);
+        }
+        // Otherwise regular flow - only navigate if not in post-payment
+        else if (!localStorage.getItem('subscription_activated') && 
+                 !localStorage.getItem('payment_in_progress')) {
+          console.log("[SessionCheck] Regular sign-in, navigating to chat");
+          navigate('/chat');
+        }
       }
     });
 
