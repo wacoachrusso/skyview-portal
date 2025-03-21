@@ -57,12 +57,7 @@ export function ChatInput({
       // Clear input immediately to provide better UX feedback
       setMessage("");
       
-      // Display toast to indicate search is in progress
-      toast({
-        title: "Searching Contract",
-        description: "Looking for relevant information...",
-        duration: 3000,
-      });
+      // No toast notification - removed as requested
       
       await onSendMessage(messageContent);
     } catch (error) {

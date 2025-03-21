@@ -5,6 +5,18 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 // Default assistant ID as fallback
 const defaultAssistantId = "asst_xpkEzhLUt4Qn6uzRzSxAekGh";
 
+// Assistant IDs by role and airline
+const assistantMappings = {
+  "delta": {
+    "pilot": "asst_v2zjTUE3U4gyfuUEvEOIusK8",
+    "flight_attendant": "asst_xpkEzhLUt4Qn6uzRzSxAekGh"
+  },
+  "american": {
+    "pilot": "asst_CfrZjBnZBJx5k0gmg5ioRKlq",
+    "flight_attendant": "asst_xpkEzhLUt4Qn6uzRzSxAekGh"
+  }
+};
+
 if (!openAIApiKey) {
   throw new Error('Required OpenAI API key is not set');
 }
@@ -65,45 +77,26 @@ export async function addMessageToThread(threadId: string, content: string) {
   }
 }
 
-export async function runAssistant(threadId: string, assistantId: string) {
-  const effectiveAssistantId = assistantId?.trim() || defaultAssistantId;
+export async function runAssistant(threadId: string, assistantId: string, userInfo?: { airline?: string; userType?: string }) {
+  let effectiveAssistantId = assistantId?.trim() || defaultAssistantId;
+  
+  // Try to find a specific assistant based on user role and airline
+  if (userInfo?.airline && userInfo?.userType) {
+    const airline = userInfo.airline.toLowerCase().replace(/\s+/g, '_');
+    const userType = userInfo.userType.toLowerCase().replace(/\s+/g, '_');
+    
+    console.log(`Looking for assistant for airline: ${airline}, userType: ${userType}`);
+    
+    if (assistantMappings[airline]?.[userType]) {
+      effectiveAssistantId = assistantMappings[airline][userType];
+      console.log(`Using role-specific assistant: ${effectiveAssistantId}`);
+    }
+  }
   
   // Validate the assistant ID
   if (!effectiveAssistantId.startsWith('asst_')) {
     console.warn(`Invalid assistant ID provided: ${effectiveAssistantId}. Using default assistant.`);
-    const defaultId = defaultAssistantId;
-    console.log('Running assistant on thread:', threadId, 'with default assistant ID:', defaultId);
-    
-    try {
-      const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          assistant_id: defaultId,
-          instructions: `You are a union contract expert. When answering questions, you must:
-          1. Only answer questions directly related to union contract terms, policies, or provisions
-          2. Include specific references from the contract in this exact format:
-             [REF]Section X.X, Page Y: Exact quote from contract[/REF]
-          3. If no specific reference exists, clearly state this
-          4. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
-          5. Keep responses focused and accurate
-          6. Format all contract references consistently using the [REF] tags`
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Run creation failed:', errorText);
-        throw new Error(`Failed to run assistant: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Assistant run started:', data.id);
-      return data;
-    } catch (error) {
-      console.error('Error in runAssistant with default assistant:', error);
-      throw error;
-    }
+    effectiveAssistantId = defaultAssistantId;
   }
   
   console.log('Running assistant on thread:', threadId, 'with assistant ID:', effectiveAssistantId);

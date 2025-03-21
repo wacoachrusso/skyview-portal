@@ -24,11 +24,12 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { content, subscriptionPlan, assistantId } = await req.json();
+    const { content, subscriptionPlan, assistantId, userInfo } = await req.json();
     
     console.log('Request received for chat completion');
     console.log('Content length:', content?.length || 0);
     console.log('Assistant ID:', assistantId || 'default');
+    console.log('User Info:', JSON.stringify(userInfo || {}));
 
     // Check if content appears to be non-contract related
     if (containsNonContractContent(content)) {
@@ -49,7 +50,7 @@ serve(async (req) => {
     console.log('Message added to thread');
 
     // Run the assistant with the effective assistant ID
-    const run = await runAssistant(thread.id, assistantId);
+    const run = await runAssistant(thread.id, assistantId, userInfo);
     console.log('Assistant run started:', run.id);
 
     // Poll for completion

@@ -56,7 +56,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
         );
       }
       
-      // Process regular text, preserving HTML formatting like <b> tags
+      // Process regular text with enhanced formatting for section references
       return <span key={index} dangerouslySetInnerHTML={{ __html: part }} />;
     });
   };
