@@ -38,7 +38,8 @@ export default function Chat() {
   
   const conversationIdFromParams = searchParams.get('conversationId');
   
-  // Handle question selection
+  // Handle question selection - modified to only populate the input
+  // without automatically sending the message
   const { handleSelectQuestion } = useQuestionHandler(
     currentConversationId,
     createNewConversation,
@@ -77,10 +78,11 @@ export default function Chat() {
     return handleCopyMessage(content);
   };
   
-  // Handle question selection with state update
+  // Handle question selection - just set the text in the input box
+  // without automatically sending the message
   const handleQuestionSelect = (question: string) => {
     setSelectedQuestion(question);
-    handleSelectQuestion(question);
+    // Removed the call to handleSelectQuestion to prevent auto-sending
   };
 
   return (
