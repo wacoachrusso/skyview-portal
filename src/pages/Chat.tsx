@@ -116,6 +116,7 @@ export default function Chat() {
                 onSendMessage={handleMessageSend}
                 isLoading={isLoading}
                 selectedQuestion={selectedQuestion}
+                disabled={false} // Explicitly set disabled to false to ensure the input is enabled
               />
             </div>
           </ChatContent>

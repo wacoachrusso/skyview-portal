@@ -18,7 +18,7 @@ interface ChatInputProps {
 export function ChatInput({
   onSendMessage,
   isLoading,
-  disabled,
+  disabled = false, // Ensure default is false
   queryCount = 0,
   subscriptionPlan = "free",
   selectedQuestion,
@@ -26,9 +26,8 @@ export function ChatInput({
   const [message, setMessage] = useState("");
   const { toast } = useToast();
 
-  // Determine if the chat input should be disabled
-  const isInputDisabled =
-    disabled || isLoading || (subscriptionPlan === "free" && queryCount >= 1);
+  // Determine if the chat input should be disabled - simplified logic to prevent unwanted disabling
+  const isInputDisabled = disabled || isLoading;
 
   // Handle selectedQuestion changes
   useEffect(() => {
@@ -75,11 +74,7 @@ export function ChatInput({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              isInputDisabled
-                ? "Chat unavailable while offline or trial ended"
-                : "Ask about your contract..."
-            }
+            placeholder="Ask about your contract..."
             className="min-h-[60px] w-full pr-[120px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0"
             disabled={isInputDisabled}
             aria-label="Chat input"
