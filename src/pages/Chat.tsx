@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -5,7 +6,7 @@ import { ChatNavbar } from "@/components/chat/layout/ChatNavbar";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { ChatContent } from "@/components/chat/ChatContent";
 import { ChatContainer } from "@/components/chat/ChatContainer";
-import { useClipboard } from "@/hooks/useClipboard";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Message } from '@/types/chat';
@@ -19,7 +20,7 @@ export default function Chat() {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const { copy } = useClipboard();
+  const { copyToClipboard } = useCopyToClipboard();
   const { toast } = useToast();
   
   const conversationIdFromParams = searchParams.get('conversationId');
@@ -37,8 +38,13 @@ export default function Chat() {
       if (error) {
         console.error("Error fetching messages:", error);
         setError(error as any);
-      } else {
-        setMessages(data || []);
+      } else if (data) {
+        // Ensure the role is properly typed as "user" | "assistant"
+        const typedMessages = data.map(msg => ({
+          ...msg,
+          role: msg.role as "user" | "assistant"
+        }));
+        setMessages(typedMessages);
       }
     } catch (err) {
       console.error("Unexpected error fetching messages:", err);
@@ -63,7 +69,7 @@ export default function Chat() {
   };
 
   const handleCopyMessage = (content: string) => {
-    copy(content);
+    copyToClipboard(content);
     toast({
       title: "Copied to clipboard",
       description: "Message content copied to clipboard",
@@ -78,11 +84,11 @@ export default function Chat() {
     }
 
     // First add a user message
-    const userMessage: Partial<Message> = {
+    const userMessage = {
       conversation_id: currentConversationId,
       user_id: currentUserId,
       content: messageContent,
-      role: 'user'
+      role: 'user' as "user" | "assistant"  // Explicitly type as "user"
     };
 
     try {
@@ -99,7 +105,11 @@ export default function Chat() {
         return;
       }
 
-      setMessages(prevMessages => [...prevMessages, userData as Message]);
+      // Ensure the typed message is added to state
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { ...userData, role: userData.role as "user" | "assistant" }
+      ]);
 
       // Now simulate AI response
       setIsLoading(true);
@@ -107,11 +117,11 @@ export default function Chat() {
       // Simulate AI thinking time
       setTimeout(async () => {
         // Create AI response
-        const aiMessage: Partial<Message> = {
+        const aiMessage = {
           conversation_id: currentConversationId,
           user_id: currentUserId,
           content: "I'm sorry, but I can only answer questions directly related to your union contract's terms, policies, or provisions. For other topics, please contact appropriate resources or refocus your question on contract-related matters.",
-          role: 'assistant'
+          role: 'assistant' as "user" | "assistant"  // Explicitly type as "assistant"
         };
 
         try {
@@ -124,8 +134,12 @@ export default function Chat() {
           if (aiError) {
             console.error("Error sending AI message:", aiError);
             setError(aiError as any);
-          } else {
-            setMessages(prevMessages => [...prevMessages, aiData as Message]);
+          } else if (aiData) {
+            // Ensure the typed message is added to state
+            setMessages(prevMessages => [
+              ...prevMessages, 
+              { ...aiData, role: aiData.role as "user" | "assistant" }
+            ]);
           }
         } catch (err) {
           console.error("Unexpected error sending AI message:", err);

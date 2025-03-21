@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
-import { useClipboard } from "@/hooks/useClipboard";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -16,7 +16,7 @@ interface ChatListProps {
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   console.log('ChatList rendering with messages:', messages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { copy } = useClipboard();
+  const { copyToClipboard } = useCopyToClipboard();
   const { toast } = useToast();
 
   // Scroll to bottom when new messages arrive
@@ -25,19 +25,13 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
   }, [messages.length]);
 
   const handleCopyMessage = (content: string) => {
-    copy(content);
-    toast({
-      title: "Copied to clipboard",
-      description: "Message content copied to clipboard",
-      duration: 2000,
-    });
+    copyToClipboard(content);
     if (onCopyMessage) {
       onCopyMessage(content);
     }
   };
 
   // Group messages by role to determine if a message is the last in its group
-  // This would be useful for styling consecutive messages from the same sender
   const groupedMessages = messages.reduce((acc, message, index) => {
     const prevMessage = index > 0 ? messages[index - 1] : null;
     const isNewGroup = !prevMessage || prevMessage.role !== message.role;
