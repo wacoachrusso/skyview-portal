@@ -69,6 +69,10 @@ export const useSignup = () => {
       // Handle paid plan signup via Stripe
       if (selectedPlan !== "free" && priceId) {
         storePendingSignup({ ...signupData, plan: selectedPlan });
+        
+        // Set flag for payment flow
+        localStorage.setItem('payment_in_progress', 'true');
+        localStorage.setItem('selected_plan', selectedPlan);
 
         const checkoutUrl = await createStripeCheckoutSession({
           priceId,
@@ -115,23 +119,33 @@ export const useSignup = () => {
         // Continue with signup even if email fails
       }
 
-      // Show appropriate toast message based on sign-in method
+      // Show appropriate toast message
+      toast({
+        title: "Account created",
+        description: "Welcome to SkyGuide!",
+        duration: 5000
+      });
+
+      // Store auth tokens in localStorage for persistence across page refreshes
       if (!isGoogleSignIn) {
-        toast({
-          title: "Account created",
-          description: "Welcome to SkyGuide!",
-          duration: 5000
-        });
-      } else {
-        toast({
-          title: "Account created",
-          description: "Welcome to SkyGuide!",
-          duration: 5000
-        });
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          localStorage.setItem('auth_access_token', session.access_token);
+          localStorage.setItem('auth_refresh_token', session.refresh_token);
+          localStorage.setItem('auth_user_id', session.user.id);
+          localStorage.setItem('auth_user_email', formData.email);
+          
+          // Set session tokens in cookies for persistence
+          document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+          document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+          document.cookie = `session_user_id=${session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+        }
       }
 
       // Direct users to chat page immediately after signup
-      navigate("/chat");
+      // Use window.location.href instead of navigate to force a full page reload
+      // This ensures all auth state is properly initialized
+      window.location.href = "/chat";
     } catch (error) {
       console.error("Error during signup:", error);
 

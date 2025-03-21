@@ -13,7 +13,7 @@ export const handleSignIn = async (email: string, password: string, rememberMe: 
     if (error) throw error;
 
     // No need to check email confirmation - we assume emails are already confirmed
-    // Just set session storage flag to prevent pricing redirects
+    // Set session storage flag to prevent pricing redirects
     sessionStorage.setItem('recently_signed_up', 'true');
 
     // Handle "Remember Me" functionality for 30 days
@@ -22,6 +22,19 @@ export const handleSignIn = async (email: string, password: string, rememberMe: 
       localStorage.setItem('supabase.refresh-token', data.session.refresh_token);
       document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`;
       console.log("Remember Me enabled, set 30-day session");
+    }
+    
+    // Store auth tokens in localStorage for persistence across page refreshes
+    if (data.session) {
+      localStorage.setItem('auth_access_token', data.session.access_token);
+      localStorage.setItem('auth_refresh_token', data.session.refresh_token);
+      localStorage.setItem('auth_user_id', data.session.user.id);
+      localStorage.setItem('auth_user_email', email);
+      
+      // Set session tokens in cookies for additional persistence
+      document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+      document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+      document.cookie = `session_user_id=${data.session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
     }
 
     console.log("Sign in successful");

@@ -28,6 +28,8 @@ const AuthCallback = () => {
       localStorage.setItem('login_in_progress', 'true');
       // Also set the recently_signed_up flag to prevent pricing redirects
       sessionStorage.setItem('recently_signed_up', 'true');
+      // Set new user signup flag to maintain redirect to chat
+      localStorage.setItem('new_user_signup', 'true');
       
       try {
         // Check if this is a Stripe callback with session_id parameter
@@ -47,10 +49,11 @@ const AuthCallback = () => {
           try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-              await supabase.functions.invoke('send-payment-confirmation', {
+              await supabase.functions.invoke('send-subscription-confirmation', {
                 body: { 
                   email: session.user.email,
-                  userId: session.user.id
+                  name: session.user.user_metadata?.full_name || session.user.email,
+                  plan: localStorage.getItem('selected_plan') || 'monthly'
                 }
               });
               console.log("Payment confirmation email sent");
@@ -84,17 +87,19 @@ const AuthCallback = () => {
         
         if (email && token_hash) {
           console.log("AuthCallback: Handling email confirmation for:", email);
-          setIsEmailConfirmation(true);
-          setStatusMessage('Confirming your email address...');
+          // We don't need to wait for email confirmation - redirect immediately
+          // to avoid that "check your email" message
           
-          // We'll automatically confirm the email without waiting for verification
-          // Just set success and redirect to chat
+          // Instead of confirming, just redirect to chat
           setProcessingStatus('success');
           setStatusMessage('Account setup successful! Redirecting...');
           
+          // Clear login_in_progress but keep recently_signed_up
+          localStorage.removeItem('login_in_progress');
+          sessionStorage.setItem('recently_signed_up', 'true');
+          
           // For post-payment flow or regular flow - redirect to chat
           setTimeout(() => {
-            localStorage.removeItem('login_in_progress');
             navigate('/chat', { replace: true });
           }, 1500);
         } else {
@@ -131,55 +136,55 @@ const AuthCallback = () => {
           // Clear login processing flag before redirecting
           localStorage.removeItem('login_in_progress');
           
-          // At this point, handleCallback has already navigated to the appropriate page
-          // But we'll set a success state just in case
+          // Set success state
           setProcessingStatus('success');
           setStatusMessage('Authentication successful! Redirecting...');
+          
+          // Always redirect to chat
+          navigate('/chat', { replace: true });
         }
       } catch (error) {
         console.error("AuthCallback: Error in auth callback:", error);
         setProcessingStatus('error');
         setStatusMessage('An error occurred during authentication. Please try again.');
-        
-        // Show error toast
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "Failed to complete authentication. Please try again."
-        });
-        
-        // Clear the login flag and redirect to login
         localStorage.removeItem('login_in_progress');
-        setTimeout(() => navigate('/login'), 3000);
+        setTimeout(() => navigate('/login'), 2000);
       }
     };
-    
-    processCallback();
-  }, [searchParams, navigate, handleEmailConfirmation, handleCallback, toast]);
 
-  // If this is a Google OAuth flow, use the specialized handler
+    processCallback();
+  }, [navigate, toast, handleCallback, handleEmailConfirmation, searchParams]);
+
   if (isOAuthFlow) {
     return <GoogleAuthHandler />;
   }
-  
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="text-center max-w-md w-full p-6 space-y-4">
-        <LoadingSpinner size="lg" />
-        
-        <h2 className={`mt-4 text-xl ${
-          processingStatus === 'success' ? 'text-green-400' : 
-          processingStatus === 'error' ? 'text-red-400' : 
-          'text-white'
-        }`}>
-          {statusMessage}
-        </h2>
-        
-        {processingStatus === 'error' && (
-          <p className="text-gray-300 text-sm">
-            You'll be redirected to the login page shortly.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-luxury-dark text-white">
+      <div className="w-full max-w-md space-y-8 px-4 sm:px-6">
+        <div className="flex flex-col items-center space-y-4 text-center">
+          <img 
+            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+            alt="SkyGuide Logo" 
+            className="h-12 w-auto" 
+          />
+          
+          <h1 className="text-2xl font-bold tracking-tight">
+            {processingStatus === 'processing' ? 'Processing Authentication' : 
+             processingStatus === 'success' ? 'Authentication Successful' : 
+             'Authentication Error'}
+          </h1>
+          
+          <p className="text-sm text-gray-400">
+            {statusMessage}
           </p>
-        )}
+          
+          {processingStatus === 'processing' && (
+            <div className="mt-4">
+              <LoadingSpinner size="lg" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

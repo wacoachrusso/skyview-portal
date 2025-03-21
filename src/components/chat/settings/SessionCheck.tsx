@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -17,17 +16,18 @@ export function SessionCheck() {
         // This must override all other checks
         const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
         const isDirectPaymentRedirect = localStorage.getItem('direct_payment_redirect') === 'true';
+        const isNewUserSignup = localStorage.getItem('new_user_signup') === 'true';
         
-        // Check if we're already on the chat page and in post-payment state
+        // Check if we're already on the chat page and in post-payment or new signup state
         // This prevents the redirect loop that causes flashing
-        if (isPostPayment && window.location.pathname === '/chat') {
-          console.log("[SessionCheck] Already on chat page with post-payment state, skipping redirect");
-          // Clear the post-payment flag to prevent future redirects
-          // But only do this if we're already on the chat page
+        if ((isPostPayment || isNewUserSignup) && window.location.pathname === '/chat') {
+          console.log("[SessionCheck] Already on chat page with post-payment/new signup state, skipping redirect");
+          // Clear the flags to prevent future redirects
           localStorage.removeItem('subscription_activated');
           localStorage.removeItem('postPaymentConfirmation');
           localStorage.removeItem('payment_in_progress');
           localStorage.removeItem('direct_payment_redirect');
+          localStorage.removeItem('new_user_signup');
           return;
         }
         
@@ -36,6 +36,14 @@ export function SessionCheck() {
         if (isDirectPaymentRedirect && window.location.pathname === '/chat') {
           console.log("[SessionCheck] Direct payment redirect detected, skipping further processing");
           localStorage.removeItem('direct_payment_redirect');
+          return;
+        }
+        
+        // Handle new user signup explicitly
+        if (isNewUserSignup) {
+          console.log("[SessionCheck] New user signup detected, redirecting to chat");
+          localStorage.removeItem('new_user_signup');
+          navigate('/chat');
           return;
         }
         
@@ -223,6 +231,15 @@ export function SessionCheck() {
           } else {
             // Ensure admin flag is removed for non-admin users
             localStorage.removeItem('user_is_admin');
+          }
+          
+          // Check for recently signed up users - always keep them on chat page
+          if (sessionStorage.getItem('recently_signed_up') === 'true') {
+            console.log("[SessionCheck] Recently signed up user detected, keeping on chat page");
+            if (window.location.pathname !== '/chat') {
+              navigate('/chat');
+            }
+            return;
           }
           
           // Deliberately SKIP redirect for free trials during login

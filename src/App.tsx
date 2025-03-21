@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Enhanced InitialSessionCheck component with better payment flow handling
+// Enhanced InitialSessionCheck component with better session management
 function InitialSessionCheck() {
   const navigate = useNavigate();
   
@@ -26,6 +26,14 @@ function InitialSessionCheck() {
     const checkInitialSession = async () => {
       try {
         console.log("Checking initial session on app load");
+        
+        // Check for new user signup - this is set during the signup process
+        const isNewUserSignup = localStorage.getItem('new_user_signup') === 'true';
+        if (isNewUserSignup && window.location.pathname !== '/chat') {
+          console.log("New user signup detected, redirecting to chat");
+          navigate('/chat', { replace: true });
+          return;
+        }
         
         // Check if user was in the middle of a payment flow
         const paymentInProgress = localStorage.getItem('payment_in_progress') === 'true';
@@ -40,8 +48,6 @@ function InitialSessionCheck() {
           // Try to restore session from saved tokens
           const savedAccessToken = localStorage.getItem('auth_access_token');
           const savedRefreshToken = localStorage.getItem('auth_refresh_token');
-          const savedUserId = localStorage.getItem('auth_user_id');
-          const sessionToken = localStorage.getItem('session_token');
           
           if (savedAccessToken && savedRefreshToken) {
             console.log("Found saved auth tokens, attempting to restore session");
@@ -69,7 +75,7 @@ function InitialSessionCheck() {
                     console.log("Successfully recovered session from cookies");
                     
                     // Create a new session token if we have a user ID
-                    if (cookieSession.session.user.id && sessionToken) {
+                    if (cookieSession.session.user.id) {
                       try {
                         const { createNewSession } = await import('@/services/session');
                         await createNewSession(cookieSession.session.user.id);
@@ -154,6 +160,16 @@ function InitialSessionCheck() {
           return;
         }
         
+        // For recently signed up users, ensure they stay on the chat page
+        if (sessionStorage.getItem('recently_signed_up') === 'true') {
+          console.log("Recently signed up user detected");
+          if (window.location.pathname !== '/chat') {
+            console.log("Redirecting recent signup to chat page");
+            navigate('/chat', { replace: true });
+            return;
+          }
+        }
+        
         // Basic session check
         const { data } = await supabase.auth.getSession();
         
@@ -214,7 +230,11 @@ function InitialSessionCheck() {
               profile?.subscription_status === 'inactive' ||
               profile?.subscription_plan === 'trial_ended') {
             console.log("Free trial ended or inactive subscription, redirecting to pricing");
-            navigate('/?scrollTo=pricing-section', { replace: true });
+            
+            // Only redirect to pricing if not already there
+            if (window.location.pathname !== '/' || !window.location.search.includes('scrollTo=pricing')) {
+              navigate('/?scrollTo=pricing-section', { replace: true });
+            }
             return;
           }
           

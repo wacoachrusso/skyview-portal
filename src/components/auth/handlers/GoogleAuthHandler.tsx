@@ -30,6 +30,11 @@ export const GoogleAuthHandler = () => {
         }
 
         console.log("GoogleAuthHandler: User authenticated with ID:", session.user.id);
+        
+        // Set session tokens in cookies for persistence
+        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+        document.cookie = `session_user_id=${session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
 
         // Check if user profile exists
         const { data: profile, error: profileError } = await supabase
@@ -51,6 +56,18 @@ export const GoogleAuthHandler = () => {
 
           const fullName = session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email;
 
+          // See if we can find an assistant for the user
+          let assistantId = null;
+          // Default to first available assistant
+          const { data: defaultAssistant } = await supabase
+            .from("openai_assistants")
+            .select("assistant_id")
+            .eq("is_active", true)
+            .limit(1)
+            .single();
+            
+          assistantId = defaultAssistant?.assistant_id;
+
           const { error: insertError } = await supabase
             .from('profiles')
             .insert({
@@ -62,7 +79,8 @@ export const GoogleAuthHandler = () => {
               query_count: 0,
               login_attempts: 0,
               email_notifications: true,
-              push_notifications: true
+              push_notifications: true,
+              assistant_id: assistantId
             });
 
           if (insertError) {
@@ -72,9 +90,40 @@ export const GoogleAuthHandler = () => {
             return;
           }
 
+          // Set flag for new signup
+          localStorage.setItem('new_user_signup', 'true');
+          sessionStorage.setItem('recently_signed_up', 'true');
+          
           await createNewSession(session.user.id);
-          toast({ title: "Account Created", description: "Please complete your profile to continue." });
-          navigate("/complete-profile", { replace: true });
+          toast({ title: "Account Created", description: "Your account has been created successfully." });
+          
+          // Send welcome email
+          try {
+            const { error: emailError } = await supabase.functions.invoke('send-free-trial-welcome', {
+              body: { 
+                email: session.user.email,
+                name: fullName
+              }
+            });
+
+            if (emailError) {
+              console.error("Error sending welcome email:", emailError);
+            } else {
+              console.log("Welcome email sent successfully");
+            }
+          } catch (emailError) {
+            console.error("Failed to send welcome email:", emailError);
+            // Continue regardless of email error
+          }
+          
+          // Redirect to complete profile page if we need more info
+          if (!assistantId) {
+            navigate("/complete-profile", { replace: true });
+            return;
+          }
+          
+          // Go directly to chat if we have enough info
+          navigate("/chat", { replace: true });
           return;
         }
 
@@ -93,6 +142,10 @@ export const GoogleAuthHandler = () => {
         } else {
           // Ensure admin flag is removed for non-admin users
           localStorage.removeItem('user_is_admin');
+          
+          // Set flag to prevent pricing redirects
+          sessionStorage.setItem('recently_signed_up', 'true');
+          
           navigate("/chat", { replace: true });
         }
 

@@ -57,6 +57,18 @@ export const handleFreeSignup = async ({
     }
 
     console.log("Profile created successfully for authenticated user:", profile);
+    
+    // Set session tokens in cookies for persistence
+    if (session.session) {
+      document.cookie = `sb-access-token=${session.session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+      document.cookie = `sb-refresh-token=${session.session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+      document.cookie = `session_user_id=${session.session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+      console.log("Session tokens stored in cookies for persistence");
+    }
+    
+    // Store a flag to prevent pricing redirects
+    sessionStorage.setItem('recently_signed_up', 'true');
+    
     return { message: "Profile created successfully", profile };
   }
 
@@ -73,8 +85,10 @@ export const handleFreeSignup = async ({
           subscription_plan: 'free',
           assistant_id: assistantId,
         },
-        // Don't redirect to confirmation URL - sign them in directly
+        // We don't redirect to confirmation URL - sign them in directly
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // Disable email confirmation - we want to sign them in directly
+        emailVerification: false
       },
     });
 
@@ -86,7 +100,12 @@ export const handleFreeSignup = async ({
     if (!data.user) {
       throw new Error('Failed to create account');
     }
-
+    
+    // Set a flag to prevent pricing redirects
+    sessionStorage.setItem('recently_signed_up', 'true');
+    // This flag helps us know it's a new signup
+    localStorage.setItem('new_user_signup', 'true');
+    
     console.log("Free trial signup successful:", data);
     return data;
   } catch (error) {
