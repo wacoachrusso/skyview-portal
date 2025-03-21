@@ -7,17 +7,18 @@ export function cleanResponse(response: string): string {
   // Remove any source citations like 【8:0†source】
   const cleanedResponse = response.replace(/【[^】]*】/g, '');
   
-  // Ensure references are properly formatted
+  // Format contract references with the standardized format
   let formattedResponse = cleanedResponse.replace(
-    /\[REF\](Section [^,]+, Page \d+):(.*?)\[\/REF\]/g,
-    (_, reference, quote) => {
-      return `[REF]${reference.trim()}: ${quote.trim()}[/REF]`;
+    /\[REF\](.*?)\[\/REF\]/g,
+    (match, reference) => {
+      // Add the colored diamond emoji and format in a highlighted box
+      return `\n\n🔹 Reference: ${reference.trim()}\n`;
     }
   );
   
   // If no references were found, append a note
-  if (!formattedResponse.includes('[REF]')) {
-    formattedResponse = formattedResponse + '\n\n[REF]Note: No specific contract references were found for this query.[/REF]';
+  if (!formattedResponse.includes('🔹 Reference:')) {
+    formattedResponse = formattedResponse + '\n\n🔹 Note: No specific contract references were found for this query. Please consult your union representative for further clarification.';
   }
   
   return formattedResponse;

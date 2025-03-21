@@ -42,15 +42,24 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   }, [message.content, message.role]);
 
   const formatContent = (content: string) => {
-    const parts = content.split(/(\[REF\].*?\[\/REF\])/g);
+    // Split content by reference markers (🔹 Reference:)
+    const parts = content.split(/(🔹 Reference:.*?)(?=\n|$)/g);
     
     return parts.map((part, index) => {
-      if (part.startsWith('[REF]') && part.endsWith('[/REF]')) {
-        const quote = part.replace('[REF]', '').replace('[/REF]', '');
+      if (part.startsWith('🔹 Reference:')) {
+        // Style the reference block
         return (
-          <div key={index} className="flex items-start gap-2 my-3 p-2 text-pink-300 bg-pink-950/20 rounded-md border-l-4 border-pink-500/50">
+          <div key={index} className="flex items-start gap-2 my-3 p-3 text-blue-300 bg-blue-950/30 rounded-md border-l-4 border-blue-500/50 font-medium">
             <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
-            <em className="italic">{quote}</em>
+            <div className="flex-1">{part}</div>
+          </div>
+        );
+      } else if (part.includes('No specific contract reference was found')) {
+        // Handle the "no reference found" message
+        return (
+          <div key={index} className="flex items-start gap-2 my-3 p-3 text-amber-300 bg-amber-950/20 rounded-md border-l-4 border-amber-500/50 italic">
+            <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
+            <em>{part}</em>
           </div>
         );
       }
