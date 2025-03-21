@@ -34,7 +34,9 @@ const Account = () => {
       }
     };
 
-    checkAlphaTester();
+    if (profile?.id) {
+      checkAlphaTester();
+    }
   }, [profile?.id]);
 
   const handlePlanChange = (newPlan: string) => {

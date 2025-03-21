@@ -27,11 +27,14 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         
         if (userError) {
           console.error("Error getting user:", userError);
-          throw userError;
+          setIsLoading(false);
+          navigate('/login');
+          return;
         }
         
         if (!user) {
           console.log("No authenticated user found");
+          setIsLoading(false);
           navigate('/login');
           return;
         }
@@ -58,6 +61,9 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
           const reactivatedProfile = await reactivateAccount(profileByIdData);
           if (reactivatedProfile) {
             setProfile(reactivatedProfile);
+            setIsLoading(false);
+          } else {
+            setIsLoading(false);
           }
           return;
         }
@@ -84,6 +90,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               if (reactivatedProfile) {
                 setProfile(reactivatedProfile);
               }
+              setIsLoading(false);
               return;
             }
             
@@ -96,6 +103,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               
             if (updateError) {
               console.error("Error updating profile ID:", updateError);
+              setIsLoading(false);
             } else {
               console.log("Updated profile ID to match auth ID");
               // Refetch profile with updated ID
@@ -106,19 +114,23 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
                 .single();
                 
               setProfile(updatedProfile);
+              setIsLoading(false);
               return;
             }
           } else {
             console.log("No profile found by email either");
+            setIsLoading(false);
           }
         } else if (profileByIdData) {
           // Active profile found by ID
           setProfile(profileByIdData);
+          setIsLoading(false);
           return;
         }
         
         // If we get here, no valid profile was found
         console.log("No valid profile found, redirecting to onboarding");
+        setIsLoading(false);
         toast({
           title: "Account Setup",
           description: "Please complete your account setup to continue.",
@@ -132,8 +144,6 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
           title: "Error",
           description: "Failed to load profile information.",
         });
-      } finally {
-        console.log("Setting loading state to false");
         setIsLoading(false);
       }
     };
