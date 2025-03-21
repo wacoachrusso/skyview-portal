@@ -24,26 +24,40 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
     throw new Error('Authentication required. Please log in before proceeding.');
   }
   
-  // Prepare auth header with session access token
-  const authHeader = { Authorization: `Bearer ${session.access_token}` };
-  
-  console.log('Invoking create-checkout-session with auth header present:', !!authHeader.Authorization);
+  // Set API call flag to prevent session validation interference
+  sessionStorage.setItem('api_call_in_progress', 'true');
   
   try {
+    // Prepare auth header with session access token
+    const authHeader = { Authorization: `Bearer ${session.access_token}` };
+    
+    console.log('Invoking create-checkout-session with auth header present:', !!authHeader.Authorization);
+    
     const response = await supabase.functions.invoke('create-checkout-session', {
       body: JSON.stringify({
         priceId: priceId,
         mode: 'subscription',
         email: email.trim().toLowerCase(),
-        sessionToken: sessionToken || ''
+        sessionToken: sessionToken || '',
+        origin: window.location.origin
       }),
       headers: authHeader
     });
 
     console.log('Checkout session response:', response);
 
+    // Clear API call flag
+    sessionStorage.removeItem('api_call_in_progress');
+
     if (response.error) {
       console.error('Error creating checkout session:', response.error);
+      
+      // If authorization error, redirect to login
+      if (response.error.message?.includes('auth') || response.error.message?.includes('Authorization')) {
+        window.location.href = '/login?redirect=pricing';
+        throw new Error('Authorization error. Please log in again.');
+      }
+      
       throw new Error(response.error.message || 'Failed to create checkout session');
     }
 
@@ -56,7 +70,10 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
 
     console.log('Successfully created checkout session, redirecting to:', data.url);
     return data.url;
-  } catch (error: any) {
+  } catch (error) {
+    // Clear API call flag on error
+    sessionStorage.removeItem('api_call_in_progress');
+    
     console.error('Error in createStripeCheckoutSession:', error);
     
     // Check if it's a network error
@@ -65,7 +82,7 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
     }
     
     // More specific error for authorization issues
-    if (error.status === 401 || error.message?.includes('unauthorized')) {
+    if (error.status === 401 || error.message?.includes('unauthorized') || error.message?.includes('auth')) {
       window.location.href = '/login?redirect=pricing';
       throw new Error('Your session has expired. Please log in again.');
     }

@@ -66,6 +66,12 @@ export const usePricingCard = () => {
       // Get session token for additional security
       const sessionToken = localStorage.getItem('session_token') || '';
       
+      toast({
+        variant: "default",
+        title: "Processing",
+        description: "Preparing your checkout session...",
+      });
+      
       // Call the utility function to create checkout session
       try {
         const checkoutUrl = await createStripeCheckoutSession({
@@ -78,7 +84,22 @@ export const usePricingCard = () => {
         window.location.href = checkoutUrl;
       } catch (error: any) {
         console.error('Error in createStripeCheckoutSession from usePricingCard:', error);
-        throw error;
+        
+        let errorMessage = "Failed to process plan selection. Please try again.";
+        
+        // Customize error message based on error type
+        if (error.message?.includes('Authentication') || error.message?.includes('session')) {
+          errorMessage = "Authentication required. Please log in and try again.";
+          navigate('/login', { state: { returnTo: 'pricing' } });
+        } else if (error.message?.includes('network')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+        
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || errorMessage,
+        });
       }
     } catch (error: any) {
       console.error('Error in usePricingCard:', error);

@@ -21,12 +21,15 @@ serve(async (req) => {
   try {
     console.log('Request headers:', JSON.stringify([...req.headers.entries()]));
     
-    // Verify authorization
+    // Verify JWT token from Supabase Auth
     const authHeader = req.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.error('Missing or invalid authorization header');
       return new Response(
-        JSON.stringify({ error: 'Missing or invalid authorization' }),
+        JSON.stringify({ 
+          error: 'Missing or invalid authorization',
+          details: 'Please sign in to continue'
+        }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -78,6 +81,17 @@ serve(async (req) => {
     // Create the checkout session
     let session;
     try {
+      // Fetch origin dynamically from the request if needed
+      const origin = req.headers.get('origin') || 'https://skyguide.site';
+      const cancelUrl = `${origin}/?scrollTo=pricing-section`;
+      const successUrl = `${origin}/auth/callback?session_id={CHECKOUT_SESSION_ID}`;
+      
+      console.log('Creating checkout session with URLs:', { 
+        successUrl,
+        cancelUrl,
+        origin
+      });
+      
       session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -87,8 +101,8 @@ serve(async (req) => {
           },
         ],
         mode: mode || 'subscription',
-        success_url: `${req.headers.get('origin')}/auth/callback?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.headers.get('origin')}/?scrollTo=pricing-section`,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
         customer_email: email,
         client_reference_id: sessionToken || undefined,
         metadata: {
@@ -96,7 +110,7 @@ serve(async (req) => {
           environment: isTestMode() ? 'test' : 'production'
         },
       });
-    } catch (stripeError: any) {
+    } catch (stripeError) {
       console.error('Stripe API error:', stripeError);
       return new Response(
         JSON.stringify({ 
