@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatNavbar } from "./layout/ChatNavbar";
 import { ChatLayout } from "./layout/ChatLayout";
 import { ChatContent } from "./ChatContent";
 
 export default function ChatContainer() {
-  const { user } = useUser();
+  const { userProfile, currentUserId } = useUserProfile();
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,15 +58,16 @@ export default function ChatContainer() {
   };
 
   const handleSendMessage = async (messageContent: string) => {
-    if (!user || !currentConversationId) {
+    if (!currentUserId || !currentConversationId) {
       console.error("User or conversation ID is missing.");
       return;
     }
 
     const newMessage = {
       conversation_id: currentConversationId,
-      sender_id: user.id,
+      sender_id: currentUserId,
       content: messageContent,
+      role: 'user' // Add role field which is required
     };
 
     try {
@@ -110,6 +112,7 @@ export default function ChatContainer() {
             onSendMessage={handleSendMessage}
             showWelcome={showWelcome}
             currentConversationId={currentConversationId}
+            currentUserId={currentUserId || ""}
           />
         </ChatLayout>
       </div>
