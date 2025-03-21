@@ -21,9 +21,13 @@ export const handleStripeCallback = async (
   console.log("Processing Stripe payment callback with session ID:", sessionId);
   
   try {
-    // Check for saved auth tokens from pre-payment
+    // IMPORTANT: First restore auth state from localStorage if available
     const savedAccessToken = localStorage.getItem('auth_access_token');
     const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+    const savedUserId = localStorage.getItem('auth_user_id');
+    const savedEmail = localStorage.getItem('auth_user_email');
+    
+    let authRestored = false;
     
     if (savedAccessToken && savedRefreshToken) {
       console.log("Found saved auth tokens, attempting to restore session");
@@ -36,16 +40,32 @@ export const handleStripeCallback = async (
       
       if (restoreError) {
         console.error("Error restoring session from saved tokens:", restoreError);
+        
+        // If we have the user ID, try alternate method - sign in with refresh token
+        if (savedUserId) {
+          console.log("Attempting alternate session restoration method");
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error("Alternate session restoration failed:", refreshError);
+          } else {
+            authRestored = true;
+            console.log("Successfully restored session via refresh method");
+          }
+        }
       } else if (sessionData.session) {
+        authRestored = true;
         console.log("Successfully restored session from saved tokens");
       }
       
       // Clean up saved tokens regardless of outcome
       localStorage.removeItem('auth_access_token');
       localStorage.removeItem('auth_refresh_token');
+      localStorage.removeItem('auth_user_id');
+      localStorage.removeItem('auth_user_email');
     }
     
-    // First check if user is logged in
+    // Check if user is now logged in
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     console.log("Session check result:", { 
       hasSession: !!session,
@@ -58,7 +78,7 @@ export const handleStripeCallback = async (
     }
 
     if (session?.user) {
-      console.log("User is already authenticated:", session.user.email);
+      console.log("User is authenticated:", session.user.email);
       
       try {
         // Update subscription status in profile after successful payment
@@ -92,12 +112,13 @@ export const handleStripeCallback = async (
           description: "Your subscription has been activated. Welcome to SkyGuide!",
         });
         
-        // Direct to chat instead of dashboard
-        navigate('/chat', { replace: true });
+        // CRITICAL: Use absolute URL replacing current page to avoid history issues
+        window.location.href = `${window.location.origin}/chat`;
         return null;
       } catch (error) {
         console.error("Error in subscription activation:", error);
-        navigate('/dashboard');
+        // If anything fails, explicitly redirect to chat
+        window.location.href = `${window.location.origin}/chat`;
         return null;
       }
     }

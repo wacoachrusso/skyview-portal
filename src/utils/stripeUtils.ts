@@ -22,12 +22,15 @@ export const createStripeCheckoutSession = async ({
   localStorage.setItem('selected_plan', planType);
   localStorage.setItem('payment_in_progress', 'true');
   
-  // Store current auth tokens to ensure we can recover the session
+  // *** CRITICAL: Save ALL current auth data to ensure session persistence ***
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
+    // Store tokens and user data
     localStorage.setItem('auth_access_token', session.access_token);
     localStorage.setItem('auth_refresh_token', session.refresh_token);
-    console.log('Saved auth tokens for post-payment recovery');
+    localStorage.setItem('auth_user_id', session.user.id);
+    localStorage.setItem('auth_user_email', session.user.email || '');
+    console.log('Saved complete auth data for post-payment recovery');
   }
   
   try {
@@ -51,7 +54,8 @@ export const createStripeCheckoutSession = async ({
           plan_type: planType,
           is_new_user: !session,
           user_id: session?.user?.id || null,
-          access_token: session?.access_token || null
+          access_token: session?.access_token || null,
+          payment_source: 'website'
         }
       }),
       headers: session ? {

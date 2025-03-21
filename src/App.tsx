@@ -36,26 +36,49 @@ function InitialSessionCheck() {
           // Try to restore session from saved tokens
           const savedAccessToken = localStorage.getItem('auth_access_token');
           const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+          const savedUserId = localStorage.getItem('auth_user_id');
           
           if (savedAccessToken && savedRefreshToken) {
             console.log("Found saved auth tokens, attempting to restore session");
             
-            const { data: sessionData, error: restoreError } = await supabase.auth.setSession({
-              access_token: savedAccessToken,
-              refresh_token: savedRefreshToken
-            });
-            
-            if (restoreError) {
-              console.error("Error restoring session from saved tokens:", restoreError);
-              // Clear payment flags to prevent login loops
+            try {
+              const { data: sessionData, error: restoreError } = await supabase.auth.setSession({
+                access_token: savedAccessToken,
+                refresh_token: savedRefreshToken
+              });
+              
+              if (restoreError) {
+                console.error("Error restoring session from saved tokens:", restoreError);
+                // Another attempt with refresh
+                const { error: refreshError } = await supabase.auth.refreshSession();
+                
+                if (!refreshError && savedUserId) {
+                  console.log("Successfully recovered session after payment");
+                  window.location.href = `${window.location.origin}/chat`;
+                  return;
+                }
+                
+                // Clear payment flags to prevent login loops
+                localStorage.removeItem('payment_in_progress');
+                localStorage.removeItem('postPaymentConfirmation');
+                localStorage.removeItem('auth_access_token');
+                localStorage.removeItem('auth_refresh_token');
+                localStorage.removeItem('auth_user_id');
+                localStorage.removeItem('auth_user_email');
+              } else if (sessionData.session) {
+                console.log("Successfully restored session after payment");
+                window.location.href = `${window.location.origin}/chat`;
+                return;
+              }
+            } catch (error) {
+              console.error("Unexpected error restoring session:", error);
+              // Clear all flags
               localStorage.removeItem('payment_in_progress');
               localStorage.removeItem('postPaymentConfirmation');
               localStorage.removeItem('auth_access_token');
               localStorage.removeItem('auth_refresh_token');
-            } else if (sessionData.session) {
-              console.log("Successfully restored session after payment");
-              navigate('/chat', { replace: true });
-              return;
+              localStorage.removeItem('auth_user_id');
+              localStorage.removeItem('auth_user_email');
             }
           } else {
             // We need to clear these flags if no session can be recovered
@@ -82,7 +105,7 @@ function InitialSessionCheck() {
           // Check if user just completed payment
           if (postPayment) {
             console.log("Post-payment user with active session, redirecting to chat");
-            navigate('/chat', { replace: true });
+            window.location.href = `${window.location.origin}/chat`;
             return;
           }
           

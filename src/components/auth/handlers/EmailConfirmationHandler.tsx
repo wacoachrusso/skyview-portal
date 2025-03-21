@@ -17,6 +17,10 @@ export const EmailConfirmationHandler = () => {
         // First check for saved auth tokens (from payment flow)
         const savedAccessToken = localStorage.getItem('auth_access_token');
         const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+        const savedUserId = localStorage.getItem('auth_user_id');
+        const savedEmail = localStorage.getItem('auth_user_email');
+        
+        let authRestored = false;
         
         if (savedAccessToken && savedRefreshToken) {
           console.log("Found saved auth tokens, attempting to restore session");
@@ -29,13 +33,22 @@ export const EmailConfirmationHandler = () => {
           
           if (restoreError) {
             console.error("Error restoring session from saved tokens:", restoreError);
+            
+            // If we have the user ID, try alternate method
+            if (savedUserId && savedEmail) {
+              console.log("Attempting alternate session restoration with user ID:", savedUserId);
+              // We could potentially implement another restoration method here if needed
+            }
           } else if (sessionData.session) {
+            authRestored = true;
             console.log("Successfully restored session from saved tokens");
           }
           
           // Clean up saved tokens regardless of outcome
           localStorage.removeItem('auth_access_token');
           localStorage.removeItem('auth_refresh_token');
+          localStorage.removeItem('auth_user_id');
+          localStorage.removeItem('auth_user_email');
         }
         
         // Get current session
@@ -101,15 +114,16 @@ export const EmailConfirmationHandler = () => {
               description: "Your account is now ready to use with full access.",
             });
             
-            // Always navigate directly to chat after payment
-            navigate('/chat', { replace: true });
+            // CRITICAL: Use window.location for a full page reload to ensure clean state
+            window.location.href = `${window.location.origin}/chat`;
           } catch (error) {
             console.error("Error in post-payment processing:", error);
             toast({
               title: "Welcome to SkyGuide",
               description: "Your account is now ready to use.",
             });
-            navigate('/chat', { replace: true });
+            // Fall back to direct navigation if needed
+            window.location.href = `${window.location.origin}/chat`;
           }
         } else {
           // Non-payment related email confirmation, go to dashboard
