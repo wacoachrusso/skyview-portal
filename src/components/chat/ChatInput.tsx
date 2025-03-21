@@ -99,7 +99,7 @@ export function ChatInput({
       </form>
       <p
         id="chat-input-description"
-        className="text-xs text-muted-foreground/70 text-center pb-1"
+        className="text-xs text-muted-foreground/70 text-center"
       >
         SkyGuide can make mistakes. Check important info.
       </p>
