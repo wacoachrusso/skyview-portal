@@ -53,7 +53,7 @@ export function ChatContent({
           {children}
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-hidden">
           <p className="text-center text-muted-foreground p-4">
             Start a conversation with the AI assistant.
           </p>

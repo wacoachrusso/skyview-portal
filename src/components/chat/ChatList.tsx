@@ -52,7 +52,7 @@ export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: 
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 pb-20">
+      <ScrollArea className="flex-1 h-full">
         <div className="flex flex-col gap-4 p-4 md:p-6">
           {messages.map((message, index) => (
             <ChatMessage

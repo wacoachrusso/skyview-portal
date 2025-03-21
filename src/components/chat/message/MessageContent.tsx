@@ -21,6 +21,8 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       setIsComplete(false);
       let index = 0;
       const content = message.content;
+      
+      // Clear any existing interval first
       const typingInterval = setInterval(() => {
         if (index <= content.length) {
           setDisplayContent(content.slice(0, index));
