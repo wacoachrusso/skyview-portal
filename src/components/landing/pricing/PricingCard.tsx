@@ -31,23 +31,33 @@ export const PricingCard = ({
   const { handlePlanSelection } = usePricingHandler();
 
   const handlePlanClick = async () => {
-    // Call both handlers to ensure both implementations work
-    // First try the direct handler if provided
-    if (onSelect) {
-      await onSelect();
-    } else {
-      // Use the pricing card hook for compatibility
-      await handleCardSelection(name, priceId, mode, onSelect);
+    try {
+      console.log(`Plan clicked: ${name} with priceId: ${priceId}`);
       
-      // For free trial specifically, also use the pricing handler directly
-      // This ensures the free trial option works properly
+      // First try the direct handler if provided
+      if (onSelect) {
+        await onSelect();
+        return;
+      }
+      
+      // Special handling for free trial
       if (name.toLowerCase() === 'free' || name.toLowerCase() === 'free trial') {
+        console.log("Free trial selected, using pricing handler directly");
+        
+        // Always use the pricing handler directly for free trial to ensure it works
         await handlePlanSelection({
           name: name,
           priceId: priceId,
           mode: mode
         });
+        return;
       }
+      
+      // For other plans, use the pricing card hook for compatibility
+      await handleCardSelection(name, priceId, mode);
+      
+    } catch (error) {
+      console.error("Error handling plan selection:", error);
     }
   };
 
