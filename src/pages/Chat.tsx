@@ -71,7 +71,7 @@ export default function Chat() {
     }
   };
 
-  // Wrapper function to handle message copying that returns a Promise
+  // Proper Promise-returning wrapper function for handleCopyMessage
   const handleCopyMessageWrapper = async (content: string): Promise<void> => {
     return handleCopyMessage(content);
   };
