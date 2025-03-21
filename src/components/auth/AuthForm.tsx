@@ -1,3 +1,4 @@
+
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { AuthFormHeader } from "./AuthFormHeader";
@@ -28,6 +29,11 @@ export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
   const stateSelectedPlan = location.state?.selectedPlan;
   const statePriceId = location.state?.priceId;
   const finalSelectedPlan = selectedPlan || stateSelectedPlan || "free";
+
+  // Mark new signups to prevent pricing redirection
+  useEffect(() => {
+    sessionStorage.setItem('recently_signed_up', 'true');
+  }, []);
 
   // Check if the user is signed in with Google
   const isGoogleSignIn = !!session?.user; // If session exists, the user signed in with Google

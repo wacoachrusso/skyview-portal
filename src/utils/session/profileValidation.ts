@@ -23,6 +23,15 @@ export const checkProfileStatus = async (userId: string, { navigate, toast }: Va
       return false;
     }
 
+    // Check if this is a recent sign-up
+    const isRecentSignup = sessionStorage.getItem('recently_signed_up') === 'true';
+    if (isRecentSignup) {
+      console.log('Recent signup detected, skipping free trial check');
+      // Clear the recent signup flag after use
+      sessionStorage.removeItem('recently_signed_up');
+      return true;
+    }
+
     // Only redirect to pricing if user has exhausted free trial
     // and they're actually trying to use the chat
     if (profile?.subscription_plan === 'free' && profile?.query_count >= 2) {
