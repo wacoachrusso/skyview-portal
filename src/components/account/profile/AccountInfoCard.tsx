@@ -9,6 +9,8 @@ interface AccountInfoCardProps {
     full_name: string;
     user_type: string;
     airline: string;
+    address: string;
+    phone_number: string;
     employee_id: string;
     [key: string]: string;
   };

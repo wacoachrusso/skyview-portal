@@ -1,43 +1,60 @@
 
-import React from 'react';
-import { WelcomeMessage } from './WelcomeMessage';
-import { ChatMessage } from './ChatMessage';
-import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { ReactNode } from "react";
+import { Message } from "@/types/chat";
+import { ChatHeader } from "./ChatHeader";
+import { useOfflineStatus } from "@/hooks/useOfflineStatus";
+import { useFreeTrial } from "@/hooks/useFreeTrial";
+import { useProfileVerification } from "@/hooks/useProfileVerification";
+import { useChatAvailability } from "@/hooks/useChatAvailability";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { TrialEndedState } from "./TrialEndedState";
 
-export interface ChatContentProps {
-  messages: any[];
-  isLoading: boolean;
+interface ChatContentProps {
+  messages: Message[];
+  currentUserId: string;
+  isLoading?: boolean;
   onSendMessage: (content: string) => Promise<void>;
-  showWelcome: boolean;
-  currentConversationId: string | null;
+  onNewChat?: () => void;
+  isChatDisabled?: boolean;
+  children?: ReactNode;
 }
 
-export function ChatContent({ 
-  messages, 
-  isLoading, 
-  onSendMessage, 
-  showWelcome,
-  currentConversationId
+export function ChatContent({
+  messages,
+  currentUserId,
+  isLoading,
+  onSendMessage,
+  onNewChat,
+  isChatDisabled = false,
+  children,
 }: ChatContentProps) {
+  const { isOffline, offlineError } = useOfflineStatus();
+  const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
+  const { userProfile } = useProfileVerification(currentUserId, isOffline);
+  const { shouldDisableChat } = useChatAvailability(
+    isChatDisabled,
+    isTrialEnded,
+    userProfile,
+    currentUserId
+  );
+  const { copyToClipboard } = useCopyToClipboard();
+
+  // If the trial has ended or chat is disabled, show the TrialEndedState
+  if (shouldDisableChat) {
+    return <TrialEndedState />;
+  }
+
   return (
-    <div className="flex-1 overflow-hidden flex flex-col w-full">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <LoadingSpinner />
-          </div>
-        ) : showWelcome ? (
-          <WelcomeMessage onSelectQuestion={(question) => onSendMessage(question)} />
-        ) : (
-          messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              isUserMessage={message.role === 'user'}
-            />
-          ))
-        )}
-      </div>
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      <ChatHeader onNewChat={onNewChat} />
+      
+      {children ? children : (
+        <div className="flex-1 overflow-y-auto">
+          <p className="text-center text-muted-foreground p-4">
+            Start a conversation with the AI assistant.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

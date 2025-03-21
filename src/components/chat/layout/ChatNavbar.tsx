@@ -18,32 +18,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 
-interface ChatNavbarProps {
-  isSidebarOpen?: boolean;
-  setIsSidebarOpen?: (open: boolean) => void;
-}
-
-export function ChatNavbar({ isSidebarOpen, setIsSidebarOpen }: ChatNavbarProps) {
+export function ChatNavbar() {
   const { handleLogout } = useLogout();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   
   return (
-    <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm py-3 px-4 sticky top-0 z-50">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        {/* Logo section with hamburger menu for mobile */}
+    <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm py-3 px-4">
+      <div className="flex items-center justify-between">
+        {/* Logo section */}
         <div className="flex items-center gap-2">
-          {isMobile && setIsSidebarOpen && (
-            <SheetTrigger asChild onClick={() => setIsSidebarOpen(true)}>
-              <Button variant="ghost" size="icon" className="mr-2 h-8 w-8">
-                <Menu className="h-5 w-5 text-foreground" />
-                <span className="sr-only">Toggle sidebar</span>
-              </Button>
-            </SheetTrigger>
-          )}
-          
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
             alt="SkyGuide Logo" 
@@ -56,7 +40,7 @@ export function ChatNavbar({ isSidebarOpen, setIsSidebarOpen }: ChatNavbarProps)
         
         {/* Desktop Navigation */}
         {!isMobile && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button
               asChild
               variant="ghost"
@@ -81,15 +65,7 @@ export function ChatNavbar({ isSidebarOpen, setIsSidebarOpen }: ChatNavbarProps)
               </Link>
             </Button>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/chat')}
-              className="border-brand-gold/50 text-brand-gold hover:bg-brand-gold/10"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Chat
-            </Button>
+            <PlusCircleButton />
             
             <NotificationBell />
             
@@ -120,21 +96,12 @@ export function ChatNavbar({ isSidebarOpen, setIsSidebarOpen }: ChatNavbarProps)
         {/* Mobile Navigation */}
         {isMobile && (
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/chat')}
-              className="border-brand-gold/50 text-brand-gold hover:bg-brand-gold/10 mr-1"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span className="sr-only">New Chat</span>
-            </Button>
-            
+            <PlusCircleButton />
             <NotificationBell />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -170,5 +137,28 @@ export function ChatNavbar({ isSidebarOpen, setIsSidebarOpen }: ChatNavbarProps)
         )}
       </div>
     </nav>
+  );
+}
+
+// Helper component for new chat button
+function PlusCircleButton() {
+  const navigate = useNavigate();
+  
+  return (
+    <Button
+      asChild
+      variant="outline"
+      size="sm"
+      className="border-brand-gold/50 text-brand-gold hover:bg-brand-gold/10"
+    >
+      <Link to="#" onClick={(e) => {
+        e.preventDefault();
+        // Use React Router navigation instead of window.location for smoother transition
+        navigate('/chat');
+      }}>
+        <PlusCircle className="mr-2 h-4 w-4" />
+        New Chat
+      </Link>
+    </Button>
   );
 }

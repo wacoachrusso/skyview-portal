@@ -28,13 +28,13 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="text-muted-foreground hover:text-foreground hover:bg-accent/50 mr-2"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
           >
             <ArrowLeft className="h-4 w-4" />
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
-        <div className={`flex items-center gap-2 ${isMobile && showBackButton ? 'ml-0' : isMobile ? 'ml-2' : ''}`}>
+        <div className={`flex items-center gap-2 ${isMobile ? 'ml-10' : ''}`}>
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
             alt="SkyGuide Logo" 
@@ -66,7 +66,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
             <span className="ml-2 hidden md:inline">Dashboard</span>
           </Link>
         </Button>
-        {/* Account Button */}
+        {/* Add Account Button */}
         <Button
           asChild
           variant="ghost"

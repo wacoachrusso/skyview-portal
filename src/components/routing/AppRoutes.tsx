@@ -47,35 +47,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    let mounted = true;
-    
     const checkAuth = async () => {
       try {
         // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session && mounted) {
+        if (!session) {
           console.log("No session found in ProtectedRoute, redirecting to login");
-          navigate("/login", { replace: true });
+          navigate("/login");
           return;
         }
         
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       } catch (error) {
         console.error("Error in ProtectedRoute:", error);
-        if (mounted) {
-          navigate("/login", { replace: true });
-        }
+        navigate("/login");
       }
     };
     
     checkAuth();
-    
-    return () => {
-      mounted = false;
-    };
   }, [navigate]);
   
   if (isLoading) {
