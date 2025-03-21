@@ -2,7 +2,6 @@
 import { Message } from "@/types/chat";
 import { ChatList } from "./ChatList";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { motion } from "framer-motion";
 
 interface ChatContainerProps {
   messages: Message[];
@@ -25,9 +24,7 @@ export function ChatContainer({
   const showWelcomeMessage = messages.length === 0 && !isLoading;
 
   return (
-    <div 
-      className="flex-1 flex flex-col overflow-hidden"
-    >
+    <div className="flex-1 flex flex-col overflow-hidden">
       {showWelcomeMessage ? (
         <WelcomeMessage onSelectQuestion={onSelectQuestion} />
       ) : (
