@@ -45,15 +45,15 @@ export function ChatContent({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full bg-background">
       <ChatHeader onNewChat={onNewChat} />
       
       {children ? (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col relative">
           {children}
         </div>
       ) : (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1">
           <p className="text-center text-muted-foreground p-4">
             Start a conversation with the AI assistant.
           </p>

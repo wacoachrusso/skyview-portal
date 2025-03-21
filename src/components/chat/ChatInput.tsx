@@ -68,7 +68,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="flex flex-col mt-auto border-t border-border/50">
+    <div className="border-t border-border/50 mt-auto sticky bottom-0 bg-background">
       <form onSubmit={handleSubmit} className="p-4">
         <div className="relative flex items-center">
           <Textarea
@@ -99,7 +99,7 @@ export function ChatInput({
       </form>
       <p
         id="chat-input-description"
-        className="text-xs text-muted-foreground/70 text-center"
+        className="text-xs text-muted-foreground/70 text-center pb-2"
       >
         SkyGuide can make mistakes. Check important info.
       </p>
