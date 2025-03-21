@@ -3,9 +3,22 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import Stripe from 'https://esm.sh/stripe@12.18.0?target=deno';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-});
+const stripe = (() => {
+  try {
+    const key = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!key) {
+      console.error('[create-checkout-session] STRIPE_SECRET_KEY is not set');
+      return null;
+    }
+    console.log('[create-checkout-session] Initializing Stripe with key prefix:', key.substring(0, 7) + '...');
+    return new Stripe(key, {
+      apiVersion: '2023-10-16',
+    });
+  } catch (error) {
+    console.error('[create-checkout-session] Failed to initialize Stripe:', error);
+    return null;
+  }
+})();
 
 const isTestMode = () => {
   const key = Deno.env.get('STRIPE_SECRET_KEY') || '';
@@ -21,6 +34,22 @@ serve(async (req) => {
   }
 
   try {
+    // Check if Stripe was initialized properly
+    if (!stripe) {
+      console.error('[create-checkout-session] Stripe was not initialized correctly');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Payment service configuration error', 
+          details: 'The payment service is not properly configured',
+          code: 'stripe_not_initialized'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Extract authorization header
     const authHeader = req.headers.get('Authorization') || '';
     console.log('[create-checkout-session] Auth header prefix:', authHeader.substring(0, 15) + '...');
@@ -30,7 +59,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Authentication error',
-          details: 'Missing or invalid authorization header' 
+          details: 'Missing or invalid authorization header',
+          code: 'auth_header_invalid'
         }),
         { 
           status: 401, 
@@ -58,7 +88,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Invalid request format',
-          details: error.message 
+          details: error.message,
+          code: 'invalid_json'
         }),
         { 
           status: 400, 
@@ -78,7 +109,24 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Missing required fields', 
-          details: 'Price ID and email are required' 
+          details: 'Price ID and email are required',
+          code: 'missing_fields'
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Validate the Stripe price ID format
+    if (!/^price_[A-Za-z0-9]+$/.test(priceId)) {
+      console.error('[create-checkout-session] Invalid price ID format:', priceId);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid price ID format',
+          details: 'The provided price ID is not in the correct format',
+          code: 'invalid_price_id'
         }),
         { 
           status: 400, 
@@ -94,7 +142,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Payment service configuration error', 
-          details: 'The payment service is not properly configured' 
+          details: 'The payment service is not properly configured',
+          code: 'missing_stripe_key'
         }),
         { 
           status: 500, 
@@ -118,6 +167,44 @@ serve(async (req) => {
         successUrl,
         cancelUrl
       });
+      
+      // Try to fetch the price first to verify it exists
+      try {
+        const price = await stripe.prices.retrieve(priceId);
+        console.log('[create-checkout-session] Successfully retrieved price:', { 
+          id: price.id,
+          active: price.active,
+          product: price.product
+        });
+        
+        if (!price.active) {
+          console.error('[create-checkout-session] Price is inactive:', price.id);
+          return new Response(
+            JSON.stringify({ 
+              error: 'Invalid price', 
+              details: 'The selected price is no longer active',
+              code: 'inactive_price'
+            }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+      } catch (priceError) {
+        console.error('[create-checkout-session] Failed to retrieve price:', priceError.message);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Price not found', 
+            details: 'The selected price could not be found',
+            code: 'price_not_found'
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
       
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -155,6 +242,24 @@ serve(async (req) => {
       if (stripeError.type) {
         console.error('[create-checkout-session] Stripe error type:', stripeError.type);
       }
+      
+      // Check if it's a configuration issue
+      if (stripeError.message?.includes('API key') || 
+          stripeError.message?.includes('authentication') ||
+          stripeError.type === 'StripeAuthenticationError') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Payment service configuration error', 
+            details: 'The payment service has an authentication issue',
+            code: 'stripe_auth_error'
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           error: 'Payment processor error', 
@@ -173,7 +278,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Server error',
-        message: error.message || 'An unexpected error occurred'
+        message: error.message || 'An unexpected error occurred',
+        code: 'server_error'
       }),
       { 
         status: 500, 

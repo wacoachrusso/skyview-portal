@@ -60,47 +60,90 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
       const origin = window.location.origin;
       console.log('Using origin for redirects:', origin);
       
-      const response = await supabase.functions.invoke('create-checkout-session', {
-        body: JSON.stringify({
-          priceId: priceId,
-          mode: 'subscription',
-          email: email.trim().toLowerCase(),
-          sessionToken: sessionToken || refreshedSession.refresh_token || '',
-          origin: origin
-        }),
-        headers: {
-          Authorization: authHeader
-        }
-      });
-
-      console.log('Checkout session response:', response);
-
-      // Clear API call flag
-      sessionStorage.removeItem('api_call_in_progress');
-
-      if (response.error) {
-        console.error('Error creating checkout session:', response.error);
-        
-        // If authorization error, redirect to login
-        if (response.error.message?.includes('auth') || 
-            response.error.message?.includes('Authorization') || 
-            response.error.message?.includes('token')) {
-          window.location.href = '/login?redirect=pricing';
-          throw new Error('Your session has expired. Please log in again.');
-        }
-        
-        throw new Error(response.error.message || 'Failed to create checkout session');
+      // Verify priceId format before sending
+      if (!priceId || !/^price_[A-Za-z0-9]+$/.test(priceId)) {
+        console.error('Invalid price ID format:', priceId);
+        throw new Error('Invalid price ID format. Please try a different plan or contact support.');
       }
-
-      const { data } = response;
       
-      if (!data?.url) {
-        console.error('No checkout URL received:', data);
-        throw new Error('No checkout URL received from payment processor');
-      }
+      // Make 3 attempts to create the checkout session with a small delay between attempts
+      let lastError = null;
+      
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`Checkout attempt ${attempt}/3 for price ID: ${priceId}`);
+          
+          const response = await supabase.functions.invoke('create-checkout-session', {
+            body: JSON.stringify({
+              priceId: priceId,
+              mode: 'subscription',
+              email: email.trim().toLowerCase(),
+              sessionToken: sessionToken || refreshedSession.refresh_token || '',
+              origin: origin
+            }),
+            headers: {
+              Authorization: authHeader
+            }
+          });
 
-      console.log('Successfully created checkout session, redirecting to:', data.url);
-      return data.url;
+          console.log(`Attempt ${attempt} response:`, response);
+
+          if (response.error) {
+            lastError = response.error;
+            console.error(`Attempt ${attempt} failed:`, response.error);
+            
+            // If it's an authentication error, break immediately
+            if (response.error.message?.includes('auth') || 
+                response.error.message?.includes('Authorization') || 
+                response.error.message?.includes('token')) {
+              window.location.href = '/login?redirect=pricing';
+              throw new Error('Your session has expired. Please log in again.');
+            }
+            
+            // For server errors, wait and retry
+            if (attempt < 3) {
+              console.log(`Waiting before attempt ${attempt + 1}...`);
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              continue;
+            }
+            
+            throw new Error(response.error.message || 'Failed to create checkout session');
+          }
+
+          const { data } = response;
+          
+          if (!data?.url) {
+            console.error('No checkout URL received:', data);
+            throw new Error('No checkout URL received from payment processor');
+          }
+
+          console.log('Successfully created checkout session, redirecting to:', data.url);
+          // Clear API call flag on success
+          sessionStorage.removeItem('api_call_in_progress');
+          return data.url;
+        } catch (retryError) {
+          lastError = retryError;
+          console.error(`Error in attempt ${attempt}:`, retryError);
+          
+          // For fatal errors, don't retry
+          if (retryError.message?.includes('Authentication') || 
+              retryError.message?.includes('log in') ||
+              retryError.message?.includes('Invalid price ID')) {
+            throw retryError;
+          }
+          
+          // For potentially transient errors, wait and retry if not the last attempt
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+          
+          throw retryError;
+        }
+      }
+      
+      // If we reached here, all attempts failed
+      throw lastError || new Error('Failed to create checkout session after multiple attempts');
     } catch (error) {
       // Clear API call flag on error
       sessionStorage.removeItem('api_call_in_progress');
@@ -119,6 +162,13 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
           error.message?.includes('token')) {
         window.location.href = '/login?redirect=pricing';
         throw new Error('Your session has expired. Please log in again.');
+      }
+
+      // Special handling for edge function errors
+      if (error.message?.includes('Edge Function') || 
+          error.message?.includes('non-2xx status')) {
+        
+        throw new Error('The payment service is currently unavailable. Please try again later or contact support.');
       }
       
       throw error;
