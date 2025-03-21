@@ -76,7 +76,7 @@ export const handleProfileRedirect = async (
   }
 
   if (profile.subscription_plan === 'free') {
-    console.log('Free plan user, redirecting to dashboard');
+    console.log('Free plan user, redirecting to chat');
     toast({
       title: "Login Successful",
       description: "You've been signed in. Any other active sessions have been signed out for security."
@@ -120,7 +120,8 @@ export const handleSelectedPlan = async (
         title: "Error",
         description: "Failed to process payment. Please try again.",
       });
-      navigate('/dashboard');
+      // Redirect to chat instead of dashboard
+      navigate('/chat');
       return true;
     }
   }

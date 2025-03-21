@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +67,18 @@ export const useAuthCallback = () => {
         console.error("Error creating session:", error);
       }
       
+      // Instead of using handleProfileRedirect, we'll directly go to chat
+      if (profile.subscription_plan === 'free') {
+        console.log('Free plan user, redirecting to chat page');
+        toast({
+          title: "Login Successful",
+          description: "You've been signed in. Any other active sessions have been signed out for security."
+        });
+        navigate('/chat');
+        return;
+      }
+      
+      // For paid plans, still use handleProfileRedirect for Stripe checkout
       await handleProfileRedirect(profile, selectedPlan, { navigate, toast });
 
     } catch (error) {

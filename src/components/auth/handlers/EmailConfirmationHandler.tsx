@@ -163,9 +163,9 @@ export const EmailConfirmationHandler = () => {
             return;
           }
         } else {
-          // Non-payment related email confirmation, go to dashboard
+          // Non-payment related email confirmation, go to chat instead of dashboard
           localStorage.removeItem('login_in_progress');
-          navigate('/dashboard', { replace: true });
+          navigate('/chat', { replace: true });
         }
       } catch (error) {
         console.error("EmailConfirmationHandler: Unexpected error:", error);

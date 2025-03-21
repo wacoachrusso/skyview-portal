@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -114,16 +115,15 @@ export const useSignup = () => {
         // Continue with signup even if email fails
       }
 
-      
-        toast({
-          title: "Account created",
-          description: isGoogleSignIn 
-            ? "Successfully!" 
-            : "Please check your email to verify your account.",
-            duration:30000
-        });
-      
+      toast({
+        title: "Account created",
+        description: isGoogleSignIn 
+          ? "Successfully!" 
+          : "Please check your email to verify your account.",
+        duration: 30000
+      });
 
+      // Direct users to chat page immediately after signup
       navigate("/chat");
     } catch (error) {
       console.error("Error during signup:", error);
