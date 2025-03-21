@@ -17,30 +17,33 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
   const [authUser, setAuthUser] = useState<User | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadProfile = async () => {
       try {
         console.log("Starting to load profile data...");
-        setIsLoading(true);
         
         // Get authenticated user
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
           console.error("Error getting user:", userError);
-          setIsLoading(false);
+          if (isMounted) setIsLoading(false);
           navigate('/login');
           return;
         }
         
         if (!user) {
           console.log("No authenticated user found");
-          setIsLoading(false);
+          if (isMounted) setIsLoading(false);
           navigate('/login');
           return;
         }
         
-        setAuthUser(user);
-        setUserEmail(user.email);
+        if (isMounted) {
+          setAuthUser(user);
+          setUserEmail(user.email);
+        }
         console.log("User authenticated:", { id: user.id, email: user.email });
         
         // First try finding profile by user ID
@@ -59,10 +62,10 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         if (profileByIdData && profileByIdData.account_status === 'deleted') {
           console.log("Found deleted account by ID, attempting reactivation");
           const reactivatedProfile = await reactivateAccount(profileByIdData);
-          if (reactivatedProfile) {
-            setProfile(reactivatedProfile);
-            setIsLoading(false);
-          } else {
+          if (isMounted) {
+            if (reactivatedProfile) {
+              setProfile(reactivatedProfile);
+            }
             setIsLoading(false);
           }
           return;
@@ -87,10 +90,12 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
             if (profileByEmailData.account_status === 'deleted') {
               console.log("Found deleted account by email, attempting reactivation");
               const reactivatedProfile = await reactivateAccount(profileByEmailData);
-              if (reactivatedProfile) {
-                setProfile(reactivatedProfile);
+              if (isMounted) {
+                if (reactivatedProfile) {
+                  setProfile(reactivatedProfile);
+                }
+                setIsLoading(false);
               }
-              setIsLoading(false);
               return;
             }
             
@@ -103,7 +108,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               
             if (updateError) {
               console.error("Error updating profile ID:", updateError);
-              setIsLoading(false);
+              if (isMounted) setIsLoading(false);
             } else {
               console.log("Updated profile ID to match auth ID");
               // Refetch profile with updated ID
@@ -113,42 +118,55 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
                 .eq('id', user.id)
                 .single();
                 
-              setProfile(updatedProfile);
-              setIsLoading(false);
+              if (isMounted) {
+                setProfile(updatedProfile);
+                setIsLoading(false);
+              }
               return;
             }
           } else {
             console.log("No profile found by email either");
-            setIsLoading(false);
+            if (isMounted) setIsLoading(false);
           }
         } else if (profileByIdData) {
           // Active profile found by ID
-          setProfile(profileByIdData);
-          setIsLoading(false);
+          if (isMounted) {
+            setProfile(profileByIdData);
+            setIsLoading(false);
+          }
           return;
         }
         
         // If we get here, no valid profile was found
         console.log("No valid profile found, redirecting to onboarding");
-        setIsLoading(false);
-        toast({
-          title: "Account Setup",
-          description: "Please complete your account setup to continue.",
-        });
+        if (isMounted) {
+          setIsLoading(false);
+          toast({
+            title: "Account Setup",
+            description: "Please complete your account setup to continue.",
+          });
+        }
         navigate('/?scrollTo=pricing-section');
         
       } catch (error) {
         console.error('Error loading profile:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load profile information.",
-        });
-        setIsLoading(false);
+        if (isMounted) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load profile information.",
+          });
+          setIsLoading(false);
+        }
       }
     };
     
     loadProfile();
+    
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+    };
   }, [navigate, toast, reactivateAccount]);
 
   return {
