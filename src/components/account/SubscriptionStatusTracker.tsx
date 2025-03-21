@@ -8,12 +8,15 @@ interface SubscriptionStatusTrackerProps {
     subscription_plan: string;
     last_query_timestamp: string | null;
     subscription_status?: string;
+    created_at: string; // Added this to use for subscription calculations when last_query_timestamp is not available
   };
 }
 
 export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTrackerProps) => {
   const getSubscriptionInfo = () => {
-    if (!profile.last_query_timestamp || profile.subscription_plan === 'free' || profile.subscription_status !== 'active') {
+    if (profile.subscription_status !== 'active' || 
+       !profile.subscription_plan || 
+       (profile.subscription_plan === 'free' || profile.subscription_plan === 'trial_ended')) {
       return {
         startDate: new Date(),
         endDate: new Date(),
@@ -22,11 +25,11 @@ export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTracker
       };
     }
 
-    // For more accurate dates, use the current date if no timestamp is available
-    // or if we're showing a new subscription
+    // Use created_at as the start date if last_query_timestamp is not available
+    // This is a more reliable way to track subscription start
     const startDate = profile.last_query_timestamp 
       ? new Date(profile.last_query_timestamp) 
-      : new Date();
+      : new Date(profile.created_at);
     
     // Calculate end date based on subscription plan
     const endDate = profile.subscription_plan === 'monthly' 
@@ -45,7 +48,9 @@ export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTracker
   const { startDate, endDate, progress, daysLeft } = getSubscriptionInfo();
 
   // If not on an active paid plan, don't show the tracker
-  if (profile.subscription_plan === 'free' || profile.subscription_status !== 'active') {
+  if (profile.subscription_plan === 'free' || 
+      profile.subscription_plan === 'trial_ended' || 
+      profile.subscription_status !== 'active') {
     return null;
   }
 

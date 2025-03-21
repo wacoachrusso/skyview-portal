@@ -75,6 +75,13 @@ export const useSessionInitialization = () => {
       }
 
       setIsLoading(false);
+      
+      // Redirect to chat page after successful initialization
+      // Check current location to avoid redirecting if already on chat page
+      if (window.location.pathname !== '/chat') {
+        console.log("Session initialized successfully, redirecting to chat page");
+        navigate('/chat');
+      }
     } catch (error) {
       console.error("Error initializing session:", error);
       setIsLoading(false);

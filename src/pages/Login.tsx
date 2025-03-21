@@ -17,7 +17,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
+  const next = searchParams.get("next") ?? "/chat"; // Change default redirect to /chat
   const isMobile = useIsMobile();
 
   // Check for error param in URL (from Google auth callback)
@@ -42,6 +42,9 @@ const Login = () => {
 
     setLoading(true);
     try {
+      // Set login in progress flag
+      localStorage.setItem('login_in_progress', 'true');
+      
       const success = await handleSignIn(email, password, rememberMe);
       
       if (success) {
@@ -56,10 +59,16 @@ const Login = () => {
         
         if (user) {
           await handleAuthSession(user.id, createNewSession, navigate);
+          
+          // Clear login in progress flag
+          localStorage.removeItem('login_in_progress');
+          
+          // Redirect to chat by default or to the next parameter if provided
           navigate(next);
         }
       } else {
         setLoading(false);
+        localStorage.removeItem('login_in_progress');
       }
     } catch (error) {
       console.error("Unexpected error during login:", error);
@@ -69,6 +78,7 @@ const Login = () => {
         description: "An unexpected error occurred. Please try again.",
       });
       setLoading(false);
+      localStorage.removeItem('login_in_progress');
     }
   };
 

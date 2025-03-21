@@ -16,6 +16,9 @@ interface ChatContentProps {
   onNewChat?: () => void;
   isChatDisabled?: boolean;
   children?: ReactNode;
+  error?: any;
+  showWelcome?: boolean;
+  currentConversationId?: string | null;
 }
 
 export function ChatContent({
@@ -26,6 +29,9 @@ export function ChatContent({
   onNewChat,
   isChatDisabled = false,
   children,
+  error,
+  showWelcome = false,
+  currentConversationId
 }: ChatContentProps) {
   const { isOffline } = useOfflineStatus();
   const { isTrialEnded } = useFreeTrial(currentUserId, isOffline);
