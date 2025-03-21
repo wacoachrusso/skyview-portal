@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -212,10 +211,7 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-screen w-full">
-      <ChatNavbar 
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-      />
+      <ChatNavbar />
       <div className="flex flex-1 overflow-hidden">
         <ChatLayout
           isSidebarOpen={isSidebarOpen}
