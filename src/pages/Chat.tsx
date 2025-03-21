@@ -1,7 +1,6 @@
 
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChatNavbar } from "@/components/chat/layout/ChatNavbar";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { ChatContent } from "@/components/chat/ChatContent";
 import { ChatContainer } from "@/components/chat/ChatContainer";
@@ -65,11 +64,12 @@ export default function Chat() {
     createNewConversation();
   };
 
-  // Handle sending a message
+  // Handle sending a message, creating a wrapper to match expected prop type
   const handleMessageSend = (content: string) => {
     if (currentConversationId) {
-      handleSendMessage(content, currentConversationId);
+      return handleSendMessage(content, currentConversationId);
     }
+    return Promise.resolve();
   };
 
   // Proper Promise-returning wrapper function for handleCopyMessage
@@ -87,7 +87,6 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-screen w-full">
-      <ChatNavbar />
       <div className="flex flex-1 overflow-hidden">
         <ChatLayout
           isSidebarOpen={isSidebarOpen}
@@ -99,7 +98,7 @@ export default function Chat() {
             messages={messages}
             currentUserId={currentUserId}
             isLoading={isLoading}
-            onSendMessage={handleSendMessage}
+            onSendMessage={handleMessageSend}
             onNewChat={handleNewChat}
             error={error}
             showWelcome={showWelcome}
@@ -114,7 +113,7 @@ export default function Chat() {
                 onSelectQuestion={handleQuestionSelect}
               />
               <ChatInput 
-                onSendMessage={handleSendMessage}
+                onSendMessage={handleMessageSend}
                 isLoading={isLoading}
                 selectedQuestion={selectedQuestion}
               />
