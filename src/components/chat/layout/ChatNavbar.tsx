@@ -18,14 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 
-interface ChatNavbarProps {
-  isSidebarOpen?: boolean;
-  setIsSidebarOpen?: (open: boolean) => void;
-}
-
-export function ChatNavbar({ isSidebarOpen, setIsSidebarOpen }: ChatNavbarProps) {
+export function ChatNavbar() {
   const { handleLogout } = useLogout();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -33,17 +27,8 @@ export function ChatNavbar({ isSidebarOpen, setIsSidebarOpen }: ChatNavbarProps)
   return (
     <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm py-3 px-4 sticky top-0 z-50">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
-        {/* Logo section with hamburger menu for mobile */}
+        {/* Logo section */}
         <div className="flex items-center gap-2">
-          {isMobile && setIsSidebarOpen && (
-            <SheetTrigger asChild onClick={() => setIsSidebarOpen(true)}>
-              <Button variant="ghost" size="icon" className="mr-2 h-8 w-8">
-                <Menu className="h-5 w-5 text-foreground" />
-                <span className="sr-only">Toggle sidebar</span>
-              </Button>
-            </SheetTrigger>
-          )}
-          
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
             alt="SkyGuide Logo" 
