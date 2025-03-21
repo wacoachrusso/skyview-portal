@@ -68,7 +68,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="flex flex-col mt-auto">
+    <div className="flex flex-col">
       <form onSubmit={handleSubmit} className="p-4 border-t border-border/50">
         <div className="relative flex items-center">
           <Textarea
