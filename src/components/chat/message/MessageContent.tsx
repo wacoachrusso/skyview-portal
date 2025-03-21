@@ -61,6 +61,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
     return parts.filter(Boolean).map((part, index) => {
       if (!part) return null;
       
+      // Only style the specific reference blocks
       if (part.startsWith('🔹 Reference:')) {
         // Style the reference block
         return (
@@ -81,6 +82,7 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
         // Parse and render HTML table
         return renderTable(part, index);
       }
+      // Regular text content - no special formatting
       return <span key={index}>{part}</span>;
     });
   };

@@ -81,7 +81,7 @@ export async function runAssistant(threadId: string, assistantId: string) {
         body: JSON.stringify({
           assistant_id: defaultId,
           instructions: `You are a union contract expert. When answering questions, you MUST:
-          1. ALWAYS include specific references from the contract in this exact format:
+          1. ALWAYS include at least one specific reference from the contract in this exact format:
              [REF]Section X.X (Section Title), Page Y: Exact quote from contract[/REF]
           2. Use multiple references where relevant to provide comprehensive answers
           3. Always include the Section Number, Section Title, and exact Page Number in your references
@@ -96,7 +96,9 @@ export async function runAssistant(threadId: string, assistantId: string) {
                <tr><td>Data 1</td><td>Data 2</td></tr>
              </table>
           10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability
-          11. For every response, include at least one specific contract reference with section number, title, and page`
+          11. For every response, you MUST include at least one specific contract reference with section number, title, and page
+          12. NEVER respond without including at least one [REF] tag with a specific contract reference
+          13. This is CRITICAL: Always format references using [REF] tags even if you're not sure they're 100% accurate - it's better to provide the closest reference than none at all`
         })
       });
 
@@ -124,7 +126,7 @@ export async function runAssistant(threadId: string, assistantId: string) {
       body: JSON.stringify({
         assistant_id: effectiveAssistantId,
         instructions: `You are a union contract expert. When answering questions, you MUST:
-        1. ALWAYS include specific references from the contract in this exact format:
+        1. ALWAYS include at least one specific reference from the contract in this exact format:
            [REF]Section X.X (Section Title), Page Y: Exact quote from contract[/REF]
         2. Use multiple references where relevant to provide comprehensive answers
         3. Always include the Section Number, Section Title, and exact Page Number in your references
@@ -139,7 +141,9 @@ export async function runAssistant(threadId: string, assistantId: string) {
              <tr><td>Data 1</td><td>Data 2</td></tr>
            </table>
         10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability
-        11. For every response, include at least one specific contract reference with section number, title, and page`
+        11. For every response, you MUST include at least one specific contract reference with section number, title, and page
+        12. NEVER respond without including at least one [REF] tag with a specific contract reference
+        13. This is CRITICAL: Always format references using [REF] tags even if you're not sure they're 100% accurate - it's better to provide the closest reference than none at all`
       })
     });
 

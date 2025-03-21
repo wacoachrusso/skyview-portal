@@ -19,8 +19,9 @@ export function cleanResponse(response: string): string {
     }
   );
   
-  // If no references were found, append a note
-  if (!formattedResponse.includes('🔹 Reference:')) {
+  // If no references were found and it's not an error message about non-contract content
+  if (!formattedResponse.includes('🔹 Reference:') && 
+      !formattedResponse.includes("I'm designed to answer questions about your union contract")) {
     formattedResponse = formattedResponse + '\n\n🔹 Note: No specific contract references were found for this query. Please consult your union representative for further clarification.';
   }
   
