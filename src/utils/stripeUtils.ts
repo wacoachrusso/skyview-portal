@@ -26,6 +26,8 @@ export const createStripeCheckoutSession = async ({
     
     if (!session) {
       console.log('No active session, will use email-based flow');
+    } else {
+      console.log('Active session found for email:', session.user.email);
     }
     
     // Get current origin for redirect URLs
@@ -40,7 +42,8 @@ export const createStripeCheckoutSession = async ({
         origin,
         metadata: {
           plan_type: planType,
-          is_new_user: !session
+          is_new_user: !session,
+          user_id: session?.user?.id || null
         }
       }),
       headers: session ? {

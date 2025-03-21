@@ -11,59 +11,93 @@ export const EmailConfirmationHandler = () => {
 
   useEffect(() => {
     const checkAuthAndPayment = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        navigate('/login');
-        return;
-      }
-
-      // Check if this is a post-payment confirmation
-      const isPostPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
-      if (isPostPayment) {
-        try {
-          // Create a new session token for this user
-          await createNewSession(session.user.id);
-          console.log("Created new session token after email confirmation");
-          
-          // Update user's profile to mark subscription as active
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-              subscription_status: 'active',
-              // If we know the plan type from localStorage
-              ...(localStorage.getItem('selected_plan') && {
-                subscription_plan: localStorage.getItem('selected_plan')
-              })
-            })
-            .eq('id', session.user.id);
-            
-          if (updateError) {
-            console.error("Error updating profile after payment:", updateError);
-          }
-          
-          // Clean up localStorage
-          localStorage.removeItem('postPaymentConfirmation');
-          localStorage.removeItem('selected_plan');
-          
-          // Set flag to show welcome message in app
-          localStorage.setItem('subscription_activated', 'true');
-          
+      try {
+        console.log("Email confirmation handler running");
+        
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error in EmailConfirmationHandler:", sessionError);
           toast({
-            title: "Welcome to SkyGuide",
-            description: "Your account is now ready to use with full access.",
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Please try logging in again."
           });
-          
-          navigate('/chat');
-        } catch (error) {
-          console.error("Error in post-payment processing:", error);
-          toast({
-            title: "Welcome to SkyGuide",
-            description: "Your account is now ready to use.",
-          });
-          navigate('/chat');
+          navigate('/login');
+          return;
         }
-      } else {
-        navigate('/dashboard');
+        
+        if (!session?.user) {
+          console.log("No user session found, redirecting to login");
+          navigate('/login');
+          return;
+        }
+
+        console.log("User authenticated:", session.user.email);
+
+        // Check if this is a post-payment confirmation
+        const isPostPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
+        console.log("Is post-payment confirmation:", isPostPayment);
+        
+        if (isPostPayment) {
+          try {
+            // Create a new session token for this user
+            await createNewSession(session.user.id);
+            console.log("Created new session token after email confirmation");
+            
+            // Update user's profile to mark subscription as active
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                subscription_status: 'active',
+                // If we know the plan type from localStorage
+                ...(localStorage.getItem('selected_plan') && {
+                  subscription_plan: localStorage.getItem('selected_plan')
+                })
+              })
+              .eq('id', session.user.id);
+              
+            if (updateError) {
+              console.error("Error updating profile after payment:", updateError);
+            } else {
+              console.log("Profile updated with subscription status: active");
+            }
+            
+            // Clean up localStorage
+            localStorage.removeItem('postPaymentConfirmation');
+            localStorage.removeItem('selected_plan');
+            
+            // Set flag to show welcome message in app
+            localStorage.setItem('subscription_activated', 'true');
+            
+            toast({
+              title: "Welcome to SkyGuide",
+              description: "Your account is now ready to use with full access.",
+            });
+            
+            // Always navigate directly to chat after payment
+            navigate('/chat', { replace: true });
+          } catch (error) {
+            console.error("Error in post-payment processing:", error);
+            toast({
+              title: "Welcome to SkyGuide",
+              description: "Your account is now ready to use.",
+            });
+            navigate('/chat', { replace: true });
+          }
+        } else {
+          // Non-payment related email confirmation, go to dashboard
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (error) {
+        console.error("Unexpected error in EmailConfirmationHandler:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An unexpected error occurred. Please try logging in again."
+        });
+        navigate('/login');
       }
     };
 

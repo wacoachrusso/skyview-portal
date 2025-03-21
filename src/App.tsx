@@ -1,4 +1,3 @@
-
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,7 +17,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Simplified InitialSessionCheck component
+// Enhanced InitialSessionCheck component with better payment flow handling
 function InitialSessionCheck() {
   const navigate = useNavigate();
   
@@ -27,21 +26,50 @@ function InitialSessionCheck() {
       try {
         console.log("Checking initial session on app load");
         
-        // Skip auth callback route
-        if (window.location.pathname === '/auth/callback') {
+        // Skip specific routes that handle their own auth
+        if (window.location.pathname === '/auth/callback' || 
+            window.location.pathname.includes('/stripe-callback')) {
+          console.log("Skipping session check for auth callback route");
           return;
+        }
+        
+        // Check for post-payment flow
+        const isPostPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
+        if (isPostPayment && window.location.pathname === '/login') {
+          console.log("Post-payment user landed on login page - attempting to recover session");
+          
+          // Try to get current session 
+          const { data: { session } } = await supabase.auth.getSession(); 
+          
+          if (session?.user) {
+            console.log("Found session after payment, redirecting to chat");
+            navigate('/chat', { replace: true });
+            return;
+          } else {
+            // We need to clear these flags if no session is found to prevent login loops
+            console.log("No session found after payment, clearing flags");
+            localStorage.removeItem('postPaymentConfirmation');
+            localStorage.removeItem('selected_plan');
+          }
         }
         
         // Basic session check
         const { data } = await supabase.auth.getSession();
         
         if (data.session) {
-          console.log("Active session found");
+          console.log("Active session found for user:", data.session.user.email);
+          
+          // Check if user just completed payment
+          if (isPostPayment) {
+            console.log("Post-payment user with active session, redirecting to chat");
+            navigate('/chat', { replace: true });
+            return;
+          }
           
           // Check user's subscription status
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('subscription_plan, query_count')
+            .select('subscription_plan, subscription_status, query_count')
             .eq('id', data.session.user.id)
             .single();
             
@@ -50,8 +78,11 @@ function InitialSessionCheck() {
             return;
           }
           
+          console.log("User profile:", profile);
+          
           // Free trial ended or not active subscription - redirect to pricing
           if ((profile?.subscription_plan === 'free' && profile?.query_count >= 1) || 
+              profile?.subscription_status === 'inactive' ||
               profile?.subscription_plan === 'trial_ended') {
             console.log("Free trial ended or inactive subscription, redirecting to pricing");
             navigate('/?scrollTo=pricing-section', { replace: true });
