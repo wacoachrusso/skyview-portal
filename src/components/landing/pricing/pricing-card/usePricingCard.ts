@@ -36,6 +36,7 @@ export const usePricingCard = () => {
         variant: "default",
         title: "Processing",
         description: "Preparing your checkout session...",
+        duration: 30000, // 30 seconds
       });
       
       // Check if user is logged in
@@ -63,6 +64,20 @@ export const usePricingCard = () => {
             mode
           }
         });
+        return;
+      }
+
+      // Perform a session refresh to ensure we have a fresh token
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.error('Failed to refresh session:', refreshError);
+        processingToast.dismiss();
+        toast({
+          variant: "destructive",
+          title: "Session Error",
+          description: "Failed to refresh your session. Please log in again.",
+        });
+        navigate('/login', { state: { returnTo: 'pricing' } });
         return;
       }
 
@@ -101,16 +116,26 @@ export const usePricingCard = () => {
         // Customize error message based on error type
         if (error.message?.includes('Authentication') || error.message?.includes('session') || error.message?.includes('token')) {
           errorMessage = "Authentication required. Please log in and try again.";
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: errorMessage,
+          });
           navigate('/login', { state: { returnTo: 'pricing' } });
         } else if (error.message?.includes('network')) {
           errorMessage = "Network error. Please check your connection and try again.";
+          toast({
+            variant: "destructive",
+            title: "Connection Error",
+            description: errorMessage,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: error.message || errorMessage,
+          });
         }
-        
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || errorMessage,
-        });
       }
     } catch (error: any) {
       console.error('Error in usePricingCard:', error);

@@ -10,13 +10,15 @@ interface StripeCheckoutParams {
 export const createStripeCheckoutSession = async ({ priceId, email, sessionToken }: StripeCheckoutParams) => {
   console.log('Creating checkout session for:', { priceId, email, hasSessionToken: !!sessionToken });
   
-  // Get current session
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  // First, refresh the session to ensure we have a valid token
+  const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
   
-  if (sessionError) {
-    console.error('Session error:', sessionError);
+  if (refreshError) {
+    console.error('Session refresh error:', refreshError);
     throw new Error('Authentication error. Please log in again before proceeding.');
   }
+  
+  const session = refreshData.session;
   
   if (!session) {
     console.error('No active session found when creating checkout');
@@ -49,7 +51,7 @@ export const createStripeCheckoutSession = async ({ priceId, email, sessionToken
         priceId: priceId,
         mode: 'subscription',
         email: email.trim().toLowerCase(),
-        sessionToken: sessionToken || '',
+        sessionToken: sessionToken || session.refresh_token || '',
         origin: origin
       }),
       headers: {

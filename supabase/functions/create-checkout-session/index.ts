@@ -19,17 +19,18 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Request received:', req.method);
-    console.log('Request headers:', JSON.stringify([...req.headers.entries()]));
+    console.log('[create-checkout-session] Request received:', req.method);
     
-    // Extract and verify authorization
+    // Extract authorization header for debugging
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('Missing authorization header');
+    console.log('[create-checkout-session] Auth header present:', !!authHeader);
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('[create-checkout-session] Missing or invalid authorization header');
       return new Response(
         JSON.stringify({ 
-          error: 'Missing authorization header',
-          details: 'Authorization header is required'
+          error: 'Missing or invalid authorization header',
+          details: 'Authorization header with Bearer token is required'
         }),
         { 
           status: 401, 
@@ -38,21 +39,21 @@ serve(async (req) => {
       );
     }
 
-    // Get the request body
+    // Parse request data
     const requestData = await req.text();
-    console.log('Request body received, length:', requestData.length);
+    console.log('[create-checkout-session] Request body length:', requestData.length);
     
     let jsonBody;
     try {
       jsonBody = JSON.parse(requestData);
-      console.log('Parsed request data:', {
+      console.log('[create-checkout-session] Request data:', {
         priceId: jsonBody.priceId,
         mode: jsonBody.mode,
         hasEmail: !!jsonBody.email,
         origin: jsonBody.origin
       });
     } catch (error) {
-      console.error('Invalid JSON in request body:', error);
+      console.error('[create-checkout-session] JSON parse error:', error.message);
       return new Response(
         JSON.stringify({ 
           error: 'Invalid request format',
@@ -69,7 +70,10 @@ serve(async (req) => {
     
     // Validate required fields
     if (!priceId || !email) {
-      console.error('Missing required fields:', { hasPriceId: !!priceId, hasEmail: !!email });
+      console.error('[create-checkout-session] Missing fields:', { 
+        hasPriceId: !!priceId, 
+        hasEmail: !!email 
+      });
       return new Response(
         JSON.stringify({ 
           error: 'Missing required fields', 
@@ -85,7 +89,7 @@ serve(async (req) => {
     // Check if Stripe key is valid
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeKey) {
-      console.error('STRIPE_SECRET_KEY is not set');
+      console.error('[create-checkout-session] STRIPE_SECRET_KEY is not set');
       return new Response(
         JSON.stringify({ 
           error: 'Payment service configuration error', 
@@ -100,14 +104,14 @@ serve(async (req) => {
 
     // Determine base URL for success and cancel URLs
     const baseUrl = origin || 'https://skyguide.site';
-    console.log('Using base URL for redirects:', baseUrl);
+    console.log('[create-checkout-session] Using base URL:', baseUrl);
 
     // Create the checkout session
     try {
       const successUrl = `${baseUrl}/auth/callback?session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${baseUrl}/?scrollTo=pricing-section`;
       
-      console.log('Creating checkout session with URLs:', { 
+      console.log('[create-checkout-session] Creating session with URLs:', { 
         successUrl,
         cancelUrl
       });
@@ -131,7 +135,7 @@ serve(async (req) => {
         },
       });
 
-      console.log('Checkout session created:', { 
+      console.log('[create-checkout-session] Session created successfully:', { 
         id: session.id, 
         hasUrl: !!session.url
       });
@@ -144,7 +148,7 @@ serve(async (req) => {
         }
       );
     } catch (stripeError) {
-      console.error('Stripe API error:', stripeError);
+      console.error('[create-checkout-session] Stripe API error:', stripeError);
       return new Response(
         JSON.stringify({ 
           error: 'Payment processor error', 
@@ -158,7 +162,7 @@ serve(async (req) => {
       );
     }
   } catch (error) {
-    console.error('Unhandled error in create-checkout-session:', error);
+    console.error('[create-checkout-session] Unhandled error:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Server error',
