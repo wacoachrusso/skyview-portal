@@ -89,7 +89,13 @@ export async function runAssistant(threadId: string, assistantId: string) {
           5. If no specific reference exists, clearly state "No specific contract reference was found for this query. Please consult your union representative for further clarification."
           6. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
           7. Format all contract references consistently using the [REF] tags
-          8. Do not fabricate or assume references if they don't exist in the contract`
+          8. Do not fabricate or assume references if they don't exist in the contract
+          9. When presenting structured data like pay scales, rates, schedules, or numerical information, use HTML table format like this:
+             <table>
+               <tr><th>Header 1</th><th>Header 2</th></tr>
+               <tr><td>Data 1</td><td>Data 2</td></tr>
+             </table>
+          10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability`
         })
       });
 
@@ -125,7 +131,13 @@ export async function runAssistant(threadId: string, assistantId: string) {
         5. If no specific reference exists, clearly state "No specific contract reference was found for this query. Please consult your union representative for further clarification."
         6. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
         7. Format all contract references consistently using the [REF] tags
-        8. Do not fabricate or assume references if they don't exist in the contract`
+        8. Do not fabricate or assume references if they don't exist in the contract
+        9. When presenting structured data like pay scales, rates, schedules, or numerical information, use HTML table format like this:
+           <table>
+             <tr><th>Header 1</th><th>Header 2</th></tr>
+             <tr><td>Data 1</td><td>Data 2</td></tr>
+           </table>
+        10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability`
       })
     });
 

@@ -1,6 +1,14 @@
 
 import { Quote, Check } from "lucide-react";
 import { useEffect, useState } from "react";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 interface MessageContentProps {
   message: {
@@ -42,10 +50,17 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   }, [message.content, message.role]);
 
   const formatContent = (content: string) => {
-    // Split content by reference markers (🔹 Reference:)
-    const parts = content.split(/(🔹 Reference:.*?)(?=\n|$)/g);
+    // Check if the content contains an HTML table
+    const hasTable = content.includes('<table>') && content.includes('</table>');
     
-    return parts.map((part, index) => {
+    // Split content by reference markers (🔹 Reference:) and table markers
+    const parts = hasTable 
+      ? content.split(/(<table>.*?<\/table>)|(🔹 Reference:.*?)(?=\n|$)/gs)
+      : content.split(/(🔹 Reference:.*?)(?=\n|$)/g);
+    
+    return parts.filter(Boolean).map((part, index) => {
+      if (!part) return null;
+      
       if (part.startsWith('🔹 Reference:')) {
         // Style the reference block
         return (
@@ -62,9 +77,61 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
             <em>{part}</em>
           </div>
         );
+      } else if (part.startsWith('<table>') && part.includes('</table>')) {
+        // Parse and render HTML table
+        return renderTable(part, index);
       }
       return <span key={index}>{part}</span>;
     });
+  };
+
+  // Function to parse and render HTML tables
+  const renderTable = (tableHtml: string, key: number) => {
+    try {
+      // Extract rows from the table HTML
+      const rowsMatch = tableHtml.match(/<tr>(.*?)<\/tr>/gs);
+      if (!rowsMatch) return <span key={key}>{tableHtml}</span>;
+      
+      const headerMatch = rowsMatch[0].match(/<th>(.*?)<\/th>/gs);
+      const isHeaderRow = headerMatch && headerMatch.length > 0;
+      
+      const headers = isHeaderRow 
+        ? rowsMatch[0].match(/<th>(.*?)<\/th>/gs)?.map(h => h.replace(/<\/?th>/g, '')) || []
+        : [];
+      
+      const dataRows = isHeaderRow ? rowsMatch.slice(1) : rowsMatch;
+      
+      return (
+        <div key={key} className="my-4 w-full overflow-x-auto">
+          <Table>
+            {isHeaderRow && (
+              <TableHeader>
+                <TableRow>
+                  {headers.map((header, i) => (
+                    <TableHead key={i}>{header}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+            )}
+            <TableBody>
+              {dataRows.map((row, rowIndex) => {
+                const cells = row.match(/<td>(.*?)<\/td>/gs)?.map(c => c.replace(/<\/?td>/g, '')) || [];
+                return (
+                  <TableRow key={rowIndex}>
+                    {cells.map((cell, cellIndex) => (
+                      <TableCell key={cellIndex}>{cell}</TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    } catch (error) {
+      console.error("Error rendering table:", error);
+      return <span key={key}>{tableHtml}</span>;
+    }
   };
 
   return (
