@@ -9,6 +9,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { NotificationManager } from "@/components/admin/NotificationManager";
 import { AlphaTesters } from "@/components/admin/AlphaTesters";
+import { EmailQueueManager } from "@/components/admin/EmailQueueManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SetPasswordPanel } from "@/components/admin/SetPasswordPanel";
@@ -58,6 +59,7 @@ const AdminDashboard = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="alpha-testers">Alpha Testers</TabsTrigger>
+          <TabsTrigger value="emails">Email Queue</TabsTrigger>
           <TabsTrigger value="release-notes">Release Notes</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -65,6 +67,7 @@ const AdminDashboard = () => {
         <TabsContent value="overview"><SystemStats /></TabsContent>
         <TabsContent value="users"><UserManagement /></TabsContent>
         <TabsContent value="alpha-testers"><AlphaTesters /></TabsContent>
+        <TabsContent value="emails"><EmailQueueManager /></TabsContent>
         <TabsContent value="release-notes"><ReleaseNotesAdmin /></TabsContent>
         <TabsContent value="notifications"><NotificationManager /></TabsContent>
       </Tabs>
