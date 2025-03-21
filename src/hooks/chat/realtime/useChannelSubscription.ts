@@ -12,8 +12,12 @@ export function useChannelSubscription() {
   // Cleanup function for channel subscription
   const cleanupChannel = () => {
     if (activeChannelRef.current) {
-      console.log(`Removing channel: ${activeChannelRef.current}`);
-      supabase.removeChannel(activeChannelRef.current);
+      console.log(`Cleaning up channel: ${activeChannelRef.current}`);
+      try {
+        supabase.removeChannel(activeChannelRef.current);
+      } catch (error) {
+        console.error("Error removing channel:", error);
+      }
       activeChannelRef.current = null;
     }
   };
@@ -22,13 +26,16 @@ export function useChannelSubscription() {
   const setActiveChannel = (channel: any) => {
     cleanupChannel();
     activeChannelRef.current = channel;
+    console.log(`Active channel set: ${activeChannelRef.current}`);
   };
 
   // Component lifecycle management
   useEffect(() => {
     isMountedRef.current = true;
+    console.log("Channel subscription hook mounted");
     
     return () => {
+      console.log("Channel subscription hook unmounting");
       isMountedRef.current = false;
       cleanupChannel();
     };

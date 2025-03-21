@@ -14,8 +14,16 @@ export function useRealTimeMessages(
 
   // Subscribe to real-time updates when conversation changes
   useEffect(() => {
+    console.log(`useRealTimeMessages: conversation changed to ${conversationId}`);
+    
     if (conversationId) {
+      console.log(`Setting up channel for conversation: ${conversationId}`);
       setupChannel(conversationId);
+    } else {
+      console.log("No conversation ID available, skipping channel setup");
     }
+    
+    // Effect cleanup does not need to do anything special here as
+    // the useChannelSubscription hook handles cleaning up the channel
   }, [conversationId, setupChannel]);
 }
