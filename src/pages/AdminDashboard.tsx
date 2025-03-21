@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ReleaseNotesAdmin } from "@/components/admin/ReleaseNotesAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, MessageSquare, Mail } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Mail, User } from "lucide-react";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { NotificationManager } from "@/components/admin/NotificationManager";
@@ -45,6 +45,14 @@ const AdminDashboard = () => {
           >
             <MessageSquare className="h-4 w-4" />
             Go to Chat
+          </Button>
+          <Button 
+            variant="secondary"
+            onClick={() => navigate("/account")} 
+            className="gap-2"
+          >
+            <User className="h-4 w-4" />
+            Account
           </Button>
         </div>
       </div>
