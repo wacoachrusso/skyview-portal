@@ -12,6 +12,7 @@ import { useWelcomeState } from "@/hooks/useWelcomeState";
 import { useChatClipboard } from "@/utils/clipboardUtils";
 import { useQuestionHandler } from "@/hooks/useQuestionHandler";
 import { useState } from 'react';
+import { ChatInput } from "@/components/chat/ChatInput";
 
 export default function Chat() {
   const { currentUserId } = useUserProfile();
@@ -76,6 +77,14 @@ export default function Chat() {
     return handleCopyMessage(content);
   };
 
+  const [selectedQuestion, setSelectedQuestion] = useState<string>("");
+  
+  // Handle question selection with state update
+  const handleQuestionSelect = (question: string) => {
+    setSelectedQuestion(question);
+    handleSelectQuestion(question);
+  };
+
   return (
     <div className="flex flex-col h-screen w-full">
       <ChatNavbar />
@@ -90,19 +99,26 @@ export default function Chat() {
             messages={messages}
             currentUserId={currentUserId}
             isLoading={isLoading}
-            onSendMessage={handleMessageSend}
+            onSendMessage={handleSendMessage}
             onNewChat={handleNewChat}
             error={error}
             showWelcome={showWelcome}
             currentConversationId={currentConversationId}
           >
-            <ChatContainer
-              messages={messages}
-              currentUserId={currentUserId}
-              isLoading={isLoading}
-              onCopyMessage={handleCopyMessageWrapper}
-              onSelectQuestion={handleSelectQuestion}
-            />
+            <div className="flex flex-col h-full">
+              <ChatContainer
+                messages={messages}
+                currentUserId={currentUserId}
+                isLoading={isLoading}
+                onCopyMessage={handleCopyMessageWrapper}
+                onSelectQuestion={handleQuestionSelect}
+              />
+              <ChatInput 
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+                selectedQuestion={selectedQuestion}
+              />
+            </div>
           </ChatContent>
         </ChatLayout>
       </div>
