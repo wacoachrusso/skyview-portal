@@ -35,7 +35,6 @@ export function ChatContent({
   const { loadError, isTrialEnded } = useFreeTrial(currentUserId, isOffline);
   const [userProfile, setUserProfile] = useState<{
     subscription_plan: string;
-    subscription_status: string;
     query_count: number;
   } | null>(null);
 
@@ -45,113 +44,39 @@ export function ChatContent({
       if (!currentUserId) return;
 
       try {
-        // Check for post-payment condition first
-        const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
-        
-        if (isPostPayment) {
-          console.log("ChatContent: Post-payment state detected, ensuring status updated");
-          
-          // Delay this process slightly to ensure we have a valid session
-          setTimeout(async () => {
-            // Update user profile to mark subscription as active
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ 
-                subscription_status: 'active',
-                subscription_plan: localStorage.getItem('selected_plan') || 'monthly'
-              })
-              .eq('id', currentUserId);
-              
-            if (updateError) {
-              console.error("ChatContent: Error updating profile after payment:", updateError);
-            } else {
-              console.log("ChatContent: Profile updated with active subscription");
-            }
-          }, 1000);
-          
-          // Don't clear post-payment flags yet - they're needed elsewhere
-        }
-
-        // Fetch the profile regardless of payment state
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("subscription_plan, subscription_status, query_count")
+          .select("subscription_plan, query_count")
           .eq("id", currentUserId)
           .single();
 
         if (error) throw error;
 
-        console.log("ChatContent: User profile:", profile);
         setUserProfile(profile);
         
-        // Only check for free trial end if:
-        // 1. Not in post-payment state
-        // 2. No login in progress
-        // 3. Not on homepage already
-        if (!isPostPayment && 
-            !localStorage.getItem('login_in_progress') && 
-            (profile.subscription_plan === "free" && profile.query_count >= 2) && 
-            window.location.pathname !== '/') {
-          console.log("ChatContent: Free trial ended - redirecting to pricing");
+        // If user is on free plan and has reached the limit, redirect to pricing
+        if (profile.subscription_plan === "free" && profile.query_count >= 2) {
+          console.log("Free trial ended in ChatContent - redirecting");
           toast({
-            title: "Subscription Required",
+            title: "Free Trial Ended",
             description: "Please select a subscription plan to continue.",
             variant: "destructive",
           });
-          // Clear temporary flags now that we're redirecting
-          localStorage.removeItem('login_in_progress');
           navigate("/?scrollTo=pricing-section", { replace: true });
         }
-        
-        // Only when we know we're staying on this page and everything is good,
-        // we can clear the post-payment state
-        if (isPostPayment && 
-            profile.subscription_status === 'active' && 
-            profile.subscription_plan !== 'free' &&
-            window.location.pathname === '/chat') {
-          // Clear payment flags after a delay to ensure other components have processed them
-          setTimeout(() => {
-            console.log("ChatContent: All good, clearing payment flags after 3 seconds");
-            localStorage.removeItem('subscription_activated');
-            localStorage.removeItem('selected_plan');
-            localStorage.removeItem('payment_in_progress');
-            localStorage.removeItem('login_in_progress');
-          }, 3000);
-        }
       } catch (error) {
-        console.error("ChatContent: Error fetching user profile:", error);
+        console.error("Error fetching user profile:", error);
       }
     };
 
     fetchUserProfile();
-    
-    // Set up a timer to clear flags after 1 minute as a fallback
-    const safetyClearTimeout = setTimeout(() => {
-      if (localStorage.getItem('subscription_activated') === 'true' &&
-          window.location.pathname === '/chat') {
-        console.log("ChatContent: Safety timeout clearing payment flags");
-        localStorage.removeItem('subscription_activated');
-        localStorage.removeItem('selected_plan');
-        localStorage.removeItem('payment_in_progress');
-        localStorage.removeItem('login_in_progress');
-      }
-    }, 60000); // 1 minute safety timeout
-    
-    return () => clearTimeout(safetyClearTimeout);
-    
   }, [currentUserId, navigate, toast]);
 
   // Determine if the chat should be disabled
   const shouldDisableChat = useMemo(() => {
-    // Skip all checks if we're in post-payment state
-    if (localStorage.getItem('subscription_activated') === 'true') {
-      return false;
-    }
-    
     return isChatDisabled || 
            isTrialEnded || 
-           (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2) ||
-           (userProfile?.subscription_status === 'inactive' && userProfile?.subscription_plan !== 'free');
+           (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2);
   }, [isChatDisabled, isTrialEnded, userProfile]);
 
   // Memoize the display messages
@@ -159,16 +84,10 @@ export function ChatContent({
     isOffline ? messages : messages
   , [isOffline, messages]);
 
-  // Auto-redirect if trial has ended
+  // Auto-redirect if trial has ended - this is an additional check to ensure redirection works
   useEffect(() => {
-    // Skip redirect if in post-payment state
-    if (localStorage.getItem('subscription_activated') === 'true' ||
-        localStorage.getItem('login_in_progress') === 'true') {
-      return;
-    }
-    
     if (shouldDisableChat && currentUserId) {
-      console.log("ChatContent: Chat is disabled, redirecting to pricing");
+      console.log("Chat is disabled, redirecting to pricing");
       navigate("/?scrollTo=pricing-section", { replace: true });
     }
   }, [shouldDisableChat, navigate, currentUserId]);
