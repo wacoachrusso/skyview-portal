@@ -28,14 +28,18 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         
         if (userError) {
           console.error("Error getting user:", userError);
-          if (isMounted) setIsLoading(false);
+          if (isMounted) {
+            setIsLoading(false);
+          }
           navigate('/login');
           return;
         }
         
         if (!user) {
           console.log("No authenticated user found");
-          if (isMounted) setIsLoading(false);
+          if (isMounted) {
+            setIsLoading(false);
+          }
           navigate('/login');
           return;
         }
@@ -44,6 +48,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
           setAuthUser(user);
           setUserEmail(user.email);
         }
+        
         console.log("User authenticated:", { id: user.id, email: user.email });
         
         // First try finding profile by user ID
@@ -61,8 +66,8 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         // Check if profile is marked as deleted and reactivate if needed
         if (profileByIdData && profileByIdData.account_status === 'deleted') {
           console.log("Found deleted account by ID, attempting reactivation");
-          const reactivatedProfile = await reactivateAccount(profileByIdData);
           if (isMounted) {
+            const reactivatedProfile = await reactivateAccount(profileByIdData);
             if (reactivatedProfile) {
               setProfile(reactivatedProfile);
             }
@@ -89,8 +94,8 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
             // Found profile by email
             if (profileByEmailData.account_status === 'deleted') {
               console.log("Found deleted account by email, attempting reactivation");
-              const reactivatedProfile = await reactivateAccount(profileByEmailData);
               if (isMounted) {
+                const reactivatedProfile = await reactivateAccount(profileByEmailData);
                 if (reactivatedProfile) {
                   setProfile(reactivatedProfile);
                 }
@@ -108,7 +113,9 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               
             if (updateError) {
               console.error("Error updating profile ID:", updateError);
-              if (isMounted) setIsLoading(false);
+              if (isMounted) {
+                setIsLoading(false);
+              }
             } else {
               console.log("Updated profile ID to match auth ID");
               // Refetch profile with updated ID
@@ -122,11 +129,13 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
                 setProfile(updatedProfile);
                 setIsLoading(false);
               }
-              return;
             }
+            return;
           } else {
             console.log("No profile found by email either");
-            if (isMounted) setIsLoading(false);
+            if (isMounted) {
+              setIsLoading(false);
+            }
           }
         } else if (profileByIdData) {
           // Active profile found by ID
@@ -138,15 +147,15 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         }
         
         // If we get here, no valid profile was found
-        console.log("No valid profile found, redirecting to onboarding");
         if (isMounted) {
+          console.log("No valid profile found, redirecting to onboarding");
           setIsLoading(false);
           toast({
             title: "Account Setup",
             description: "Please complete your account setup to continue.",
           });
+          navigate('/?scrollTo=pricing-section');
         }
-        navigate('/?scrollTo=pricing-section');
         
       } catch (error) {
         console.error('Error loading profile:', error);

@@ -17,10 +17,13 @@ const Account = () => {
   const { isLoading, userEmail, profile, handleCancelSubscription } = useAccountManagement();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [mounted, setMounted] = useState(true);
 
   useEffect(() => {
+    setMounted(true);
+    
     const checkAlphaTester = async () => {
-      if (!profile?.id) return;
+      if (!profile?.id || !mounted) return;
 
       const { data: alphaTester } = await supabase
         .from('alpha_testers')
@@ -29,7 +32,7 @@ const Account = () => {
         .maybeSingle();
 
       // Show password change form for alpha testers with temporary passwords
-      if (alphaTester?.temporary_password) {
+      if (alphaTester?.temporary_password && mounted) {
         setShowPasswordChange(true);
       }
     };
@@ -37,6 +40,10 @@ const Account = () => {
     if (profile?.id) {
       checkAlphaTester();
     }
+    
+    return () => {
+      setMounted(false);
+    };
   }, [profile?.id]);
 
   const handlePlanChange = (newPlan: string) => {
