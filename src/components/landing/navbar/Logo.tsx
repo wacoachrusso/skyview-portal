@@ -15,7 +15,7 @@ export function Logo({ handleLogoClick }: LogoProps) {
       const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
       
       if (isPostPayment) {
-        console.log("Post-payment state detected in Logo, going to chat");
+        console.log("Logo: Post-payment state detected, going to chat");
         window.location.href = '/chat';
         return;
       }
@@ -24,7 +24,7 @@ export function Logo({ handleLogoClick }: LogoProps) {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.log("No active session, going to homepage");
+        console.log("Logo: No active session, going to homepage");
         window.location.href = '/';
         return;
       }
@@ -37,18 +37,18 @@ export function Logo({ handleLogoClick }: LogoProps) {
         .single();
         
       if (profileError) {
-        console.error("Error fetching profile in logo click:", profileError);
+        console.error("Logo: Error fetching profile in logo click:", profileError);
         window.location.href = '/';
         return;
       }
       
-      console.log("User profile in Logo:", profile);
+      console.log("Logo: User profile:", profile);
       
-      // Check for active paid subscription first
+      // Check for active paid subscription first - most important!
       if (profile?.subscription_status === 'active' && 
           profile?.subscription_plan !== 'free' && 
           profile?.subscription_plan !== 'trial_ended') {
-        console.log("User has active subscription, going to dashboard/chat");
+        console.log("Logo: User has active subscription, going to chat");
         window.location.href = '/chat';
         return;
       }
@@ -56,14 +56,14 @@ export function Logo({ handleLogoClick }: LogoProps) {
       // Free trial ended or inactive subscription - go to homepage with pricing
       if ((profile?.subscription_plan === 'free' && profile?.query_count >= 2) ||
           (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
-        console.log("Free trial ended or inactive subscription, going to pricing");
+        console.log("Logo: Free trial ended/inactive subscription, going to pricing");
         window.location.href = '/?scrollTo=pricing-section';
       } else {
-        // Free trial remaining - go to dashboard
-        window.location.href = '/dashboard';
+        // Free trial remaining - go to chat
+        window.location.href = '/chat';
       }
     } catch (error) {
-      console.error("Error in logo click:", error);
+      console.error("Logo: Error in logo click:", error);
       window.location.href = '/';
     }
   };

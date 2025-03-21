@@ -16,14 +16,35 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
     try {
       console.log("Checking free trial status for user:", currentUserId);
       
-      // Check for post-payment condition first
+      // CRITICAL: Check for post-payment condition early and skip all checks
       const isPostPayment = localStorage.getItem('subscription_activated') === 'true';
       if (isPostPayment) {
-        console.log("Post-payment state detected, skipping trial status check");
+        console.log("Post-payment state detected in useFreeTrial, bypassing all checks");
         setIsTrialEnded(false);
+        
+        // Ensure profile is updated one more time (redundancy)
+        try {
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({
+              subscription_status: 'active',
+              subscription_plan: localStorage.getItem('selected_plan') || 'monthly'
+            })
+            .eq("id", currentUserId);
+            
+          if (updateError) {
+            console.error("Error in redundant profile update:", updateError);
+          } else {
+            console.log("Profile confirmed updated in useFreeTrial");
+          }
+        } catch (e) {
+          console.error("Non-critical error in profile update:", e);
+        }
+        
         return;
       }
       
+      // Now proceed with regular checks
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("subscription_plan, subscription_status, query_count")
@@ -36,7 +57,6 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
       console.log("User profile in useFreeTrial:", profile);
 
       // IMPORTANT: Check for active paid subscription first
-      // A user with an active status and non-free plan has full access
       if (profile?.subscription_status === 'active' && 
           (profile?.subscription_plan !== 'free' && 
            profile?.subscription_plan !== 'trial_ended')) {
@@ -50,16 +70,23 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
         console.log("Free trial ended - query count:", profile.query_count);
         setIsTrialEnded(true);
 
-        // Don't redirect immediately after payment
-        if (!isPostPayment) {
+        // Only redirect if not immediately after login or payment
+        const skipRedirect = localStorage.getItem('login_in_progress') === 'true' || 
+                             localStorage.getItem('payment_in_progress') === 'true' ||
+                             localStorage.getItem('subscription_activated') === 'true';
+                             
+        if (!skipRedirect) {
           toast({
             title: "Free Trial Ended",
             description: "Please select a subscription plan to continue.",
             variant: "destructive",
           });
           
-          // Redirect to home page with pricing section
+          // Redirect to pricing section
+          console.log("Redirecting to pricing section from useFreeTrial");
           navigate("/?scrollTo=pricing-section", { replace: true });
+        } else {
+          console.log("Skipping redirect due to login/payment in progress");
         }
       } else {
         setIsTrialEnded(false);
