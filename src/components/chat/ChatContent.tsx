@@ -39,6 +39,15 @@ export function ChatContent({
     query_count: number;
   } | null>(null);
 
+  // Function to handle copying message content
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast({
+      title: "Copied to clipboard",
+      description: "Message content has been copied to your clipboard.",
+    });
+  };
+
   // Fetch user profile from the database
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -201,9 +210,14 @@ export function ChatContent({
     <div className="flex flex-col h-full overflow-hidden bg-background">
       <ChatHeader onNewChat={onNewChat} />
       
-      {isOffline && <OfflineAlert error={offlineError} />}
+      {isOffline && <OfflineAlert offlineError={offlineError} />}
       
-      <ChatContainer messages={messages} isLoading={isLoading} />
+      <ChatContainer 
+        messages={messages} 
+        isLoading={isLoading} 
+        currentUserId={currentUserId || ""}
+        onCopyMessage={handleCopyMessage}
+      />
       
       <ChatInput 
         onSendMessage={onSendMessage} 
