@@ -1,9 +1,9 @@
 
-import { useCallback, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useCallback } from "react";
 import { Message } from "@/types/chat";
-import { updateSessionApiActivity } from "@/services/session";
+import { useMessageState } from "./useMessageState";
+import { useApiCallState } from "./useApiCallState";
+import { useAiResponse } from "./useAiResponse";
 
 /**
  * Hook to handle sending messages and AI responses
@@ -17,18 +17,25 @@ export function useSendMessage(
   ensureConversation: (userId: string, content?: string) => Promise<string | null>,
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 ) {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    isLoading,
+    setIsLoading,
+    createTempUserMessage,
+    addTempMessage,
+    updateTempMessage,
+    addTypingIndicator,
+    removeTypingIndicator,
+    removeMessage,
+    showError
+  } = useMessageState(setMessages, currentUserId);
+
+  const { setupApiCall, clearApiCall, updateSessionActivity } = useApiCallState();
+  const { getAiResponse } = useAiResponse();
 
   const sendMessage = useCallback(
     async (content: string) => {
       if (!currentUserId) {
-        toast({
-          title: "Error",
-          description: "Unable to send message. Please try refreshing the page.",
-          variant: "destructive",
-          duration: 2000,
-        });
+        showError("Unable to send message. Please try refreshing the page.");
         return;
       }
 
@@ -42,20 +49,14 @@ export function useSendMessage(
 
       let tempMessage: Message | null = null;
       let conversationId: string | null = null;
+      let apiCallId: string | null = null;
       
       try {
         // Set the API call flag
-        const apiCallId = Date.now().toString();
-        sessionStorage.setItem('api_call_in_progress', 'true');
-        sessionStorage.setItem('api_call_id', apiCallId);
-        
-        console.log(`API call started with ID: ${apiCallId}`);
+        apiCallId = setupApiCall();
         
         // Update session activity to prevent timeout during API call
-        const currentToken = localStorage.getItem('session_token');
-        if (currentToken) {
-          await updateSessionApiActivity(currentToken);
-        }
+        await updateSessionActivity();
 
         // Ensure the conversation exists
         conversationId = await ensureConversation(currentUserId, content);
@@ -63,73 +64,25 @@ export function useSendMessage(
           throw new Error("Failed to create or get conversation");
         }
 
-        // Create a temporary message for immediate display
-        tempMessage = {
-          id: crypto.randomUUID(),
-          conversation_id: conversationId,
-          user_id: currentUserId,
-          content: content,
-          role: "user",
-          created_at: new Date().toISOString(),
-        };
-
-        // Add the temporary message to the state immediately
-        setMessages((prev) => {
-          console.log("Adding temporary message to UI immediately:", tempMessage);
-          return [...prev, tempMessage as Message];
-        });
+        // Create and display temporary user message
+        tempMessage = createTempUserMessage(content, conversationId);
+        addTempMessage(tempMessage);
         
         // Insert the user message into the database
         const actualMessage = await insertUserMessage(content, conversationId);
         console.log("User message inserted into database:", actualMessage);
 
-        // Replace the temporary message with the actual one
-        if (actualMessage && actualMessage.id) {
-          setMessages((prev) => {
-            return prev.map(msg => 
-              msg.id === tempMessage?.id ? 
-                { ...actualMessage, role: "user" as "user" | "assistant" } : 
-                msg
-            );
-          });
-        }
+        // Replace temporary message with the actual one
+        updateTempMessage(tempMessage.id, actualMessage);
 
         // Update session activity again before the AI call
-        if (currentToken) {
-          await updateSessionApiActivity(currentToken);
-        }
+        await updateSessionActivity();
 
-        // Add an immediate AI typing indicator message
-        const typingMessage: Message = {
-          id: 'typing-' + Date.now().toString(),
-          conversation_id: conversationId,
-          user_id: null,
-          content: '',
-          role: "assistant",
-          created_at: new Date().toISOString(),
-        };
+        // Add AI typing indicator
+        const typingMessage = addTypingIndicator(conversationId);
 
-        setMessages(prev => [...prev, typingMessage]);
-
-        // Set timeout for AI response
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("AI response timeout")), 30000);
-        });
-
-        // Call the AI completion function with timeout
-        const responsePromise = supabase.functions.invoke("chat-completion", {
-          body: {
-            content: `${content}`,
-            subscriptionPlan: userProfile?.subscription_plan || "free",
-            assistantId: userProfile?.assistant_id || "default_assistant_id",
-          },
-        });
-
-        // Race between response and timeout
-        const { data, error } = await Promise.race([
-          responsePromise,
-          timeoutPromise.then(() => ({ data: null, error: new Error("AI response timeout") }))
-        ]) as any;
+        // Get AI response
+        const { data, error } = await getAiResponse(content, userProfile);
 
         if (error) {
           console.error("AI completion error:", error);
@@ -142,24 +95,17 @@ export function useSendMessage(
         }
 
         // Update session activity once more after the AI call
-        if (currentToken) {
-          await updateSessionApiActivity(currentToken);
-        }
+        await updateSessionActivity();
 
-        // Remove the typing indicator message
-        setMessages(prev => prev.filter(msg => msg.id !== typingMessage.id));
+        // Remove typing indicator
+        removeTypingIndicator(typingMessage.id);
 
         // Insert the AI response
         await insertAIMessage(data.response, conversationId);
         console.log("AI message inserted.");
       } catch (error) {
         console.error("Error sending message:", error);
-        toast({
-          title: "Error",
-          description: "Failed to send message or receive response. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        });
+        showError("Failed to send message or receive response. Please try again.");
 
         // Remove typing indicator if it exists
         setMessages((prev) => {
@@ -168,21 +114,13 @@ export function useSendMessage(
 
         // Remove the temporary message if an error occurs
         if (tempMessage) {
-          setMessages((prev) => {
-            console.log("Removing temporary message due to error:", tempMessage);
-            return prev.filter((msg) => msg.id !== tempMessage!.id);
-          });
+          removeMessage(tempMessage.id);
         }
       } finally {
-        // Clear the API call flag with a small delay
-        const apiCallId = sessionStorage.getItem('api_call_id');
-        console.log(`API call with ID ${apiCallId} completed, clearing flag after delay`);
-        
-        setTimeout(() => {
-          sessionStorage.removeItem('api_call_in_progress');
-          sessionStorage.removeItem('api_call_id');
-          console.log("API call flag cleared");
-        }, 500);
+        // Clear the API call flag
+        if (apiCallId) {
+          clearApiCall(apiCallId);
+        }
         
         setIsLoading(false);
         console.log("Message sending completed.");
@@ -194,10 +132,20 @@ export function useSendMessage(
       insertUserMessage,
       insertAIMessage,
       userProfile,
-      toast,
       isLoading,
       currentConversationId,
       setMessages,
+      setupApiCall,
+      clearApiCall,
+      updateSessionActivity,
+      createTempUserMessage,
+      addTempMessage,
+      updateTempMessage,
+      addTypingIndicator,
+      removeTypingIndicator,
+      removeMessage,
+      showError,
+      getAiResponse
     ]
   );
 
