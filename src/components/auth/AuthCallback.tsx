@@ -35,6 +35,9 @@ const AuthCallback = () => {
           console.log("AuthCallback: Stripe payment callback detected with session ID:", sessionId);
           setStatusMessage('Completing your payment...');
           
+          // Set a direct redirect flag to ensure we land on chat after payment
+          localStorage.setItem('direct_payment_redirect', 'true');
+          
           // Import and use the Stripe callback handler
           const { handleStripeCallback } = await import('@/utils/auth/stripeCallbackHandler');
           await handleStripeCallback(sessionId, navigate);
@@ -79,7 +82,8 @@ const AuthCallback = () => {
             } else {
               // Regular flow - clear flag and redirect
               localStorage.removeItem('login_in_progress');
-              setTimeout(() => navigate('/login'), 1500);
+              // Redirect to chat page instead of login
+              setTimeout(() => navigate('/chat'), 1500);
             }
           } else {
             setProcessingStatus('error');

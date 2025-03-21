@@ -24,7 +24,7 @@ export const checkProfileStatus = async (userId: string, { navigate, toast }: Va
     }
 
     if (profile?.subscription_plan === 'free' && profile?.query_count >= 2) {
-      console.log('Free trial exhausted, logging out');
+      console.log('Free trial exhausted, redirecting to pricing');
       
       toast({
         title: "Free Trial Ended",

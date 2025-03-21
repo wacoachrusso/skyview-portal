@@ -212,7 +212,7 @@ export function SessionCheck() {
             // Store admin status in localStorage for quick access
             localStorage.setItem('user_is_admin', 'true');
             
-            // IMPORTANT FIX: Don't redirect if already on a valid admin page
+            // Don't redirect if already on a valid admin page
             if (window.location.pathname === '/' || 
                 window.location.pathname === '/login' ||
                 window.location.pathname.includes('scrollTo=pricing')) {
@@ -249,10 +249,12 @@ export function SessionCheck() {
           }
         }
 
-        // If user is authenticated and on the root route, redirect to chat
+        // If user is authenticated and on the root route, always redirect to chat
+        // IMPORTANT: This is the key fix for ensuring post-signup redirects to chat
         if (window.location.pathname === '/' && 
             !window.location.href.includes('scrollTo=pricing') && 
             !localStorage.getItem('payment_in_progress')) {
+          console.log("[SessionCheck] Authenticated user on homepage, redirecting to chat");
           navigate('/chat');
         }
       } catch (error) {
@@ -275,7 +277,7 @@ export function SessionCheck() {
           navigate('/login');
         }
       }
-      // For sign-in events
+      // For sign-in events, always redirect to chat
       else if (event === 'SIGNED_IN') {
         // Handle pending subscription activation if needed
         if (pendingActivation) {

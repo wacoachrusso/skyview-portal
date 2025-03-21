@@ -117,13 +117,13 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           
         if (profileError || !profile) {
           console.error("Error fetching admin status:", profileError);
-          navigate("/dashboard");
+          navigate("/chat"); // Redirect non-admins to chat instead of dashboard
           return;
         }
         
         if (!profile.is_admin) {
-          console.log("User is not an admin, redirecting to dashboard");
-          navigate("/dashboard");
+          console.log("User is not an admin, redirecting to chat");
+          navigate("/chat"); // Redirect non-admins to chat instead of dashboard
           return;
         }
         
@@ -132,7 +132,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         setIsAdmin(true);
       } catch (error) {
         console.error("Error checking admin status:", error);
-        navigate("/dashboard");
+        navigate("/chat"); // Redirect to chat on error
       } finally {
         setIsLoading(false);
       }
