@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: true,
-      port: 3000,
+      port: 8080, // Changed from 3000 to 8080
       strictPort: true,
       headers: {
         'Access-Control-Allow-Origin': '*',
