@@ -29,6 +29,11 @@ export function useChatAvailability(
       return false;
     }
     
+    // Recent signup should not have disabled chat
+    if (sessionStorage.getItem('recently_signed_up') === 'true') {
+      return false;
+    }
+    
     return isChatDisabled || 
            isTrialEnded || 
            (userProfile?.subscription_plan === "free" && userProfile?.query_count >= 2) ||
@@ -42,7 +47,8 @@ export function useChatAvailability(
         userProfile?.is_admin ||
         localStorage.getItem('subscription_activated') === 'true' ||
         localStorage.getItem('login_in_progress') === 'true' ||
-        localStorage.getItem('payment_in_progress') === 'true') {
+        localStorage.getItem('payment_in_progress') === 'true' ||
+        sessionStorage.getItem('recently_signed_up') === 'true') {
       return;
     }
     
