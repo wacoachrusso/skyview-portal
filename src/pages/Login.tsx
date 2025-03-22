@@ -9,6 +9,7 @@ import { createNewSession, validateSessionToken } from "@/services/session";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { handleSignIn } from "@/utils/signInUtils";
+import { navigateWithoutRedirectCheck } from "@/utils/navigation";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -34,6 +35,8 @@ const Login = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         console.log("User already authenticated, redirecting to chat");
+        // Use the utility to break potential redirect loops
+        localStorage.setItem('skip_initial_redirect', 'true');
         navigate('/chat', { replace: true });
       }
       setInitialCheckDone(true);
@@ -83,8 +86,8 @@ const Login = () => {
         
         if (user) {
           await handleAuthSession(user.id, createNewSession, navigate);
-          // Use replace:true to prevent back button from returning to login
-          navigate('/chat', { replace: true });
+          // Use the utility to break potential redirect loops
+          navigateWithoutRedirectCheck('/chat');
         }
       } else {
         localStorage.removeItem('login_in_progress');

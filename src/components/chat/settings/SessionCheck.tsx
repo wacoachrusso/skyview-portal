@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -240,6 +241,25 @@ export function SessionCheck() {
           return;
         }
 
+        // *** IMPORTANT CHANGE: Check for allowed public routes first ***
+        const publicRoutes = [
+          '/login', 
+          '/signup', 
+          '/', 
+          '/auth/callback', 
+          '/privacy-policy', 
+          '/about',
+          '/help-center',
+          '/WebViewDemo'
+        ];
+        
+        if (publicRoutes.includes(location.pathname)) {
+          console.log("[SessionCheck] User on public route:", location.pathname);
+          isCheckingRef.current = false;
+          setIsInitialCheck(false);
+          return;
+        }
+
         // Check subscription status and admin status
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -258,13 +278,7 @@ export function SessionCheck() {
             // Store admin status in localStorage for quick access
             localStorage.setItem('user_is_admin', 'true');
             
-            // Don't redirect if already on a valid admin page
-            if (window.location.pathname === '/' || 
-                window.location.pathname === '/login' ||
-                window.location.pathname.includes('scrollTo=pricing')) {
-              console.log("[SessionCheck] Admin not on admin page, redirecting to chat");
-              navigate('/chat', { replace: true });
-            }
+            // *** IMPORTANT CHANGE: Don't force redirect admins to chat if they're already on a valid page ***
             isCheckingRef.current = false;
             setIsInitialCheck(false);
             return;
@@ -306,8 +320,8 @@ export function SessionCheck() {
           }
         }
 
-        // If user is authenticated and on the root route, always redirect to chat
-        // IMPORTANT: This is the key fix for ensuring post-signup redirects to chat
+        // If user is authenticated and on the root route, redirect to chat
+        // IMPORTANT: This was causing redirect loops - now we only do this for the exact root path
         if (location.pathname === '/' && 
             !window.location.href.includes('scrollTo=pricing') && 
             !localStorage.getItem('payment_in_progress')) {
@@ -345,7 +359,7 @@ export function SessionCheck() {
           navigate('/login', { replace: true });
         }
       }
-      // For sign-in events, always redirect to chat
+      // For sign-in events, don't automatically redirect to chat
       else if (event === 'SIGNED_IN') {
         // Handle pending subscription activation if needed
         if (pendingActivation) {
@@ -358,12 +372,7 @@ export function SessionCheck() {
           // Wait briefly then call checkSession again to process the post-payment flow
           setTimeout(checkSession, 1000);
         }
-        // Otherwise regular flow - only navigate if not in post-payment
-        else if (!localStorage.getItem('subscription_activated') && 
-                 !localStorage.getItem('payment_in_progress')) {
-          console.log("[SessionCheck] Regular sign-in, navigating to chat");
-          navigate('/chat', { replace: true });
-        }
+        // *** IMPORTANT CHANGE: Don't redirect on sign-in to avoid loops ***
       }
     });
 

@@ -27,6 +27,15 @@ function InitialSessionCheck() {
       try {
         console.log("Checking initial session on app load");
         
+        // *** IMPORTANT FIX: Check if we should skip initial redirect ***
+        // This prevents redirect loops
+        const skipInitialRedirect = localStorage.getItem('skip_initial_redirect') === 'true';
+        if (skipInitialRedirect) {
+          console.log("Skipping initial redirect due to flag");
+          localStorage.removeItem('skip_initial_redirect');
+          return;
+        }
+        
         // Check for new user signup - this is set during the signup process
         const isNewUserSignup = localStorage.getItem('new_user_signup') === 'true';
         if (isNewUserSignup && window.location.pathname !== '/chat') {
@@ -160,6 +169,23 @@ function InitialSessionCheck() {
           return;
         }
         
+        // *** IMPORTANT FIX: Check for public routes to avoid redirect loops ***
+        const publicRoutes = [
+          '/login', 
+          '/signup', 
+          '/', 
+          '/auth/callback', 
+          '/privacy-policy', 
+          '/about',
+          '/help-center',
+          '/WebViewDemo'
+        ];
+        
+        if (publicRoutes.includes(window.location.pathname)) {
+          console.log("User on public route, skipping auth check:", window.location.pathname);
+          return;
+        }
+        
         // For recently signed up users, ensure they stay on the chat page
         if (sessionStorage.getItem('recently_signed_up') === 'true') {
           console.log("Recently signed up user detected");
@@ -238,8 +264,9 @@ function InitialSessionCheck() {
             return;
           }
           
-          // Active subscription or still has free trial - redirect to chat from login pages
-          if (window.location.pathname === '/login' || window.location.pathname === '/signup' || window.location.pathname === '/') {
+          // *** IMPORTANT CHANGE: Don't automatically redirect authenticated users ***
+          // This was causing redirect loops
+          if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
             navigate('/chat', { replace: true });
           }
         } else if (window.location.pathname !== '/login' && 
@@ -247,7 +274,9 @@ function InitialSessionCheck() {
                  window.location.pathname !== '/' && 
                  window.location.pathname !== '/auth/callback' &&
                  window.location.pathname !== '/privacy-policy' &&
-                 window.location.pathname !== '/about') {
+                 window.location.pathname !== '/about' &&
+                 window.location.pathname !== '/help-center' &&
+                 window.location.pathname !== '/WebViewDemo') {
           // No session and trying to access protected route
           console.log("No active session found, redirecting to login");
           navigate('/login', { replace: true });

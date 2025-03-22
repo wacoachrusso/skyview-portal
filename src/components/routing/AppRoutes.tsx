@@ -1,4 +1,3 @@
-
 import { Route, Routes, useNavigate } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -8,6 +7,7 @@ import { RefreshCw, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import WebViewDemo from '@/pages/WebViewDemo';
 import { supabase } from "@/integrations/supabase/client";
+import { isPublicRoute } from "@/utils/navigation";
 
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   useEffect(() => {
@@ -41,31 +41,71 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
-// Simplified protected route component with admin check
+// Improved protected route component with loop prevention
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   useEffect(() => {
+    let mounted = true;
+    
     const checkAuth = async () => {
       try {
+        // Set a flag to track that we've started the check
+        const checkStarted = sessionStorage.getItem('auth_check_started') === 'true';
+        if (checkStarted && !isAuthenticated) {
+          console.log("Auth check already in progress, preventing loop");
+          setIsLoading(false);
+          return;
+        }
+        
+        sessionStorage.setItem('auth_check_started', 'true');
+        
+        // Skip check if any special flags are set
+        if (localStorage.getItem('login_in_progress') === 'true' ||
+            localStorage.getItem('skip_initial_redirect') === 'true') {
+          console.log("Skipping auth check due to special flags");
+          if (mounted) {
+            setIsAuthenticated(true);
+            setIsLoading(false);
+          }
+          return;
+        }
+        
         // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
           console.log("No session found in ProtectedRoute, redirecting to login");
-          navigate("/login");
+          if (mounted) {
+            // Set a flag to prevent redirect loops
+            localStorage.setItem('skip_initial_redirect', 'true');
+            navigate("/login", { replace: true });
+          }
           return;
         }
         
-        setIsLoading(false);
+        if (mounted) {
+          setIsAuthenticated(true);
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("Error in ProtectedRoute:", error);
-        navigate("/login");
+        if (mounted) {
+          setIsLoading(false);
+          navigate("/login", { replace: true });
+        }
+      } finally {
+        sessionStorage.removeItem('auth_check_started');
       }
     };
     
     checkAuth();
+    
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
   
   if (isLoading) {
@@ -76,7 +116,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  return <>{children}</>;
+  return isAuthenticated ? <>{children}</> : null;
 };
 
 // Admin route component with admin status check
