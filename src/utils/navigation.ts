@@ -32,3 +32,21 @@ export const isPublicRoute = (path: string): boolean => {
   
   return publicRoutes.includes(path);
 };
+
+/**
+ * Set a temporary flag to indicate a new chat is being created
+ * This prevents flickering during the new chat creation process
+ */
+export const setNewChatFlag = () => {
+  sessionStorage.setItem('creating_new_chat', 'true');
+  setTimeout(() => {
+    sessionStorage.removeItem('creating_new_chat');
+  }, 2000); // Clear after 2 seconds
+};
+
+/**
+ * Check if a new chat is currently being created
+ */
+export const isCreatingNewChat = () => {
+  return sessionStorage.getItem('creating_new_chat') === 'true';
+};

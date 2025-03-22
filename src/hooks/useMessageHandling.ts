@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -7,26 +8,49 @@ export const useMessageHandling = (currentUserId: string | null, currentConversa
   const updateConversation = async (conversationId: string, content: string) => {
     console.log('Updating conversation:', { conversationId, content });
     
-    // Truncate content for title, remove special characters and keep first 50 chars
-    const title = content
-      .replace(/[^\w\s]/gi, '')
-      .trim()
-      .slice(0, 50);
-    
-    const { error: updateError } = await supabase
-      .from('conversations')
-      .update({ 
-        last_message_at: new Date().toISOString(),
-        title: title || 'New Chat'
-      })
-      .eq('id', conversationId);
+    try {
+      // First check if the conversation exists and needs a title update
+      const { data: conversation, error: fetchError } = await supabase
+        .from('conversations')
+        .select('title')
+        .eq('id', conversationId)
+        .single();
+        
+      if (fetchError) {
+        console.error('Error fetching conversation:', fetchError);
+        throw fetchError;
+      }
+      
+      // Prepare update data
+      const updateData: { last_message_at: string; title?: string } = {
+        last_message_at: new Date().toISOString()
+      };
+      
+      // Only update title if it's currently empty
+      if (!conversation.title || conversation.title === '') {
+        // Generate title from message content (max 50 chars)
+        const trimmedContent = content.replace(/[^\w\s]/gi, '').trim();
+        updateData.title = trimmedContent.length > 50 
+          ? `${trimmedContent.substring(0, 47)}...` 
+          : trimmedContent || 'New Chat';
+      }
+      
+      // Update the conversation
+      const { error: updateError } = await supabase
+        .from('conversations')
+        .update(updateData)
+        .eq('id', conversationId);
 
-    if (updateError) {
-      console.error('Error updating conversation:', updateError);
-      throw updateError;
+      if (updateError) {
+        console.error('Error updating conversation:', updateError);
+        throw updateError;
+      }
+      
+      console.log('Conversation updated successfully', updateData);
+    } catch (error) {
+      console.error('Error in updateConversation:', error);
+      throw error;
     }
-    
-    console.log('Conversation updated successfully');
   };
 
   const insertUserMessage = async (content: string, conversationId: string) => {

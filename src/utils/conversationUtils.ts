@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const updateConversationTitle = async (conversationId: string, content: string) => {
@@ -9,23 +8,44 @@ export const updateConversationTitle = async (conversationId: string, content: s
 
   console.log('Updating conversation title for:', conversationId);
   
-  // Generate a more meaningful title from the message content (max 50 chars)
-  // Remove special characters and trim whitespace
-  const trimmedContent = content.replace(/[^\w\s]/gi, '').trim();
-  const title = trimmedContent.length > 50 ? `${trimmedContent.substring(0, 47)}...` : trimmedContent || 'New Chat';
-  
   try {
-    const { error } = await supabase
+    // First check if conversation already has a title
+    const { data: existingConversation, error: fetchError } = await supabase
       .from('conversations')
-      .update({ title })
-      .eq('id', conversationId);
-
-    if (error) {
-      console.error('Error updating conversation title:', error);
-      throw error;
+      .select('title')
+      .eq('id', conversationId)
+      .single();
+      
+    if (fetchError) {
+      console.error('Error fetching conversation:', fetchError);
+      throw fetchError;
     }
     
-    console.log('Conversation title updated successfully:', title);
+    // Only update title if it's empty or a default title
+    const shouldUpdateTitle = !existingConversation?.title || existingConversation.title === 'New Chat' || existingConversation.title === '';
+    
+    if (shouldUpdateTitle) {
+      // Generate a more meaningful title from the message content (max 50 chars)
+      // Remove special characters and trim whitespace
+      const trimmedContent = content.replace(/[^\w\s]/gi, '').trim();
+      const title = trimmedContent.length > 50 ? `${trimmedContent.substring(0, 47)}...` : trimmedContent;
+      
+      if (title) {
+        const { error } = await supabase
+          .from('conversations')
+          .update({ title })
+          .eq('id', conversationId);
+
+        if (error) {
+          console.error('Error updating conversation title:', error);
+          throw error;
+        }
+        
+        console.log('Conversation title updated successfully:', title);
+      }
+    } else {
+      console.log('Conversation already has a title, not updating:', existingConversation.title);
+    }
   } catch (error) {
     console.error('Failed to update conversation title:', error);
   }

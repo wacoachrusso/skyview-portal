@@ -16,7 +16,7 @@ export function useConversation() {
         .from('conversations')
         .insert([{ 
           user_id: userId,
-          title: 'New Chat'
+          title: '' 
         }])
         .select()
         .single();
@@ -49,8 +49,8 @@ export function useConversation() {
     }
   
     try {
-      const title = firstMessage ? firstMessage.slice(0, 50) : 'New Chat';
-      console.log('Creating new conversation with title:', title);
+      const title = firstMessage ? firstMessage.slice(0, 50) : '';
+      console.log('Creating new conversation with title:', title || '(Empty - will be set after first message)');
       
       const { data: newConversation, error: conversationError } = await supabase
         .from('conversations')

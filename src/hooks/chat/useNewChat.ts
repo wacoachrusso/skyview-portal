@@ -1,6 +1,7 @@
 
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { setNewChatFlag } from "@/utils/navigation";
 
 /**
  * Hook to handle creating a new chat conversation
@@ -17,21 +18,23 @@ export function useNewChat(
   // Start a new chat
   const startNewChat = useCallback(async () => {
     try {
+      // Set a flag to prevent flickering during navigation
+      setNewChatFlag();
+      
       // Set loading state to prevent UI flickering
       setIsLoading(true);
       
-      // First create the new conversation if user is logged in
+      // First clear the old messages to give immediate feedback
+      setMessages([]);
+      
+      // Create the new conversation if user is logged in
       if (currentUserId) {
         const newConversationId = await createNewConversation(currentUserId);
-        // Only after we have the new ID and it's ready, we clear the old messages
-        // This prevents the UI from briefly showing empty state before new content loads
         if (newConversationId) {
-          setMessages([]);
           setCurrentConversationId(newConversationId);
         }
       } else {
-        // If no user, just clear messages
-        setMessages([]);
+        // If no user, just clear any conversation ID
         setCurrentConversationId(null);
       }
     } catch (error) {
