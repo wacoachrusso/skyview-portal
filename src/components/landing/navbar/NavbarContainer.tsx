@@ -1,9 +1,7 @@
 
 import { Logo } from "./Logo";
-import { AuthButtons } from "./AuthButtons";
+import { NavbarActions } from "./NavbarActions";
 import { MobileMenu } from "./MobileMenu";
-import { AskSkyGuideButton } from "./AskSkyGuideButton";
-import { NotificationBell } from "@/components/shared/NotificationBell";
 import { useNavbarAuth } from "@/hooks/landing/useNavbarAuth";
 import { useLogoClickHandler } from "@/hooks/landing/useLogoClickHandler";
 import { usePricingScroll } from "@/hooks/landing/usePricingScroll";
@@ -22,11 +20,10 @@ export function NavbarContainer() {
         <div className="flex justify-between items-center h-14">
           <Logo handleLogoClick={handleLogoClick} />
           
-          <div className="flex items-center gap-2">
-            {isLoggedIn && !isLoading && <AskSkyGuideButton />}
-            
-            {isLoggedIn && !isLoading && <NotificationBell />}
-          </div>
+          <NavbarActions 
+            isLoggedIn={isLoggedIn} 
+            isLoading={isLoading} 
+          />
           
           <div className="hidden md:flex items-center space-x-4">
             <AuthButtons 
