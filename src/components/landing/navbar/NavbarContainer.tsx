@@ -2,6 +2,7 @@
 import { Logo } from "./Logo";
 import { NavbarActions } from "./NavbarActions";
 import { MobileMenu } from "./MobileMenu";
+import { AuthButtons } from "./AuthButtons";
 import { useNavbarAuth } from "@/hooks/landing/useNavbarAuth";
 import { useLogoClickHandler } from "@/hooks/landing/useLogoClickHandler";
 import { usePricingScroll } from "@/hooks/landing/usePricingScroll";
