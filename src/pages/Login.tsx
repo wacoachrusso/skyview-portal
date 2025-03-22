@@ -14,6 +14,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [passwordResetEmail, setPasswordResetEmail] = useState("");
   const [isPasswordResetting, setIsPasswordResetting] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -25,6 +26,7 @@ const Login = () => {
     const checkAuth = async () => {
       // Skip this check if we're already in login flow
       if (localStorage.getItem('login_in_progress') === 'true') {
+        setInitialCheckDone(true);
         return;
       }
       
@@ -34,6 +36,7 @@ const Login = () => {
         console.log("User already authenticated, redirecting to chat");
         navigate('/chat', { replace: true });
       }
+      setInitialCheckDone(true);
     };
     
     checkAuth();
@@ -41,13 +44,15 @@ const Login = () => {
 
   // Check for error param in URL (from Google auth callback)
   const errorParam = searchParams.get("error");
-  if (errorParam) {
-    toast({
-      variant: "destructive",
-      title: "Authentication Error",
-      description: errorParam || "Failed to complete authentication. Please try again."
-    });
-  }
+  useEffect(() => {
+    if (errorParam && initialCheckDone) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: errorParam || "Failed to complete authentication. Please try again."
+      });
+    }
+  }, [errorParam, toast, initialCheckDone]);
 
   const handleLogin = async (email: string, password?: string, rememberMe?: boolean) => {
     if (!email || !password) {
@@ -128,6 +133,15 @@ const Login = () => {
 
     setIsPasswordResetting(false);
   };
+
+  // Hide the login form until initial check is complete to prevent flashing
+  if (!initialCheckDone) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">

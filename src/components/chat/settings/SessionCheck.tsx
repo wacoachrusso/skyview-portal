@@ -1,14 +1,15 @@
-
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 export function SessionCheck() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const isCheckingRef = useRef(false);
   const checkedOnceRef = useRef(false);
+  const [isInitialCheck, setIsInitialCheck] = useState(true);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -24,6 +25,14 @@ export function SessionCheck() {
             localStorage.getItem('signup_in_progress') === 'true') {
           console.log("[SessionCheck] Login/signup in progress, skipping check");
           isCheckingRef.current = false;
+          setIsInitialCheck(false);
+          return;
+        }
+
+        // Skip session check on login page unless it's the initial check
+        if (location.pathname === '/login' && !isInitialCheck) {
+          console.log("[SessionCheck] Already on login page, skipping check");
+          isCheckingRef.current = false;
           return;
         }
         
@@ -35,7 +44,7 @@ export function SessionCheck() {
         
         // Check if we're already on the chat page and in post-payment or new signup state
         // This prevents the redirect loop that causes flashing
-        if ((isPostPayment || isNewUserSignup) && window.location.pathname === '/chat') {
+        if ((isPostPayment || isNewUserSignup) && location.pathname === '/chat') {
           console.log("[SessionCheck] Already on chat page with post-payment/new signup state, skipping redirect");
           // Clear the flags to prevent future redirects
           localStorage.removeItem('subscription_activated');
@@ -44,15 +53,17 @@ export function SessionCheck() {
           localStorage.removeItem('direct_payment_redirect');
           localStorage.removeItem('new_user_signup');
           isCheckingRef.current = false;
+          setIsInitialCheck(false);
           return;
         }
         
         // If this is a direct redirect from payment and we're on the chat page,
         // don't do any further processing to avoid redirect loops
-        if (isDirectPaymentRedirect && window.location.pathname === '/chat') {
+        if (isDirectPaymentRedirect && location.pathname === '/chat') {
           console.log("[SessionCheck] Direct payment redirect detected, skipping further processing");
           localStorage.removeItem('direct_payment_redirect');
           isCheckingRef.current = false;
+          setIsInitialCheck(false);
           return;
         }
         
@@ -62,6 +73,7 @@ export function SessionCheck() {
           localStorage.removeItem('new_user_signup');
           navigate('/chat', { replace: true });
           isCheckingRef.current = false;
+          setIsInitialCheck(false);
           return;
         }
         
@@ -157,6 +169,7 @@ export function SessionCheck() {
             
             navigate('/login', { replace: true });
             isCheckingRef.current = false;
+            setIsInitialCheck(false);
             return;
           }
           
@@ -209,6 +222,7 @@ export function SessionCheck() {
             // This helps clear any stale state that might be causing the flashing
             window.location.href = `${window.location.origin}/chat`;
             isCheckingRef.current = false;
+            setIsInitialCheck(false);
           }, 1500);
           return;
         }
@@ -218,8 +232,11 @@ export function SessionCheck() {
         
         if (!session) {
           console.log("[SessionCheck] No active session found, redirecting to login");
-          navigate('/login', { replace: true });
+          if (location.pathname !== '/login') {
+            navigate('/login', { replace: true });
+          }
           isCheckingRef.current = false;
+          setIsInitialCheck(false);
           return;
         }
 
@@ -249,6 +266,7 @@ export function SessionCheck() {
               navigate('/chat', { replace: true });
             }
             isCheckingRef.current = false;
+            setIsInitialCheck(false);
             return;
           } else {
             // Ensure admin flag is removed for non-admin users
@@ -262,6 +280,7 @@ export function SessionCheck() {
               navigate('/chat', { replace: true });
             }
             isCheckingRef.current = false;
+            setIsInitialCheck(false);
             return;
           }
           
@@ -272,6 +291,7 @@ export function SessionCheck() {
             console.log("[SessionCheck] Subscription inactive, redirecting to pricing");
             navigate('/?scrollTo=pricing-section', { replace: true });
             isCheckingRef.current = false;
+            setIsInitialCheck(false);
             return;
           }
           
@@ -281,13 +301,14 @@ export function SessionCheck() {
             console.log("[SessionCheck] Free trial ended, redirecting to pricing");
             navigate('/?scrollTo=pricing-section', { replace: true });
             isCheckingRef.current = false;
+            setIsInitialCheck(false);
             return;
           }
         }
 
         // If user is authenticated and on the root route, always redirect to chat
         // IMPORTANT: This is the key fix for ensuring post-signup redirects to chat
-        if (window.location.pathname === '/' && 
+        if (location.pathname === '/' && 
             !window.location.href.includes('scrollTo=pricing') && 
             !localStorage.getItem('payment_in_progress')) {
           console.log("[SessionCheck] Authenticated user on homepage, redirecting to chat");
@@ -295,10 +316,14 @@ export function SessionCheck() {
         }
         
         isCheckingRef.current = false;
+        setIsInitialCheck(false);
       } catch (error) {
         console.error("[SessionCheck] Error:", error);
         isCheckingRef.current = false;
-        navigate('/login', { replace: true });
+        setIsInitialCheck(false);
+        if (location.pathname !== '/login') {
+          navigate('/login', { replace: true });
+        }
       }
     };
 
@@ -316,7 +341,7 @@ export function SessionCheck() {
       const pendingActivation = localStorage.getItem('pending_subscription_activation') === 'true';
       
       if (event === 'SIGNED_OUT' || !session) {
-        if (!pendingActivation) {
+        if (!pendingActivation && location.pathname !== '/login') {
           navigate('/login', { replace: true });
         }
       }
@@ -345,7 +370,7 @@ export function SessionCheck() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, location.pathname, isInitialCheck]);
 
   return null;
 }
