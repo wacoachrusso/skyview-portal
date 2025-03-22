@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SetPasswordPanel } from "@/components/admin/SetPasswordPanel";
 import { EmailQueueManager } from "@/components/admin/EmailQueueManager";
-import { EmailTemplatePreview } from "@/components/admin/EmailTemplatePreview";
+import { EmailTemplatePreview } from "@/components/admin/email-templates/EmailTemplatePreview";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
