@@ -1,12 +1,12 @@
+
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useSessionManagement } from "@/hooks/useSessionManagement";
+import { createNewSession } from "./useSessionManagement";
 
 export const useSessionState = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { createNewSession } = useSessionManagement();
 
   const handleSessionError = async () => {
     console.log("Handling session error, cleaning up...");
@@ -36,9 +36,6 @@ export const useSessionState = () => {
       if (session.refresh_token) {
         localStorage.setItem('supabase.refresh-token', session.refresh_token);
       }
-
-      // Create a new session (this will automatically invalidate other sessions)
-      await createNewSession(session.user.id);
 
       // Verify the session is still valid
       const { data: { user }, error: userError } = await supabase.auth.getUser();

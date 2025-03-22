@@ -1,10 +1,11 @@
+
+import { supabase } from "@/integrations/supabase/client";
 import { useSessionInitialization } from "./session/useSessionInitialization";
 import { useSessionInvalidation } from "./session/useSessionInvalidation";
 import { useSessionInterceptor } from "./session/useSessionInterceptor";
-import { supabase } from "@/integrations/supabase/client";
 
 export const createNewSession = async (userId: string) => {
-  console.log('Creating new session for user:', userId);
+  console.log('Creating new session for userId:', userId);
   
   try {
     // First invalidate any existing sessions
@@ -22,10 +23,6 @@ export const createNewSession = async (userId: string) => {
     const sessionToken = crypto.randomUUID();
     const refreshToken = crypto.randomUUID();
 
-    // Get device info
-    const { data: deviceInfo } = await fetch('https://api.ipify.org?format=json')
-      .then(res => res.json());
-
     // Create new session
     const { data: session, error } = await supabase
       .from('sessions')
@@ -33,8 +30,7 @@ export const createNewSession = async (userId: string) => {
         user_id: userId,
         session_token: sessionToken,
         refresh_token: refreshToken,
-        device_info: deviceInfo,
-        ip_address: deviceInfo?.ip,
+        device_info: navigator.userAgent,
         status: 'active'
       }])
       .select()
@@ -62,8 +58,8 @@ export const useSessionManagement = () => {
   return {
     isLoading,
     initializeSession,
-    sessionInterceptor,
     createNewSession,
+    sessionInterceptor,
     handleSessionInvalidation
   };
 };

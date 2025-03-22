@@ -30,7 +30,10 @@ export const isPublicRoute = (path: string): boolean => {
     '/WebViewDemo'
   ];
   
-  return publicRoutes.includes(path);
+  return publicRoutes.some(route => 
+    path === route || 
+    (route !== '/' && path.startsWith(route))
+  );
 };
 
 /**

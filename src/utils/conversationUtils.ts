@@ -1,5 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Update a conversation's title based on message content
+ */
 export const updateConversationTitle = async (conversationId: string, content: string) => {
   if (!conversationId) {
     console.error('No conversation ID provided for title update');
@@ -51,6 +55,9 @@ export const updateConversationTitle = async (conversationId: string, content: s
   }
 };
 
+/**
+ * Load messages for a conversation
+ */
 export const loadConversationMessages = async (conversationId: string) => {
   if (!conversationId) {
     console.error('No conversation ID provided for loading messages');
@@ -73,6 +80,9 @@ export const loadConversationMessages = async (conversationId: string) => {
   return messages || [];
 };
 
+/**
+ * Set up real-time messaging channel for a conversation
+ */
 export const setupMessageChannel = (conversationId: string, onNewMessage: (message: any) => void) => {
   if (!conversationId) {
     console.error('No conversation ID provided for channel setup');
@@ -96,12 +106,7 @@ export const setupMessageChannel = (conversationId: string, onNewMessage: (messa
         onNewMessage(payload.new);
       }
     )
-    .subscribe((status, err) => {
-      console.log(`Real-time subscription status for conversation ${conversationId}:`, status);
-      if (err) {
-        console.error('Real-time subscription error:', err);
-      }
-    });
+    .subscribe();
 
   return channel;
 };
