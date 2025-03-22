@@ -56,3 +56,21 @@ export const setNewChatFlag = () => {
 export const isCreatingNewChat = () => {
   return sessionStorage.getItem('creating_new_chat') === 'true';
 };
+
+/**
+ * Temporarily disable all redirects
+ * Use this when you want to navigate to a specific page without being redirected
+ */
+export const disableRedirects = (durationMs = 5000) => {
+  localStorage.setItem('disable_redirects', 'true');
+  setTimeout(() => {
+    localStorage.removeItem('disable_redirects');
+  }, durationMs);
+};
+
+/**
+ * Check if redirects are currently disabled
+ */
+export const areRedirectsDisabled = () => {
+  return localStorage.getItem('disable_redirects') === 'true';
+};

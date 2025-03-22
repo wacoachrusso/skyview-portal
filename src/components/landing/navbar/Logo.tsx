@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { disableRedirects } from "@/utils/navigation";
 
 interface LogoProps {
   handleLogoClick?: (e: React.MouseEvent) => void;
@@ -12,6 +13,9 @@ export function Logo({ handleLogoClick }: LogoProps) {
     
     try {
       console.log("[Logo] Logo clicked, determining redirect");
+      
+      // Disable redirects temporarily to prevent redirect loops
+      disableRedirects(3000);
       
       // First check for post-payment state - highest priority
       const isPostPayment = localStorage.getItem('subscription_activated') === 'true';

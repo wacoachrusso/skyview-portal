@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { areRedirectsDisabled, isPublicRoute } from "@/utils/navigation";
 
 export function SessionCheck() {
   const navigate = useNavigate();
@@ -21,6 +22,14 @@ export function SessionCheck() {
       try {
         console.log("[SessionCheck] Checking session status...");
         
+        // Skip all redirect checks if redirects are disabled
+        if (areRedirectsDisabled()) {
+          console.log("[SessionCheck] Redirects are currently disabled, skipping all checks");
+          isCheckingRef.current = false;
+          setIsInitialCheck(false);
+          return;
+        }
+        
         // Anti-flicker: Skip checks during login/signup process
         if (localStorage.getItem('login_in_progress') === 'true' || 
             localStorage.getItem('signup_in_progress') === 'true') {
@@ -34,6 +43,14 @@ export function SessionCheck() {
         if (location.pathname === '/login' && !isInitialCheck) {
           console.log("[SessionCheck] Already on login page, skipping check");
           isCheckingRef.current = false;
+          return;
+        }
+        
+        // Check if this is a public route - don't redirect from public routes
+        if (isPublicRoute(location.pathname)) {
+          console.log("[SessionCheck] On public route, skipping authentication check");
+          isCheckingRef.current = false;
+          setIsInitialCheck(false);
           return;
         }
         
@@ -241,25 +258,6 @@ export function SessionCheck() {
           return;
         }
 
-        // *** IMPORTANT CHANGE: Check for allowed public routes first ***
-        const publicRoutes = [
-          '/login', 
-          '/signup', 
-          '/', 
-          '/auth/callback', 
-          '/privacy-policy', 
-          '/about',
-          '/help-center',
-          '/WebViewDemo'
-        ];
-        
-        if (publicRoutes.includes(location.pathname)) {
-          console.log("[SessionCheck] User on public route:", location.pathname);
-          isCheckingRef.current = false;
-          setIsInitialCheck(false);
-          return;
-        }
-
         // Check subscription status and admin status
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -278,7 +276,7 @@ export function SessionCheck() {
             // Store admin status in localStorage for quick access
             localStorage.setItem('user_is_admin', 'true');
             
-            // *** IMPORTANT CHANGE: Don't force redirect admins to chat if they're already on a valid page ***
+            // Don't force redirect admins to specific pages, let them browse freely
             isCheckingRef.current = false;
             setIsInitialCheck(false);
             return;
@@ -287,14 +285,15 @@ export function SessionCheck() {
             localStorage.removeItem('user_is_admin');
           }
           
-          // Check for recently signed up users - always keep them on chat page
-          if (sessionStorage.getItem('recently_signed_up') === 'true') {
-            console.log("[SessionCheck] Recently signed up user detected, keeping on chat page");
-            if (window.location.pathname !== '/chat') {
-              navigate('/chat', { replace: true });
-            }
+          // Check for recently signed up users - don't force them back to chat if they navigate away
+          if (sessionStorage.getItem('recently_signed_up') === 'true' && 
+              location.pathname !== '/chat' && 
+              isInitialCheck) {
+            console.log("[SessionCheck] Recently signed up user, initial navigation to chat");
+            navigate('/chat', { replace: true });
             isCheckingRef.current = false;
             setIsInitialCheck(false);
+            sessionStorage.removeItem('recently_signed_up'); // Remove flag after initial navigation
             return;
           }
           
@@ -324,7 +323,8 @@ export function SessionCheck() {
         // IMPORTANT: This was causing redirect loops - now we only do this for the exact root path
         if (location.pathname === '/' && 
             !window.location.href.includes('scrollTo=pricing') && 
-            !localStorage.getItem('payment_in_progress')) {
+            !localStorage.getItem('payment_in_progress') &&
+            isInitialCheck) {  // Only on initial check
           console.log("[SessionCheck] Authenticated user on homepage, redirecting to chat");
           navigate('/chat', { replace: true });
         }
