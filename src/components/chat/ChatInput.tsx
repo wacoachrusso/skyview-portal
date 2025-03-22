@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +40,6 @@ export function ChatInput({
       setMessage(selectedQuestion);
     }
   }, [selectedQuestion, isInputDisabled]);
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || isLoading || isInputDisabled || isSubmittingRef.current) return;
@@ -67,30 +65,18 @@ export function ChatInput({
       isSubmittingRef.current = false;
     }
   };
-  
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-  
   return <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background z-10">
       <form onSubmit={handleSubmit} className="p-4">
         <div className="relative flex items-center">
           <Textarea value={message} onChange={e => setMessage(e.target.value)} onKeyDown={handleKeyDown} placeholder={isInputDisabled ? "Chat unavailable while offline or trial ended" : "Ask about your contract..."} className="min-h-[60px] w-full pr-[160px] resize-none bg-background/50 focus-visible:ring-1 focus-visible:ring-offset-0" disabled={isInputDisabled} aria-label="Chat input" aria-describedby="chat-input-description" />
           <div className="absolute right-2 flex items-center space-x-1 h-full pr-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={handleContractClick}
-              disabled={isInputDisabled}
-              title="View Contract"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            >
-              <FileText className="h-4 w-4" />
-            </Button>
+            
             <MicButton onRecognized={setMessage} disabled={isInputDisabled} />
             <SendButton isLoading={isLoading} disabled={!message.trim() || isInputDisabled} />
           </div>
