@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -331,6 +330,13 @@ export function SessionCheck() {
         
         isCheckingRef.current = false;
         setIsInitialCheck(false);
+        
+        // **** IMPORTANT CHANGE: Modify this section to reduce aggressive redirects ****
+        // Don't auto-redirect authenticated users unless they're on auth pages
+        if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
+          navigate('/chat', { replace: true });
+        }
+        
       } catch (error) {
         console.error("[SessionCheck] Error:", error);
         isCheckingRef.current = false;

@@ -1,4 +1,3 @@
-
 import { Route, Routes, useNavigate } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -42,7 +41,6 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
-// Improved protected route component with loop prevention
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +51,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     
     const checkAuth = async () => {
       try {
-        // Set a flag to track that we've started the check
         const checkStarted = sessionStorage.getItem('auth_check_started') === 'true';
         if (checkStarted && !isAuthenticated) {
           console.log("Auth check already in progress, preventing loop");
@@ -63,7 +60,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         
         sessionStorage.setItem('auth_check_started', 'true');
         
-        // Skip check if any special flags are set
         if (localStorage.getItem('login_in_progress') === 'true' ||
             localStorage.getItem('skip_initial_redirect') === 'true') {
           console.log("Skipping auth check due to special flags");
@@ -74,13 +70,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
           console.log("No session found in ProtectedRoute, redirecting to login");
           if (mounted) {
-            // Set a flag to prevent redirect loops
             localStorage.setItem('skip_initial_redirect', 'true');
             navigate("/login", { replace: true });
           }
@@ -120,7 +114,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : null;
 };
 
-// Admin route component with admin status check
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -129,7 +122,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // First check if we have a cached admin status
         const cachedAdminStatus = localStorage.getItem('user_is_admin') === 'true';
         
         if (cachedAdminStatus) {
@@ -140,7 +132,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         }
         
         setIsLoading(true);
-        // Check if user is logged in
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
@@ -149,7 +140,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        // Check if user is admin
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('is_admin')
@@ -158,22 +148,21 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           
         if (profileError || !profile) {
           console.error("Error fetching admin status:", profileError);
-          navigate("/chat"); // Redirect non-admins to chat instead of dashboard
+          navigate("/chat");
           return;
         }
         
         if (!profile.is_admin) {
           console.log("User is not an admin, redirecting to chat");
-          navigate("/chat"); // Redirect non-admins to chat instead of dashboard
+          navigate("/chat");
           return;
         }
         
-        // User is admin - update cache and state
         localStorage.setItem('user_is_admin', 'true');
         setIsAdmin(true);
       } catch (error) {
         console.error("Error checking admin status:", error);
-        navigate("/chat"); // Redirect to chat on error
+        navigate("/chat");
       } finally {
         setIsLoading(false);
       }
@@ -197,7 +186,6 @@ export function AppRoutes() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<LazyRoutes.Index />} />
         <Route path="/login" element={<LazyRoutes.Login />} />
         <Route path="/signup" element={<LazyRoutes.SignUp />} />
@@ -209,7 +197,6 @@ export function AppRoutes() {
         <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
         <Route path="/WebViewDemo" element={<WebViewDemo />} />
         
-        {/* Protected routes */}
         <Route path="/chat" element={<ProtectedRoute><LazyRoutes.Chat /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><LazyRoutes.Account /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><LazyRoutes.Settings /></ProtectedRoute>} />
@@ -217,13 +204,10 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
-        {/* Redirects */}
         <Route path="/complete-profile" element={<LazyRoutes.Login />} />
         
-        {/* Admin routes */}
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
-        {/* Fallback route */}
         <Route path="*" element={<LazyRoutes.Dashboard />} />
       </Routes>
     </ErrorBoundary>

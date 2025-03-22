@@ -1,4 +1,3 @@
-
 /**
  * Navigation utility functions to prevent redirect loops
  */
@@ -19,6 +18,7 @@ export const navigateWithoutRedirectCheck = (path: string) => {
  * Check if a path is a public route that doesn't require authentication
  */
 export const isPublicRoute = (path: string): boolean => {
+  // Define public routes with canonical paths to prevent duplicates
   const publicRoutes = [
     '/login', 
     '/signup', 
@@ -30,13 +30,59 @@ export const isPublicRoute = (path: string): boolean => {
     '/WebViewDemo'
   ];
   
-  // Normalize path for comparison (removing any query parameters)
-  const normalizedPath = path.split('?')[0];
+  // Normalize path for comparison (removing any query parameters and trailing slashes)
+  let normalizedPath = path.split('?')[0];
+  normalizedPath = normalizedPath.endsWith('/') && normalizedPath !== '/' 
+    ? normalizedPath.slice(0, -1) 
+    : normalizedPath;
   
   return publicRoutes.some(route => 
     normalizedPath === route || 
     (route !== '/' && normalizedPath.startsWith(route))
   );
+};
+
+/**
+ * Get a list of unique application routes for navigation
+ * This helps prevent duplicate routes in navigation menus
+ */
+export const getUniqueAppRoutes = (): string[] => {
+  return [
+    '/chat',
+    '/account',
+    '/settings',
+    '/dashboard',
+    '/admin',
+    '/privacy-policy',
+    '/about',
+    '/help-center',
+    '/release-notes',
+    '/refunds'
+  ];
+};
+
+/**
+ * Get a human-readable name for a route
+ */
+export const getRouteDisplayName = (route: string): string => {
+  const routeMap: Record<string, string> = {
+    '/': 'Home',
+    '/login': 'Login',
+    '/signup': 'Sign Up',
+    '/chat': 'Chat',
+    '/account': 'Account',
+    '/settings': 'Settings',
+    '/dashboard': 'Dashboard',
+    '/admin': 'Admin',
+    '/privacy-policy': 'Privacy Policy',
+    '/about': 'About',
+    '/help-center': 'Help Center',
+    '/release-notes': 'Release Notes',
+    '/refunds': 'Refunds',
+    '/WebViewDemo': 'Web View Demo'
+  };
+  
+  return routeMap[route] || route.replace('/', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 /**
