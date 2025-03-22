@@ -1,3 +1,4 @@
+
 import { Route, Routes, useNavigate } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -196,6 +197,7 @@ export function AppRoutes() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<LazyRoutes.Index />} />
         <Route path="/login" element={<LazyRoutes.Login />} />
         <Route path="/signup" element={<LazyRoutes.SignUp />} />
@@ -205,7 +207,9 @@ export function AppRoutes() {
         <Route path="/reset-password" element={<LazyRoutes.ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
+        <Route path="/WebViewDemo" element={<WebViewDemo />} />
         
+        {/* Protected routes */}
         <Route path="/chat" element={<ProtectedRoute><LazyRoutes.Chat /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><LazyRoutes.Account /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><LazyRoutes.Settings /></ProtectedRoute>} />
@@ -213,11 +217,13 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
+        {/* Redirects */}
         <Route path="/complete-profile" element={<LazyRoutes.Login />} />
         
+        {/* Admin routes */}
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
-        <Route path="/WebViewDemo" element={<WebViewDemo />} />
+        {/* Fallback route */}
         <Route path="*" element={<LazyRoutes.Dashboard />} />
       </Routes>
     </ErrorBoundary>

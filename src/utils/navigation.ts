@@ -30,9 +30,12 @@ export const isPublicRoute = (path: string): boolean => {
     '/WebViewDemo'
   ];
   
+  // Normalize path for comparison (removing any query parameters)
+  const normalizedPath = path.split('?')[0];
+  
   return publicRoutes.some(route => 
-    path === route || 
-    (route !== '/' && path.startsWith(route))
+    normalizedPath === route || 
+    (route !== '/' && normalizedPath.startsWith(route))
   );
 };
 

@@ -15,7 +15,7 @@ export function useNewChat(
 ) {
   const { toast } = useToast();
 
-  // Start a new chat
+  // Start a new chat - streamlined to prevent duplications
   const startNewChat = useCallback(async () => {
     try {
       // Set a flag to prevent flickering during navigation
@@ -24,13 +24,15 @@ export function useNewChat(
       // Set loading state to prevent UI flickering
       setIsLoading(true);
       
-      // First clear the old messages to give immediate feedback
+      // Clear the old messages immediately for user feedback
       setMessages([]);
       
       // Create the new conversation if user is logged in
       if (currentUserId) {
         const newConversationId = await createNewConversation(currentUserId);
         if (newConversationId) {
+          // Update the conversation ID without navigation 
+          // as we're already on the chat page
           setCurrentConversationId(newConversationId);
         }
       } else {
