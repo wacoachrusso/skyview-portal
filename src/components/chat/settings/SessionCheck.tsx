@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -6,11 +7,25 @@ import { useToast } from "@/hooks/use-toast";
 export function SessionCheck() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isCheckingRef = useRef(false);
+  const checkedOnceRef = useRef(false);
 
   useEffect(() => {
     const checkSession = async () => {
+      // Prevent concurrent checks and redundant checks
+      if (isCheckingRef.current) return;
+      isCheckingRef.current = true;
+      
       try {
         console.log("[SessionCheck] Checking session status...");
+        
+        // Anti-flicker: Skip checks during login/signup process
+        if (localStorage.getItem('login_in_progress') === 'true' || 
+            localStorage.getItem('signup_in_progress') === 'true') {
+          console.log("[SessionCheck] Login/signup in progress, skipping check");
+          isCheckingRef.current = false;
+          return;
+        }
         
         // MOST CRITICAL CHECK: First check for post-payment state
         // This must override all other checks
@@ -28,6 +43,7 @@ export function SessionCheck() {
           localStorage.removeItem('payment_in_progress');
           localStorage.removeItem('direct_payment_redirect');
           localStorage.removeItem('new_user_signup');
+          isCheckingRef.current = false;
           return;
         }
         
@@ -36,6 +52,7 @@ export function SessionCheck() {
         if (isDirectPaymentRedirect && window.location.pathname === '/chat') {
           console.log("[SessionCheck] Direct payment redirect detected, skipping further processing");
           localStorage.removeItem('direct_payment_redirect');
+          isCheckingRef.current = false;
           return;
         }
         
@@ -43,7 +60,8 @@ export function SessionCheck() {
         if (isNewUserSignup) {
           console.log("[SessionCheck] New user signup detected, redirecting to chat");
           localStorage.removeItem('new_user_signup');
-          navigate('/chat');
+          navigate('/chat', { replace: true });
+          isCheckingRef.current = false;
           return;
         }
         
@@ -137,7 +155,8 @@ export function SessionCheck() {
               duration: 8000,
             });
             
-            navigate('/login');
+            navigate('/login', { replace: true });
+            isCheckingRef.current = false;
             return;
           }
           
@@ -189,6 +208,7 @@ export function SessionCheck() {
             // Use window.location.href instead of navigate to force a full page reload
             // This helps clear any stale state that might be causing the flashing
             window.location.href = `${window.location.origin}/chat`;
+            isCheckingRef.current = false;
           }, 1500);
           return;
         }
@@ -198,7 +218,8 @@ export function SessionCheck() {
         
         if (!session) {
           console.log("[SessionCheck] No active session found, redirecting to login");
-          navigate('/login');
+          navigate('/login', { replace: true });
+          isCheckingRef.current = false;
           return;
         }
 
@@ -225,8 +246,9 @@ export function SessionCheck() {
                 window.location.pathname === '/login' ||
                 window.location.pathname.includes('scrollTo=pricing')) {
               console.log("[SessionCheck] Admin not on admin page, redirecting to chat");
-              navigate('/chat');
+              navigate('/chat', { replace: true });
             }
+            isCheckingRef.current = false;
             return;
           } else {
             // Ensure admin flag is removed for non-admin users
@@ -237,14 +259,9 @@ export function SessionCheck() {
           if (sessionStorage.getItem('recently_signed_up') === 'true') {
             console.log("[SessionCheck] Recently signed up user detected, keeping on chat page");
             if (window.location.pathname !== '/chat') {
-              navigate('/chat');
+              navigate('/chat', { replace: true });
             }
-            return;
-          }
-          
-          // Deliberately SKIP redirect for free trials during login
-          if (localStorage.getItem('login_in_progress') === 'true') {
-            console.log("[SessionCheck] Skipping redirect check during login process");
+            isCheckingRef.current = false;
             return;
           }
           
@@ -253,7 +270,8 @@ export function SessionCheck() {
               profile?.subscription_plan !== 'free' && 
               profile?.subscription_plan !== 'trial_ended') {
             console.log("[SessionCheck] Subscription inactive, redirecting to pricing");
-            navigate('/?scrollTo=pricing-section');
+            navigate('/?scrollTo=pricing-section', { replace: true });
+            isCheckingRef.current = false;
             return;
           }
           
@@ -261,7 +279,8 @@ export function SessionCheck() {
           if (profile?.subscription_plan === 'free' && profile?.query_count >= 2 && 
               window.location.pathname !== '/' && !localStorage.getItem('login_in_progress')) {
             console.log("[SessionCheck] Free trial ended, redirecting to pricing");
-            navigate('/?scrollTo=pricing-section');
+            navigate('/?scrollTo=pricing-section', { replace: true });
+            isCheckingRef.current = false;
             return;
           }
         }
@@ -272,15 +291,22 @@ export function SessionCheck() {
             !window.location.href.includes('scrollTo=pricing') && 
             !localStorage.getItem('payment_in_progress')) {
           console.log("[SessionCheck] Authenticated user on homepage, redirecting to chat");
-          navigate('/chat');
+          navigate('/chat', { replace: true });
         }
+        
+        isCheckingRef.current = false;
       } catch (error) {
         console.error("[SessionCheck] Error:", error);
-        navigate('/login');
+        isCheckingRef.current = false;
+        navigate('/login', { replace: true });
       }
     };
 
-    checkSession();
+    // Run check once immediately (if not already done)
+    if (!checkedOnceRef.current) {
+      checkedOnceRef.current = true;
+      checkSession();
+    }
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -291,7 +317,7 @@ export function SessionCheck() {
       
       if (event === 'SIGNED_OUT' || !session) {
         if (!pendingActivation) {
-          navigate('/login');
+          navigate('/login', { replace: true });
         }
       }
       // For sign-in events, always redirect to chat
@@ -311,7 +337,7 @@ export function SessionCheck() {
         else if (!localStorage.getItem('subscription_activated') && 
                  !localStorage.getItem('payment_in_progress')) {
           console.log("[SessionCheck] Regular sign-in, navigating to chat");
-          navigate('/chat');
+          navigate('/chat', { replace: true });
         }
       }
     });

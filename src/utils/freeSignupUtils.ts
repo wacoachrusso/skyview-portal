@@ -23,11 +23,15 @@ export const handleFreeSignup = async ({
   console.log('Processing free plan signup for:', email);
   console.log('Using assistant ID:', assistantId);
 
+  // Set a flag to prevent redirect loops during signup
+  localStorage.setItem('signup_in_progress', 'true');
+
   // Check if the user is already authenticated
   const { data: session, error: sessionError } = await supabase.auth.getSession();
 
   if (sessionError) {
     console.error("Error checking user session:", sessionError);
+    localStorage.removeItem('signup_in_progress');
     throw new Error("Error checking user session. Please try again.");
   }
 
@@ -53,6 +57,7 @@ export const handleFreeSignup = async ({
 
     if (profileError) {
       console.error("Error creating profile:", profileError);
+      localStorage.removeItem('signup_in_progress');
       throw new Error("Error creating profile. Please try again.");
     }
 
@@ -68,6 +73,8 @@ export const handleFreeSignup = async ({
     
     // Store a flag to prevent pricing redirects
     sessionStorage.setItem('recently_signed_up', 'true');
+    localStorage.setItem('new_user_signup', 'true');
+    localStorage.removeItem('signup_in_progress');
     
     return { message: "Profile created successfully", profile };
   }
@@ -87,17 +94,17 @@ export const handleFreeSignup = async ({
         },
         // We don't redirect to confirmation URL - sign them in directly
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        // Disable email confirmation - we want to sign them in directly
-        emailVerification: false
       },
     });
 
     if (error) {
       console.error("Signup error:", error);
+      localStorage.removeItem('signup_in_progress');
       throw error;
     }
 
     if (!data.user) {
+      localStorage.removeItem('signup_in_progress');
       throw new Error('Failed to create account');
     }
     
@@ -105,11 +112,13 @@ export const handleFreeSignup = async ({
     sessionStorage.setItem('recently_signed_up', 'true');
     // This flag helps us know it's a new signup
     localStorage.setItem('new_user_signup', 'true');
+    localStorage.removeItem('signup_in_progress');
     
     console.log("Free trial signup successful:", data);
     return data;
   } catch (error) {
     console.error("Error in handleFreeSignup:", error);
+    localStorage.removeItem('signup_in_progress');
     throw error;
   }
 };

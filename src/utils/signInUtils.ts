@@ -5,6 +5,9 @@ import { toast } from "@/hooks/use-toast";
 export const handleSignIn = async (email: string, password: string, rememberMe: boolean = false) => {
   console.log("Starting sign in process");
   try {
+    // Set a flag to prevent redirection during login process
+    localStorage.setItem('login_in_progress', 'true');
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -38,9 +41,17 @@ export const handleSignIn = async (email: string, password: string, rememberMe: 
     }
 
     console.log("Sign in successful");
+    
+    // Clear the login_in_progress flag after a short delay
+    // This allows time for other components to complete their initialization
+    setTimeout(() => {
+      localStorage.removeItem('login_in_progress');
+    }, 2000);
+    
     return true;
   } catch (error) {
     console.error("Sign in error:", error);
+    localStorage.removeItem('login_in_progress');
     toast({
       variant: "destructive",
       title: "Error",

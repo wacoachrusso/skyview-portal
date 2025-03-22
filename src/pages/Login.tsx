@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,25 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const next = searchParams.get("next") ?? "/";
   const isMobile = useIsMobile();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Skip this check if we're already in login flow
+      if (localStorage.getItem('login_in_progress') === 'true') {
+        return;
+      }
+      
+      // Check if user is already logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        console.log("User already authenticated, redirecting to chat");
+        navigate('/chat', { replace: true });
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   // Check for error param in URL (from Google auth callback)
   const errorParam = searchParams.get("error");
@@ -42,6 +61,9 @@ const Login = () => {
 
     setLoading(true);
     try {
+      // Set a flag to prevent SessionCheck from redirecting during login
+      localStorage.setItem('login_in_progress', 'true');
+      
       const success = await handleSignIn(email, password, rememberMe);
       
       if (success) {
@@ -56,13 +78,16 @@ const Login = () => {
         
         if (user) {
           await handleAuthSession(user.id, createNewSession, navigate);
-          navigate(next);
+          // Use replace:true to prevent back button from returning to login
+          navigate('/chat', { replace: true });
         }
       } else {
+        localStorage.removeItem('login_in_progress');
         setLoading(false);
       }
     } catch (error) {
       console.error("Unexpected error during login:", error);
+      localStorage.removeItem('login_in_progress');
       toast({
         variant: "destructive",
         title: "Login Error",
