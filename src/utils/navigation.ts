@@ -1,3 +1,4 @@
+
 /**
  * Navigation utility functions to prevent redirect loops
  */
@@ -119,4 +120,22 @@ export const disableRedirects = (durationMs = 5000) => {
  */
 export const areRedirectsDisabled = () => {
   return localStorage.getItem('disable_redirects') === 'true';
+};
+
+/**
+ * Helper function to force navigation to another page
+ * This bypasses all session and redirect checks
+ */
+export const forceNavigate = (path: string) => {
+  // Set flags to bypass all checks
+  localStorage.setItem('skip_initial_redirect', 'true');
+  localStorage.setItem('disable_redirects', 'true');
+  
+  // Use direct window location change for maximum reliability
+  window.location.href = `${window.location.origin}${path}`;
+  
+  // Reset the disable_redirects flag after navigation completes
+  setTimeout(() => {
+    localStorage.removeItem('disable_redirects');
+  }, 2000);
 };

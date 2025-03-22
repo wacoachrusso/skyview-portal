@@ -2,9 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useLogout } from "@/hooks/useLogout";
 import { Icons } from "@/components/icons";
+import { forceNavigate } from "@/utils/navigation";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
@@ -15,7 +16,6 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoading = false }: ChatHeaderProps) {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const { handleLogout } = useLogout();
 
   return (
@@ -45,27 +45,23 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
       <div className="flex items-center gap-2">
         {isLoading && <Icons.spinner className="h-4 w-4 mr-2" />}
         <Button
-          asChild
           variant="ghost"
           size="sm"
+          onClick={() => forceNavigate('/dashboard')}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center"
         >
-          <Link to="/dashboard">
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="ml-2 hidden md:inline">Dashboard</span>
-          </Link>
+          <LayoutDashboard className="h-4 w-4" />
+          <span className="ml-2 hidden md:inline">Dashboard</span>
         </Button>
         {/* Add Account Button */}
         <Button
-          asChild
           variant="ghost"
           size="sm"
+          onClick={() => forceNavigate('/account')}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center"
         >
-          <Link to="/account">
-            <UserCircle className="h-4 w-4" />
-            <span className="ml-2 hidden md:inline">Account</span>
-          </Link>
+          <UserCircle className="h-4 w-4" />
+          <span className="ml-2 hidden md:inline">Account</span>
         </Button>
         <Button
           variant="ghost"

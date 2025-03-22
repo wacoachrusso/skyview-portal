@@ -1,4 +1,3 @@
-
 import { NavigateFunction } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { disableRedirects } from "@/utils/navigation";
@@ -8,11 +7,20 @@ import { disableRedirects } from "@/utils/navigation";
  */
 export const handleNewUserSignup = (navigate: NavigateFunction): boolean => {
   const isNewUserSignup = localStorage.getItem('new_user_signup') === 'true';
+  
+  // Only redirect to chat if not already on the chat page
   if (isNewUserSignup && window.location.pathname !== '/chat') {
     console.log("New user signup detected, redirecting to chat");
+    localStorage.removeItem('new_user_signup'); // Clear the flag immediately to prevent future redirects
     navigate('/chat', { replace: true });
     return true;
   }
+  
+  // Clear the flag if we're already on the chat page to prevent future redirects
+  if (isNewUserSignup && window.location.pathname === '/chat') {
+    localStorage.removeItem('new_user_signup');
+  }
+  
   return false;
 };
 
@@ -139,9 +147,9 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
     console.log("[Initial Session] Admin user detected in initial check");
     localStorage.setItem('user_is_admin', 'true');
     
+    // Only redirect admin if they're on login/signup pages
     if (window.location.pathname === '/login' || 
-        window.location.pathname === '/signup' || 
-        window.location.pathname === '/') {
+        window.location.pathname === '/signup') {
       console.log("[Initial Session] Admin on auth page, redirecting to chat");
       navigate('/chat', { replace: true });
     }
@@ -220,7 +228,7 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
       return;
     }
     
-    // Handle new user signup first
+    // Handle new user signup first - only on initial page load
     if (handleNewUserSignup(navigate)) {
       return;
     }
@@ -243,13 +251,16 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
       // Don't redirect from public routes unless we have specific conditions
     }
     
-    // For recently signed up users, ensure they stay on the chat page
+    // For recently signed up users, ONLY redirect if we're not already on the chat page
     if (sessionStorage.getItem('recently_signed_up') === 'true') {
       console.log("[Initial Session] Recently signed up user detected");
       if (window.location.pathname !== '/chat') {
         console.log("[Initial Session] Redirecting recent signup to chat page");
         navigate('/chat', { replace: true });
         return;
+      } else {
+        // Clear the flag to prevent future redirects
+        sessionStorage.removeItem('recently_signed_up');
       }
     }
     
@@ -259,7 +270,7 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
     if (data.session) {
       console.log("[Initial Session] Active session found for user:", data.session.user.email);
       
-      // Check subscription status
+      // Check subscription status - but don't redirect if already on a valid page
       await checkSubscriptionStatus(data.session.user.id, navigate);
       
       // Check if user just completed payment

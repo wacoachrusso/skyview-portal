@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { forceNavigate } from "@/utils/navigation";
 
 export function ChatNavbar() {
   const { handleLogout } = useLogout();
@@ -42,27 +43,23 @@ export function ChatNavbar() {
         {!isMobile && (
           <div className="flex items-center gap-3">
             <Button
-              asChild
+              onClick={() => forceNavigate('/dashboard')}
               variant="ghost"
               size="sm"
               className="text-foreground/80 hover:text-foreground"
             >
-              <Link to="/dashboard">
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Dashboard
-              </Link>
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Dashboard
             </Button>
             
             <Button
-              asChild
               variant="ghost"
               size="sm"
               className="text-foreground/80 hover:text-foreground"
+              onClick={(e) => e.preventDefault()}
             >
-              <Link to="#" onClick={(e) => e.preventDefault()}>
-                <FileText className="mr-2 h-4 w-4" />
-                View Contract
-              </Link>
+              <FileText className="mr-2 h-4 w-4" />
+              View Contract
             </Button>
             
             <PlusCircleButton />
@@ -70,15 +67,13 @@ export function ChatNavbar() {
             <NotificationBell />
             
             <Button
-              asChild
+              onClick={() => forceNavigate('/account')}
               variant="ghost"
               size="sm"
               className="text-foreground/80 hover:text-foreground"
             >
-              <Link to="/account">
-                <UserCircle className="mr-2 h-4 w-4" />
-                Account
-              </Link>
+              <UserCircle className="mr-2 h-4 w-4" />
+              Account
             </Button>
             
             <Button
@@ -106,23 +101,17 @@ export function ChatNavbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard" className="flex items-center">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Link>
+                <DropdownMenuItem onClick={() => forceNavigate('/dashboard')} className="flex items-center">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="#" onClick={(e) => e.preventDefault()} className="flex items-center">
-                    <FileText className="mr-2 h-4 w-4" />
-                    View Contract
-                  </Link>
+                <DropdownMenuItem onClick={(e) => e.preventDefault()} className="flex items-center">
+                  <FileText className="mr-2 h-4 w-4" />
+                  View Contract
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/account" className="flex items-center">
-                    <UserCircle className="mr-2 h-4 w-4" />
-                    Account
-                  </Link>
+                <DropdownMenuItem onClick={() => forceNavigate('/account')} className="flex items-center">
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  Account
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => handleLogout()}
@@ -142,23 +131,19 @@ export function ChatNavbar() {
 
 // Helper component for new chat button
 function PlusCircleButton() {
-  const navigate = useNavigate();
-  
   return (
     <Button
-      asChild
       variant="outline"
       size="sm"
       className="border-brand-gold/50 text-brand-gold hover:bg-brand-gold/10"
-    >
-      <Link to="#" onClick={(e) => {
+      onClick={(e) => {
         e.preventDefault();
-        // Use React Router navigation instead of window.location for smoother transition
-        navigate('/chat');
-      }}>
-        <PlusCircle className="mr-2 h-4 w-4" />
-        New Chat
-      </Link>
+        // Use the force navigate function to create a new chat
+        forceNavigate('/chat');
+      }}
+    >
+      <PlusCircle className="mr-2 h-4 w-4" />
+      New Chat
     </Button>
   );
 }
