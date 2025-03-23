@@ -106,11 +106,21 @@ export default function Index() {
       <ReleaseNotePopup />
 
       <Sheet open={showIOSPrompt} onOpenChange={handleClosePrompt}>
-        <SheetContent side="bottom" className="glass-morphism h-[40vh] bg-premium-gradient border-t border-white/10">
+        <SheetContent 
+          side="bottom" 
+          className="glass-morphism border-t border-white/10 max-h-[80vh] overflow-y-auto pb-safe"
+          // Ensure the sheet is properly sized and scrollable
+          style={{
+            height: "auto",
+            minHeight: "280px",
+            maxHeight: "min(450px, 80vh)",
+            paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)",
+          }}
+        >
           <SheetHeader>
             <SheetTitle className="text-xl font-bold text-white">Install SkyGuide App</SheetTitle>
             <SheetDescription className="text-base text-gray-300">
-              <div className="space-y-4">
+              <div className="space-y-4 pb-6">
                 <p>Install SkyGuide on your iOS device for the best experience:</p>
                 <ol className="list-decimal pl-5 space-y-2">
                   <li>Tap the Share button <span className="inline-block w-6 h-6 align-middle">
@@ -121,7 +131,7 @@ export default function Index() {
                   <li>Scroll down and tap "Add to Home Screen"</li>
                   <li>Tap "Add" to install SkyGuide</li>
                 </ol>
-                <div className="mt-6">
+                <div className="mt-6 mb-4">
                   <button
                     onClick={handleClosePrompt}
                     className="premium-button w-full bg-brand-gold text-brand-navy font-semibold py-3 rounded-lg hover:bg-brand-gold/90 transition-colors shadow-gold hover:shadow-gold-hover"
