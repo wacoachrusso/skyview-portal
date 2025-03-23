@@ -1,4 +1,3 @@
-
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { Navbar } from "@/components/landing/Navbar";
@@ -7,7 +6,7 @@ import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { Features } from "@/components/landing/Features";
-import { motion } from "framer-motion";
+import { AnimatedSection } from "./common/SectionContainer";
 import { InstallPrompt } from "./InstallPrompt";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -32,11 +31,6 @@ export const LandingPageContent = () => {
     };
   }, [location]);
 
-  const sectionVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5 } }
-  };
-
   return (
     <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
       <Navbar />
@@ -44,41 +38,21 @@ export const LandingPageContent = () => {
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />
           
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
+          <AnimatedSection>
             <Features />
-          </motion.div>
+          </AnimatedSection>
           
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
+          <AnimatedSection>
             <Testimonials />
-          </motion.div>
+          </AnimatedSection>
           
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
+          <AnimatedSection>
             <PricingSection />
-          </motion.div>
+          </AnimatedSection>
           
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={sectionVariants}
-          >
+          <AnimatedSection>
             <ReferralSection />
-          </motion.div>
+          </AnimatedSection>
         </div>
       </main>
       <Footer />
