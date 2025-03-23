@@ -21,20 +21,26 @@ export default function Index() {
   const [waitlistLoading, setWaitlistLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Index page mounted - checking waitlist settings");
+    
     const loadWaitlistSettings = async () => {
       try {
         setWaitlistLoading(true);
-        const { data: showWaitlistData } = await supabase
+        const { data: showWaitlistData, error: showError } = await supabase
           .from('app_settings')
           .select('value')
           .eq('key', 'show_waitlist')
           .single();
 
-        const { data: forceOpenData } = await supabase
+        console.log("Show waitlist setting:", showWaitlistData, "Error:", showError);
+
+        const { data: forceOpenData, error: forceError } = await supabase
           .from('app_settings')
           .select('value')
           .eq('key', 'waitlist_force_open')
           .single();
+          
+        console.log("Force open setting:", forceOpenData, "Error:", forceError);
 
         setShowWaitlist(showWaitlistData?.value === true);
         setWaitlistForceOpen(forceOpenData?.value === true);
@@ -51,7 +57,6 @@ export default function Index() {
   useEffect(() => {
     console.log('Index page mounted');
     
-    // Check for pricing section scroll
     const searchParams = new URLSearchParams(location.search);
     const scrollTo = searchParams.get('scrollTo');
     if (scrollTo === 'pricing-section') {
@@ -61,11 +66,9 @@ export default function Index() {
       }
     }
 
-    // Check if it's iOS and not in standalone mode
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     
-    // Check if the prompt has been shown before
     const hasShownPrompt = localStorage.getItem('iosInstallPromptShown');
     
     console.log('Device checks:', { isIOS, isStandalone, hasShownPrompt });
@@ -84,7 +87,6 @@ export default function Index() {
     setShowIOSPrompt(false);
   };
 
-  // Animation variants for sections
   const sectionVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.5 } }
@@ -98,12 +100,12 @@ export default function Index() {
     );
   }
 
-  // Show waitlist page if enabled
+  console.log("Rendering Index with showWaitlist:", showWaitlist);
+
   if (showWaitlist) {
     return <WaitlistPage forceOpen={waitlistForceOpen} />;
   }
 
-  // Otherwise show the regular landing page
   return (
     <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
       <Navbar />

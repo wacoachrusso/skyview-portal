@@ -114,6 +114,7 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
           email: data.email,
           role: data.role,
           airline: data.airline,
+          phoneNumber: data.phoneNumber,
         },
       });
 
@@ -303,10 +304,10 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                           <FormLabel className="text-gray-200">Role</FormLabel>
                           <FormControl>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <SelectTrigger className="bg-gray-800/50 border-gray-700">
+                              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                                 <SelectValue placeholder="Select your role" />
                               </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-gray-700">
+                              <SelectContent className="bg-gray-800 border-gray-700 text-white">
                                 <SelectItem value="Flight Attendant">Flight Attendant</SelectItem>
                                 <SelectItem value="Pilot">Pilot</SelectItem>
                               </SelectContent>
@@ -327,10 +328,10 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                           <FormLabel className="text-gray-200">Airline</FormLabel>
                           <FormControl>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <SelectTrigger className="bg-gray-800/50 border-gray-700">
+                              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                                 <SelectValue placeholder="Select your airline" />
                               </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-gray-700">
+                              <SelectContent className="bg-gray-800 border-gray-700 text-white">
                                 <SelectItem value="United">United</SelectItem>
                                 <SelectItem value="Alaska">Alaska</SelectItem>
                                 <SelectItem value="Delta">Delta</SelectItem>
@@ -369,10 +370,10 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                       <FormItem>
                         <FormLabel className="text-gray-200">Preferred Contact Method</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger className="bg-gray-800/50 border-gray-700">
+                          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                             <SelectValue placeholder="Select preferred contact method" />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-800 border-gray-700">
+                          <SelectContent className="bg-gray-800 border-gray-700 text-white">
                             <SelectItem value="Email">Email</SelectItem>
                             <SelectItem value="Phone">Phone</SelectItem>
                             <SelectItem value="Both">Both Email and Phone</SelectItem>
