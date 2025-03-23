@@ -26,13 +26,12 @@ export default function Index() {
     const loadWaitlistSettings = async () => {
       try {
         setWaitlistLoading(true);
+        
         const { data: showWaitlistData, error: showError } = await supabase
           .from('app_settings')
           .select('value')
           .eq('key', 'show_waitlist')
           .single();
-
-        console.log("Show waitlist setting:", showWaitlistData, "Error:", showError);
 
         const { data: forceOpenData, error: forceError } = await supabase
           .from('app_settings')
@@ -40,9 +39,15 @@ export default function Index() {
           .eq('key', 'waitlist_force_open')
           .single();
           
-        console.log("Force open setting:", forceOpenData, "Error:", forceError);
+        console.log("Waitlist settings:", { 
+          showWaitlist: showWaitlistData?.value, 
+          forceOpen: forceOpenData?.value,
+          showError, 
+          forceError 
+        });
 
-        setShowWaitlist(showWaitlistData?.value === true);
+        const waitlistEnabled = showWaitlistData?.value === true;
+        setShowWaitlist(waitlistEnabled);
         setWaitlistForceOpen(forceOpenData?.value === true);
       } catch (error) {
         console.error("Error loading waitlist settings:", error);

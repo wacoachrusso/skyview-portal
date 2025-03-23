@@ -1,3 +1,4 @@
+
 import { Route, Routes, useNavigate } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -40,6 +41,52 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
     </div>
   );
 }
+
+// Component to check if waitlist is enabled
+const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const [isChecking, setIsChecking] = useState(true);
+  const [waitlistEnabled, setWaitlistEnabled] = useState(false);
+  
+  useEffect(() => {
+    const checkWaitlistStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'show_waitlist')
+          .single();
+          
+        console.log("WaitlistCheck - waitlist status:", data?.value, error);
+        
+        // Explicitly convert to boolean
+        const isEnabled = data?.value === true;
+        setWaitlistEnabled(isEnabled);
+        
+        if (isEnabled) {
+          console.log("Waitlist is enabled, redirecting to home");
+          navigate('/', { replace: true });
+        }
+      } catch (error) {
+        console.error("Error checking waitlist status:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    
+    checkWaitlistStatus();
+  }, [navigate]);
+  
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  return waitlistEnabled ? null : <>{children}</>;
+};
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -111,7 +158,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  return isAuthenticated ? <>{children}</> : null;
+  return isAuthenticated ? <WaitlistCheck>{children}</WaitlistCheck> : null;
 };
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -183,16 +230,66 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 export function AppRoutes() {
+  // Check for waitlist on all routes except admin routes
+  const [isWaitlistChecking, setIsWaitlistChecking] = useState(true);
+  const [shouldShowWaitlist, setShouldShowWaitlist] = useState(false);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Quickly check if we're on the admin route, and skip waitlist check if so
+    const isAdminRoute = window.location.pathname.startsWith('/admin');
+    
+    if (isAdminRoute) {
+      setIsWaitlistChecking(false);
+      return;
+    }
+    
+    const checkWaitlistGlobal = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'show_waitlist')
+          .single();
+          
+        console.log("AppRoutes - Global waitlist check:", data?.value, error);
+        
+        // Explicitly convert to boolean
+        const waitlistEnabled = data?.value === true;
+        setShouldShowWaitlist(waitlistEnabled);
+        
+        if (waitlistEnabled && window.location.pathname !== '/') {
+          console.log("Waitlist is enabled, redirecting to home from AppRoutes");
+          navigate('/', { replace: true });
+        }
+      } catch (error) {
+        console.error("Error in global waitlist check:", error);
+      } finally {
+        setIsWaitlistChecking(false);
+      }
+    };
+    
+    checkWaitlistGlobal();
+  }, [navigate]);
+  
+  if (isWaitlistChecking) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
         <Route path="/" element={<LazyRoutes.Index />} />
-        <Route path="/login" element={<LazyRoutes.Login />} />
-        <Route path="/signup" element={<LazyRoutes.SignUp />} />
+        <Route path="/login" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Login />} />
+        <Route path="/signup" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.SignUp />} />
         <Route path="/privacy-policy" element={<LazyRoutes.PrivacyPolicy />} />
         <Route path="/about" element={<LazyRoutes.About />} />
-        <Route path="/forgot-password" element={<LazyRoutes.ForgotPassword />} />
-        <Route path="/reset-password" element={<LazyRoutes.ResetPassword />} />
+        <Route path="/forgot-password" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.ForgotPassword />} />
+        <Route path="/reset-password" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
         <Route path="/WebViewDemo" element={<WebViewDemo />} />
@@ -204,11 +301,11 @@ export function AppRoutes() {
         <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
         <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
-        <Route path="/complete-profile" element={<LazyRoutes.Login />} />
+        <Route path="/complete-profile" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Login />} />
         
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
-        <Route path="*" element={<LazyRoutes.Dashboard />} />
+        <Route path="*" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Dashboard />} />
       </Routes>
     </ErrorBoundary>
   );

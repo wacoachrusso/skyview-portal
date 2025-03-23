@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { createUserAccount } from "@/utils/auth/userCreationHandler";
+import { createUserAccount, SignupData } from "@/utils/auth/userCreationHandler";
 
 // Schema for the signup form
 const formSchema = z.object({
@@ -43,8 +43,41 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [waitlistLoading, setWaitlistLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check if waitlist is enabled
+  useEffect(() => {
+    const checkWaitlistStatus = async () => {
+      setWaitlistLoading(true);
+      try {
+        const { data: showWaitlistData, error } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'show_waitlist')
+          .single();
+
+        console.log("Signup page - Waitlist check:", showWaitlistData, error);
+        
+        // Explicitly convert to boolean to avoid type issues
+        const waitlistEnabled = showWaitlistData?.value === true;
+        setShowWaitlist(waitlistEnabled);
+        
+        if (waitlistEnabled) {
+          // Redirect to home where the waitlist will be shown
+          navigate('/', { replace: true });
+        }
+      } catch (error) {
+        console.error("Error checking waitlist status:", error);
+      } finally {
+        setWaitlistLoading(false);
+      }
+    };
+    
+    checkWaitlistStatus();
+  }, [navigate]);
 
   // Form initialization
   const form = useForm<FormValues>({
@@ -79,8 +112,15 @@ export default function SignUp() {
     try {
       console.log("Creating user account:", data);
       
-      // Create the user account
-      const user = await createUserAccount(data);
+      // Create the user account - ensure all required fields are present
+      const user = await createUserAccount({
+        email: data.email,
+        password: data.password,
+        full_name: data.full_name,
+        job_title: data.job_title,
+        airline: data.airline,
+        plan: data.plan
+      });
       
       if (user) {
         toast({
@@ -120,12 +160,17 @@ export default function SignUp() {
   };
 
   // Hide the signup form until initial check is complete to prevent flashing
-  if (!initialCheckDone) {
+  if (waitlistLoading || !initialCheckDone) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
+  }
+
+  // If waitlist is enabled, this component should not render (redirected in useEffect)
+  if (showWaitlist) {
+    return null;
   }
 
   return (

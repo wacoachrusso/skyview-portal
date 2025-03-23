@@ -1,6 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
-interface SignupData {
+// Define the expected signup data shape
+export interface SignupData {
   email: string;
   password: string;
   full_name: string;
@@ -9,43 +11,34 @@ interface SignupData {
   plan: string;
 }
 
-export const createUserAccount = async (signupData: SignupData) => {
-  console.log("Creating user account with data:", {
-    email: signupData.email,
-    fullName: signupData.full_name,
-    jobTitle: signupData.job_title,
-    airline: signupData.airline,
-    plan: signupData.plan
-  });
-
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-    email: signupData.email,
-    password: signupData.password,
-    options: {
-      data: {
-        full_name: signupData.full_name,
-        user_type: signupData.job_title,
-        airline: signupData.airline,
-        subscription_plan: signupData.plan
+/**
+ * Creates a new user account
+ */
+export async function createUserAccount(data: SignupData) {
+  console.log("Creating user account with data:", { ...data, password: '[REDACTED]' });
+  
+  try {
+    // Create the auth user
+    const { data: authUser, error: signUpError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          full_name: data.full_name,
+          user_type: data.job_title,
+          airline: data.airline,
+          subscription_plan: data.plan || "free"
+        }
       }
-    }
-  });
-
-  console.log("Signup result:", { 
-    success: !!signUpData?.user,
-    userId: signUpData?.user?.id,
-    error: signUpError 
-  });
-
-  if (signUpError) {
-    console.error("Error creating user account:", signUpError);
-    throw signUpError;
+    });
+    
+    if (signUpError) throw signUpError;
+    
+    console.log("User created successfully:", authUser);
+    return authUser.user;
+    
+  } catch (error) {
+    console.error("Error in createUserAccount:", error);
+    throw error;
   }
-
-  if (!signUpData?.user) {
-    console.error("No user data returned from signup");
-    throw new Error("Failed to create user account");
-  }
-
-  return signUpData.user;
-};
+}

@@ -307,7 +307,11 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                               <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                                 <SelectValue placeholder="Select your role" />
                               </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                              <SelectContent 
+                                className="bg-gray-800 border-gray-700 text-white"
+                                position="popper"
+                                sideOffset={5}
+                              >
                                 <SelectItem value="Flight Attendant">Flight Attendant</SelectItem>
                                 <SelectItem value="Pilot">Pilot</SelectItem>
                               </SelectContent>
@@ -331,7 +335,11 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                               <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                                 <SelectValue placeholder="Select your airline" />
                               </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                              <SelectContent 
+                                className="bg-gray-800 border-gray-700 text-white"
+                                position="popper"
+                                sideOffset={5}
+                              >
                                 <SelectItem value="United">United</SelectItem>
                                 <SelectItem value="Alaska">Alaska</SelectItem>
                                 <SelectItem value="Delta">Delta</SelectItem>
@@ -373,7 +381,11 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                           <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                             <SelectValue placeholder="Select preferred contact method" />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                          <SelectContent 
+                            className="bg-gray-800 border-gray-700 text-white"
+                            position="popper"
+                            sideOffset={5}
+                          >
                             <SelectItem value="Email">Email</SelectItem>
                             <SelectItem value="Phone">Phone</SelectItem>
                             <SelectItem value="Both">Both Email and Phone</SelectItem>
