@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { handleAuthSession, handlePasswordReset } from "@/utils/auth/sessionHandler";
-import { createNewSession, validateSessionToken } from "@/services/session";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { handleSignIn } from "@/utils/signInUtils";
@@ -12,13 +10,10 @@ import { navigateWithoutRedirectCheck } from "@/utils/navigation";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
-  const [passwordResetEmail, setPasswordResetEmail] = useState("");
-  const [isPasswordResetting, setIsPasswordResetting] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
   const isAdminLogin = searchParams.get("admin") === "true";
   const isMobile = useIsMobile();
 
@@ -101,8 +96,6 @@ const Login = () => {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          await handleAuthSession(user.id, createNewSession, navigate);
-          
           if (isAdminLogin) {
             console.log("Admin login detected, checking if user is an admin");
             
@@ -143,38 +136,6 @@ const Login = () => {
       });
       setLoading(false);
     }
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsPasswordResetting(true);
-
-    if (!passwordResetEmail) {
-      toast({
-        variant: "destructive",
-        title: "Reset Error",
-        description: "Please enter your email address.",
-      });
-      setIsPasswordResetting(false);
-      return;
-    }
-
-    const { success, error } = await handlePasswordReset(passwordResetEmail);
-
-    if (success) {
-      toast({
-        title: "Reset Email Sent",
-        description: "Check your inbox to reset your password.",
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Reset Error",
-        description: error || "Failed to send password reset email.",
-      });
-    }
-
-    setIsPasswordResetting(false);
   };
 
   if (!initialCheckDone) {
