@@ -46,29 +46,65 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
 const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
-  const [waitlistEnabled, setWaitlistEnabled] = useState(false);
+  const [waitlistEnabled, setWaitlistEnabled] = useState(true); // Default to true until confirmed otherwise
   
   useEffect(() => {
     const checkWaitlistStatus = async () => {
       try {
-        const { data, error } = await supabase
-          .from('app_settings')
-          .select('value')
-          .eq('key', 'show_waitlist')
-          .single();
+        // Add retry logic for better reliability
+        let attempts = 0;
+        const maxAttempts = 3;
+        let waitlistData = null;
+        
+        while (attempts < maxAttempts && waitlistData === null) {
+          try {
+            console.log(`WaitlistCheck - attempt ${attempts + 1}`);
+            const { data, error } = await supabase
+              .from('app_settings')
+              .select('value')
+              .eq('key', 'show_waitlist')
+              .single();
+              
+            if (data && !error) {
+              waitlistData = data;
+              break;
+            } else {
+              console.error(`Attempt ${attempts + 1} error:`, error);
+            }
+          } catch (fetchError) {
+            console.error(`Fetch attempt ${attempts + 1} failed:`, fetchError);
+          }
           
-        console.log("WaitlistCheck - waitlist status:", data?.value, error);
+          attempts++;
+          if (attempts < maxAttempts) {
+            // Wait 1 second before next attempt
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
         
-        // Explicitly convert to boolean
-        const isEnabled = data?.value === true;
-        setWaitlistEnabled(isEnabled);
+        console.log("WaitlistCheck - final waitlist status:", waitlistData?.value);
         
-        if (isEnabled) {
+        // If we failed to fetch data after all attempts, default to showing waitlist
+        if (!waitlistData) {
+          console.warn("Could not fetch waitlist settings - defaulting to show waitlist");
+          setWaitlistEnabled(true);
+        } else {
+          // Explicitly convert to boolean using double negation to handle any type issues
+          const isEnabled = !!waitlistData.value;
+          console.log("Setting waitlist enabled to:", isEnabled);
+          setWaitlistEnabled(isEnabled);
+        }
+        
+        // If waitlist is enabled, always redirect to home
+        if (waitlistEnabled && window.location.pathname !== '/') {
           console.log("Waitlist is enabled, redirecting to home");
           navigate('/', { replace: true });
         }
       } catch (error) {
         console.error("Error checking waitlist status:", error);
+        // Default to showing waitlist on error
+        setWaitlistEnabled(true);
+        navigate('/', { replace: true });
       } finally {
         setIsChecking(false);
       }
@@ -232,7 +268,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 export function AppRoutes() {
   // Check for waitlist on all routes except admin routes
   const [isWaitlistChecking, setIsWaitlistChecking] = useState(true);
-  const [shouldShowWaitlist, setShouldShowWaitlist] = useState(false);
+  const [shouldShowWaitlist, setShouldShowWaitlist] = useState(true); // Default to true
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -241,29 +277,65 @@ export function AppRoutes() {
     
     if (isAdminRoute) {
       setIsWaitlistChecking(false);
+      setShouldShowWaitlist(false);
       return;
     }
     
     const checkWaitlistGlobal = async () => {
       try {
-        const { data, error } = await supabase
-          .from('app_settings')
-          .select('value')
-          .eq('key', 'show_waitlist')
-          .single();
+        // Add retry logic for better reliability
+        let attempts = 0;
+        const maxAttempts = 3;
+        let waitlistData = null;
+        
+        while (attempts < maxAttempts && waitlistData === null) {
+          try {
+            console.log(`AppRoutes - Global waitlist check attempt ${attempts + 1}`);
+            const { data, error } = await supabase
+              .from('app_settings')
+              .select('value')
+              .eq('key', 'show_waitlist')
+              .single();
+              
+            if (data && !error) {
+              waitlistData = data;
+              break;
+            } else {
+              console.error(`Attempt ${attempts + 1} error:`, error);
+            }
+          } catch (fetchError) {
+            console.error(`Fetch attempt ${attempts + 1} failed:`, fetchError);
+          }
           
-        console.log("AppRoutes - Global waitlist check:", data?.value, error);
+          attempts++;
+          if (attempts < maxAttempts) {
+            // Wait 1 second before next attempt
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
         
-        // Explicitly convert to boolean
-        const waitlistEnabled = data?.value === true;
-        setShouldShowWaitlist(waitlistEnabled);
+        console.log("AppRoutes - Global waitlist check final status:", waitlistData?.value);
         
-        if (waitlistEnabled && window.location.pathname !== '/') {
+        // If we failed to fetch data after all attempts, default to showing waitlist
+        if (!waitlistData) {
+          console.warn("Could not fetch waitlist settings - defaulting to show waitlist");
+          setShouldShowWaitlist(true);
+        } else {
+          // Explicitly convert to boolean using double negation to handle any type issues
+          const waitlistEnabled = !!waitlistData.value;
+          console.log("Setting global waitlist enabled to:", waitlistEnabled);
+          setShouldShowWaitlist(waitlistEnabled);
+        }
+        
+        // If waitlist is enabled and not on home page, redirect to home
+        if (shouldShowWaitlist && window.location.pathname !== '/') {
           console.log("Waitlist is enabled, redirecting to home from AppRoutes");
           navigate('/', { replace: true });
         }
       } catch (error) {
         console.error("Error in global waitlist check:", error);
+        // Default to showing waitlist on error
+        setShouldShowWaitlist(true);
       } finally {
         setIsWaitlistChecking(false);
       }
@@ -294,12 +366,12 @@ export function AppRoutes() {
         <Route path="/help-center" element={<LazyRoutes.HelpCenter />} />
         <Route path="/WebViewDemo" element={<WebViewDemo />} />
         
-        <Route path="/chat" element={<ProtectedRoute><LazyRoutes.Chat /></ProtectedRoute>} />
-        <Route path="/account" element={<ProtectedRoute><LazyRoutes.Account /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><LazyRoutes.Settings /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
-        <Route path="/release-notes" element={<ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
-        <Route path="/refunds" element={<ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
+        <Route path="/chat" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <ProtectedRoute><LazyRoutes.Chat /></ProtectedRoute>} />
+        <Route path="/account" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <ProtectedRoute><LazyRoutes.Account /></ProtectedRoute>} />
+        <Route path="/settings" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <ProtectedRoute><LazyRoutes.Settings /></ProtectedRoute>} />
+        <Route path="/dashboard" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <ProtectedRoute><LazyRoutes.Dashboard /></ProtectedRoute>} />
+        <Route path="/release-notes" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <ProtectedRoute><LazyRoutes.ReleaseNotes /></ProtectedRoute>} />
+        <Route path="/refunds" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <ProtectedRoute><LazyRoutes.Refunds /></ProtectedRoute>} />
         
         <Route path="/complete-profile" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Login />} />
         

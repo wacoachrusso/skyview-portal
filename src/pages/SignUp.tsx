@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,7 +42,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
-  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [showWaitlist, setShowWaitlist] = useState(true); // Default to true until confirmed
   const [waitlistLoading, setWaitlistLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -53,17 +52,48 @@ export default function SignUp() {
     const checkWaitlistStatus = async () => {
       setWaitlistLoading(true);
       try {
-        const { data: showWaitlistData, error } = await supabase
-          .from('app_settings')
-          .select('value')
-          .eq('key', 'show_waitlist')
-          .single();
-
-        console.log("Signup page - Waitlist check:", showWaitlistData, error);
+        // Add retry logic
+        let attempts = 0;
+        const maxAttempts = 3;
+        let waitlistData = null;
         
-        // Explicitly convert to boolean to avoid type issues
-        const waitlistEnabled = showWaitlistData?.value === true;
-        setShowWaitlist(waitlistEnabled);
+        while (attempts < maxAttempts && waitlistData === null) {
+          console.log(`Signup page - Waitlist check attempt ${attempts + 1}`);
+          try {
+            const { data, error } = await supabase
+              .from('app_settings')
+              .select('value')
+              .eq('key', 'show_waitlist')
+              .single();
+              
+            if (data && !error) {
+              waitlistData = data;
+              break;
+            } else {
+              console.error(`Attempt ${attempts + 1} error:`, error);
+            }
+          } catch (fetchError) {
+            console.error(`Fetch attempt ${attempts + 1} failed:`, fetchError);
+          }
+          
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+
+        console.log("Signup page - Waitlist check final status:", waitlistData?.value);
+        
+        // If we failed to fetch data after all attempts, default to showing waitlist
+        if (!waitlistData) {
+          console.warn("Could not fetch waitlist settings - defaulting to show waitlist");
+          setShowWaitlist(true);
+        } else {
+          // Explicitly convert to boolean
+          const waitlistEnabled = !!waitlistData.value;
+          console.log("Setting waitlist enabled to:", waitlistEnabled);
+          setShowWaitlist(waitlistEnabled);
+        }
         
         if (waitlistEnabled) {
           // Redirect to home where the waitlist will be shown
@@ -71,6 +101,9 @@ export default function SignUp() {
         }
       } catch (error) {
         console.error("Error checking waitlist status:", error);
+        // Default to showing waitlist on error
+        setShowWaitlist(true);
+        navigate('/', { replace: true });
       } finally {
         setWaitlistLoading(false);
       }
