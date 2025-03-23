@@ -1,3 +1,4 @@
+
 import { Route, Routes, useNavigate } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -44,7 +45,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
 const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
-  const [waitlistEnabled, setWaitlistEnabled] = useState(true);
+  const [waitlistEnabled, setWaitlistEnabled] = useState(false); // Default to false to prevent loading delays
 
   useEffect(() => {
     const checkWaitlistStatus = async () => {
@@ -60,8 +61,9 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
+        // Reduce number of attempts and timeout duration
         let attempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 2;
         let waitlistData = null;
         
         while (attempts < maxAttempts && waitlistData === null) {
@@ -71,12 +73,12 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
               .from('app_settings')
               .select('value')
               .eq('key', 'show_waitlist')
-              .single();
+              .maybeSingle(); // Use maybeSingle instead of single
               
             if (data && !error) {
               waitlistData = data;
               break;
-            } else {
+            } else if (error) {
               console.error(`Attempt ${attempts + 1} error:`, error);
             }
           } catch (fetchError) {
@@ -85,15 +87,16 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
           
           attempts++;
           if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Reduced timeout from 1000ms to 500ms
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
         
         console.log("WaitlistCheck - final waitlist status:", waitlistData?.value);
         
         if (!waitlistData) {
-          console.warn("Could not fetch waitlist settings - defaulting to show waitlist");
-          setWaitlistEnabled(true);
+          console.warn("Could not fetch waitlist settings - defaulting to NOT show waitlist");
+          setWaitlistEnabled(false);
         } else {
           const isEnabled = !!waitlistData.value;
           console.log("Setting waitlist enabled to:", isEnabled);
@@ -106,14 +109,24 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error("Error checking waitlist status:", error);
-        setWaitlistEnabled(true);
-        navigate('/', { replace: true });
+        setWaitlistEnabled(false); // Default to false on error
       } finally {
         setIsChecking(false);
       }
     };
     
+    // Set a timeout in case the check takes too long
+    const timeoutId = setTimeout(() => {
+      if (isChecking) {
+        console.log("Waitlist check timed out, proceeding with app");
+        setIsChecking(false);
+        setWaitlistEnabled(false);
+      }
+    }, 3000); // Timeout after 3 seconds
+    
     checkWaitlistStatus();
+    
+    return () => clearTimeout(timeoutId);
   }, [navigate]);
   
   if (isChecking) {
@@ -270,7 +283,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 export function AppRoutes() {
   const [isWaitlistChecking, setIsWaitlistChecking] = useState(true);
-  const [shouldShowWaitlist, setShouldShowWaitlist] = useState(false);
+  const [shouldShowWaitlist, setShouldShowWaitlist] = useState(false); // Default to false
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -287,8 +300,9 @@ export function AppRoutes() {
     
     const checkWaitlistGlobal = async () => {
       try {
+        // Reduce attempts and timeout for faster loading
         let attempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 2;
         let waitlistData = null;
         
         while (attempts < maxAttempts && waitlistData === null) {
@@ -298,12 +312,12 @@ export function AppRoutes() {
               .from('app_settings')
               .select('value')
               .eq('key', 'show_waitlist')
-              .single();
+              .maybeSingle(); // Use maybeSingle instead of single
               
             if (data && !error) {
               waitlistData = data;
               break;
-            } else {
+            } else if (error) {
               console.error(`Attempt ${attempts + 1} error:`, error);
             }
           } catch (fetchError) {
@@ -312,7 +326,8 @@ export function AppRoutes() {
           
           attempts++;
           if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Reduce timeout from 1000ms to 500ms
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
         
@@ -340,8 +355,31 @@ export function AppRoutes() {
       }
     };
     
+    // Set a timeout in case the check takes too long
+    const timeoutId = setTimeout(() => {
+      if (isWaitlistChecking) {
+        console.log("Global waitlist check timed out, proceeding with default (no waitlist)");
+        setIsWaitlistChecking(false);
+        setShouldShowWaitlist(false);
+      }
+    }, 3000); // Timeout after 3 seconds
+    
     checkWaitlistGlobal();
+    
+    return () => clearTimeout(timeoutId);
   }, [navigate]);
+  
+  // Reduce loading time by showing content after a maximum of 2 seconds
+  useEffect(() => {
+    const forceLoadTimeout = setTimeout(() => {
+      if (isWaitlistChecking) {
+        console.log("Force loading app content after timeout");
+        setIsWaitlistChecking(false);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(forceLoadTimeout);
+  }, []);
   
   if (isWaitlistChecking) {
     return (
