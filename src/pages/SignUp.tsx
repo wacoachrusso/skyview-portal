@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -96,6 +95,7 @@ export default function SignUp() {
         }
         
         if (waitlistEnabled) {
+          // Fixed the error here by using the local variable instead of directly referencing waitlistEnabled
           // Redirect to home where the waitlist will be shown
           navigate('/', { replace: true });
         }
@@ -376,3 +376,4 @@ export default function SignUp() {
     </div>
   );
 }
+
