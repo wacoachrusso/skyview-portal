@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +22,13 @@ const Login = () => {
   const isAdminLogin = searchParams.get("admin") === "true";
   const isMobile = useIsMobile();
 
+  // Log admin login attempt for debugging
+  useEffect(() => {
+    if (isAdminLogin) {
+      console.log("Admin login page accessed");
+    }
+  }, [isAdminLogin]);
+
   useEffect(() => {
     const checkAuth = async () => {
       if (localStorage.getItem('login_in_progress') === 'true') {
@@ -30,7 +38,23 @@ const Login = () => {
       
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        console.log("User already authenticated, redirecting to chat");
+        console.log("User already authenticated, checking admin status");
+        
+        if (isAdminLogin) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (profile?.is_admin) {
+            console.log("User is an admin, redirecting to admin dashboard");
+            localStorage.setItem('user_is_admin', 'true');
+            navigateWithoutRedirectCheck('/admin');
+            return;
+          }
+        }
+        
         localStorage.setItem('skip_initial_redirect', 'true');
         navigate('/chat', { replace: true });
       }
@@ -38,7 +62,7 @@ const Login = () => {
     };
     
     checkAuth();
-  }, [navigate]);
+  }, [navigate, isAdminLogin]);
 
   const errorParam = searchParams.get("error");
   useEffect(() => {
@@ -95,6 +119,11 @@ const Login = () => {
               return;
             } else {
               console.log("User is NOT an admin, regular login flow");
+              toast({
+                variant: "destructive",
+                title: "Access Denied",
+                description: "You do not have administrator privileges.",
+              });
             }
           }
           

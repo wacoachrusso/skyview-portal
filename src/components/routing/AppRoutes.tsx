@@ -372,14 +372,17 @@ export function AppRoutes() {
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
         <Route path="/" element={<LazyRoutes.Index />} />
+        
+        {/* Important: Allow admin login even when waitlist is enabled */}
         <Route 
           path="/login" 
           element={
-            shouldShowWaitlist && !window.location.search.includes('admin=true') 
-              ? <LazyRoutes.Index /> 
-              : <LazyRoutes.Login />
+            window.location.search.includes('admin=true') 
+              ? <LazyRoutes.Login />
+              : (shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Login />)
           } 
         />
+        
         <Route path="/signup" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.SignUp />} />
         <Route path="/privacy-policy" element={<LazyRoutes.PrivacyPolicy />} />
         <Route path="/about" element={<LazyRoutes.About />} />
@@ -398,6 +401,7 @@ export function AppRoutes() {
         
         <Route path="/complete-profile" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Login />} />
         
+        {/* Admin route - always accessible */}
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
         <Route path="*" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Dashboard />} />
