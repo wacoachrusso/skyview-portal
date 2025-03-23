@@ -1,4 +1,3 @@
-
 import { Route, Routes, useNavigate } from "react-router-dom";
 import AuthCallback from "@/components/auth/AuthCallback";
 import * as LazyRoutes from "./LazyRoutes";
@@ -42,16 +41,14 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
   );
 }
 
-// Component to check if waitlist is enabled
 const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
-  const [waitlistEnabled, setWaitlistEnabled] = useState(true); // Default to true until confirmed otherwise
-  
+  const [waitlistEnabled, setWaitlistEnabled] = useState(true);
+
   useEffect(() => {
     const checkWaitlistStatus = async () => {
       try {
-        // Check if we're on the admin route or admin login - skip waitlist check
         const isAdminRoute = window.location.pathname.startsWith('/admin');
         const isAdminLogin = window.location.pathname === '/login' && 
                             window.location.search.includes('admin=true');
@@ -63,7 +60,6 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        // Add retry logic for better reliability
         let attempts = 0;
         const maxAttempts = 3;
         let waitlistData = null;
@@ -89,32 +85,27 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
           
           attempts++;
           if (attempts < maxAttempts) {
-            // Wait 1 second before next attempt
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
         
         console.log("WaitlistCheck - final waitlist status:", waitlistData?.value);
         
-        // If we failed to fetch data after all attempts, default to showing waitlist
         if (!waitlistData) {
           console.warn("Could not fetch waitlist settings - defaulting to show waitlist");
           setWaitlistEnabled(true);
         } else {
-          // Explicitly convert to boolean using double negation to handle any type issues
           const isEnabled = !!waitlistData.value;
           console.log("Setting waitlist enabled to:", isEnabled);
           setWaitlistEnabled(isEnabled);
         }
         
-        // If waitlist is enabled, always redirect to home (except for admin paths)
         if (waitlistEnabled && window.location.pathname !== '/') {
           console.log("Waitlist is enabled, redirecting to home");
           navigate('/', { replace: true });
         }
       } catch (error) {
         console.error("Error checking waitlist status:", error);
-        // Default to showing waitlist on error
         setWaitlistEnabled(true);
         navigate('/', { replace: true });
       } finally {
@@ -278,13 +269,11 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 export function AppRoutes() {
-  // Check for waitlist on all routes except admin routes
   const [isWaitlistChecking, setIsWaitlistChecking] = useState(true);
-  const [shouldShowWaitlist, setShouldShowWaitlist] = useState(true); // Default to true
+  const [shouldShowWaitlist, setShouldShowWaitlist] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Quickly check if we're on the admin route or admin login, and skip waitlist check if so
     const isAdminRoute = window.location.pathname.startsWith('/admin');
     const isAdminLogin = window.location.pathname === '/login' && 
                         window.location.search.includes('admin=true');
@@ -298,7 +287,6 @@ export function AppRoutes() {
     
     const checkWaitlistGlobal = async () => {
       try {
-        // Add retry logic for better reliability
         let attempts = 0;
         const maxAttempts = 3;
         let waitlistData = null;
@@ -324,25 +312,21 @@ export function AppRoutes() {
           
           attempts++;
           if (attempts < maxAttempts) {
-            // Wait 1 second before next attempt
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
         
         console.log("AppRoutes - Global waitlist check final status:", waitlistData?.value);
         
-        // If we failed to fetch data after all attempts, default to showing waitlist
         if (!waitlistData) {
-          console.warn("Could not fetch waitlist settings - defaulting to show waitlist");
-          setShouldShowWaitlist(true);
+          console.warn("Could not fetch waitlist settings - defaulting to NOT show waitlist");
+          setShouldShowWaitlist(false);
         } else {
-          // Explicitly convert to boolean using double negation to handle any type issues
           const waitlistEnabled = !!waitlistData.value;
           console.log("Setting global waitlist enabled to:", waitlistEnabled);
           setShouldShowWaitlist(waitlistEnabled);
         }
         
-        // If waitlist is enabled and not on home page, redirect to home (except for admin paths)
         if (shouldShowWaitlist && window.location.pathname !== '/' && 
             !isAdminRoute && !isAdminLogin) {
           console.log("Waitlist is enabled, redirecting to home from AppRoutes");
@@ -350,8 +334,7 @@ export function AppRoutes() {
         }
       } catch (error) {
         console.error("Error in global waitlist check:", error);
-        // Default to showing waitlist on error
-        setShouldShowWaitlist(true);
+        setShouldShowWaitlist(false);
       } finally {
         setIsWaitlistChecking(false);
       }
@@ -373,7 +356,6 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<LazyRoutes.Index />} />
         
-        {/* Important: Allow admin login even when waitlist is enabled */}
         <Route 
           path="/login" 
           element={
@@ -401,7 +383,6 @@ export function AppRoutes() {
         
         <Route path="/complete-profile" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Login />} />
         
-        {/* Admin route - always accessible */}
         <Route path="/admin" element={<AdminRoute><LazyRoutes.AdminDashboard /></AdminRoute>} />
         
         <Route path="*" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Dashboard />} />

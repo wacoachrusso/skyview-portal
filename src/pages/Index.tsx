@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 export default function Index() {
   const location = useLocation();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
-  const [showWaitlist, setShowWaitlist] = useState(true); // Default to true until we confirm it's off
+  const [showWaitlist, setShowWaitlist] = useState(false); // Default to false until confirmed otherwise
   const [waitlistForceOpen, setWaitlistForceOpen] = useState(false);
   const [waitlistLoading, setWaitlistLoading] = useState(true);
 
@@ -81,10 +81,11 @@ export default function Index() {
           forceOpen: forceOpenData?.value
         });
 
-        // If we failed to fetch data after all attempts, default to showing waitlist
+        // If we failed to fetch data after all attempts, default to NOT showing waitlist
+        // This is the key change
         if (!waitlistData) {
-          console.warn("Could not fetch waitlist settings - defaulting to show waitlist");
-          setShowWaitlist(true);
+          console.warn("Could not fetch waitlist settings - defaulting to NOT show waitlist");
+          setShowWaitlist(false);
         } else {
           // Explicitly convert to boolean using double negation to handle any type issues
           const waitlistEnabled = !!waitlistData.value;
@@ -99,8 +100,8 @@ export default function Index() {
         }
       } catch (error) {
         console.error("Error loading waitlist settings:", error);
-        // Default to showing waitlist on error
-        setShowWaitlist(true);
+        // Default to NOT showing waitlist on error - this is our key change
+        setShowWaitlist(false);
       } finally {
         setWaitlistLoading(false);
       }
