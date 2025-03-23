@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -89,15 +90,15 @@ export default function SignUp() {
           setShowWaitlist(true);
         } else {
           // Explicitly convert to boolean
-          const waitlistEnabled = !!waitlistData.value;
-          console.log("Setting waitlist enabled to:", waitlistEnabled);
-          setShowWaitlist(waitlistEnabled);
-        }
-        
-        if (waitlistEnabled) {
-          // Fixed the error here by using the local variable instead of directly referencing waitlistEnabled
-          // Redirect to home where the waitlist will be shown
-          navigate('/', { replace: true });
+          const shouldShowWaitlist = !!waitlistData.value;
+          console.log("Setting waitlist enabled to:", shouldShowWaitlist);
+          setShowWaitlist(shouldShowWaitlist);
+          
+          if (shouldShowWaitlist) {
+            // Fixed the error by using the local variable instead of directly referencing waitlistEnabled
+            // Redirect to home where the waitlist will be shown
+            navigate('/', { replace: true });
+          }
         }
       } catch (error) {
         console.error("Error checking waitlist status:", error);
