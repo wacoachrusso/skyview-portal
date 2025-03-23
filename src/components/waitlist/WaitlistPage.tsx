@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Name is required" }),
   email: z.string().email({ message: "Valid email is required" }),
+  phoneNumber: z.string().optional(),
   role: z.string().min(1, { message: "Role is required" }),
   airline: z.string().min(1, { message: "Airline is required" }),
   base: z.string().min(1, { message: "Base is required" }),
@@ -50,6 +51,7 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
     defaultValues: {
       fullName: "",
       email: "",
+      phoneNumber: "",
       role: "",
       airline: "",
       base: "",
@@ -85,6 +87,7 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
       const { error: insertError } = await supabase.from("waitlist_signups").insert({
         full_name: data.fullName,
         email: data.email,
+        phone_number: data.phoneNumber,
         role: data.role,
         airline: data.airline,
         base: data.base,
@@ -276,6 +279,24 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-200">Phone Number (Optional)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="(555) 123-4567" 
+                              type="tel" 
+                              {...field} 
+                              className="bg-gray-800/50 border-gray-700"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
                       name="role"
                       render={({ field }) => (
                         <FormItem>
@@ -285,7 +306,7 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                               <SelectTrigger className="bg-gray-800/50 border-gray-700">
                                 <SelectValue placeholder="Select your role" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-gray-800 border-gray-700">
                                 <SelectItem value="Flight Attendant">Flight Attendant</SelectItem>
                                 <SelectItem value="Pilot">Pilot</SelectItem>
                               </SelectContent>
@@ -295,6 +316,9 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
                       name="airline"
@@ -306,7 +330,7 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                               <SelectTrigger className="bg-gray-800/50 border-gray-700">
                                 <SelectValue placeholder="Select your airline" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-gray-800 border-gray-700">
                                 <SelectItem value="United">United</SelectItem>
                                 <SelectItem value="Alaska">Alaska</SelectItem>
                                 <SelectItem value="Delta">Delta</SelectItem>
@@ -319,9 +343,6 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                         </FormItem>
                       )}
                     />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
                       name="base"
@@ -339,24 +360,28 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="preferredContact"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-200">Preferred Contact Method</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="email, phone, or both" 
-                              {...field} 
-                              className="bg-gray-800/50 border-gray-700"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="preferredContact"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-200">Preferred Contact Method</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger className="bg-gray-800/50 border-gray-700">
+                            <SelectValue placeholder="Select preferred contact method" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-800 border-gray-700">
+                            <SelectItem value="Email">Email</SelectItem>
+                            <SelectItem value="Phone">Phone</SelectItem>
+                            <SelectItem value="Both">Both Email and Phone</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <Button 
                     type="submit" 

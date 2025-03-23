@@ -13,6 +13,7 @@ interface WaitlistRequest {
   email: string;
   role: string;
   airline: string;
+  phoneNumber?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,7 +24,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, role, airline } = await req.json() as WaitlistRequest;
+    const { name, email, role, airline, phoneNumber } = await req.json() as WaitlistRequest;
     console.log(`Sending waitlist confirmation to ${email}`);
 
     // Send confirmation email to user
@@ -84,6 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
             <ul>
               <li><strong>Name:</strong> ${name}</li>
               <li><strong>Email:</strong> ${email}</li>
+              <li><strong>Phone:</strong> ${phoneNumber || 'Not provided'}</li>
               <li><strong>Role:</strong> ${role}</li>
               <li><strong>Airline:</strong> ${airline}</li>
             </ul>
