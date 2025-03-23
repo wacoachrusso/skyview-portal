@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { handleAuthSession, handlePasswordReset } from "@/utils/auth/sessionHandler";
@@ -20,6 +19,7 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const next = searchParams.get("next") ?? "/";
+  const isAdminLogin = searchParams.get("admin") === "true";
   const isMobile = useIsMobile();
 
   // Check if user is already logged in
@@ -86,6 +86,28 @@ const Login = () => {
         
         if (user) {
           await handleAuthSession(user.id, createNewSession, navigate);
+          
+          // Special handling for admin login from waitlist page
+          if (isAdminLogin) {
+            console.log("Admin login detected, checking if user is an admin");
+            
+            // Check if the user is an admin
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('is_admin')
+              .eq('id', user.id)
+              .single();
+              
+            if (profile?.is_admin) {
+              console.log("User is an admin, redirecting to admin dashboard");
+              localStorage.setItem('user_is_admin', 'true');
+              navigateWithoutRedirectCheck('/admin');
+              return;
+            } else {
+              console.log("User is NOT an admin, regular login flow");
+            }
+          }
+          
           // Use the utility to break potential redirect loops
           navigateWithoutRedirectCheck('/chat');
         }
@@ -156,10 +178,12 @@ const Login = () => {
             className="h-12 w-auto mb-4"
           />
           <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Sign in to SkyGuide
+            {isAdminLogin ? "Admin Sign In" : "Sign in to SkyGuide"}
           </h1>
           <p className="text-sm text-gray-400">
-            Enter your credentials to access your account
+            {isAdminLogin 
+              ? "Enter your credentials to access admin dashboard" 
+              : "Enter your credentials to access your account"}
           </p>
         </div>
 

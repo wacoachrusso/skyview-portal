@@ -51,6 +51,18 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkWaitlistStatus = async () => {
       try {
+        // Check if we're on the admin route or admin login - skip waitlist check
+        const isAdminRoute = window.location.pathname.startsWith('/admin');
+        const isAdminLogin = window.location.pathname === '/login' && 
+                            window.location.search.includes('admin=true');
+        
+        if (isAdminRoute || isAdminLogin) {
+          console.log("Admin route detected, bypassing waitlist check");
+          setWaitlistEnabled(false);
+          setIsChecking(false);
+          return;
+        }
+        
         // Add retry logic for better reliability
         let attempts = 0;
         const maxAttempts = 3;
@@ -95,7 +107,7 @@ const WaitlistCheck = ({ children }: { children: React.ReactNode }) => {
           setWaitlistEnabled(isEnabled);
         }
         
-        // If waitlist is enabled, always redirect to home
+        // If waitlist is enabled, always redirect to home (except for admin paths)
         if (waitlistEnabled && window.location.pathname !== '/') {
           console.log("Waitlist is enabled, redirecting to home");
           navigate('/', { replace: true });
@@ -272,10 +284,13 @@ export function AppRoutes() {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Quickly check if we're on the admin route, and skip waitlist check if so
+    // Quickly check if we're on the admin route or admin login, and skip waitlist check if so
     const isAdminRoute = window.location.pathname.startsWith('/admin');
+    const isAdminLogin = window.location.pathname === '/login' && 
+                        window.location.search.includes('admin=true');
     
-    if (isAdminRoute) {
+    if (isAdminRoute || isAdminLogin) {
+      console.log("Admin route detected, bypassing waitlist check in AppRoutes");
       setIsWaitlistChecking(false);
       setShouldShowWaitlist(false);
       return;
@@ -327,8 +342,9 @@ export function AppRoutes() {
           setShouldShowWaitlist(waitlistEnabled);
         }
         
-        // If waitlist is enabled and not on home page, redirect to home
-        if (shouldShowWaitlist && window.location.pathname !== '/') {
+        // If waitlist is enabled and not on home page, redirect to home (except for admin paths)
+        if (shouldShowWaitlist && window.location.pathname !== '/' && 
+            !isAdminRoute && !isAdminLogin) {
           console.log("Waitlist is enabled, redirecting to home from AppRoutes");
           navigate('/', { replace: true });
         }
@@ -356,7 +372,14 @@ export function AppRoutes() {
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Routes>
         <Route path="/" element={<LazyRoutes.Index />} />
-        <Route path="/login" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.Login />} />
+        <Route 
+          path="/login" 
+          element={
+            shouldShowWaitlist && !window.location.search.includes('admin=true') 
+              ? <LazyRoutes.Index /> 
+              : <LazyRoutes.Login />
+          } 
+        />
         <Route path="/signup" element={shouldShowWaitlist ? <LazyRoutes.Index /> : <LazyRoutes.SignUp />} />
         <Route path="/privacy-policy" element={<LazyRoutes.PrivacyPolicy />} />
         <Route path="/about" element={<LazyRoutes.About />} />

@@ -8,11 +8,12 @@ import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { WaitlistPage } from "@/components/waitlist/WaitlistPage";
+import { Button } from "@/components/ui/button";
 
 export default function Index() {
   const location = useLocation();
@@ -157,7 +158,18 @@ export default function Index() {
   console.log("Rendering Index with showWaitlist:", showWaitlist);
 
   if (showWaitlist) {
-    return <WaitlistPage forceOpen={waitlistForceOpen} />;
+    return (
+      <div>
+        <WaitlistPage forceOpen={waitlistForceOpen} />
+        <div className="absolute bottom-4 right-4">
+          <Link to="/login?admin=true">
+            <Button variant="ghost" size="sm" className="text-xs text-gray-500 hover:text-gray-400">
+              Admin Login
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
