@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -24,8 +23,8 @@ import {
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
-// Schema for the waitlist form
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Name is required" }),
   email: z.string().email({ message: "Valid email is required" }),
@@ -45,7 +44,6 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
 
-  // Initialize the form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,7 +57,6 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
     },
   });
 
-  // Fetch the current number of signups
   useEffect(() => {
     const fetchSignups = async () => {
       try {
@@ -79,11 +76,9 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
     fetchSignups();
   }, []);
 
-  // Handle form submission
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      // Insert the signup data
       const { error: insertError } = await supabase.from("waitlist_signups").insert({
         full_name: data.fullName,
         email: data.email,
@@ -96,7 +91,6 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
 
       if (insertError) {
         if (insertError.code === "23505") {
-          // Unique constraint violation (email already exists)
           toast({
             title: "Email already registered",
             description: "This email is already on our waitlist.",
@@ -107,7 +101,6 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
         throw insertError;
       }
 
-      // Send confirmation email via edge function
       const { error: emailError } = await supabase.functions.invoke("send-waitlist-confirmation", {
         body: { 
           name: data.fullName,
@@ -122,10 +115,8 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
         console.error("Error sending confirmation email:", emailError);
       }
 
-      // Show success message
       setIsSuccess(true);
       setSignupCount(prev => prev + 1);
-
     } catch (error) {
       console.error("Error submitting waitlist form:", error);
       toast({
@@ -138,10 +129,8 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
     }
   };
 
-  // Get URL for admin login
   const adminLoginUrl = "/login";
 
-  // Check if waitlist is full and not forced open
   const isWaitlistFull = signupCount >= 300 && !forceOpen;
 
   if (isLoading) {
@@ -155,7 +144,6 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
   return (
     <div className="min-h-screen bg-luxury-dark py-12 px-4 sm:px-6 lg:px-8 flex flex-col">
       <div className="max-w-3xl mx-auto w-full">
-        {/* Header with logo */}
         <div className="flex justify-center mb-8">
           <img 
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
@@ -164,7 +152,6 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
           />
         </div>
 
-        {/* Main Content */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -414,14 +401,13 @@ export function WaitlistPage({ forceOpen = false }: { forceOpen?: boolean }) {
           )}
         </motion.div>
 
-        {/* Footer */}
         <div className="mt-8 text-center">
-          <a 
-            href={adminLoginUrl} 
+          <Link 
+            to="/login?admin=true" 
             className="text-gray-500 hover:text-gray-400 text-sm"
           >
             Admin Login
-          </a>
+          </Link>
         </div>
       </div>
     </div>

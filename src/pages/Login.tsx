@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -22,20 +21,16 @@ const Login = () => {
   const isAdminLogin = searchParams.get("admin") === "true";
   const isMobile = useIsMobile();
 
-  // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
-      // Skip this check if we're already in login flow
       if (localStorage.getItem('login_in_progress') === 'true') {
         setInitialCheckDone(true);
         return;
       }
       
-      // Check if user is already logged in
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         console.log("User already authenticated, redirecting to chat");
-        // Use the utility to break potential redirect loops
         localStorage.setItem('skip_initial_redirect', 'true');
         navigate('/chat', { replace: true });
       }
@@ -45,7 +40,6 @@ const Login = () => {
     checkAuth();
   }, [navigate]);
 
-  // Check for error param in URL (from Google auth callback)
   const errorParam = searchParams.get("error");
   useEffect(() => {
     if (errorParam && initialCheckDone) {
@@ -69,7 +63,6 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // Set a flag to prevent SessionCheck from redirecting during login
       localStorage.setItem('login_in_progress', 'true');
       
       const success = await handleSignIn(email, password, rememberMe);
@@ -81,17 +74,14 @@ const Login = () => {
           description: "You have successfully logged in.",
         });
 
-        // Get current user after successful login
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
           await handleAuthSession(user.id, createNewSession, navigate);
           
-          // Special handling for admin login from waitlist page
           if (isAdminLogin) {
             console.log("Admin login detected, checking if user is an admin");
             
-            // Check if the user is an admin
             const { data: profile } = await supabase
               .from('profiles')
               .select('is_admin')
@@ -108,7 +98,6 @@ const Login = () => {
             }
           }
           
-          // Use the utility to break potential redirect loops
           navigateWithoutRedirectCheck('/chat');
         }
       } else {
@@ -159,7 +148,6 @@ const Login = () => {
     setIsPasswordResetting(false);
   };
 
-  // Hide the login form until initial check is complete to prevent flashing
   if (!initialCheckDone) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
