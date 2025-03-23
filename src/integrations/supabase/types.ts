@@ -65,6 +65,27 @@ export type Database = {
           },
         ]
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       cached_responses: {
         Row: {
           access_count: number
@@ -761,6 +782,39 @@ export type Database = {
           id?: string
           private_key?: string
           public_key?: string
+        }
+        Relationships: []
+      }
+      waitlist_signups: {
+        Row: {
+          airline: string
+          base: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          preferred_contact: string | null
+          role: string
+        }
+        Insert: {
+          airline: string
+          base?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          preferred_contact?: string | null
+          role: string
+        }
+        Update: {
+          airline?: string
+          base?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          preferred_contact?: string | null
+          role?: string
         }
         Relationships: []
       }

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ReleaseNotesAdmin } from "@/components/admin/ReleaseNotesAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, MessageSquare, Mail, User } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Mail, User, Users } from "lucide-react";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { NotificationManager } from "@/components/admin/NotificationManager";
@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { SetPasswordPanel } from "@/components/admin/SetPasswordPanel";
 import { EmailQueueManager } from "@/components/admin/EmailQueueManager";
 import { EmailTemplatePreview } from "@/components/admin/email-templates/EmailTemplatePreview";
+import { WaitlistSettings } from "@/components/admin/WaitlistSettings";
+import { WaitlistTable } from "@/components/admin/WaitlistTable";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -68,6 +70,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="alpha-testers">Alpha Testers</TabsTrigger>
+          <TabsTrigger value="waitlist">
+            <Users className="h-4 w-4 mr-2" />
+            Waitlist
+          </TabsTrigger>
           <TabsTrigger value="release-notes">Release Notes</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="emails">Email Queue</TabsTrigger>
@@ -80,6 +86,12 @@ const AdminDashboard = () => {
         <TabsContent value="overview"><SystemStats /></TabsContent>
         <TabsContent value="users"><UserManagement /></TabsContent>
         <TabsContent value="alpha-testers"><AlphaTesters /></TabsContent>
+        <TabsContent value="waitlist">
+          <div className="space-y-8">
+            <WaitlistSettings />
+            <WaitlistTable />
+          </div>
+        </TabsContent>
         <TabsContent value="release-notes"><ReleaseNotesAdmin /></TabsContent>
         <TabsContent value="notifications"><NotificationManager /></TabsContent>
         <TabsContent value="emails"><EmailQueueManager /></TabsContent>

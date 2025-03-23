@@ -1,4 +1,3 @@
-
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -11,10 +10,43 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { WaitlistPage } from "@/components/waitlist/WaitlistPage";
 
 export default function Index() {
   const location = useLocation();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [waitlistForceOpen, setWaitlistForceOpen] = useState(false);
+  const [waitlistLoading, setWaitlistLoading] = useState(true);
+
+  useEffect(() => {
+    const loadWaitlistSettings = async () => {
+      try {
+        setWaitlistLoading(true);
+        const { data: showWaitlistData } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'show_waitlist')
+          .single();
+
+        const { data: forceOpenData } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'waitlist_force_open')
+          .single();
+
+        setShowWaitlist(showWaitlistData?.value === true);
+        setWaitlistForceOpen(forceOpenData?.value === true);
+      } catch (error) {
+        console.error("Error loading waitlist settings:", error);
+      } finally {
+        setWaitlistLoading(false);
+      }
+    };
+
+    loadWaitlistSettings();
+  }, []);
 
   useEffect(() => {
     console.log('Index page mounted');
@@ -58,6 +90,20 @@ export default function Index() {
     visible: { opacity: 1, transition: { duration: 0.5 } }
   };
 
+  if (waitlistLoading) {
+    return (
+      <div className="min-h-screen bg-luxury-dark flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show waitlist page if enabled
+  if (showWaitlist) {
+    return <WaitlistPage forceOpen={waitlistForceOpen} />;
+  }
+
+  // Otherwise show the regular landing page
   return (
     <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
       <Navbar />
@@ -109,7 +155,6 @@ export default function Index() {
         <SheetContent 
           side="bottom" 
           className="glass-morphism border-t border-white/10 max-h-[80vh] overflow-y-auto pb-safe"
-          // Ensure the sheet is properly sized and scrollable
           style={{
             height: "auto",
             minHeight: "280px",
