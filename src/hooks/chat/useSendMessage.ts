@@ -6,7 +6,7 @@ import { useApiCallState } from "./useApiCallState";
 import { useAiResponse } from "./useAiResponse";
 
 /**
- * Hook to handle sending messages and AI responses
+ * Hook to handle sending messages and AI responses with optimized performance
  */
 export function useSendMessage(
   currentUserId: string | null,
@@ -52,36 +52,41 @@ export function useSendMessage(
       let apiCallId: string | null = null;
       
       try {
-        // Set the API call flag
+        // Set the API call flag - immediate, no delay
         apiCallId = setupApiCall();
         
-        // Update session activity to prevent timeout during API call
-        await updateSessionActivity();
-
-        // Ensure the conversation exists
+        // Add typing indicator immediately for instant feedback
+        const typingMessage = addTypingIndicator("pending-conversation");
+        
+        // Ensure the conversation exists - immediate, no delay
         conversationId = await ensureConversation(currentUserId, content);
         if (!conversationId) {
           throw new Error("Failed to create or get conversation");
         }
 
-        // Create and display temporary user message
+        // Update the typing indicator with the correct conversation ID
+        typingMessage.conversation_id = conversationId;
+        
+        // Create and display temporary user message - immediate, no delay
         tempMessage = createTempUserMessage(content, conversationId);
         addTempMessage(tempMessage);
         
-        // Insert the user message into the database
-        const actualMessage = await insertUserMessage(content, conversationId);
-        console.log("User message inserted into database:", actualMessage);
+        // Update session activity - run in parallel
+        updateSessionActivity().catch(console.error);
 
-        // Replace temporary message with the actual one
-        updateTempMessage(tempMessage.id, actualMessage);
+        // Insert the user message into the database - can run in parallel
+        insertUserMessage(content, conversationId)
+          .then(actualMessage => {
+            console.log("User message inserted into database:", actualMessage);
+            // Update temp message with actual one
+            updateTempMessage(tempMessage!.id, actualMessage);
+          })
+          .catch(error => {
+            console.error("Error inserting user message:", error);
+            // Continue with the flow despite error (non-blocking)
+          });
 
-        // Update session activity again before the AI call
-        await updateSessionActivity();
-
-        // Add AI typing indicator
-        const typingMessage = addTypingIndicator(conversationId);
-
-        // Get AI response
+        // Get AI response - critical path
         const { data, error } = await getAiResponse(content, userProfile);
 
         if (error) {
@@ -94,15 +99,21 @@ export function useSendMessage(
           throw new Error("Invalid response from chat-completion");
         }
 
-        // Update session activity once more after the AI call
-        await updateSessionActivity();
-
         // Remove typing indicator
         removeTypingIndicator(typingMessage.id);
 
-        // Insert the AI response
-        await insertAIMessage(data.response, conversationId);
-        console.log("AI message inserted.");
+        // Insert the AI response - non-blocking
+        insertAIMessage(data.response, conversationId)
+          .then(() => {
+            console.log("AI message inserted successfully");
+          })
+          .catch(error => {
+            console.error("Error inserting AI message:", error);
+            // Continue despite error (non-blocking)
+          });
+          
+        // Update session activity again (non-blocking)
+        updateSessionActivity().catch(console.error);
       } catch (error) {
         console.error("Error sending message:", error);
         showError("Failed to send message or receive response. Please try again.");

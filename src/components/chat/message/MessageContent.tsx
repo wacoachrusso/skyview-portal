@@ -25,29 +25,12 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
 
   useEffect(() => {
     if (message.role === "assistant") {
-      setIsTyping(true);
-      setIsComplete(false);
-      let index = 0;
-      const content = message.content;
-      
-      // Dramatically increased typing speed for near-instant rendering
-      const typingInterval = setInterval(() => {
-        // Process larger chunks of text at once (10 chars instead of 1)
-        const chunkSize = 10;
-        index += chunkSize;
-        
-        if (index <= content.length) {
-          setDisplayContent(content.slice(0, index));
-        } else {
-          setDisplayContent(content); // Ensure full content is displayed
-          clearInterval(typingInterval);
-          setIsTyping(false);
-          setIsComplete(true);
-        }
-      }, 1); // Reduced from 5ms to 1ms for maximum speed
-
-      return () => clearInterval(typingInterval);
+      // Set the entire message content immediately for instant display
+      setDisplayContent(message.content);
+      setIsComplete(true);
+      setIsTyping(false);
     } else {
+      // User messages are displayed instantly
       setDisplayContent(message.content);
       setIsComplete(true);
     }
@@ -143,9 +126,6 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
   return (
     <div className="whitespace-pre-wrap break-words">
       {formatContent(displayContent)}
-      {isTyping && (
-        <span className="inline-block w-1 h-4 ml-1 bg-current animate-pulse" />
-      )}
       {isComplete && message.role === "assistant" && (
         <div className="flex items-center text-xs text-gray-400 mt-2">
           <Check className="h-3 w-3 mr-1" />

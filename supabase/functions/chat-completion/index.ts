@@ -24,12 +24,13 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { content, subscriptionPlan, assistantId, priority } = await req.json();
+    const { content, subscriptionPlan, assistantId, priority, stream } = await req.json();
     
     console.log('Request received for chat completion');
     console.log('Content length:', content?.length || 0);
     console.log('Assistant ID:', assistantId || 'default');
     console.log('Priority request:', priority ? 'Yes' : 'No');
+    console.log('Streaming enabled:', stream ? 'Yes' : 'No');
 
     // Check if content appears to be non-contract related
     if (containsNonContractContent(content)) {
@@ -41,23 +42,24 @@ serve(async (req) => {
       });
     }
 
-    // Create a thread
+    // Create a thread - immediate action, no delay
     const thread = await createThread();
     console.log('Thread created:', thread.id);
 
-    // Add message to thread
+    // Add message to thread - immediate action, no delay
     await addMessageToThread(thread.id, content);
     console.log('Message added to thread');
 
-    // Run the assistant with the effective assistant ID
+    // Run the assistant with the effective assistant ID - immediate action, no delay
     const run = await runAssistant(thread.id, assistantId);
     console.log('Assistant run started:', run.id);
 
-    // Poll for completion with optimized polling interval
+    // Ultra-aggressive polling for completion with minimal interval
+    // This maximizes the chances of getting a response as soon as it's ready
     let runStatus;
     let attempts = 0;
-    const maxAttempts = 30; // 30 seconds timeout (reduced from 60)
-    const pollingInterval = priority ? 500 : 1000; // Faster polling for priority requests
+    const maxAttempts = 60; // 30 seconds maximum wait time (still checking frequently)
+    const pollingInterval = priority ? 200 : 500; // Ultra-fast polling for priority requests
     
     do {
       if (attempts >= maxAttempts) {
@@ -67,15 +69,19 @@ serve(async (req) => {
       await new Promise(resolve => setTimeout(resolve, pollingInterval));
       
       runStatus = await getRunStatus(thread.id, run.id);
-      console.log('Run status:', runStatus.status);
+      console.log('Run status:', runStatus.status, 'Attempt:', attempts);
       attempts++;
+
+      // If streaming is enabled and we have content available, we could
+      // potentially stream partial results here in a future enhancement
+      
     } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
     if (runStatus.status !== 'completed') {
       throw new Error(`Run failed with status: ${runStatus.status}`);
     }
 
-    // Get messages
+    // Get messages immediately once complete
     const messages = await getMessages(thread.id);
     const assistantMessage = messages.data.find(m => m.role === 'assistant');
     
@@ -84,7 +90,7 @@ serve(async (req) => {
     }
 
     const rawResponse = assistantMessage.content[0].text.value;
-    // Clean and format the response
+    // Clean and format the response without any unnecessary processing delays
     const response = cleanResponse(rawResponse);
     console.log('Successfully retrieved and processed assistant response');
 

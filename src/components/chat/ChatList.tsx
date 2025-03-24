@@ -1,7 +1,7 @@
 
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
-import { useEffect, useRef, useLayoutEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface ChatListProps {
   messages: Message[];
@@ -12,42 +12,30 @@ interface ChatListProps {
 
 export function ChatList({ messages, currentUserId, isLoading, onCopyMessage }: ChatListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const previousMessagesLengthRef = useRef<number>(0);
   const scrollTimeoutRef = useRef<number | null>(null);
 
-  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+  // Immediate scroll function without delay
+  const scrollToBottom = (behavior: ScrollBehavior = "instant") => {
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
     
-    // Use a very short timeout to ensure DOM updates first
-    scrollTimeoutRef.current = window.setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior });
-      scrollTimeoutRef.current = null;
-    }, 10);
+    // Don't use a timeout for scrolling
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
-  // Use useLayoutEffect to scroll before browser paints
-  useLayoutEffect(() => {
-    // Always scroll on new messages
-    if (messages.length > previousMessagesLengthRef.current) {
-      // Use instant scroll for initial load and smooth for new messages
-      const behavior = previousMessagesLengthRef.current === 0 ? "auto" : "smooth";
-      scrollToBottom(behavior);
-      
-      // Update the previous messages length reference
-      previousMessagesLengthRef.current = messages.length;
-    }
-  }, [messages]);
-
-  // Cleanup timeout on unmount
+  // Use useEffect to scroll immediately when messages change
   useEffect(() => {
+    // Always scroll on new messages, use instant scrolling for optimal speed
+    scrollToBottom("instant");
+
+    // Cleanup function for unmounting
     return () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, []);
+  }, [messages]); // Only depend on messages array
 
   return (
     <div className="absolute inset-0 overflow-y-auto pb-32">

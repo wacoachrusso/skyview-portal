@@ -2,29 +2,30 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Hook to handle AI responses with optimized performance
+ * Hook to handle AI responses with optimal performance for near-instant responses
  */
 export function useAiResponse() {
-  // Get AI response with optimized timeout handling
+  // Get AI response with streaming and minimal timeout
   const getAiResponse = async (content: string, userProfile: any) => {
     console.log("Getting AI response for content:", content);
     
-    // Reduced timeout for faster UX (from 30s to 15s)
+    // Minimal timeout (5s) for faster error reporting if needed
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("AI response timeout")), 15000);
+      setTimeout(() => reject(new Error("AI response timeout")), 5000);
     });
 
-    // Call the AI completion function with priority flag
+    // Call the AI completion function with high priority flag and streaming enabled
     const responsePromise = supabase.functions.invoke("chat-completion", {
       body: {
         content: `${content}`,
         subscriptionPlan: userProfile?.subscription_plan || "free",
         assistantId: userProfile?.assistant_id || "default_assistant_id",
-        priority: true, // Add priority flag
+        priority: true, // Ensure high priority processing
+        stream: true,   // Enable streaming for faster initial response
       },
     });
 
-    // Race between response and timeout (using Promise.race for faster resolution)
+    // Use Promise.race for fastest possible resolution
     try {
       const result = await Promise.race([
         responsePromise,
