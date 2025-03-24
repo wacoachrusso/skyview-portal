@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/conversationUtils";
 import { Loader2 } from "lucide-react";
 
 interface MessageMetadataProps {
@@ -8,6 +7,34 @@ interface MessageMetadataProps {
   feedback?: number | null;
   isStreaming?: boolean;
 }
+
+// Local date formatting function
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return 'Invalid date';
+  }
+  
+  // For today's dates, show time only
+  const today = new Date();
+  const isToday = date.getDate() === today.getDate() &&
+                  date.getMonth() === today.getMonth() &&
+                  date.getFullYear() === today.getFullYear();
+  
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  // For past dates, show abbreviated date and time
+  return date.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
 export function MessageMetadata({ timestamp, feedback, isStreaming = false }: MessageMetadataProps) {
   return (
