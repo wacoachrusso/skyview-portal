@@ -12,10 +12,11 @@ interface ChatMessageProps {
   message: Message;
   isCurrentUser: boolean;
   onCopy: () => void;
-  isLastInGroup?: boolean; // Added this optional prop
+  isLastInGroup?: boolean;
+  isStreaming?: boolean;
 }
 
-export function ChatMessage({ message, isCurrentUser, onCopy, isLastInGroup }: ChatMessageProps) {
+export function ChatMessage({ message, isCurrentUser, onCopy, isLastInGroup, isStreaming = false }: ChatMessageProps) {
   const [isFlagDialogOpen, setIsFlagDialogOpen] = useState(false);
   const { isSubmittingFeedback, feedback, handleFeedback } = useFeedbackHandling(message.id, isCurrentUser);
 
@@ -41,7 +42,8 @@ export function ChatMessage({ message, isCurrentUser, onCopy, isLastInGroup }: C
             "flex max-w-[85%] sm:max-w-[80%] flex-col gap-1 rounded-xl px-3 py-2 sm:px-4 sm:py-2 relative shadow-lg transition-all duration-300",
             isCurrentUser
               ? "bg-chat-user-gradient text-white border border-blue-500/10"
-              : "bg-chat-ai-gradient text-white border border-white/5"
+              : "bg-chat-ai-gradient text-white border border-white/5",
+            isStreaming && "animate-pulse"
           )}
         >
           {/* Message glow effect */}
@@ -52,15 +54,21 @@ export function ChatMessage({ message, isCurrentUser, onCopy, isLastInGroup }: C
           <MessageContent message={message} isCurrentUser={isCurrentUser} />
           
           <div className="flex items-center justify-between gap-2 mt-2">
-            <MessageMetadata timestamp={message.created_at} feedback={feedback} />
-            <MessageActions
-              isCurrentUser={isCurrentUser}
-              onThumbsUp={() => handleFeedback(5)}
-              onThumbsDown={() => handleFeedback(1)}
-              onFlag={handleFlag}
-              onCopy={onCopy}
-              isSubmittingFeedback={isSubmittingFeedback}
+            <MessageMetadata 
+              timestamp={message.created_at} 
+              feedback={feedback}
+              isStreaming={isStreaming}
             />
+            {!isStreaming && (
+              <MessageActions
+                isCurrentUser={isCurrentUser}
+                onThumbsUp={() => handleFeedback(5)}
+                onThumbsDown={() => handleFeedback(1)}
+                onFlag={handleFlag}
+                onCopy={onCopy}
+                isSubmittingFeedback={isSubmittingFeedback}
+              />
+            )}
           </div>
           
           {/* Subtle shine effect on hover */}

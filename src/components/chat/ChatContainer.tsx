@@ -42,6 +42,11 @@ export function ChatContainer({
     scrollToBottom(shouldScrollImmediately ? 'auto' : 'smooth');
   }, [messages.length, isLoading]);
 
+  // Separate effect to monitor content changes of streaming messages
+  useEffect(() => {
+    scrollToBottom('smooth');
+  }, [messages.map(m => m.content).join('')]);
+
   // Group messages by sender to create visual conversation clusters
   const renderMessages = () => {
     return messages.map((message, index) => {
@@ -51,6 +56,9 @@ export function ChatContainer({
         index === messages.length - 1 || 
         messages[index + 1]?.user_id !== message.user_id;
       
+      // Check if this is a streaming message (in progress)
+      const isStreaming = message.id.startsWith('streaming-');
+      
       return (
         <ChatMessage
           key={message.id}
@@ -58,6 +66,7 @@ export function ChatContainer({
           isCurrentUser={isCurrentUser}
           onCopy={() => onCopyMessage(message.content)}
           isLastInGroup={isLastInGroup}
+          isStreaming={isStreaming}
         />
       );
     });
@@ -78,7 +87,7 @@ export function ChatContainer({
       className="flex flex-col h-full overflow-y-auto px-1 sm:px-3 py-4 pt-0 space-y-1 scroll-smooth"
     >
       {renderMessages()}
-      {isLoading && <LoadingMessage />}
+      {isLoading && !messages.some(m => m.id.startsWith('streaming-')) && <LoadingMessage />}
       <div ref={messagesEndRef} className="h-1" />
     </div>
   );

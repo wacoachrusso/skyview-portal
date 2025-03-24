@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * Hook to manage message state during the sending process
+ * with support for streaming message updates
  */
 export function useMessageState(
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
@@ -46,10 +47,11 @@ export function useMessageState(
     }
   };
 
-  // Create and add an AI typing indicator message
-  const addTypingIndicator = (conversationId: string): Message => {
-    const typingMessage: Message = {
-      id: 'typing-' + Date.now().toString(),
+  // Add a streaming AI message that will be updated in real-time
+  const addStreamingMessage = (conversationId: string): string => {
+    const streamingId = 'streaming-' + Date.now().toString();
+    const streamingMessage: Message = {
+      id: streamingId,
       conversation_id: conversationId,
       user_id: null,
       content: '',
@@ -57,13 +59,30 @@ export function useMessageState(
       created_at: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, typingMessage]);
-    return typingMessage;
+    setMessages(prev => [...prev, streamingMessage]);
+    return streamingId;
   };
 
-  // Remove the typing indicator message
-  const removeTypingIndicator = (typingMessageId: string) => {
-    setMessages(prev => prev.filter(msg => msg.id !== typingMessageId));
+  // Update the streaming message content as it arrives
+  const updateStreamingMessage = (streamingId: string, content: string) => {
+    setMessages(prev => 
+      prev.map(msg => 
+        msg.id === streamingId 
+          ? { ...msg, content: content }
+          : msg
+      )
+    );
+  };
+
+  // Finish the streaming message with final content
+  const finishStreamingMessage = (streamingId: string, finalContent: string) => {
+    setMessages(prev => 
+      prev.map(msg => 
+        msg.id === streamingId 
+          ? { ...msg, content: finalContent }
+          : msg
+      )
+    );
   };
 
   // Remove a message by its ID
@@ -90,8 +109,9 @@ export function useMessageState(
     createTempUserMessage,
     addTempMessage,
     updateTempMessage,
-    addTypingIndicator,
-    removeTypingIndicator,
+    addStreamingMessage,
+    updateStreamingMessage,
+    finishStreamingMessage,
     removeMessage,
     showError
   };

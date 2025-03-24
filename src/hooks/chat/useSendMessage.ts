@@ -7,7 +7,7 @@ import { useAiResponse } from "./useAiResponse";
 import { useToast } from "@/hooks/use-toast";
 
 /**
- * Hook to handle sending messages and AI responses with optimized performance
+ * Hook to handle sending messages and streaming AI responses for real-time display
  */
 export function useSendMessage(
   currentUserId: string | null,
@@ -24,8 +24,9 @@ export function useSendMessage(
     createTempUserMessage,
     addTempMessage,
     updateTempMessage,
-    addTypingIndicator,
-    removeTypingIndicator,
+    addStreamingMessage,
+    updateStreamingMessage,
+    finishStreamingMessage,
     removeMessage,
     showError
   } = useMessageState(setMessages, currentUserId);
@@ -56,14 +57,11 @@ export function useSendMessage(
       let tempMessage: Message | null = null;
       let conversationId: string | null = null;
       let apiCallId: string | null = null;
-      let typingMessage: Message | null = null;
+      let streamingMessageId: string | null = null;
       
       try {
         // Set the API call flag - immediate, no delay
         apiCallId = setupApiCall();
-        
-        // Add typing indicator immediately for instant feedback
-        typingMessage = addTypingIndicator("pending-conversation");
         
         // Ensure the conversation exists - immediate, no delay
         let createAttempts = 0;
@@ -87,15 +85,13 @@ export function useSendMessage(
         if (!conversationId) {
           throw new Error("Failed to create or get conversation");
         }
-
-        // Update the typing indicator with the correct conversation ID
-        if (typingMessage) {
-          typingMessage.conversation_id = conversationId;
-        }
         
         // Create and display temporary user message - immediate, no delay
         tempMessage = createTempUserMessage(content, conversationId);
         addTempMessage(tempMessage);
+        
+        // Add streaming AI message placeholder immediately for real-time updates
+        streamingMessageId = addStreamingMessage(conversationId);
         
         // Update session activity - run in parallel
         updateSessionActivity().catch(error => {
@@ -154,10 +150,19 @@ export function useSendMessage(
             
             aiResponse = data.response;
             
+            // Update the streaming message with the complete response
+            if (streamingMessageId) {
+              finishStreamingMessage(streamingMessageId, aiResponse);
+            }
+            
           } catch (error) {
             console.error(`Error getting AI response (attempt ${aiResponseAttempts}/2):`, error);
             
             if (aiResponseAttempts >= 2) {
+              // If streaming message exists, remove it on final failure
+              if (streamingMessageId) {
+                removeMessage(streamingMessageId);
+              }
               throw error;
             }
             
@@ -172,11 +177,6 @@ export function useSendMessage(
 
         // Ensure user message is inserted (await the promise now if it hasn't completed)
         await userMessagePromise;
-
-        // Remove typing indicator
-        if (typingMessage) {
-          removeTypingIndicator(typingMessage.id);
-        }
 
         // Insert the AI response - non-blocking
         insertAIMessage(aiResponse, conversationId)
@@ -212,14 +212,14 @@ export function useSendMessage(
         
         showError(errorMessage);
 
-        // Remove typing indicator if it exists
-        if (typingMessage) {
-          removeTypingIndicator(typingMessage.id);
-        }
-
         // Remove the temporary message if an error occurs
         if (tempMessage) {
           removeMessage(tempMessage.id);
+        }
+        
+        // Remove streaming message if it exists
+        if (streamingMessageId) {
+          removeMessage(streamingMessageId);
         }
       } finally {
         // Clear the API call flag
@@ -246,8 +246,9 @@ export function useSendMessage(
       createTempUserMessage,
       addTempMessage,
       updateTempMessage,
-      addTypingIndicator,
-      removeTypingIndicator,
+      addStreamingMessage,
+      updateStreamingMessage,
+      finishStreamingMessage,
       removeMessage,
       showError,
       getAiResponse,

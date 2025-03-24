@@ -4,13 +4,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useErrorState } from "@/hooks/useErrorState";
 
 /**
- * Hook to handle AI responses with optimal performance for near-instant responses
+ * Hook to handle AI responses with streaming capability for real-time display
  */
 export function useAiResponse() {
   const { toast } = useToast();
   const { handleError } = useErrorState();
 
-  // Get AI response with streaming and improved error handling
+  // Get AI response with streaming enabled for real-time display
   const getAiResponse = async (content: string, userProfile: any) => {
     console.log("Getting AI response for content:", content);
     
@@ -27,7 +27,7 @@ export function useAiResponse() {
           subscriptionPlan: userProfile?.subscription_plan || "free",
           assistantId: userProfile?.assistant_id || "default_assistant_id",
           priority: true, // Ensure high priority processing
-          stream: true,   // Enable streaming for faster initial response
+          stream: true,   // Enable streaming for real-time display
           retryCount: 3   // Allow more retries at the function level
         },
       });
