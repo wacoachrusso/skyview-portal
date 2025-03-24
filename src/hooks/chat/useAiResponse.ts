@@ -14,9 +14,9 @@ export function useAiResponse() {
   const getAiResponse = async (content: string, userProfile: any) => {
     console.log("Getting AI response for content:", content);
     
-    // Extended timeout (20s) to prevent premature timeout errors
+    // Extended timeout (30s) to prevent premature timeout errors
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("AI response timeout after 20 seconds")), 20000);
+      setTimeout(() => reject(new Error("AI response timeout after 30 seconds")), 30000);
     });
 
     try {
@@ -28,7 +28,7 @@ export function useAiResponse() {
           assistantId: userProfile?.assistant_id || "default_assistant_id",
           priority: true, // Ensure high priority processing
           stream: true,   // Enable streaming for faster initial response
-          retryCount: 2   // Allow retries at the function level
+          retryCount: 3   // Allow more retries at the function level
         },
       });
 
@@ -46,9 +46,11 @@ export function useAiResponse() {
         let userMessage = "Failed to get response. Please try again.";
         
         if (errorMessage.includes("timeout")) {
-          userMessage = "Request timed out. The service might be busy. Please try again.";
+          userMessage = "Request timed out. The service might be busy. Please try again in a moment.";
         } else if (errorMessage.includes("network") || errorMessage.includes("connection")) {
           userMessage = "Network error. Please check your connection and try again.";
+        } else if (errorMessage.includes("rate limit") || errorMessage.includes("429")) {
+          userMessage = "Too many requests. Please wait a moment before trying again.";
         }
         
         toast({
@@ -68,9 +70,11 @@ export function useAiResponse() {
       let errorMessage = "Network or server error. Please try again later.";
       
       if (error.message?.includes("timeout")) {
-        errorMessage = "Request timed out. The service might be busy. Please try again shortly.";
-      } else if (error.status === 429) {
+        errorMessage = "Request timed out. Please try a shorter question or try again shortly.";
+      } else if (error.status === 429 || error.message?.includes("rate limit")) {
         errorMessage = "Too many requests. Please wait a moment before trying again.";
+      } else if (error.message?.includes("Failed to fetch") || error.message?.includes("NetworkError")) {
+        errorMessage = "Network connection issue. Please check your internet connection.";
       }
       
       toast({

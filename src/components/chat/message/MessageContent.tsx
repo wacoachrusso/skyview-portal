@@ -51,10 +51,10 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
         
         // Only style the specific reference blocks
         if (part.startsWith('🔹 Reference:')) {
-          // Style the reference block
+          // Enhanced styling for reference blocks - more prominent highlighting
           return (
-            <div key={index} className="flex items-start gap-2 my-3 p-3 text-blue-300 bg-blue-950/30 rounded-md border-l-4 border-blue-500/50 font-medium">
-              <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
+            <div key={index} className="flex items-start gap-2 my-3 p-3 text-blue-200 bg-blue-950/50 rounded-md border-l-4 border-blue-500 font-medium shadow-inner">
+              <Quote className="h-4 w-4 mt-1 flex-shrink-0 text-blue-300" />
               <div className="flex-1">{part}</div>
             </div>
           );

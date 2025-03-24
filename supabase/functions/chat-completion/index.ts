@@ -50,21 +50,21 @@ serve(async (req) => {
     // Create a thread with retry
     const thread = await withRetry(() => createThread(), {
       maxRetries,
-      initialDelay: 500
+      initialDelay: 300 // Reduced initial delay for faster first attempt
     });
     console.log('Thread created:', thread.id);
 
     // Add message to thread with retry
     await withRetry(() => addMessageToThread(thread.id, content), {
       maxRetries,
-      initialDelay: 500
+      initialDelay: 300
     });
     console.log('Message added to thread');
 
     // Run the assistant with the effective assistant ID with retry
     const run = await withRetry(() => runAssistant(thread.id, assistantId), {
       maxRetries,
-      initialDelay: 500
+      initialDelay: 300
     });
     console.log('Assistant run started:', run.id);
 
@@ -72,12 +72,12 @@ serve(async (req) => {
     // This maximizes the chances of getting a response as soon as it's ready
     let runStatus;
     let attempts = 0;
-    const maxAttempts = 180; // 90 seconds maximum wait time when using 500ms polling
-    const pollingInterval = priority ? 200 : 500; // Ultra-fast polling for priority requests
+    const maxAttempts = 300; // 150 seconds maximum wait time when using 500ms polling
+    const pollingInterval = priority ? 200 : 300; // Ultra-fast polling for priority requests
     
     do {
       if (attempts >= maxAttempts) {
-        throw new Error('Run timed out after 90 seconds');
+        throw new Error('Run timed out after 150 seconds');
       }
       
       await new Promise(resolve => setTimeout(resolve, pollingInterval));
@@ -98,7 +98,7 @@ serve(async (req) => {
     // Get messages immediately once complete with retry
     const messages = await withRetry(() => getMessages(thread.id), {
       maxRetries: 3,
-      initialDelay: 500
+      initialDelay: 300
     });
     const assistantMessage = messages.data.find(m => m.role === 'assistant');
     

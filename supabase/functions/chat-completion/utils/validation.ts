@@ -10,7 +10,7 @@ export function cleanResponse(response: string): string {
   // Handle and preserve table formatting
   let formattedResponse = preserveTables(cleanedResponse);
   
-  // Format contract references with the standardized format
+  // Format contract references with the standardized format - ensure they stand out
   formattedResponse = formattedResponse.replace(
     /\[REF\](.*?)\[\/REF\]/g,
     (match, reference) => {
