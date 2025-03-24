@@ -22,9 +22,11 @@ const getRandomUniqueItems = (array: string[], count: number): string[] => {
   const shuffled = [...array].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 };
+
 interface WelcomeMessageProps {
   onSelectQuestion?: (question: string) => void;
 }
+
 export function WelcomeMessage({
   onSelectQuestion
 }: WelcomeMessageProps) {
@@ -33,8 +35,10 @@ export function WelcomeMessage({
   // Select random questions from the pool
   // Using useMemo to ensure questions only change on component mount
   const randomQuestions = useMemo(() => getRandomUniqueItems(EXAMPLE_QUESTIONS, isMobile ? 2 : 3), [isMobile]);
-  return <div className="h-full flex flex-col items-center justify-center px-2 py-2 overflow-y-auto">
-      <div className="max-w-3xl w-full rounded-2xl p-3 sm:p-5 md:p-6 shadow-xl bg-gradient-to-br from-[#1A2035] to-[#2A304A] border border-white/10 animate-fade-in">
+  
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
+      <div className="max-w-3xl w-full rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl bg-gradient-to-br from-[#1A2035] to-[#2A304A] border border-white/10 animate-fade-in">
         <div className="flex flex-col items-center">
           {/* Logo and header */}
           <div className="mb-2 md:mb-3 relative">
@@ -46,17 +50,37 @@ export function WelcomeMessage({
             Welcome to <span className="text-gradient">SkyGuide</span>
           </h1>
           
-          <p className="text-xs sm:text-sm text-gray-300 text-center mb-3 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-300 text-center mb-4 max-w-2xl leading-relaxed">
             I'm your contract interpretation assistant. Ask me anything about your union contract, and I'll provide accurate, relevant information to help you understand your rights and benefits.
           </p>
           
-          {/* Example cards */}
-          <div className={`grid w-full gap-3 mb-4 grid-cols-1 ${isMobile ? "grid-cols-1" : "sm:grid-cols-2 md:grid-cols-3"}`}>
-            <ExampleCard icon={<Sparkles className="h-4 w-4 text-brand-gold" />} title="Try asking me:" question={randomQuestions[0]} color="brand-gold" onClick={onSelectQuestion} />
+          {/* Example cards - improved layout for mobile/tablet */}
+          <div className="w-full grid gap-3 mb-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <ExampleCard 
+              icon={<Sparkles className="h-4 w-4 text-brand-gold" />} 
+              title="Try asking me:" 
+              question={randomQuestions[0]} 
+              color="brand-gold" 
+              onClick={onSelectQuestion} 
+            />
             
-            <ExampleCard icon={<Sparkles className="h-4 w-4 text-brand-purple" />} title="Or ask about:" question={randomQuestions[1]} color="brand-purple" onClick={onSelectQuestion} />
+            <ExampleCard 
+              icon={<Sparkles className="h-4 w-4 text-brand-purple" />} 
+              title="Or ask about:" 
+              question={randomQuestions[1]} 
+              color="brand-purple" 
+              onClick={onSelectQuestion} 
+            />
             
-            {!isMobile && <ExampleCard icon={<Sparkles className="h-4 w-4 text-brand-teal" />} title="You can also ask:" question={randomQuestions[2]} color="brand-teal" onClick={onSelectQuestion} />}
+            {!isMobile && (
+              <ExampleCard 
+                icon={<Sparkles className="h-4 w-4 text-brand-teal" />} 
+                title="You can also ask:" 
+                question={randomQuestions[2]} 
+                color="brand-teal" 
+                onClick={onSelectQuestion} 
+              />
+            )}
           </div>
           
           {/* Note about contract button */}
@@ -67,7 +91,8 @@ export function WelcomeMessage({
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
 
 // Helper component for example cards
@@ -79,6 +104,7 @@ interface ExampleCardProps {
   className?: string;
   onClick?: (question: string) => void;
 }
+
 function ExampleCard({
   icon,
   title,
@@ -92,7 +118,12 @@ function ExampleCard({
       onClick(question);
     }
   };
-  return <div className={`bg-white/5 rounded-xl p-3 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:bg-white/10 ${onClick ? 'cursor-pointer' : ''} ${className}`} onClick={handleClick}>
+  
+  return (
+    <div 
+      className={`bg-white/5 rounded-xl p-3 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:bg-white/10 ${onClick ? 'cursor-pointer' : ''} ${className}`} 
+      onClick={handleClick}
+    >
       <div className="flex gap-2 items-start">
         <div className={`bg-${color}/20 p-1.5 rounded-lg`}>
           {icon}
@@ -104,5 +135,6 @@ function ExampleCard({
           </p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
