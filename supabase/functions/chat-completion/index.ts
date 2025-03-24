@@ -25,13 +25,14 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { content, subscriptionPlan, assistantId, priority, stream } = await req.json();
+    const { content, subscriptionPlan, assistantId, priority, stream, retryCount = 1 } = await req.json();
     
     console.log('Request received for chat completion');
     console.log('Content length:', content?.length || 0);
     console.log('Assistant ID:', assistantId || 'default');
     console.log('Priority request:', priority ? 'Yes' : 'No');
     console.log('Streaming enabled:', stream ? 'Yes' : 'No');
+    console.log('Retry count:', retryCount);
 
     // Check if content appears to be non-contract related
     if (containsNonContractContent(content)) {
@@ -43,23 +44,26 @@ serve(async (req) => {
       });
     }
 
+    // Max retries for all OpenAI operations
+    const maxRetries = Math.min(5, retryCount + 2); // Base + client-requested retries, capped at 5
+    
     // Create a thread with retry
     const thread = await withRetry(() => createThread(), {
-      maxRetries: 3,
+      maxRetries,
       initialDelay: 500
     });
     console.log('Thread created:', thread.id);
 
     // Add message to thread with retry
     await withRetry(() => addMessageToThread(thread.id, content), {
-      maxRetries: 3,
+      maxRetries,
       initialDelay: 500
     });
     console.log('Message added to thread');
 
     // Run the assistant with the effective assistant ID with retry
     const run = await withRetry(() => runAssistant(thread.id, assistantId), {
-      maxRetries: 3,
+      maxRetries,
       initialDelay: 500
     });
     console.log('Assistant run started:', run.id);
@@ -68,19 +72,19 @@ serve(async (req) => {
     // This maximizes the chances of getting a response as soon as it's ready
     let runStatus;
     let attempts = 0;
-    const maxAttempts = 120; // 60 seconds maximum wait time (still checking frequently)
+    const maxAttempts = 180; // 90 seconds maximum wait time when using 500ms polling
     const pollingInterval = priority ? 200 : 500; // Ultra-fast polling for priority requests
     
     do {
       if (attempts >= maxAttempts) {
-        throw new Error('Run timed out after 60 seconds');
+        throw new Error('Run timed out after 90 seconds');
       }
       
       await new Promise(resolve => setTimeout(resolve, pollingInterval));
       
       runStatus = await withRetry(() => getRunStatus(thread.id, run.id), {
-        maxRetries: 2,
-        initialDelay: 300
+        maxRetries: 3,
+        initialDelay: 200
       });
       console.log('Run status:', runStatus.status, 'Attempt:', attempts);
       attempts++;
@@ -114,15 +118,26 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in chat-completion function:', error);
     
+    let errorMessage = "I'm having trouble processing your request right now. Please try again in a moment.";
+    let statusCode = 500;
+    
+    // More specific error messages based on error type
+    if (error.message?.includes('timeout')) {
+      errorMessage = "The request took too long to process. Please try a shorter or simpler question.";
+    } else if (error.message?.includes('rate limit')) {
+      errorMessage = "Our service is experiencing high demand. Please try again in a few moments.";
+      statusCode = 429;
+    }
+    
     return new Response(
       JSON.stringify({
         error: error.message,
         details: error.stack,
         timestamp: new Date().toISOString(),
-        response: "I'm having trouble processing your request right now. Please try again in a moment."
+        response: errorMessage
       }),
       {
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

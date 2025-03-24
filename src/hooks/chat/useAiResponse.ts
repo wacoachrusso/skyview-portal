@@ -1,20 +1,22 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useErrorState } from "@/hooks/useErrorState";
 
 /**
  * Hook to handle AI responses with optimal performance for near-instant responses
  */
 export function useAiResponse() {
   const { toast } = useToast();
+  const { handleError } = useErrorState();
 
   // Get AI response with streaming and improved error handling
   const getAiResponse = async (content: string, userProfile: any) => {
     console.log("Getting AI response for content:", content);
     
-    // Increased timeout (15s) to prevent premature timeout errors
+    // Extended timeout (20s) to prevent premature timeout errors
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("AI response timeout")), 15000);
+      setTimeout(() => reject(new Error("AI response timeout after 20 seconds")), 20000);
     });
 
     try {
@@ -26,6 +28,7 @@ export function useAiResponse() {
           assistantId: userProfile?.assistant_id || "default_assistant_id",
           priority: true, // Ensure high priority processing
           stream: true,   // Enable streaming for faster initial response
+          retryCount: 2   // Allow retries at the function level
         },
       });
 
@@ -37,22 +40,47 @@ export function useAiResponse() {
       
       if (!result.data && result.error) {
         console.error("Error in AI response:", result.error);
+        
+        // Improved error message for different error types
+        const errorMessage = result.error.message || "Unknown error";
+        let userMessage = "Failed to get response. Please try again.";
+        
+        if (errorMessage.includes("timeout")) {
+          userMessage = "Request timed out. The service might be busy. Please try again.";
+        } else if (errorMessage.includes("network") || errorMessage.includes("connection")) {
+          userMessage = "Network error. Please check your connection and try again.";
+        }
+        
         toast({
           title: "Error",
-          description: "Failed to get response. Please try again.",
+          description: userMessage,
           variant: "destructive",
         });
+        
+        throw new Error(`AI response error: ${errorMessage}`);
       }
       
       return result;
     } catch (error) {
       console.error("Error getting AI response:", error);
+      
+      // Enhanced error handling with more descriptive messages
+      let errorMessage = "Network or server error. Please try again later.";
+      
+      if (error.message?.includes("timeout")) {
+        errorMessage = "Request timed out. The service might be busy. Please try again shortly.";
+      } else if (error.status === 429) {
+        errorMessage = "Too many requests. Please wait a moment before trying again.";
+      }
+      
       toast({
         title: "Error",
-        description: "Network or server error. Please try again later.",
+        description: errorMessage,
         variant: "destructive",
       });
-      return { data: null, error: new Error("AI response error: " + (error.message || "Unknown error")) };
+      
+      handleError(new Error("AI response error: " + (error.message || "Unknown error")));
+      return { data: null, error: error };
     }
   };
 

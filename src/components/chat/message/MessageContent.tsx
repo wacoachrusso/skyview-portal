@@ -21,49 +21,62 @@ interface MessageContentProps {
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
   const [displayContent, setDisplayContent] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [renderError, setRenderError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Set the entire message content immediately for instant display
-    setDisplayContent(message.content);
-    setIsComplete(true);
+    try {
+      // Set the entire message content immediately - no incremental typing effect
+      setDisplayContent(message.content || "");
+      setIsComplete(true);
+    } catch (error) {
+      console.error("Error rendering message content:", error);
+      setRenderError(error as Error);
+    }
   }, [message.content]);
 
   const formatContent = (content: string) => {
-    // Check if the content contains an HTML table
-    const hasTable = content.includes('<table>') && content.includes('</table>');
+    if (!content) return null;
     
-    // Split content by reference markers (🔹 Reference:) and table markers
-    const parts = hasTable 
-      ? content.split(/(<table>.*?<\/table>)|(🔹 Reference:.*?)(?=\n|$)/gs)
-      : content.split(/(🔹 Reference:.*?)(?=\n|$)/g);
-    
-    return parts.filter(Boolean).map((part, index) => {
-      if (!part) return null;
+    try {
+      // Check if the content contains an HTML table
+      const hasTable = content.includes('<table>') && content.includes('</table>');
       
-      // Only style the specific reference blocks
-      if (part.startsWith('🔹 Reference:')) {
-        // Style the reference block
-        return (
-          <div key={index} className="flex items-start gap-2 my-3 p-3 text-blue-300 bg-blue-950/30 rounded-md border-l-4 border-blue-500/50 font-medium">
-            <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
-            <div className="flex-1">{part}</div>
-          </div>
-        );
-      } else if (part.includes('No specific contract reference')) {
-        // Handle the "no reference found" message
-        return (
-          <div key={index} className="flex items-start gap-2 my-3 p-3 text-amber-300 bg-amber-950/20 rounded-md border-l-4 border-amber-500/50 italic">
-            <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
-            <em>{part}</em>
-          </div>
-        );
-      } else if (part.startsWith('<table>') && part.includes('</table>')) {
-        // Parse and render HTML table
-        return renderTable(part, index);
-      }
-      // Regular text content - no special formatting
-      return <span key={index}>{part}</span>;
-    });
+      // Split content by reference markers (🔹 Reference:) and table markers
+      const parts = hasTable 
+        ? content.split(/(<table>.*?<\/table>)|(🔹 Reference:.*?)(?=\n|$)/gs)
+        : content.split(/(🔹 Reference:.*?)(?=\n|$)/g);
+      
+      return parts.filter(Boolean).map((part, index) => {
+        if (!part) return null;
+        
+        // Only style the specific reference blocks
+        if (part.startsWith('🔹 Reference:')) {
+          // Style the reference block
+          return (
+            <div key={index} className="flex items-start gap-2 my-3 p-3 text-blue-300 bg-blue-950/30 rounded-md border-l-4 border-blue-500/50 font-medium">
+              <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
+              <div className="flex-1">{part}</div>
+            </div>
+          );
+        } else if (part.includes('No specific contract reference')) {
+          // Handle the "no reference found" message
+          return (
+            <div key={index} className="flex items-start gap-2 my-3 p-3 text-amber-300 bg-amber-950/20 rounded-md border-l-4 border-amber-500/50 italic">
+              <Quote className="h-4 w-4 mt-1 flex-shrink-0" />
+              <em>{part}</em>
+            </div>
+          );
+        } else if (part.startsWith('<table>') && part.includes('</table>')) {
+          // Parse and render HTML table
+          return renderTable(part, index);
+        }
+        // Regular text content - no special formatting
+        return <span key={index}>{part}</span>;
+      });
+    } catch (error) {
+      console.error("Error formatting content:", error);
+      return <span className="text-red-400">Error rendering message. Please try refreshing the page.</span>;
+    }
   };
 
   // Function to parse and render HTML tables
@@ -111,9 +124,18 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       );
     } catch (error) {
       console.error("Error rendering table:", error);
-      return <span key={key}>{tableHtml}</span>;
+      return <span key={key} className="text-red-400">Error rendering table. {tableHtml}</span>;
     }
   };
+
+  // Display error state if there was a rendering error
+  if (renderError) {
+    return (
+      <div className="text-red-400 p-2 border border-red-400 rounded">
+        Error displaying message. Please refresh the page and try again.
+      </div>
+    );
+  }
 
   return (
     <div className="whitespace-pre-wrap break-words">

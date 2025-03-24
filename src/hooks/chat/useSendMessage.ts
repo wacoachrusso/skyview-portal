@@ -66,7 +66,24 @@ export function useSendMessage(
         typingMessage = addTypingIndicator("pending-conversation");
         
         // Ensure the conversation exists - immediate, no delay
-        conversationId = await ensureConversation(currentUserId, content);
+        let createAttempts = 0;
+        while (!conversationId && createAttempts < 3) {
+          try {
+            conversationId = await ensureConversation(currentUserId, content);
+            createAttempts++;
+            if (!conversationId) {
+              console.warn(`Failed to create/get conversation, attempt ${createAttempts}/3`);
+              await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay before retry
+            }
+          } catch (error) {
+            console.error(`Error ensuring conversation (attempt ${createAttempts}/3):`, error);
+            if (createAttempts >= 3) {
+              throw new Error("Failed to create or get conversation after multiple attempts");
+            }
+            await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay before retry
+          }
+        }
+        
         if (!conversationId) {
           throw new Error("Failed to create or get conversation");
         }
@@ -81,34 +98,80 @@ export function useSendMessage(
         addTempMessage(tempMessage);
         
         // Update session activity - run in parallel
-        updateSessionActivity().catch(console.error);
+        updateSessionActivity().catch(error => {
+          console.error("Session activity update failed:", error);
+          // Non-critical failure, continue with message sending
+        });
 
         // Insert the user message into the database - can run in parallel
-        insertUserMessage(content, conversationId)
+        const userMessagePromise = insertUserMessage(content, conversationId)
           .then(actualMessage => {
             console.log("User message inserted into database:", actualMessage);
             // Update temp message with actual one
             if (tempMessage) {
               updateTempMessage(tempMessage.id, actualMessage);
             }
+            return actualMessage;
           })
           .catch(error => {
             console.error("Error inserting user message:", error);
             // Continue with the flow despite error (non-blocking)
+            return null;
           });
 
         // Get AI response - critical path
-        const { data, error } = await getAiResponse(content, userProfile);
-
-        if (error) {
-          console.error("AI completion error:", error);
-          throw error;
+        let aiResponseAttempts = 0;
+        let aiResponse = null;
+        
+        while (!aiResponse && aiResponseAttempts < 2) {
+          try {
+            aiResponseAttempts++;
+            console.log(`Attempting to get AI response (attempt ${aiResponseAttempts}/2)...`);
+            
+            const { data, error } = await getAiResponse(content, userProfile);
+            
+            if (error) {
+              console.error(`AI completion error (attempt ${aiResponseAttempts}/2):`, error);
+              
+              if (aiResponseAttempts < 2) {
+                // Wait briefly before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                continue;
+              }
+              throw error;
+            }
+            
+            if (!data || !data.response) {
+              console.error(`Invalid response from AI completion (attempt ${aiResponseAttempts}/2):`, data);
+              
+              if (aiResponseAttempts < 2) {
+                // Wait briefly before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                continue;
+              }
+              throw new Error("Invalid response from chat-completion");
+            }
+            
+            aiResponse = data.response;
+            
+          } catch (error) {
+            console.error(`Error getting AI response (attempt ${aiResponseAttempts}/2):`, error);
+            
+            if (aiResponseAttempts >= 2) {
+              throw error;
+            }
+            
+            // Brief delay before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+        
+        if (!aiResponse) {
+          throw new Error("Failed to get AI response after multiple attempts");
         }
 
-        if (!data || !data.response) {
-          console.error("Invalid response from AI completion:", data);
-          throw new Error("Invalid response from chat-completion");
-        }
+        // Ensure user message is inserted (await the promise now if it hasn't completed)
+        await userMessagePromise;
 
         // Remove typing indicator
         if (typingMessage) {
@@ -116,7 +179,7 @@ export function useSendMessage(
         }
 
         // Insert the AI response - non-blocking
-        insertAIMessage(data.response, conversationId)
+        insertAIMessage(aiResponse, conversationId)
           .then(() => {
             console.log("AI message inserted successfully");
           })
@@ -132,9 +195,22 @@ export function useSendMessage(
           
         // Update session activity again (non-blocking)
         updateSessionActivity().catch(console.error);
+        
       } catch (error) {
         console.error("Error sending message:", error);
-        showError("Failed to send message or receive response. Please try again.");
+        
+        // Provide more specific error messages based on the error type
+        let errorMessage = "Failed to send message or receive response. Please try again.";
+        
+        if (error.message?.includes('conversation')) {
+          errorMessage = "Could not create conversation. Please refresh the page and try again.";
+        } else if (error.message?.includes('timeout')) {
+          errorMessage = "Request timed out. The AI service might be busy. Please try again in a moment.";
+        } else if (error.message?.includes('network') || error.message?.includes('connection')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+        
+        showError(errorMessage);
 
         // Remove typing indicator if it exists
         if (typingMessage) {
