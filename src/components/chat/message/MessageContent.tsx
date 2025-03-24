@@ -34,13 +34,13 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       const typingInterval = setInterval(() => {
         if (index <= content.length) {
           setDisplayContent(content.slice(0, index));
-          index++;
+          index += 3; // Increase typing speed by processing more characters per tick
         } else {
           clearInterval(typingInterval);
           setIsTyping(false);
           setIsComplete(true);
         }
-      }, 5); // Increased typing speed for better user experience
+      }, 1); // Increased typing speed for better user experience
 
       return () => clearInterval(typingInterval);
     } else {

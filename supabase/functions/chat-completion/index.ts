@@ -52,17 +52,18 @@ serve(async (req) => {
     const run = await runAssistant(thread.id, assistantId);
     console.log('Assistant run started:', run.id);
 
-    // Poll for completion
+    // Poll for completion with improved polling frequency
     let runStatus;
     let attempts = 0;
-    const maxAttempts = 60; // 60 seconds timeout
+    const maxAttempts = 30; // Reduced timeout to 30 seconds max
     
     do {
       if (attempts >= maxAttempts) {
-        throw new Error('Run timed out after 60 seconds');
+        throw new Error('Run timed out after 30 seconds');
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Reduced polling interval to 500ms
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       runStatus = await getRunStatus(thread.id, run.id);
       console.log('Run status:', runStatus.status);
