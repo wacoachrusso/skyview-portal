@@ -30,17 +30,21 @@ export function MessageContent({ message, isCurrentUser }: MessageContentProps) 
       let index = 0;
       const content = message.content;
       
-      // Clear any existing interval first
+      // Dramatically increased typing speed for near-instant rendering
       const typingInterval = setInterval(() => {
+        // Process larger chunks of text at once (10 chars instead of 1)
+        const chunkSize = 10;
+        index += chunkSize;
+        
         if (index <= content.length) {
           setDisplayContent(content.slice(0, index));
-          index++;
         } else {
+          setDisplayContent(content); // Ensure full content is displayed
           clearInterval(typingInterval);
           setIsTyping(false);
           setIsComplete(true);
         }
-      }, 5); // Increased typing speed for better user experience
+      }, 1); // Reduced from 5ms to 1ms for maximum speed
 
       return () => clearInterval(typingInterval);
     } else {

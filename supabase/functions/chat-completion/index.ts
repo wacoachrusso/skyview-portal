@@ -24,11 +24,12 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { content, subscriptionPlan, assistantId } = await req.json();
+    const { content, subscriptionPlan, assistantId, priority } = await req.json();
     
     console.log('Request received for chat completion');
     console.log('Content length:', content?.length || 0);
     console.log('Assistant ID:', assistantId || 'default');
+    console.log('Priority request:', priority ? 'Yes' : 'No');
 
     // Check if content appears to be non-contract related
     if (containsNonContractContent(content)) {
@@ -52,17 +53,18 @@ serve(async (req) => {
     const run = await runAssistant(thread.id, assistantId);
     console.log('Assistant run started:', run.id);
 
-    // Poll for completion
+    // Poll for completion with optimized polling interval
     let runStatus;
     let attempts = 0;
-    const maxAttempts = 60; // 60 seconds timeout
+    const maxAttempts = 30; // 30 seconds timeout (reduced from 60)
+    const pollingInterval = priority ? 500 : 1000; // Faster polling for priority requests
     
     do {
       if (attempts >= maxAttempts) {
-        throw new Error('Run timed out after 60 seconds');
+        throw new Error('Run timed out after 30 seconds');
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
       
       runStatus = await getRunStatus(thread.id, run.id);
       console.log('Run status:', runStatus.status);
