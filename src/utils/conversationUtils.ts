@@ -2,6 +2,36 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
+ * Format a date string into a human-readable format
+ */
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return 'Invalid date';
+  }
+  
+  // For today's dates, show time only
+  const today = new Date();
+  const isToday = date.getDate() === today.getDate() &&
+                  date.getMonth() === today.getMonth() &&
+                  date.getFullYear() === today.getFullYear();
+  
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  // For past dates, show abbreviated date and time
+  return date.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+/**
  * Update a conversation's title based on message content
  */
 export const updateConversationTitle = async (conversationId: string, content: string) => {

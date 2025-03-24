@@ -3,8 +3,10 @@ import { useCallback } from "react";
 import { Message } from "@/types/chat";
 import { useMessageState } from "./useMessageState";
 import { useApiCallState } from "./useApiCallState";
-import { useAiResponse } from "./useAiResponse";
 import { useToast } from "@/hooks/use-toast";
+import { useConversationSetup } from "./message-handling/useConversationSetup";
+import { useMessageStream } from "./message-handling/useMessageStream";
+import { useAiResponseHandler } from "./message-handling/useAiResponseHandler";
 
 /**
  * Hook to handle sending messages and streaming AI responses for real-time display
@@ -32,8 +34,15 @@ export function useSendMessage(
   } = useMessageState(setMessages, currentUserId);
 
   const { setupApiCall, clearApiCall, updateSessionActivity } = useApiCallState();
-  const { getAiResponse } = useAiResponse();
   const { toast } = useToast();
+  const { setupConversation } = useConversationSetup(ensureConversation);
+  const { handleStreamingMessage } = useMessageStream(
+    addStreamingMessage,
+    updateStreamingMessage,
+    finishStreamingMessage,
+    removeMessage
+  );
+  const { getResponseWithRetry } = useAiResponseHandler();
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -57,41 +66,17 @@ export function useSendMessage(
       let tempMessage: Message | null = null;
       let conversationId: string | null = null;
       let apiCallId: string | null = null;
-      let streamingMessageId: string | null = null;
       
       try {
         // Set the API call flag - immediate, no delay
         apiCallId = setupApiCall();
         
-        // Ensure the conversation exists - immediate, no delay
-        let createAttempts = 0;
-        while (!conversationId && createAttempts < 3) {
-          try {
-            conversationId = await ensureConversation(currentUserId, content);
-            createAttempts++;
-            if (!conversationId) {
-              console.warn(`Failed to create/get conversation, attempt ${createAttempts}/3`);
-              await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay before retry
-            }
-          } catch (error) {
-            console.error(`Error ensuring conversation (attempt ${createAttempts}/3):`, error);
-            if (createAttempts >= 3) {
-              throw new Error("Failed to create or get conversation after multiple attempts");
-            }
-            await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay before retry
-          }
-        }
+        // Ensure the conversation exists
+        conversationId = await setupConversation(currentUserId, content);
         
-        if (!conversationId) {
-          throw new Error("Failed to create or get conversation");
-        }
-        
-        // Create and display temporary user message - immediate, no delay
+        // Create and display temporary user message
         tempMessage = createTempUserMessage(content, conversationId);
         addTempMessage(tempMessage);
-        
-        // Add streaming AI message placeholder immediately for real-time updates
-        streamingMessageId = addStreamingMessage(conversationId);
         
         // Update session activity - run in parallel
         updateSessionActivity().catch(error => {
@@ -115,67 +100,13 @@ export function useSendMessage(
             return null;
           });
 
-        // Get AI response - critical path
-        let aiResponseAttempts = 0;
-        let aiResponse = null;
-        
-        while (!aiResponse && aiResponseAttempts < 2) {
-          try {
-            aiResponseAttempts++;
-            console.log(`Attempting to get AI response (attempt ${aiResponseAttempts}/2)...`);
-            
-            const { data, error } = await getAiResponse(content, userProfile);
-            
-            if (error) {
-              console.error(`AI completion error (attempt ${aiResponseAttempts}/2):`, error);
-              
-              if (aiResponseAttempts < 2) {
-                // Wait briefly before retrying
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                continue;
-              }
-              throw error;
-            }
-            
-            if (!data || !data.response) {
-              console.error(`Invalid response from AI completion (attempt ${aiResponseAttempts}/2):`, data);
-              
-              if (aiResponseAttempts < 2) {
-                // Wait briefly before retrying
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                continue;
-              }
-              throw new Error("Invalid response from chat-completion");
-            }
-            
-            aiResponse = data.response;
-            
-            // Update the streaming message with the complete response
-            if (streamingMessageId) {
-              finishStreamingMessage(streamingMessageId, aiResponse);
-            }
-            
-          } catch (error) {
-            console.error(`Error getting AI response (attempt ${aiResponseAttempts}/2):`, error);
-            
-            if (aiResponseAttempts >= 2) {
-              // If streaming message exists, remove it on final failure
-              if (streamingMessageId) {
-                removeMessage(streamingMessageId);
-              }
-              throw error;
-            }
-            
-            // Brief delay before retry
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-        
-        if (!aiResponse) {
-          throw new Error("Failed to get AI response after multiple attempts");
-        }
+        // Set up AI streaming response
+        const aiResponsePromise = getResponseWithRetry(content, userProfile);
+        const aiResponse = await handleStreamingMessage(conversationId, 
+          Promise.resolve({ data: { response: await aiResponsePromise }, error: null })
+        );
 
-        // Ensure user message is inserted (await the promise now if it hasn't completed)
+        // Ensure user message is inserted (await the promise if it hasn't completed)
         await userMessagePromise;
 
         // Insert the AI response - non-blocking
@@ -216,11 +147,6 @@ export function useSendMessage(
         if (tempMessage) {
           removeMessage(tempMessage.id);
         }
-        
-        // Remove streaming message if it exists
-        if (streamingMessageId) {
-          removeMessage(streamingMessageId);
-        }
       } finally {
         // Clear the API call flag
         if (apiCallId) {
@@ -233,26 +159,24 @@ export function useSendMessage(
     },
     [
       currentUserId,
-      ensureConversation,
-      insertUserMessage,
-      insertAIMessage,
-      userProfile,
       isLoading,
-      currentConversationId,
-      setMessages,
+      setIsLoading,
       setupApiCall,
       clearApiCall,
-      updateSessionActivity,
+      setupConversation,
       createTempUserMessage,
       addTempMessage,
       updateTempMessage,
-      addStreamingMessage,
-      updateStreamingMessage,
-      finishStreamingMessage,
+      updateSessionActivity,
+      insertUserMessage,
+      insertAIMessage,
+      getResponseWithRetry,
+      handleStreamingMessage,
+      updateTempMessage,
       removeMessage,
       showError,
-      getAiResponse,
-      toast
+      toast,
+      userProfile
     ]
   );
 
