@@ -4,6 +4,7 @@ import { Message } from "@/types/chat";
 import { useMessageState } from "./useMessageState";
 import { useApiCallState } from "./useApiCallState";
 import { useAiResponse } from "./useAiResponse";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * Hook to handle sending messages and AI responses with optimized performance
@@ -31,11 +32,16 @@ export function useSendMessage(
 
   const { setupApiCall, clearApiCall, updateSessionActivity } = useApiCallState();
   const { getAiResponse } = useAiResponse();
+  const { toast } = useToast();
 
   const sendMessage = useCallback(
     async (content: string) => {
       if (!currentUserId) {
-        showError("Unable to send message. Please try refreshing the page.");
+        toast({
+          title: "Error",
+          description: "You need to be logged in to send messages.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -50,13 +56,14 @@ export function useSendMessage(
       let tempMessage: Message | null = null;
       let conversationId: string | null = null;
       let apiCallId: string | null = null;
+      let typingMessage: Message | null = null;
       
       try {
         // Set the API call flag - immediate, no delay
         apiCallId = setupApiCall();
         
         // Add typing indicator immediately for instant feedback
-        const typingMessage = addTypingIndicator("pending-conversation");
+        typingMessage = addTypingIndicator("pending-conversation");
         
         // Ensure the conversation exists - immediate, no delay
         conversationId = await ensureConversation(currentUserId, content);
@@ -65,7 +72,9 @@ export function useSendMessage(
         }
 
         // Update the typing indicator with the correct conversation ID
-        typingMessage.conversation_id = conversationId;
+        if (typingMessage) {
+          typingMessage.conversation_id = conversationId;
+        }
         
         // Create and display temporary user message - immediate, no delay
         tempMessage = createTempUserMessage(content, conversationId);
@@ -79,7 +88,9 @@ export function useSendMessage(
           .then(actualMessage => {
             console.log("User message inserted into database:", actualMessage);
             // Update temp message with actual one
-            updateTempMessage(tempMessage!.id, actualMessage);
+            if (tempMessage) {
+              updateTempMessage(tempMessage.id, actualMessage);
+            }
           })
           .catch(error => {
             console.error("Error inserting user message:", error);
@@ -100,7 +111,9 @@ export function useSendMessage(
         }
 
         // Remove typing indicator
-        removeTypingIndicator(typingMessage.id);
+        if (typingMessage) {
+          removeTypingIndicator(typingMessage.id);
+        }
 
         // Insert the AI response - non-blocking
         insertAIMessage(data.response, conversationId)
@@ -109,6 +122,11 @@ export function useSendMessage(
           })
           .catch(error => {
             console.error("Error inserting AI message:", error);
+            toast({
+              title: "Warning",
+              description: "Your message was processed but couldn't be saved. The response might not appear in your chat history.",
+              variant: "default",
+            });
             // Continue despite error (non-blocking)
           });
           
@@ -119,9 +137,9 @@ export function useSendMessage(
         showError("Failed to send message or receive response. Please try again.");
 
         // Remove typing indicator if it exists
-        setMessages((prev) => {
-          return prev.filter((msg) => !msg.id.toString().startsWith('typing-'));
-        });
+        if (typingMessage) {
+          removeTypingIndicator(typingMessage.id);
+        }
 
         // Remove the temporary message if an error occurs
         if (tempMessage) {
@@ -156,7 +174,8 @@ export function useSendMessage(
       removeTypingIndicator,
       removeMessage,
       showError,
-      getAiResponse
+      getAiResponse,
+      toast
     ]
   );
 

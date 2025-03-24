@@ -20,21 +20,13 @@ interface MessageContentProps {
 
 export function MessageContent({ message, isCurrentUser }: MessageContentProps) {
   const [displayContent, setDisplayContent] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    if (message.role === "assistant") {
-      // Set the entire message content immediately for instant display
-      setDisplayContent(message.content);
-      setIsComplete(true);
-      setIsTyping(false);
-    } else {
-      // User messages are displayed instantly
-      setDisplayContent(message.content);
-      setIsComplete(true);
-    }
-  }, [message.content, message.role]);
+    // Set the entire message content immediately for instant display
+    setDisplayContent(message.content);
+    setIsComplete(true);
+  }, [message.content]);
 
   const formatContent = (content: string) => {
     // Check if the content contains an HTML table
