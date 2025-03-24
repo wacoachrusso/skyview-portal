@@ -37,25 +37,25 @@ export function WelcomeMessage({
   const randomQuestions = useMemo(() => getRandomUniqueItems(EXAMPLE_QUESTIONS, isMobile ? 2 : 3), [isMobile]);
   
   return (
-    <div className="h-full flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
-      <div className="max-w-3xl w-full rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl bg-gradient-to-br from-[#1A2035] to-[#2A304A] border border-white/10 animate-fade-in">
+    <div className="h-full flex flex-col items-center justify-center px-3 py-4 overflow-y-auto">
+      <div className="max-w-3xl w-full rounded-2xl p-3 sm:p-4 md:p-5 shadow-xl bg-gradient-to-br from-[#1A2035] to-[#2A304A] border border-white/10 animate-fade-in">
         <div className="flex flex-col items-center">
           {/* Logo and header */}
           <div className="mb-2 md:mb-3 relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-brand-gold/20 rounded-full blur-xl opacity-75 animate-pulse-subtle" aria-hidden="true" />
-            <img src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" alt="SkyGuide Logo" className="h-8 md:h-12 w-auto relative animate-float" />
+            <img src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" alt="SkyGuide Logo" className="h-8 md:h-10 w-auto relative animate-float" />
           </div>
           
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 text-center">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-2 text-center">
             Welcome to <span className="text-gradient">SkyGuide</span>
           </h1>
           
-          <p className="text-xs sm:text-sm text-gray-300 text-center mb-4 max-w-2xl leading-relaxed">
-            I'm your contract interpretation assistant. Ask me anything about your union contract, and I'll provide accurate, relevant information to help you understand your rights and benefits.
+          <p className="text-xs sm:text-sm text-gray-300 text-center mb-3 max-w-xl leading-relaxed">
+            I'm your contract interpretation assistant. Ask me anything about your union contract, and I'll provide accurate information with specific references.
           </p>
           
           {/* Example cards - improved layout for mobile/tablet */}
-          <div className="w-full grid gap-3 mb-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="w-full grid gap-2 mb-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <ExampleCard 
               icon={<Sparkles className="h-4 w-4 text-brand-gold" />} 
               title="Try asking me:" 
@@ -121,16 +121,16 @@ function ExampleCard({
   
   return (
     <div 
-      className={`bg-white/5 rounded-xl p-3 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:bg-white/10 ${onClick ? 'cursor-pointer' : ''} ${className}`} 
+      className={`bg-white/5 rounded-xl p-2 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:bg-white/10 ${onClick ? 'cursor-pointer' : ''} ${className}`} 
       onClick={handleClick}
     >
       <div className="flex gap-2 items-start">
         <div className={`bg-${color}/20 p-1.5 rounded-lg`}>
           {icon}
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h3 className="font-medium text-white text-xs mb-1">{title}</h3>
-          <p className="text-gray-300 text-xs">
+          <p className="text-gray-300 text-xs truncate">
             "{question}"
           </p>
         </div>
