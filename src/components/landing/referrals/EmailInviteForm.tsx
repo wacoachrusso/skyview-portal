@@ -34,12 +34,24 @@ export function EmailInviteForm() {
         .eq('id', session.user.id)
         .maybeSingle();
       
+      // Generate a referral code using the database function
+      const { data: referralCodeData, error: codeError } = await supabase
+        .rpc('generate_referral_code');
+        
+      if (codeError) {
+        console.error("Error generating referral code:", codeError);
+        throw new Error("Failed to generate referral code");
+      }
+      
+      const referralCode = referralCodeData || `SKY${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      
       // Track the referral in the database
       const { error: referralError } = await supabase
         .from('referrals')
         .insert({ 
           referrer_id: session.user.id, 
           referee_email: inviteEmail,
+          referral_code: referralCode,
           status: 'pending' 
         });
       
@@ -49,7 +61,7 @@ export function EmailInviteForm() {
       }
       
       // Construct the invite URL - direct to signup page
-      const inviteUrl = `${window.location.origin}/signup`;
+      const inviteUrl = `${window.location.origin}/signup?ref=${referralCode}`;
       
       // Call the invite function
       const { error: inviteError } = await supabase.functions.invoke('send-invite', {
