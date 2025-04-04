@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { LogIn } from "lucide-react";
@@ -14,11 +15,11 @@ export function LoggedOutButtons({ isMobile = false, scrollToPricing }: LoggedOu
         asChild 
         variant={isMobile ? "ghost" : "secondary"}
         size="sm"
-        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
+        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'} cta-button`}
       >
         <Link to="/login">
           <LogIn className="mr-2 h-4 w-4" />
-          Login
+          Sign In
         </Link>
       </Button>
       
@@ -26,9 +27,9 @@ export function LoggedOutButtons({ isMobile = false, scrollToPricing }: LoggedOu
         onClick={scrollToPricing}
         size="sm"
         variant={isMobile ? "ghost" : "default"}
-        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'}`}
+        className={`${isMobile ? 'w-full justify-start' : 'primary-cta text-white hover:text-white/90'} cta-button`}
       >
-        Sign Up
+        Get Started Free
       </Button>
     </div>
   );

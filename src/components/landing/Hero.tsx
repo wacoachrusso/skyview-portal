@@ -69,29 +69,29 @@ export function Hero() {
             >
               <Button 
                 size="lg"
-                className="premium-button bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-gold transform transition-all duration-200 hover:scale-105 hover:shadow-gold-hover text-base"
+                className="cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-gold text-base"
                 onClick={scrollToPricing}
                 aria-label="Start your free trial today"
               >
-                Start Free Trial Today
+                Start Your Free Trial Today
               </Button>
               <Button 
                 size="lg"
-                className="premium-button bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-8 shadow-premium transform transition-all duration-200 hover:scale-105 hover:shadow-premium-hover text-base"
+                className="cta-button primary-cta bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-8 shadow-premium text-base"
                 onClick={scrollToPricing}
                 aria-label="Get instant answers to your contract questions"
               >
-                Sign Up & Start Using SkyGuide
+                Experience SkyGuide Now
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="premium-button border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg transform transition-all duration-200 hover:scale-105 text-base"
+                className="premium-button border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg text-base"
                 onClick={() => setShowVideo(true)}
                 aria-label="Watch demo video"
               >
                 <Play className="mr-2 h-4 w-4" aria-hidden="true" />
-                Watch Demo
+                See How It Works
               </Button>
             </motion.div>
           </div>

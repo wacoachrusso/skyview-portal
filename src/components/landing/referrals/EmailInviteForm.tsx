@@ -123,7 +123,7 @@ export function EmailInviteForm() {
         />
         <Button 
           type="submit"
-          className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy flex items-center space-x-2"
+          className="cta-button primary-cta bg-brand-gold hover:bg-brand-gold/90 text-brand-navy flex items-center space-x-2"
           disabled={sendingInvite || !inviteEmail}
         >
           {sendingInvite ? (
@@ -131,7 +131,7 @@ export function EmailInviteForm() {
           ) : (
             <>
               <Send size={16} />
-              <span>Send Invite</span>
+              <span>Share with Colleague</span>
             </>
           )}
         </Button>

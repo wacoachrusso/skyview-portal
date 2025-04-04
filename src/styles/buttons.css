@@ -14,6 +14,11 @@
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
 }
 
+.premium-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
 .premium-button::after {
   content: '';
   position: absolute;
@@ -33,4 +38,41 @@
 
 .premium-button:hover::after {
   transform: rotate(30deg) translateX(100%);
+}
+
+/* Primary CTA button styles */
+.primary-cta {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.primary-cta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
+}
+
+.primary-cta:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Gold button special effects */
+.gold-cta {
+  background: linear-gradient(135deg, #d4af37 0%, #f2d066 50%, #d4af37 100%);
+  background-size: 200% 200%;
+  animation: gold-shine 3s infinite ease-in-out;
+}
+
+.gold-cta:hover {
+  animation: gold-shine 1.5s infinite ease-in-out;
+}
+
+@keyframes gold-shine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }

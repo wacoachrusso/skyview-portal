@@ -64,6 +64,19 @@ export const PricingCard = ({
     }
   };
 
+  // Determine persuasive button text based on plan name
+  const getButtonText = () => {
+    if (name.toLowerCase() === 'free' || name.toLowerCase() === 'free trial') {
+      return 'Start Your Free Trial';
+    } else if (name.toLowerCase() === 'monthly') {
+      return 'Get Monthly Access';
+    } else if (name.toLowerCase() === 'annual') {
+      return 'Unlock Best Value';
+    } else {
+      return 'Choose This Plan';
+    }
+  };
+
   return (
     <Card className={`w-full max-w-sm mx-auto relative ${popular ? 'border-brand-gold shadow-xl hover-lift-gold' : 'border-gray-200 hover-lift'}`}>
       {savingsBadge && (
@@ -89,11 +102,11 @@ export const PricingCard = ({
           onClick={handlePlanClick}
           className={`w-full ${
             popular
-              ? 'bg-brand-gold hover:bg-brand-gold/90 text-black'
-              : 'bg-brand-navy hover:bg-brand-navy/90 text-white'
+              ? 'cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-black'
+              : 'cta-button primary-cta bg-brand-navy hover:bg-brand-navy/90 text-white'
           }`}
         >
-          Get Started
+          {getButtonText()}
         </Button>
       </CardFooter>
     </Card>
