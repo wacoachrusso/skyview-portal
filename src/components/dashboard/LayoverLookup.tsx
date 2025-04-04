@@ -9,6 +9,7 @@ import { Search, Coffee, Palmtree, MapPin, Building, Pizza, Users } from "lucide
 // Mock data for demonstration purposes
 const mockLayoverData = {
   "JFK": {
+    name: "New York (JFK)",
     restaurants: [
       { name: "Shake Shack", description: "Famous burgers and shakes", rating: 4.5 },
       { name: "Uptown Brasserie", description: "Upscale American cuisine", rating: 4.2 },
@@ -26,6 +27,7 @@ const mockLayoverData = {
     ]
   },
   "LAX": {
+    name: "Los Angeles (LAX)",
     restaurants: [
       { name: "Cassell's Hamburgers", description: "Classic burgers since 1948", rating: 4.4 },
       { name: "Border Grill", description: "Modern Mexican cuisine", rating: 4.3 },
@@ -43,6 +45,7 @@ const mockLayoverData = {
     ]
   },
   "ORD": {
+    name: "Chicago (ORD)",
     restaurants: [
       { name: "Tortas Frontera", description: "Rick Bayless Mexican sandwiches", rating: 4.7 },
       { name: "Publican Tavern", description: "Farm-to-table cuisine", rating: 4.4 },
@@ -60,6 +63,7 @@ const mockLayoverData = {
     ]
   },
   "DEN": {
+    name: "Denver (DEN)",
     restaurants: [
       { name: "Root Down DIA", description: "Farm-to-table with local ingredients", rating: 4.8 },
       { name: "Modern Market", description: "Fresh, healthy fare with local beers", rating: 4.5 },
@@ -73,6 +77,16 @@ const mockLayoverData = {
       { name: "Union Station Layover", description: "Take the A-Line train to historic Union Station for dining and relaxation", rating: 4.8 }
     ]
   }
+};
+
+// City to airport code mapping
+const cityToAirportCode: Record<string, string> = {
+  "new york": "JFK",
+  "nyc": "JFK",
+  "los angeles": "LAX",
+  "la": "LAX",
+  "chicago": "ORD",
+  "denver": "DEN"
 };
 
 export const LayoverLookup = () => {
@@ -93,12 +107,34 @@ export const LayoverLookup = () => {
     
     // Simulating API call with timeout
     setTimeout(() => {
-      const query = searchQuery.trim().toUpperCase();
+      let query = searchQuery.trim();
+      
+      // If the query is not an airport code (3 letters), try to match it to a city
+      if (query.length !== 3 || !query.match(/^[A-Za-z]{3}$/)) {
+        const normalizedQuery = query.toLowerCase();
+        
+        // Check if the query matches any city names in our mapping
+        if (cityToAirportCode[normalizedQuery]) {
+          query = cityToAirportCode[normalizedQuery];
+        } else {
+          // Try to find a partial match
+          const cityMatch = Object.keys(cityToAirportCode).find(city => 
+            city.includes(normalizedQuery)
+          );
+          
+          if (cityMatch) {
+            query = cityToAirportCode[cityMatch];
+          }
+        }
+      }
+      
+      // Convert to uppercase for airport code lookup
+      query = query.toUpperCase();
       
       if (mockLayoverData[query as keyof typeof mockLayoverData]) {
         setSearchResults(mockLayoverData[query as keyof typeof mockLayoverData]);
       } else {
-        setError("No information found for this airport. Try JFK, LAX, ORD, or DEN.");
+        setError("No information found for this location. Try JFK (New York), LAX (Los Angeles), ORD (Chicago), or DEN (Denver).");
       }
       
       setIsLoading(false);
@@ -144,7 +180,7 @@ export const LayoverLookup = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Where's your layover? (Try DEN, JFK, LAX, ORD)"
+                placeholder="Where's your layover? (City name or airport code)"
                 className="pr-10 shadow-sm focus:border-brand-purple"
               />
             </div>
@@ -172,7 +208,11 @@ export const LayoverLookup = () => {
 
           {searchResults && (
             <div className="space-y-6">
-              {Object.entries(searchResults).map(([category, items]) => (
+              {searchResults.name && (
+                <h2 className="text-xl font-semibold text-brand-navy">{searchResults.name}</h2>
+              )}
+              
+              {Object.entries(searchResults).filter(([key]) => key !== 'name').map(([category, items]) => (
                 <div key={category} className="space-y-3">
                   <h3 className="flex items-center text-lg font-semibold capitalize">
                     {getIconForCategory(category)}
@@ -211,7 +251,7 @@ export const LayoverLookup = () => {
               <Search className="h-12 w-12 text-muted-foreground/50" />
               <div>
                 <h3 className="text-lg font-medium">Find your layover hotspots</h3>
-                <p className="mt-1">Enter airport code (like DEN, JFK, LAX, ORD) to discover nearby restaurants, attractions, and spots to visit.</p>
+                <p className="mt-1">Enter city name (like Chicago, Denver) or airport code (like ORD, DEN) to discover nearby restaurants, attractions, and spots to visit.</p>
               </div>
             </div>
           )}
