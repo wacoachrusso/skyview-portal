@@ -1,11 +1,11 @@
 
-import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppRoutes } from "@/components/routing/AppRoutes";
 import { Toaster } from "@/components/ui/toaster";
 import { Suspense } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
+import { BrowserRouter } from "react-router-dom";
 import { InitialSessionCheck } from "@/components/session/InitialSessionCheck";
 import { ViewportManager } from "@/components/utils/ViewportManager";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
