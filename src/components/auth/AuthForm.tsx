@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { createNewSession } from "@/services/session";
-import { handleSession } from "@/hooks/useSessionHandler";
+import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { AuthFormFooter } from "./AuthFormFooter";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 
