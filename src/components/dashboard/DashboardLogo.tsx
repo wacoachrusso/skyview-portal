@@ -17,7 +17,7 @@ export const DashboardLogo = () => {
         className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
       >
         <img 
-          src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+          src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
           alt="SkyGuide Logo" 
           className="h-8 w-auto"
         />

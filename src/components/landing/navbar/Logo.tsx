@@ -19,7 +19,7 @@ export function Logo({ handleLogoClick }: LogoProps) {
       aria-label="SkyGuide"
     >
       <img 
-        src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+        src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
         alt="SkyGuide Logo - Your trusted companion for contract interpretation" 
         className="h-6 w-auto md:h-8"
       />

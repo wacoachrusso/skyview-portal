@@ -18,7 +18,7 @@ export function Hero() {
   return (
     <section className="relative min-h-screen bg-premium-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner">
       {/* Layered background effects */}
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png')] opacity-5 bg-repeat animate-slide" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[url('/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png')] opacity-5 bg-repeat animate-slide" aria-hidden="true" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" aria-hidden="true" />
       <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" aria-hidden="true" />
       
@@ -72,7 +72,7 @@ export function Hero() {
               <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-brand-gold/20 rounded-xl blur-xl opacity-75 animate-pulse-subtle" aria-hidden="true" />
               <div className="relative animate-float">
                 <img 
-                  src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png" 
+                  src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
                   alt="SkyGuide interface demonstration showing the chat interface and contract interpretation features" 
                   className="w-full h-auto rounded-lg shadow-2xl"
                 />
