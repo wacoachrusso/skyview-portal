@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, MessageSquare } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -10,6 +10,9 @@ interface DesktopNavProps {
 }
 
 export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
+  const location = useLocation();
+  const isChatActive = location.pathname === '/chat';
+  
   return (
     <div className="hidden md:flex items-center space-x-2 lg:space-x-6">
       <div className="flex items-center space-x-2">
@@ -18,21 +21,15 @@ export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
           asChild
           variant="secondary"
           size="sm"
-          className="hidden sm:flex text-white hover:bg-brand-gold hover:text-black"
+          className={`transition-all duration-200 ${
+            isChatActive 
+              ? "bg-brand-gold/20 text-brand-gold hover:bg-brand-gold/30 hover:text-black border border-brand-gold/50" 
+              : "text-white hover:bg-brand-gold hover:text-black"
+          }`}
         >
           <Link to="/chat">
             <MessageSquare className="mr-2 h-4 w-4" />
             <span>Ask SkyGuide</span>
-          </Link>
-        </Button>
-        <Button 
-          asChild
-          variant="ghost"
-          size="icon"
-          className="sm:hidden text-foreground/70 hover:text-foreground"
-        >
-          <Link to="/chat">
-            <MessageSquare className="h-4 w-4" />
           </Link>
         </Button>
       </div>
@@ -41,7 +38,11 @@ export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
           asChild
           variant="secondary"
           size="sm"
-          className="text-white hover:bg-brand-gold hover:text-black"
+          className={`transition-all duration-200 ${
+            location.pathname === '/account'
+              ? "bg-accent/80 text-accent-foreground"
+              : "text-white hover:bg-accent/60 hover:text-accent-foreground"
+          }`}
         >
           <Link to="/account">
             <User className="mr-2 h-4 w-4" />
@@ -53,7 +54,7 @@ export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
         variant="secondary" 
         size="sm"
         onClick={onSignOut}
-        className="bg-secondary/80 text-secondary-foreground hover:bg-secondary"
+        className="bg-secondary/80 text-secondary-foreground hover:bg-secondary hover:text-destructive transition-colors duration-200"
       >
         <LogOut className="h-4 w-4 lg:mr-2" />
         <span className="hidden lg:inline">Sign Out</span>

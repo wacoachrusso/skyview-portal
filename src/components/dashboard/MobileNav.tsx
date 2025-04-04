@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, MessageSquare, Menu } from "lucide-react";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -16,6 +16,9 @@ interface MobileNavProps {
 }
 
 export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
+  const location = useLocation();
+  const isChatActive = location.pathname === '/chat';
+  
   return (
     <div className="flex md:hidden items-center space-x-2">
       <div className="flex items-center space-x-1">
@@ -24,7 +27,9 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
           asChild
           variant="ghost"
           size="icon"
-          className="text-foreground/70 hover:text-foreground w-8 h-8"
+          className={`text-foreground/70 hover:text-foreground w-8 h-8 transition-colors ${
+            isChatActive ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30" : ""
+          }`}
         >
           <Link to="/chat">
             <MessageSquare className="h-4 w-4" />
@@ -37,17 +42,17 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
           <Button 
             variant="ghost" 
             size="icon"
-            className="text-foreground/70 hover:text-foreground w-8 h-8"
+            className="text-foreground/70 hover:text-foreground hover:bg-accent/50 w-8 h-8 transition-colors"
           >
             <Menu className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-48 sm:w-56 bg-background/95 backdrop-blur-sm border border-border"
+          className="w-48 sm:w-56 bg-background/95 backdrop-blur-sm border border-border shadow-md"
         >
           {!isAccountPage && (
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className={location.pathname === '/account' ? "bg-accent/50" : ""}>
               <Link to="/account" className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
                 Account
@@ -55,7 +60,7 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
             </DropdownMenuItem>
           )}
           <DropdownMenuItem 
-            className="text-destructive focus:text-destructive"
+            className="text-destructive focus:text-destructive hover:bg-destructive/10"
             onClick={onSignOut}
           >
             <LogOut className="mr-2 h-4 w-4" />

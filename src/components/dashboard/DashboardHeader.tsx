@@ -19,7 +19,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
   const isMobile = useIsMobile();
 
   return (
-    <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
+    <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
           <div className="flex items-center">
@@ -28,7 +28,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                 asChild
                 variant="ghost" 
                 size={isMobile ? "icon" : "sm"}
-                className="mr-1 sm:mr-2 text-muted-foreground hover:text-foreground"
+                className="mr-1 sm:mr-2 text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
               >
                 <Link to="/dashboard">
                   <ArrowLeft className="h-4 w-4" />
