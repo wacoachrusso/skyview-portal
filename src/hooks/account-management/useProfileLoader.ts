@@ -20,6 +20,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
   const loadAttemptCount = useRef(0);
   const isRetrying = useRef(false);
   const toastDisplayed = useRef(false);
+  const abortController = useRef<AbortController | null>(null);
 
   useEffect(() => {
     isMounted.current = true;
@@ -30,6 +31,14 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
       if (isRetrying.current) return;
       
       try {
+        // Cancel any previous fetch operations
+        if (abortController.current) {
+          abortController.current.abort();
+        }
+        
+        // Create a new abort controller for this attempt
+        abortController.current = new AbortController();
+        
         isRetrying.current = true;
         loadAttemptCount.current += 1;
         console.log(`Starting to load profile data... (Attempt ${loadAttemptCount.current})`);
@@ -69,24 +78,23 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         let profileByIdError;
         
         try {
-          // Create a timeout promise - increase timeout to 10 seconds
+          // Use a promise with a timeout to prevent queries from hanging
           const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error("Profile query timeout")), 10000);
+            setTimeout(() => reject(new Error("Profile query timeout")), 15000); // Increased to 15 seconds
           });
           
-          // Query promise
+          // Query promise with abort signal
           const profilePromise = supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .maybeSingle();
+            .maybeSingle()
+            .abortSignal(abortController.current.signal);
           
           // Race between the profile query and timeout
           const result = await Promise.race([
             profilePromise,
-            timeoutPromise.then(() => {
-              throw new Error("Profile query timeout");
-            })
+            timeoutPromise
           ]) as any;
           
           profileByIdData = result.data;
@@ -130,22 +138,21 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
           let profileByEmailError;
           
           try {
-            // Try profile by email with timeout protection - increase timeout to 10 seconds
+            // Try profile by email with timeout protection
             const timeoutPromise = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error("Email profile query timeout")), 10000);
+              setTimeout(() => reject(new Error("Email profile query timeout")), 15000); // Increased to 15 seconds
             });
             
             const emailProfilePromise = supabase
               .from('profiles')
               .select('*')
               .eq('email', user.email)
-              .maybeSingle();
+              .maybeSingle()
+              .abortSignal(abortController.current.signal);
               
             const result = await Promise.race([
               emailProfilePromise,
-              timeoutPromise.then(() => {
-                throw new Error("Email profile query timeout");
-              })
+              timeoutPromise
             ]) as any;
             
             profileByEmailData = result.data;
@@ -205,7 +212,8 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle()
+                .abortSignal(abortController.current.signal);
                 
               if (refetchError) {
                 console.error("Error refetching updated profile:", refetchError);
@@ -278,14 +286,19 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
     loadProfile();
     
     // Cleanup function to prevent state updates on unmounted component
+    // and abort any in-progress requests
     return () => {
       isMounted.current = false;
+      if (abortController.current) {
+        abortController.current.abort();
+      }
     };
   }, [navigate, toast, reactivateAccount]);
 
   // Add function to retry loading the profile
   const retryLoading = () => {
     if (!isLoading) {
+      abortController.current = null;
       setIsLoading(true);
       setLoadError(null);
       toastDisplayed.current = false;

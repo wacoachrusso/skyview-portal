@@ -40,7 +40,12 @@ const Account = () => {
           console.log("Setting loading timeout flag");
           setLoadingTimeout(true);
         }
-      }, 8000); // Increased timeout to 8 seconds
+      }, 12000); // Increased timeout to 12 seconds
+    }
+    
+    // Reset timeout flag if loading state changes
+    if (!isLoading) {
+      setLoadingTimeout(false);
     }
     
     return () => {
@@ -50,11 +55,6 @@ const Account = () => {
 
   useEffect(() => {
     setMounted(true);
-    
-    // Reset timeout flag if loading state changes
-    if (!isLoading) {
-      setLoadingTimeout(false);
-    }
     
     const checkAlphaTester = async () => {
       if (!profile?.id || !mounted) return;
@@ -101,6 +101,7 @@ const Account = () => {
   };
 
   const handleRefresh = () => {
+    console.log("Manually refreshing profile data");
     retryLoading();
     setLoadingTimeout(false);
   };
@@ -114,6 +115,16 @@ const Account = () => {
           <div className="text-center">
             <LoadingSpinner size="lg" className="mx-auto mb-4 border-brand-gold" />
             <h2 className="text-xl font-semibold mb-2 text-white">Loading your account...</h2>
+            <p className="text-sm text-muted-foreground mb-4">This may take a moment</p>
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+            >
+              <RefreshCw className="h-3 w-3 mr-2" />
+              Refresh
+            </Button>
           </div>
         </div>
       </div>
