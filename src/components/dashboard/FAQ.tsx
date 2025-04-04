@@ -51,12 +51,12 @@ export const FAQ = () => {
 
   return (
     <div>
-      <div className="flex items-center mb-4">
-        <h2 className="text-xl font-semibold text-foreground/90">Frequently Asked Questions</h2>
+      <div className="flex items-center mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-foreground/90">Frequently Asked Questions</h2>
       </div>
       
       {/* Search input */}
-      <div className="relative mb-4">
+      <div className="relative mb-3 sm:mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input 
           type="text"
@@ -68,15 +68,15 @@ export const FAQ = () => {
       </div>
       
       <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
-        <CardContent className="p-6">
+        <CardContent className="p-3 sm:p-4 md:p-6">
           <Accordion type="single" collapsible className="w-full">
             {filteredFaqs.length > 0 ? (
               filteredFaqs.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left">
+                  <AccordionTrigger className="text-left text-sm sm:text-base py-3 sm:py-4">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">
+                  <AccordionContent className="text-muted-foreground text-xs sm:text-sm">
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -89,7 +89,7 @@ export const FAQ = () => {
                 </AccordionItem>
               ))
             ) : (
-              <div className="py-4 text-center text-muted-foreground">
+              <div className="py-3 sm:py-4 text-center text-sm text-muted-foreground">
                 No FAQs matching your search. Try different keywords.
               </div>
             )}

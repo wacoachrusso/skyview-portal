@@ -8,7 +8,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
-import { HelpTooltip } from "@/components/shared/HelpTooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [queryCount, setQueryCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const mounted = useRef(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -129,8 +130,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
       
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-        <div className="space-y-8">
+      <main className="container mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 max-w-7xl">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8">
           <div className="w-full">
             <WelcomeCard userName={userName} />
           </div>

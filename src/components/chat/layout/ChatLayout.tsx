@@ -22,9 +22,9 @@ export function ChatLayout({
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex flex-1 h-screen overflow-hidden">
+    <div className="flex flex-1 h-[100dvh] overflow-hidden">
       {!isMobile && (
-        <div className="w-64 sm:w-80 flex-shrink-0 border-r border-border">
+        <div className="w-64 sm:w-72 md:w-80 flex-shrink-0 border-r border-border">
           <ChatSidebar 
             onSelectConversation={onSelectConversation}
             currentConversationId={currentConversationId}
@@ -39,7 +39,7 @@ export function ChatLayout({
                 <Menu className="h-5 w-5 text-foreground" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-[280px] bg-background border-r border-border">
+            <SheetContent side="left" className="p-0 w-[280px] sm:w-[320px] bg-background border-r border-border">
               <ChatSidebar 
                 onSelectConversation={(id) => {
                   onSelectConversation(id);

@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, MessageSquare, Menu } from "lucide-react";
@@ -16,17 +17,17 @@ interface MobileNavProps {
 
 export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
   return (
-    <div className="flex md:hidden items-center space-x-3">
-      <div className="flex items-center space-x-2">
+    <div className="flex md:hidden items-center space-x-2">
+      <div className="flex items-center space-x-1">
         <NotificationBell />
         <Button 
           asChild
           variant="ghost"
-          size="sm"
-          className="text-foreground/70 hover:text-foreground"
+          size="icon"
+          className="text-foreground/70 hover:text-foreground w-8 h-8"
         >
           <Link to="/chat">
-            <MessageSquare className="h-5 w-5" />
+            <MessageSquare className="h-4 w-4" />
           </Link>
         </Button>
       </div>
@@ -35,15 +36,15 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            size="sm"
-            className="text-foreground/70 hover:text-foreground"
+            size="icon"
+            className="text-foreground/70 hover:text-foreground w-8 h-8"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-56 bg-background/95 backdrop-blur-sm border border-border"
+          className="w-48 sm:w-56 bg-background/95 backdrop-blur-sm border border-border"
         >
           {!isAccountPage && (
             <DropdownMenuItem asChild>
