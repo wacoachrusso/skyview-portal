@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +7,6 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
-import { LayoverLookup } from "@/components/dashboard/LayoverLookup";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -22,12 +20,11 @@ export default function Dashboard() {
   const mounted = useRef(true);
 
   useEffect(() => {
-    // Use a smaller timeout to show content faster
     const timer = setTimeout(() => {
       if (isLoading && mounted.current) {
         setIsLoading(false);
       }
-    }, 1500); // Reduced timeout for better UX
+    }, 1500);
 
     console.log('Dashboard mounted, checking session...');
     checkSession();
@@ -77,11 +74,9 @@ export default function Dashboard() {
         console.log('Setting user data...');
         setUserEmail(session.user.email || "");
         
-        // Only set the user name if full_name exists and is not empty
         if (profile.full_name && profile.full_name.trim() !== '') {
           setUserName(profile.full_name);
         } else {
-          // Leave userName as empty string if full_name doesn't exist
           setUserName("");
         }
         
@@ -140,10 +135,6 @@ export default function Dashboard() {
           
           <div className="w-full">
             <QuickActions />
-          </div>
-          
-          <div className="w-full">
-            <LayoverLookup />
           </div>
           
           <div className="w-full">
