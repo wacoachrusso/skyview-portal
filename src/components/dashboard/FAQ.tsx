@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { HelpTooltip } from "@/components/shared/HelpTooltip";
 
 export const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,7 +52,14 @@ export const FAQ = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4 text-foreground/90">Frequently Asked Questions</h2>
+      <div className="flex items-center mb-4">
+        <h2 className="text-xl font-semibold text-foreground/90">Frequently Asked Questions</h2>
+        <HelpTooltip 
+          text="Here you'll find answers to common questions about SkyGuide. Use the search box to filter questions."
+          className="ml-2"
+          expanded
+        />
+      </div>
       
       {/* Search input */}
       <div className="relative mb-4">
@@ -63,6 +71,9 @@ export const FAQ = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <HelpTooltip text="Type keywords to filter questions" />
+        </div>
       </div>
       
       <Card className="bg-card/50 backdrop-blur-sm border border-border/50">

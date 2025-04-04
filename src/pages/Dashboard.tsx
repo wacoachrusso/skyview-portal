@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,8 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
+import { MyInsights } from "@/components/dashboard/MyInsights";
+import { HelpTooltip } from "@/components/shared/HelpTooltip";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -136,6 +139,19 @@ export default function Dashboard() {
           <div className="w-full">
             <QuickActions />
           </div>
+
+          <div className="w-full flex items-center">
+            <h2 className="text-xl font-semibold mb-4">Your Contract Insights</h2>
+            <HelpTooltip
+              text="This section shows analytics about your contract queries and usage. Explore this to understand your SkyGuide usage patterns."
+              className="ml-2"
+              expanded
+            />
+          </div>
+          
+          <div className="w-full">
+            <MyInsights userId={userId} queryCount={queryCount} />
+          </div>
           
           <div className="w-full">
             <FAQ />
@@ -144,4 +160,4 @@ export default function Dashboard() {
       </main>
     </div>
   );
-}
+};
