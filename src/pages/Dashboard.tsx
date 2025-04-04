@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,6 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
-import { MyInsights } from "@/components/dashboard/MyInsights";
 import { FAQ } from "@/components/dashboard/FAQ";
 import { ContactDirectory } from "@/components/contact/ContactDirectory";
 
@@ -133,10 +131,6 @@ export default function Dashboard() {
           
           <div className="w-full">
             <QuickActions />
-          </div>
-          
-          <div className="w-full">
-            <MyInsights userId={userId} queryCount={queryCount} />
           </div>
           
           <div className="w-full">
