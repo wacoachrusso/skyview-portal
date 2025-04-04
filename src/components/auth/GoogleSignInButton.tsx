@@ -1,10 +1,59 @@
 
 import { Button } from "@/components/ui/button";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export const GoogleSignInButton = () => {
-  const { handleGoogleSignIn, loading } = useGoogleAuth();
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      console.log("Initiating Google sign in...");
+      
+      // Clear any existing session data first to prevent issues
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('supabase.refresh-token');
+      document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      
+      // Sign out first to ensure a clean state
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?provider=google`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        console.error("Google sign in error:", error);
+        toast({
+          variant: "destructive",
+          title: "Sign In Failed",
+          description: error.message || "Failed to sign in with Google.",
+        });
+      } else {
+        console.log("Google sign in initiated, awaiting redirect...");
+      }
+    } catch (error) {
+      console.error("Unexpected error during Google sign in:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign In Error",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Button
       type="button"
@@ -14,7 +63,7 @@ export const GoogleSignInButton = () => {
       disabled={loading}
     >
       {loading ? (
-        <div className="flex items-center">
+        <div className="flex items-center justify-center">
           <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span>Connecting...</span>
         </div>

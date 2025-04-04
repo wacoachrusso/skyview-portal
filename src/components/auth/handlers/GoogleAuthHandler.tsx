@@ -19,6 +19,10 @@ export const GoogleAuthHandler = () => {
         setLoading(true);
         console.log("GoogleAuthHandler: Processing callback...");
 
+        // Prevent auth-related redirects during processing
+        localStorage.setItem('login_in_progress', 'true');
+        sessionStorage.setItem('recently_signed_up', 'true');
+        
         // Get the session to verify the user is authenticated
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -46,6 +50,7 @@ export const GoogleAuthHandler = () => {
         if (profileError && profileError.code !== 'PGRST116') {
           console.error("Error fetching profile:", profileError);
           setError("Failed to load your profile. Please try again.");
+          localStorage.removeItem('login_in_progress');
           navigate("/login?error=Profile error. Please try again.", { replace: true });
           return;
         }
@@ -54,7 +59,9 @@ export const GoogleAuthHandler = () => {
         if (!profile) {
           console.log("GoogleAuthHandler: No profile found, creating new profile");
 
-          const fullName = session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email;
+          const fullName = session.user.user_metadata.full_name || 
+                          session.user.user_metadata.name || 
+                          session.user.email;
 
           // See if we can find an assistant for the user
           let assistantId = null;
@@ -86,6 +93,7 @@ export const GoogleAuthHandler = () => {
           if (insertError) {
             console.error("Error creating profile:", insertError);
             setError("Failed to create your profile. Please try again.");
+            localStorage.removeItem('login_in_progress');
             navigate("/login?error=Profile creation failed. Please try again.", { replace: true });
             return;
           }
@@ -94,8 +102,13 @@ export const GoogleAuthHandler = () => {
           localStorage.setItem('new_user_signup', 'true');
           sessionStorage.setItem('recently_signed_up', 'true');
           
+          // Create session
           await createNewSession(session.user.id);
-          toast({ title: "Account Created", description: "Your account has been created successfully." });
+          
+          toast({ 
+            title: "Account Created", 
+            description: "Your account has been created successfully." 
+          });
           
           // Send welcome email
           try {
@@ -116,22 +129,24 @@ export const GoogleAuthHandler = () => {
             // Continue regardless of email error
           }
           
-          // Redirect to complete profile page if we need more info
-          if (!assistantId) {
-            navigate("/complete-profile", { replace: true });
-            return;
-          }
+          // Remove login processing flag
+          localStorage.removeItem('login_in_progress');
           
-          // Go directly to chat if we have enough info
+          // Redirect to chat
           navigate("/chat", { replace: true });
           return;
         }
 
-        console.log("GoogleAuthHandler: Profile found:", profile);
+        console.log("GoogleAuthHandler: Existing profile found, proceeding to login");
 
         // Create session and redirect
         await createNewSession(session.user.id);
-        toast({ title: "Sign In Successful", description: "Welcome back!" });
+        localStorage.removeItem('login_in_progress');
+        
+        toast({ 
+          title: "Sign In Successful", 
+          description: "Welcome back!" 
+        });
         
         // Check if user is admin and redirect to admin dashboard
         if (profile.is_admin) {
@@ -151,7 +166,7 @@ export const GoogleAuthHandler = () => {
 
       } catch (error) {
         console.error("GoogleAuthHandler: Unexpected error in auth callback", error);
-        localStorage.removeItem('session_token');
+        localStorage.removeItem('login_in_progress');
         setError("An unexpected error occurred. Please try again.");
         navigate("/login?error=Unexpected error. Please try again.", { replace: true });
       } finally {
@@ -164,10 +179,10 @@ export const GoogleAuthHandler = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-red-50 dark:bg-red-900/20">
-        <div className="max-w-md w-full px-6 py-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-red-700 dark:text-red-400 text-center">Authentication Failed</h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-300 text-center">{error}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-luxury-dark">
+        <div className="max-w-md w-full px-6 py-8 bg-card-gradient border border-white/10 rounded-lg shadow-lg backdrop-blur-sm">
+          <h2 className="text-xl font-semibold text-red-400 text-center">Authentication Failed</h2>
+          <p className="mt-2 text-gray-300 text-center">{error}</p>
           <div className="mt-6 flex justify-center">
             <Button onClick={() => navigate("/login")}>Return to Login</Button>
           </div>
@@ -178,16 +193,16 @@ export const GoogleAuthHandler = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-luxury-dark">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-300">Authenticating...</p>
+        <p className="mt-4 text-gray-300">Authenticating with Google...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <p className="text-gray-600 dark:text-gray-300">Authentication successful! Redirecting...</p>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-luxury-dark">
+      <p className="text-gray-300">Authentication successful! Redirecting...</p>
     </div>
   );
 };

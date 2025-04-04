@@ -1,126 +1,199 @@
 
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { AuthFormHeader } from "./AuthFormHeader";
-import { AuthFormFields } from "./AuthFormFields";
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { createNewSession } from "@/services/session";
+import { handleSession } from "@/hooks/useSessionHandler";
 import { AuthFormFooter } from "./AuthFormFooter";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useSignup } from "@/hooks/useSignup";
-import { useSignupForm } from "@/hooks/useSignupForm";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth"; // Import the useGoogleAuth hook
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
-interface AuthFormProps {
-  selectedPlan?: string;
-}
+const authFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
+});
 
-export const AuthForm = ({ selectedPlan }: AuthFormProps) => {
-  const location = useLocation();
-  const {
-    formData,
-    setFormData,
-    showPassword,
-    setShowPassword,
-    passwordError,
-  } = useSignupForm();
+type AuthFormValues = z.infer<typeof authFormSchema>;
 
-  const { loading, handleSignupSubmit } = useSignup();
-  const { session } = useGoogleAuth(); // Get the session from useGoogleAuth
+export function AuthForm() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { handleSession } = useSessionHandler();
 
-  const stateSelectedPlan = location.state?.selectedPlan;
-  const statePriceId = location.state?.priceId;
-  const finalSelectedPlan = selectedPlan || stateSelectedPlan || "free";
+  const form = useForm<AuthFormValues>({
+    resolver: zodResolver(authFormSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  // Mark new signups to prevent pricing redirection
-  useEffect(() => {
-    sessionStorage.setItem('recently_signed_up', 'true');
-  }, []);
+  const onSubmit = async (data: AuthFormValues) => {
+    setLoading(true);
 
-  // Check if the user is signed in with Google
-  const isGoogleSignIn = !!session?.user; // If session exists, the user signed in with Google
+    try {
+      if (isLogin) {
+        // Login
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+        if (error) {
+          console.error("Login error:", error);
+          toast({
+            variant: "destructive",
+            title: "Login failed",
+            description: error.message,
+          });
+          setLoading(false);
+          return;
+        }
 
-    // Use email and full name from the session if the user signed in with Google
-    const email = isGoogleSignIn ? session.user.email : formData.email;
-    const fullName = isGoogleSignIn
-      ? session.user.user_metadata?.full_name || session.user.user_metadata?.name
-      : formData.fullName;
+        if (authData.session) {
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+          });
+          
+          await createNewSession(authData.session.user.id);
+          await handleSession();
+        }
+      } else {
+        // Sign up
+        const { data: authData, error } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+        });
 
-    console.log("Submitting form with data:", {
-      email,
-      fullName,
-      jobTitle: formData.jobTitle,
-      airline: formData.airline,
-      plan: finalSelectedPlan,
-    });
+        if (error) {
+          console.error("Signup error:", error);
+          toast({
+            variant: "destructive",
+            title: "Signup failed",
+            description: error.message,
+          });
+          setLoading(false);
+          return;
+        }
 
-    handleSignupSubmit(
-      {
-        ...formData,
-        email,
-        fullName,
-      },
-      finalSelectedPlan,
-      statePriceId,
-      isGoogleSignIn // Pass isGoogleSignIn flag
-    );
+        // Set signups to go to chat instead of asking for email verification
+        if (authData.session) {
+          toast({
+            title: "Signup successful",
+            description: "Welcome to SkyGuide!",
+          });
+          
+          // Add the user to the profiles table
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user?.id,
+              email: data.email,
+              subscription_plan: 'free',
+              account_status: 'active',
+            });
+            
+          if (profileError) {
+            console.error("Error creating profile:", profileError);
+          }
+          
+          await createNewSession(authData.session.user.id);
+          navigate("/chat");
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a verification link.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Authentication error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-slate flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <AuthFormHeader />
-        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Only show job role and airline selection for Google sign-in */}
-            {isGoogleSignIn ? (
-              <>
-                <AuthFormFields
-                  formData={formData}
-                  showPassword={showPassword}
-                  setFormData={setFormData}
-                  setShowPassword={setShowPassword}
-                  isGoogleSignIn={isGoogleSignIn} // Pass isGoogleSignIn to AuthFormFields
-                />
-              </>
-            ) : (
-              <>
-                <AuthFormFields
-                  formData={formData}
-                  showPassword={showPassword}
-                  setFormData={setFormData}
-                  setShowPassword={setShowPassword}
-                  isGoogleSignIn={isGoogleSignIn} // Pass isGoogleSignIn to AuthFormFields
-                />
-              </>
-            )}
-
-            {passwordError && (
-              <Alert variant="destructive" className="bg-red-900/50 border-red-500/50">
-                <AlertDescription>{passwordError}</AlertDescription>
-              </Alert>
-            )}
-
-            <button
+    <Card className="bg-card-gradient border border-white/10 shadow-xl backdrop-blur-sm">
+      <CardContent className="pt-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="Email"
+                      type="email"
+                      className="bg-background/30 border-white/10"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="Password"
+                      type="password"
+                      className="bg-background/30 border-white/10"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-brand-gold to-yellow-500 hover:from-brand-gold/90 hover:to-yellow-500/90 text-brand-navy font-semibold h-10 px-4 py-2 rounded-md"
+              className="w-full bg-brand-gold text-brand-navy hover:bg-brand-gold/90"
               disabled={loading}
             >
-              {loading
-                ? isGoogleSignIn
-                  ? "Creating Profile..."
-                  : "Signing up..."
-                : isGoogleSignIn
-                ? "Create Profile"
-                : "Sign Up"}
-            </button>
-          </form>
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-brand-navy border-t-transparent" />
+                  <span>{isLogin ? "Signing in..." : "Creating account..."}</span>
+                </div>
+              ) : (
+                <span>{isLogin ? "Sign In" : "Create Account"}</span>
+              )}
+            </Button>
+            
+            <div className="flex items-center my-4">
+              <div className="flex-grow border-t border-white/10"></div>
+              <span className="px-3 text-xs text-gray-400">OR</span>
+              <div className="flex-grow border-t border-white/10"></div>
+            </div>
 
-          <AuthFormFooter />
-        </div>
-      </div>
-    </div>
+            <GoogleSignInButton />
+          </form>
+        </Form>
+        
+        <AuthFormFooter isLogin={isLogin} />
+      </CardContent>
+    </Card>
   );
-};
+}
