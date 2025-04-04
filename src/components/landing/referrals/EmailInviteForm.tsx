@@ -11,7 +11,9 @@ export function EmailInviteForm() {
   const [sendingInvite, setSendingInvite] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
 
-  const handleSendInvite = async () => {
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent form default submission
+    
     if (!inviteEmail || !inviteEmail.includes('@')) {
       toast.error("Please enter a valid email address");
       return;
@@ -27,12 +29,16 @@ export function EmailInviteForm() {
         return;
       }
       
+      console.log("Session found, getting user profile");
+      
       // Get user's name for the email
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', session.user.id)
         .maybeSingle();
+      
+      console.log("Profile data:", profile);
       
       // Generate a referral code using the database function
       const { data: referralCodeData, error: codeError } = await supabase
@@ -42,6 +48,8 @@ export function EmailInviteForm() {
         console.error("Error generating referral code:", codeError);
         throw new Error("Failed to generate referral code");
       }
+      
+      console.log("Referral code generated:", referralCodeData);
       
       const referralCode = referralCodeData || `SKY${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
       
@@ -60,8 +68,12 @@ export function EmailInviteForm() {
         throw new Error("Failed to create referral record");
       }
       
+      console.log("Referral record created, sending email");
+      
       // Construct the invite URL - direct to signup page
       const inviteUrl = `${window.location.origin}/signup?ref=${referralCode}`;
+      
+      console.log("Invite URL:", inviteUrl);
       
       // Call the invite function
       const { error: inviteError } = await supabase.functions.invoke('send-invite', {
@@ -76,6 +88,8 @@ export function EmailInviteForm() {
         console.error("Error invoking send-invite function:", inviteError);
         throw new Error("Failed to send invitation email");
       }
+      
+      console.log("Invitation email sent successfully");
       
       setShowThankYou(true);
       setInviteEmail("");
@@ -98,16 +112,17 @@ export function EmailInviteForm() {
       <h3 className="text-2xl font-bold text-white mb-2">Invite by Email</h3>
       <p className="text-gray-300 mb-4">Send a direct invitation to a colleague</p>
       
-      <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+      <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
         <input 
           type="email" 
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
           placeholder="colleague@airline.com" 
           className="flex-grow px-4 py-3 rounded-lg bg-slate-700/60 border border-white/10 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
+          required
         />
         <Button 
-          onClick={handleSendInvite} 
+          type="submit"
           className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy flex items-center space-x-2"
           disabled={sendingInvite || !inviteEmail}
         >
@@ -120,7 +135,7 @@ export function EmailInviteForm() {
             </>
           )}
         </Button>
-      </div>
+      </form>
       
       <ThankYouModal 
         isOpen={showThankYou} 
