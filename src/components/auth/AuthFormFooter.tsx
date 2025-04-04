@@ -7,18 +7,18 @@ interface AuthFormFooterProps {
 
 export const AuthFormFooter = ({ isLogin = false }: AuthFormFooterProps) => {
   return (
-    <p className="mt-6 text-center text-gray-400">
+    <p className="mt-6 text-center text-sm sm:text-base text-gray-400">
       {isLogin ? (
         <>
           Don't have an account?{" "}
-          <Link to="/signup" className="text-brand-gold hover:text-brand-gold/80">
+          <Link to="/signup" className="text-brand-gold hover:text-brand-gold/80 font-medium">
             Sign up
           </Link>
         </>
       ) : (
         <>
           Already have an account?{" "}
-          <Link to="/login" className="text-brand-gold hover:text-brand-gold/80">
+          <Link to="/login" className="text-brand-gold hover:text-brand-gold/80 font-medium">
             Login
           </Link>
         </>

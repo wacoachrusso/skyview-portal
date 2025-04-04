@@ -26,44 +26,44 @@ export function Footer() {
   const socials = [
     {
       name: "Twitter",
-      icon: <Twitter className="w-5 h-5" aria-hidden="true" />,
+      icon: <Twitter className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
       href: "#",
       ariaLabel: "Visit our Twitter page"
     },
     {
       name: "LinkedIn",
-      icon: <Linkedin className="w-5 h-5" aria-hidden="true" />,
+      icon: <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
       href: "#",
       ariaLabel: "Visit our LinkedIn page"
     },
     {
       name: "Facebook",
-      icon: <Facebook className="w-5 h-5" aria-hidden="true" />,
+      icon: <Facebook className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
       href: "#",
       ariaLabel: "Visit our Facebook page"
     },
     {
       name: "Instagram",
-      icon: <Instagram className="w-5 h-5" aria-hidden="true" />,
+      icon: <Instagram className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
       href: "#",
       ariaLabel: "Visit our Instagram page"
     },
     {
       name: "YouTube",
-      icon: <Youtube className="w-5 h-5" aria-hidden="true" />,
+      icon: <Youtube className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
       href: "#",
       ariaLabel: "Visit our YouTube channel"
     },
     {
       name: "Email",
-      icon: <Mail className="w-5 h-5" aria-hidden="true" />,
+      icon: <Mail className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
       href: "mailto:support@skyguide.site",
       ariaLabel: "Email us"
     }
   ];
 
   return (
-    <footer className="relative overflow-hidden text-gray-300 py-16 px-4" aria-labelledby="footer-heading">
+    <footer className="relative overflow-hidden text-gray-300 py-10 sm:py-16 px-4" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">Footer</h2>
       
       {/* Patterned background */}
@@ -73,7 +73,7 @@ export function Footer() {
       </div>
       
       <div className="container mx-auto relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and company info */}
           <div className="space-y-4">
             <h3 className="font-bold text-xl text-white mb-4 border-b border-white/10 pb-2">SkyGuide</h3>
@@ -136,7 +136,7 @@ export function Footer() {
         </div>
         
         {/* Bottom divider and copyright */}
-        <div className="mt-12 pt-8 border-t border-white/10">
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm">
               © {new Date().getFullYear()} SkyGuide. All rights reserved.
@@ -161,11 +161,11 @@ export function Footer() {
       {/* Scroll to top button */}
       <Button
         onClick={scrollToTop}
-        className="fixed bottom-8 right-8 rounded-full w-12 h-12 bg-brand-gold hover:bg-brand-gold/90 text-brand-navy shadow-gold hover:shadow-gold-hover transition-all duration-300 z-50 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-navy"
+        className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 rounded-full w-10 h-10 sm:w-12 sm:h-12 bg-brand-gold hover:bg-brand-gold/90 text-brand-navy shadow-gold hover:shadow-gold-hover transition-all duration-300 z-50 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-navy"
         size="icon"
         aria-label="Scroll to top"
       >
-        <ArrowUp className="h-6 w-6" />
+        <ArrowUp className="h-5 w-5 sm:h-6 sm:w-6" />
       </Button>
     </footer>
   );

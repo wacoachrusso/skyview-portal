@@ -60,8 +60,8 @@ export function SocialLinks({
     <motion.div
       className={cn(
         layoutType === "horizontal" 
-          ? "flex items-center justify-center gap-4" 
-          : "grid grid-cols-3 gap-4",
+          ? "flex flex-wrap items-center justify-center gap-3 sm:gap-4" 
+          : "grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4",
         className
       )}
       initial="initial"
@@ -80,7 +80,7 @@ export function SocialLinks({
               ? "opacity-50"
               : "opacity-100",
             layoutType === "grid" 
-              ? "flex flex-col items-center justify-center p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20" 
+              ? "flex flex-col items-center justify-center p-2 sm:p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20" 
               : "flex items-center justify-center"
           )}
           onMouseEnter={() => setHoveredSocial(social.name)}
