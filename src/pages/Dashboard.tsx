@@ -7,6 +7,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
+import { MyInsights } from "@/components/dashboard/MyInsights";
 import { FAQ } from "@/components/dashboard/FAQ";
 import { ContactDirectory } from "@/components/contact/ContactDirectory";
 
@@ -17,6 +18,8 @@ export default function Dashboard() {
   const [userEmail, setUserEmail] = useState<string>("");
   const [userName, setUserName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [queryCount, setQueryCount] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -75,7 +78,9 @@ export default function Dashboard() {
           setUserName("");
         }
         
+        setUserId(session.user.id);
         setIsAdmin(profile.is_admin || false);
+        setQueryCount(profile.query_count || 0);
         setIsLoading(false);
       }
     } catch (error) {
@@ -128,6 +133,10 @@ export default function Dashboard() {
           
           <div className="w-full">
             <QuickActions />
+          </div>
+          
+          <div className="w-full">
+            <MyInsights userId={userId} queryCount={queryCount} />
           </div>
           
           <div className="w-full">
