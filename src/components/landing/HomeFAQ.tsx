@@ -40,7 +40,7 @@ export const HomeFAQ = () => {
             Find answers to common questions about SkyGuide
           </p>
         </div>
-        <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
+        <Card className="bg-card/40 backdrop-blur-sm border border-border/30">
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
