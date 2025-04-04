@@ -24,7 +24,7 @@ export function Testimonials() {
             {
               quote: "The instant access to contract information has been a game-changer during trips. Having clear interpretations available anywhere has helped me protect my rights as a union member.",
               author: "Michael Torres",
-              role: "Flight Attendant, Southwest Airlines",
+              role: "Flight Attendant, Alaska Airlines",
               years: "6 years of service"
             },
             {
