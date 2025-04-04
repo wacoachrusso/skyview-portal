@@ -17,14 +17,14 @@
     
     <!-- iOS Meta Tags -->
     <meta name="apple-mobile-web-app-title" content="SkyGuide" />
-    <link rel="apple-touch-icon" href="/lovable-uploads/c8b68bbb-9c5a-4e6c-9c73-6920030c69a3.png" />
+    <link rel="apple-touch-icon" href="/lovable-uploads/c8b68bbb-9c5a-4e6c-9c73-6920030c69a3.png" title="Navigate Your Contract Confidently" />
     
     <!-- Windows Meta Tags -->
     <meta name="msapplication-TileColor" content="#1a365d" />
     <meta name="msapplication-TileImage" content="/lovable-uploads/c8b68bbb-9c5a-4e6c-9c73-6920030c69a3.png" />
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/lovable-uploads/c8b68bbb-9c5a-4e6c-9c73-6920030c69a3.png" />
+    <link rel="icon" type="image/png" href="/lovable-uploads/c8b68bbb-9c5a-4e6c-9c73-6920030c69a3.png" title="Navigate Your Contract Confidently" />
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#1a365d" />
@@ -34,6 +34,39 @@
     <meta property="og:description" content="Transform how you navigate your union contract with SkyGuide's AI-powered assistant. Get instant answers, manage grievances, and connect with union representatives - all in one platform. Perfect for flight attendants and pilots. Try it free today!" />
     <meta property="og:image" content="/lovable-uploads/c8b68bbb-9c5a-4e6c-9c73-6920030c69a3.png" />
     <meta property="og:type" content="website" />
+    
+    <!-- Custom tooltip script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const favicon = document.querySelector('link[rel="icon"]');
+        if (favicon) {
+          favicon.addEventListener('mouseover', function(e) {
+            const tooltip = document.createElement('div');
+            tooltip.textContent = 'Navigate Your Contract Confidently';
+            tooltip.style.position = 'absolute';
+            tooltip.style.backgroundColor = '#1a365d';
+            tooltip.style.color = 'white';
+            tooltip.style.padding = '5px 10px';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.zIndex = '9999';
+            tooltip.style.fontSize = '14px';
+            tooltip.style.fontWeight = 'bold';
+            tooltip.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            tooltip.style.top = (e.pageY + 20) + 'px';
+            tooltip.style.left = (e.pageX + 10) + 'px';
+            tooltip.id = 'favicon-tooltip';
+            document.body.appendChild(tooltip);
+          });
+          
+          favicon.addEventListener('mouseout', function() {
+            const tooltip = document.getElementById('favicon-tooltip');
+            if (tooltip) {
+              tooltip.remove();
+            }
+          });
+        }
+      });
+    </script>
   </head>
 
   <body>
