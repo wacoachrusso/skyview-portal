@@ -1,15 +1,19 @@
 
-import { ReferralDashboard } from "./referrals/ReferralDashboard";
+import { EmailInviteForm } from "./referrals/EmailInviteForm";
 
 export function ReferralSection() {
   return (
     <div className="bg-gradient-to-br from-brand-navy to-brand-slate py-16">
       <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Refer Friends & Earn Rewards
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20 text-center">
+            <h2 className="text-3xl font-bold text-white mb-6">
+              Invite Your Colleagues
             </h2>
+            
+            <p className="text-gray-200 mb-8">
+              Share SkyGuide with your colleagues and help them navigate their contracts more effectively. Both you and your colleague will receive special rewards.
+            </p>
             
             <div className="grid md:grid-cols-2 gap-6 mb-8">
               <div className="bg-white/5 rounded-lg p-5 border border-white/10">
@@ -22,10 +26,6 @@ export function ReferralSection() {
                   <li className="flex items-start">
                     <span className="text-brand-gold mr-2">•</span>
                     <span>Refer multiple friends for bigger savings</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-brand-gold mr-2">•</span>
-                    <span>Up to one free annual subscription per year</span>
                   </li>
                 </ul>
               </div>
@@ -41,17 +41,15 @@ export function ReferralSection() {
                     <span className="text-brand-gold mr-2">•</span>
                     <span>OR an extra free month with annual plan</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-brand-gold mr-2">•</span>
-                    <span>Applied automatically at signup</span>
-                  </li>
                 </ul>
               </div>
             </div>
           </div>
           
-          {/* Referral Dashboard - shown only for logged in users */}
-          <ReferralDashboard />
+          {/* Email Invite Form */}
+          <div className="mt-8">
+            <EmailInviteForm />
+          </div>
         </div>
       </div>
     </div>
