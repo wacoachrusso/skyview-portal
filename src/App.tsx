@@ -9,6 +9,7 @@ import { LazyMotion, domAnimation } from "framer-motion";
 import { InitialSessionCheck } from "@/components/session/InitialSessionCheck";
 import { ViewportManager } from "@/components/utils/ViewportManager";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
+import { ChatWidget } from "@/components/chat/support/ChatWidget";
 
 // Create QueryClient with default options
 const queryClient = new QueryClient({
@@ -36,6 +37,7 @@ function App() {
               </Suspense>
             </div>
             <Toaster />
+            <ChatWidget />
           </BrowserRouter>
         </LazyMotion>
       </ThemeProvider>

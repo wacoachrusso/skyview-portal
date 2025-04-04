@@ -17,7 +17,7 @@ export function ThemeSelector({ currentTheme, onThemeChange }: ThemeSelectorProp
         onValueChange={(value: Theme) => onThemeChange(value)}
         aria-labelledby="theme-selector-label"
       >
-        <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-2 focus:ring-white/30">
+        <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-2 focus:ring-brand-gold/70 focus:border-brand-gold">
           <SelectValue placeholder="Select theme" />
         </SelectTrigger>
         <SelectContent className="bg-[#2A2F3C] border-white/10">
