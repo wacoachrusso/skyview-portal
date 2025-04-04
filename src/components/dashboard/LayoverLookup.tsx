@@ -1,10 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Search, Coffee, Palmtree, MapPin, Building, Pizza } from "lucide-react";
+import { Search, Coffee, Palmtree, MapPin, Building, Pizza, Users } from "lucide-react";
 
 // Mock data for demonstration purposes
 const mockLayoverData = {
@@ -58,6 +58,20 @@ const mockLayoverData = {
       { name: "Fashion Outlets of Chicago", description: "Nearby luxury shopping", rating: 4.3 },
       { name: "Rosemont Entertainment District", description: "Dining and entertainment", rating: 4.0 }
     ]
+  },
+  "DEN": {
+    restaurants: [
+      { name: "Root Down DIA", description: "Farm-to-table with local ingredients", rating: 4.8 },
+      { name: "Modern Market", description: "Fresh, healthy fare with local beers", rating: 4.5 },
+      { name: "Denver Central Market", description: "Food hall with multiple options", rating: 4.6 }
+    ],
+    attractions: [
+      { name: "Denver Art Museum", description: "World-class art collection downtown", rating: 4.7 },
+      { name: "Red Rocks Park", description: "Famous amphitheater and hiking trails", rating: 4.9 }
+    ],
+    crewTips: [
+      { name: "Union Station Layover", description: "Take the A-Line train to historic Union Station for dining and relaxation", rating: 4.8 }
+    ]
   }
 };
 
@@ -66,6 +80,12 @@ export const LayoverLookup = () => {
   const [searchResults, setSearchResults] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Show Denver results by default
+  useEffect(() => {
+    setSearchResults(mockLayoverData["DEN"]);
+    setSearchQuery("DEN");
+  }, []);
 
   const handleSearch = () => {
     setIsLoading(true);
@@ -78,7 +98,7 @@ export const LayoverLookup = () => {
       if (mockLayoverData[query as keyof typeof mockLayoverData]) {
         setSearchResults(mockLayoverData[query as keyof typeof mockLayoverData]);
       } else {
-        setError("No information found for this airport. Try JFK, LAX, or ORD.");
+        setError("No information found for this airport. Try JFK, LAX, ORD, or DEN.");
       }
       
       setIsLoading(false);
@@ -99,6 +119,8 @@ export const LayoverLookup = () => {
         return <Palmtree className="h-5 w-5 text-brand-emerald" />;
       case 'spots':
         return <MapPin className="h-5 w-5 text-brand-purple" />;
+      case 'crewTips':
+        return <Users className="h-5 w-5 text-brand-blue" />;
       default:
         return <Building className="h-5 w-5 text-brand-navy" />;
     }
@@ -122,7 +144,7 @@ export const LayoverLookup = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Where's your layover? (Try JFK, LAX, ORD)"
+                placeholder="Where's your layover? (Try DEN, JFK, LAX, ORD)"
                 className="pr-10 shadow-sm focus:border-brand-purple"
               />
             </div>
@@ -154,11 +176,17 @@ export const LayoverLookup = () => {
                 <div key={category} className="space-y-3">
                   <h3 className="flex items-center text-lg font-semibold capitalize">
                     {getIconForCategory(category)}
-                    <span className="ml-2">{category}</span>
+                    <span className="ml-2">
+                      {category === 'crewTips' ? 'Crew Tips' : category}
+                    </span>
                   </h3>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {(items as any[]).map((item, index) => (
-                      <Card key={index} className="border-brand-slate/10 transition-all duration-200 hover:shadow-md">
+                      <Card 
+                        key={index} 
+                        className="border-brand-slate/10 transition-all duration-200 hover:shadow-md cursor-pointer"
+                        onClick={() => console.log(`Clicked on ${item.name}`)}
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div>
@@ -183,7 +211,7 @@ export const LayoverLookup = () => {
               <Search className="h-12 w-12 text-muted-foreground/50" />
               <div>
                 <h3 className="text-lg font-medium">Find your layover hotspots</h3>
-                <p className="mt-1">Enter airport code (like JFK, LAX, ORD) to discover nearby restaurants, attractions, and spots to visit.</p>
+                <p className="mt-1">Enter airport code (like DEN, JFK, LAX, ORD) to discover nearby restaurants, attractions, and spots to visit.</p>
               </div>
             </div>
           )}
