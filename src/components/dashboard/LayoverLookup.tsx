@@ -1,14 +1,18 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Search, Coffee, Palmtree, MapPin, Building, Pizza, Users, Bed } from "lucide-react";
+import { Search, Coffee, Palmtree, MapPin, Building, Pizza, Users, Bed, Share2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data for demonstration purposes
 const mockLayoverData = {
   "JFK": {
     name: "New York (JFK)",
@@ -94,7 +98,6 @@ const mockLayoverData = {
   }
 };
 
-// City to airport code mapping
 const cityToAirportCode: Record<string, string> = {
   "new york": "JFK",
   "nyc": "JFK",
@@ -104,36 +107,51 @@ const cityToAirportCode: Record<string, string> = {
   "denver": "DEN"
 };
 
+interface TipFormValues {
+  category: string;
+  name: string;
+  description: string;
+  location: string;
+}
+
 export const LayoverLookup = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [openCategories, setOpenCategories] = useState<string[]>(["foodAndCoffee", "thingsToDo", "crewTips", "restAndRecovery"]);
+  const [tipModalOpen, setTipModalOpen] = useState(false);
+  const [currentAirport, setCurrentAirport] = useState("");
+  const { toast } = useToast();
 
-  // Show Denver results by default
+  const form = useForm<TipFormValues>({
+    defaultValues: {
+      category: "foodAndCoffee",
+      name: "",
+      description: "",
+      location: ""
+    }
+  });
+
   useEffect(() => {
     setSearchResults(mockLayoverData["DEN"]);
     setSearchQuery("DEN");
+    setCurrentAirport("DEN");
   }, []);
 
   const handleSearch = () => {
     setIsLoading(true);
     setError("");
     
-    // Simulating API call with timeout
     setTimeout(() => {
       let query = searchQuery.trim();
       
-      // If the query is not an airport code (3 letters), try to match it to a city
       if (query.length !== 3 || !query.match(/^[A-Za-z]{3}$/)) {
         const normalizedQuery = query.toLowerCase();
         
-        // Check if the query matches any city names in our mapping
         if (cityToAirportCode[normalizedQuery]) {
           query = cityToAirportCode[normalizedQuery];
         } else {
-          // Try to find a partial match
           const cityMatch = Object.keys(cityToAirportCode).find(city => 
             city.includes(normalizedQuery)
           );
@@ -144,11 +162,11 @@ export const LayoverLookup = () => {
         }
       }
       
-      // Convert to uppercase for airport code lookup
       query = query.toUpperCase();
       
       if (mockLayoverData[query as keyof typeof mockLayoverData]) {
         setSearchResults(mockLayoverData[query as keyof typeof mockLayoverData]);
+        setCurrentAirport(query);
       } else {
         setError("No information found for this location. Try JFK (New York), LAX (Los Angeles), ORD (Chicago), or DEN (Denver).");
       }
@@ -199,6 +217,21 @@ export const LayoverLookup = () => {
       default:
         return category;
     }
+  };
+
+  const onSubmitTip = (data: TipFormValues) => {
+    console.log('Tip submitted:', {
+      airport: currentAirport,
+      ...data
+    });
+
+    toast({
+      title: "Tip submitted successfully!",
+      description: "Thank you for sharing your recommendation with fellow crew members.",
+    });
+
+    setTipModalOpen(false);
+    form.reset();
   };
 
   return (
@@ -295,6 +328,17 @@ export const LayoverLookup = () => {
                     </CollapsibleContent>
                   </Collapsible>
                 ))}
+
+              <div className="flex justify-center mt-4">
+                <Button 
+                  variant="link" 
+                  className="text-brand-purple text-sm flex items-center"
+                  onClick={() => setTipModalOpen(true)}
+                >
+                  <Share2 className="h-4 w-4 mr-1" />
+                  Got a great spot here? Share a tip
+                </Button>
+              </div>
             </div>
           )}
 
@@ -309,6 +353,109 @@ export const LayoverLookup = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={tipModalOpen} onOpenChange={setTipModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Share a Tip for {currentAirport}</DialogTitle>
+            <DialogDescription>
+              Help fellow crew members discover great spots during their layover.
+              Your tip will be reviewed and may be added to our database.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitTip)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="foodAndCoffee">Food & Coffee</SelectItem>
+                        <SelectItem value="thingsToDo">Things to Do</SelectItem>
+                        <SelectItem value="crewTips">Crew Tips</SelectItem>
+                        <SelectItem value="restAndRecovery">Rest & Recovery</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Name of the place" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="What makes this place special for crew?"
+                        className="min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location/Directions</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="How to find it (terminal, nearby landmarks, etc.)" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setTipModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Submit Tip</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
