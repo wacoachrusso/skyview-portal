@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const mounted = useRef(true);
 
@@ -64,6 +66,7 @@ export default function Dashboard() {
       if (mounted.current) {
         console.log('Setting user data...');
         setUserEmail(session.user.email || "");
+        setUserName(profile.full_name || "");
         setIsAdmin(profile.is_admin || false);
         setIsLoading(false);
       }
@@ -112,7 +115,7 @@ export default function Dashboard() {
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         <div className="space-y-8">
           <div className="w-full">
-            <WelcomeCard />
+            <WelcomeCard userName={userName} />
           </div>
           
           <div className="w-full">

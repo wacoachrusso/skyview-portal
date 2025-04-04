@@ -2,7 +2,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
-export const WelcomeCard = () => {
+interface WelcomeCardProps {
+  userName?: string;
+}
+
+export const WelcomeCard = ({ userName }: WelcomeCardProps) => {
+  // Get first name from full name
+  const firstName = userName ? userName.split(' ')[0] : '';
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -31,7 +38,15 @@ export const WelcomeCard = () => {
             </div>
             
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight rich-text">
-              Welcome to <span className="text-gradient">SkyGuide</span>
+              {firstName ? (
+                <>
+                  Welcome back, <span className="text-gradient">{firstName}</span>!
+                </>
+              ) : (
+                <>
+                  Welcome to <span className="text-gradient">SkyGuide</span>
+                </>
+              )}
             </h1>
             
             <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
