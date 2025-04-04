@@ -25,35 +25,25 @@ export function ReferralDashboard() {
         
         const userId = session.user.id;
         
-        // Fetch or create referral code
-        const { data: existingCodes } = await supabase
-          .from('referral_codes')
-          .select('code')
-          .eq('user_id', userId)
-          .single();
-        
-        if (existingCodes) {
-          setReferralCode(existingCodes.code);
-        } else {
-          // Create a new code if none exists
-          const newCode = `${userId.substring(0, 8)}`;
-          const { error: insertError } = await supabase
-            .from('referral_codes')
-            .insert({ user_id: userId, code: newCode });
-          
-          if (!insertError) {
-            setReferralCode(newCode);
-          }
-        }
-        
         // Fetch user's referrals
         const { data: referralData } = await supabase
           .from('referrals')
           .select('*')
           .eq('referrer_id', userId);
         
-        if (referralData) {
+        if (referralData && referralData.length > 0) {
           setReferrals(referralData);
+          
+          // Use the latest referral code if we have one
+          setReferralCode(referralData[0].referral_code);
+        } else {
+          // Generate a new code if none exists
+          const { data: generatedCode } = await supabase
+            .rpc('generate_referral_code');
+            
+          if (generatedCode) {
+            setReferralCode(generatedCode);
+          }
         }
       } catch (error) {
         console.error("Error fetching referral data:", error);
@@ -85,12 +75,33 @@ export function ReferralDashboard() {
         return;
       }
       
+      // Check if we need to generate a new code
+      let currentReferralCode = referralCode;
+      if (!currentReferralCode) {
+        const { data: generatedCode } = await supabase
+          .rpc('generate_referral_code');
+          
+        if (generatedCode) {
+          currentReferralCode = generatedCode;
+          setReferralCode(generatedCode);
+        } else {
+          throw new Error("Failed to generate referral code");
+        }
+      }
+      
+      // Get user's name for the email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', session.user.id)
+        .single();
+      
       // Insert the referral record
       const { error: referralError } = await supabase
         .from('referrals')
         .insert({ 
           referrer_id: session.user.id, 
-          referral_code: referralCode,
+          referral_code: currentReferralCode,
           referee_email: inviteEmail,
           status: 'pending' 
         });
@@ -99,13 +110,30 @@ export function ReferralDashboard() {
         throw referralError;
       }
       
+      // Construct the invite URL
+      const inviteUrl = `${window.location.origin}/signup?ref=${currentReferralCode}`;
+      
       // Call the invite function
       const { error: inviteError } = await supabase.functions.invoke('send-invite', {
-        body: { email: inviteEmail, referralCode }
+        body: { 
+          email: inviteEmail, 
+          inviteUrl: inviteUrl,
+          inviterName: profile?.full_name || undefined
+        }
       });
       
       if (inviteError) {
         throw inviteError;
+      }
+      
+      // Fetch updated referrals list
+      const { data: updatedReferrals } = await supabase
+        .from('referrals')
+        .select('*')
+        .eq('referrer_id', session.user.id);
+        
+      if (updatedReferrals) {
+        setReferrals(updatedReferrals);
       }
       
       setShowThankYou(true);
@@ -181,7 +209,6 @@ export function ReferralDashboard() {
               <p className="text-gray-300">Loading referrals...</p>
             ) : referrals.length > 0 ? (
               <div className="bg-slate-700/40 rounded-lg border border-white/10 overflow-hidden">
-                {/* Referral list would go here */}
                 <table className="w-full text-left">
                   <thead className="bg-slate-600/50">
                     <tr>
