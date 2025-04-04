@@ -18,12 +18,19 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
   const [authUser, setAuthUser] = useState<User | null>(null);
   const isMounted = useRef(true);
   const loadAttemptCount = useRef(0);
+  const isRetrying = useRef(false);
+  const toastDisplayed = useRef(false);
 
   useEffect(() => {
     isMounted.current = true;
+    toastDisplayed.current = false;
 
     const loadProfile = async () => {
+      // If we're already retrying, don't stack multiple attempts
+      if (isRetrying.current) return;
+      
       try {
+        isRetrying.current = true;
         loadAttemptCount.current += 1;
         console.log(`Starting to load profile data... (Attempt ${loadAttemptCount.current})`);
         
@@ -58,24 +65,37 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         console.log("User authenticated:", { id: user.id, email: user.email });
         
         // First try finding profile by user ID with timeout protection
-        const profilePromise = supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Profile query timeout")), 5000);
-        });
+        let profileByIdData;
+        let profileByIdError;
         
-        // Race between the profile query and timeout
-        const { data: profileByIdData, error: profileByIdError } = await Promise.race([
-          profilePromise,
-          timeoutPromise.then(() => {
-            throw new Error("Profile query timeout");
-          })
-        ]) as any;
+        try {
+          // Create a timeout promise - increase timeout to 10 seconds
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Profile query timeout")), 10000);
+          });
+          
+          // Query promise
+          const profilePromise = supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          // Race between the profile query and timeout
+          const result = await Promise.race([
+            profilePromise,
+            timeoutPromise.then(() => {
+              throw new Error("Profile query timeout");
+            })
+          ]) as any;
+          
+          profileByIdData = result.data;
+          profileByIdError = result.error;
+          
+        } catch (error: any) {
+          console.log("Profile query timed out or failed:", error.message);
+          profileByIdError = error;
+        }
           
         console.log("Profile by ID query result:", { 
           data: profileByIdData, 
@@ -106,19 +126,34 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         if (!profileByIdData && user.email) {
           console.log("No profile found by ID, trying email lookup");
           
-          // Try profile by email with timeout protection
-          const emailProfilePromise = supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', user.email)
-            .maybeSingle();
+          let profileByEmailData;
+          let profileByEmailError;
+          
+          try {
+            // Try profile by email with timeout protection - increase timeout to 10 seconds
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error("Email profile query timeout")), 10000);
+            });
             
-          const { data: profileByEmailData, error: profileByEmailError } = await Promise.race([
-            emailProfilePromise,
-            timeoutPromise.then(() => {
-              throw new Error("Email profile query timeout");
-            })
-          ]) as any;
+            const emailProfilePromise = supabase
+              .from('profiles')
+              .select('*')
+              .eq('email', user.email)
+              .maybeSingle();
+              
+            const result = await Promise.race([
+              emailProfilePromise,
+              timeoutPromise.then(() => {
+                throw new Error("Email profile query timeout");
+              })
+            ]) as any;
+            
+            profileByEmailData = result.data;
+            profileByEmailError = result.error;
+          } catch (error: any) {
+            console.log("Email profile query timed out or failed:", error.message);
+            profileByEmailError = error;
+          }
             
           console.log("Profile by email query result:", { 
             data: profileByEmailData, 
@@ -206,10 +241,15 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
           console.log("No valid profile found, redirecting to onboarding");
           setLoadError("Profile not found");
           setIsLoading(false);
-          toast({
-            title: "Account Setup",
-            description: "Please complete your account setup to continue.",
-          });
+          
+          // Display toast only once
+          if (!toastDisplayed.current) {
+            toastDisplayed.current = true;
+            toast({
+              title: "Account Setup",
+              description: "Please complete your account setup to continue.",
+            });
+          }
           navigate('/?scrollTo=pricing-section');
         }
         
@@ -217,13 +257,21 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
         console.error('Error loading profile:', error);
         if (isMounted.current) {
           setLoadError(error.message || "Failed to load profile");
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to load profile information.",
-          });
+          
+          // Display toast only once
+          if (!toastDisplayed.current) {
+            toastDisplayed.current = true;
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Failed to load profile information.",
+            });
+          }
+          
           setIsLoading(false);
         }
+      } finally {
+        isRetrying.current = false;
       }
     };
     
@@ -240,6 +288,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
     if (!isLoading) {
       setIsLoading(true);
       setLoadError(null);
+      toastDisplayed.current = false;
     }
   };
 

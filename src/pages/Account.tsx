@@ -40,7 +40,7 @@ const Account = () => {
           console.log("Setting loading timeout flag");
           setLoadingTimeout(true);
         }
-      }, 5000); // 5-second loading experience timeout
+      }, 8000); // Increased timeout to 8 seconds
     }
     
     return () => {
@@ -83,7 +83,7 @@ const Account = () => {
     };
   }, [profile?.id, isLoading]);
 
-  const handlePlanChange = (newPlan: string) => {
+  const handlePlanChange = () => {
     navigate('/?scrollTo=pricing-section');
   };
 
