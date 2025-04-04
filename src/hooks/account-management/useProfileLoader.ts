@@ -83,13 +83,12 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
             setTimeout(() => reject(new Error("Profile query timeout")), 15000); // Increased to 15 seconds
           });
           
-          // Query promise with abort signal
+          // Query promise - remove the abortSignal method that's causing errors
           const profilePromise = supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .maybeSingle()
-            .abortSignal(abortController.current.signal);
+            .maybeSingle();
           
           // Race between the profile query and timeout
           const result = await Promise.race([
@@ -147,8 +146,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               .from('profiles')
               .select('*')
               .eq('email', user.email)
-              .maybeSingle()
-              .abortSignal(abortController.current.signal);
+              .maybeSingle();
               
             const result = await Promise.race([
               emailProfilePromise,
@@ -207,13 +205,12 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               // Check if component is still mounted before continuing
               if (!isMounted.current) return;
               
-              // Refetch profile with updated ID
+              // Refetch profile with updated ID - remove the abortSignal method that's causing errors
               const { data: updatedProfile, error: refetchError } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .maybeSingle()
-                .abortSignal(abortController.current.signal);
+                .maybeSingle();
                 
               if (refetchError) {
                 console.error("Error refetching updated profile:", refetchError);
