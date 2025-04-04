@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ReferralDashboard } from "./referrals/ReferralDashboard";
+import { ThankYouModal } from "./referrals/ThankYouModal";
 
 export function ReferralSection() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
+  const [referredEmail, setReferredEmail] = useState("");
   const { toast } = useToast();
 
   const handleReferral = async (e: React.FormEvent) => {
@@ -79,10 +83,9 @@ export function ReferralSection() {
       }
 
       console.log("Referral process completed successfully");
-      toast({
-        title: "Referral sent!",
-        description: "Your friend will receive an invitation email shortly.",
-      });
+      
+      setReferredEmail(email);
+      setShowThankYouModal(true);
       setEmail("");
     } catch (error) {
       console.error("Error in referral process:", error);
@@ -161,8 +164,18 @@ export function ReferralSection() {
               </Button>
             </form>
           </div>
+          
+          {/* Referral Dashboard - shown only for logged in users */}
+          <ReferralDashboard />
         </div>
       </div>
+      
+      {/* Thank You Modal */}
+      <ThankYouModal 
+        isOpen={showThankYouModal} 
+        onClose={() => setShowThankYouModal(false)}
+        email={referredEmail}
+      />
     </div>
   );
 }

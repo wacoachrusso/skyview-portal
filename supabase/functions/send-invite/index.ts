@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -102,9 +103,10 @@ const handler = async (req: Request): Promise<Response> => {
                         <strong>Here's how the rewards work:</strong>
                       </p>
                       <ul style="color: #1a365d; text-align: left; margin: 0; padding-left: 20px;">
-                        <li style="margin-bottom: 8px;">Your friend gets a free month when you subscribe</li>
-                        <li style="margin-bottom: 8px;">You get a free month after your first paid month</li>
-                        <li>Both rewards are automatically applied to your accounts</li>
+                        <li style="margin-bottom: 8px;">Get 50% off your first month</li>
+                        <li style="margin-bottom: 8px;">OR an extra free month with annual plan</li>
+                        <li style="margin-bottom: 8px;">Your friend gets rewarded too!</li>
+                        <li>Both rewards are automatically applied</li>
                       </ul>
                     </div>
                   </div>

@@ -1,40 +1,71 @@
-import { Card } from "@/components/ui/card";
-import { ActionCard } from "./ActionCard";
-import { MessageSquare, FileText, Users, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileText, RefreshCcw, Settings, Users } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-export const QuickActions = () => {
-  const navigate = useNavigate();
+interface ActionCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+}
 
+const ActionCard: React.FC<ActionCardProps> = ({ icon, title, description, onClick }) => {
   return (
-    <Card className="p-8 bg-card-gradient shadow-lg">
-      <h2 className="text-2xl font-bold text-center mb-8 tracking-tight">Quick Actions</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <ActionCard
-          icon={MessageSquare}
-          title="Start Chat"
-          description="Ask questions about your contract"
-          onClick={() => navigate('/chat')}
-        />
-        <ActionCard
-          icon={FileText}
-          title="View Contract"
-          description="Access your union contract"
-          onClick={() => navigate('/contract')}
-        />
-        <ActionCard
-          icon={Users}
-          title="Union Reps"
-          description="Contact your representatives"
-          onClick={() => navigate('/representatives')}
-        />
-        <ActionCard
-          icon={Settings}
-          title="Settings"
-          description="Manage your preferences"
-          onClick={() => navigate('/settings')}
-        />
-      </div>
+    <Card className="bg-card-foreground border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer">
+      <CardContent className="p-4 flex flex-col items-start justify-start h-full" onClick={onClick}>
+        <div className="rounded-full bg-muted p-2 mb-2">{icon}</div>
+        <h3 className="text-lg font-semibold mb-1">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </CardContent>
     </Card>
   );
 };
+
+export function QuickActions() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleContractUpload = () => {
+    toast({
+      title: "Feature Coming Soon",
+      description: "Contract upload functionality will be available in a future update.",
+    });
+  };
+
+  return (
+    <div className="bg-card border rounded-lg p-6">
+      <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <ActionCard
+          icon={<RefreshCcw className="h-5 w-5" />}
+          title="Chat with SkyGuide"
+          description="Ask questions about your contract"
+          onClick={() => navigate('/chat')}
+        />
+        
+        <ActionCard
+          icon={<Users className="h-5 w-5" />}
+          title="My Referrals"
+          description="View and manage your referrals"
+          onClick={() => navigate('/referrals')}
+        />
+        
+        <ActionCard
+          icon={<FileText className="h-5 w-5" />}
+          title="Upload Contract"
+          description="Add your union contract document"
+          onClick={handleContractUpload}
+        />
+        
+        <ActionCard
+          icon={<Settings className="h-5 w-5" />}
+          title="Account Settings"
+          description="Update your profile information"
+          onClick={() => navigate('/account')}
+        />
+      </div>
+    </div>
+  );
+}
