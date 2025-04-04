@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { PricingHeader } from "./pricing-card/PricingHeader";
 import { PricingFeatures } from "./pricing-card/PricingFeatures";
 import { usePricingCard } from "./pricing-card/usePricingCard";
@@ -15,6 +16,7 @@ interface PricingCardProps {
   mode?: 'subscription' | 'payment';
   popular?: boolean;
   onSelect?: () => Promise<void>;
+  savingsBadge?: string;
 }
 
 export const PricingCard = ({ 
@@ -25,7 +27,8 @@ export const PricingCard = ({
   priceId,
   mode = 'subscription',
   popular = false,
-  onSelect 
+  onSelect,
+  savingsBadge
 }: PricingCardProps) => {
   const { handlePlanSelection: handleCardSelection } = usePricingCard();
   const { handlePlanSelection } = usePricingHandler();
@@ -62,7 +65,15 @@ export const PricingCard = ({
   };
 
   return (
-    <Card className={`w-full max-w-sm mx-auto ${popular ? 'border-brand-gold shadow-xl hover-lift-gold' : 'border-gray-200 hover-lift'}`}>
+    <Card className={`w-full max-w-sm mx-auto relative ${popular ? 'border-brand-gold shadow-xl hover-lift-gold' : 'border-gray-200 hover-lift'}`}>
+      {savingsBadge && (
+        <Badge 
+          variant="success" 
+          className="absolute -top-3 right-4 px-3 py-1 font-semibold shadow-md animate-pulse-subtle"
+        >
+          {savingsBadge}
+        </Badge>
+      )}
       <PricingHeader
         name={name}
         price={price}

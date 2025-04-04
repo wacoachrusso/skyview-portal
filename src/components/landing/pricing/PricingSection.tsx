@@ -25,6 +25,7 @@ export function PricingSection() {
               priceId={plan.priceId}
               mode={plan.mode}
               popular={plan.isPopular}
+              savingsBadge={plan.name === "Annual" ? "Save $10 Annually!" : undefined}
             />
           ))}
         </div>

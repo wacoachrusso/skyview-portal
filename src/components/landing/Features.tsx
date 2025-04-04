@@ -20,6 +20,9 @@ export function Features() {
   return (
     <div className="relative py-20 bg-gradient-to-b from-slate-800 to-slate-900 overflow-hidden">
       <div className="absolute inset-0 bg-glow-gradient opacity-20" />
+      <div className="absolute top-10 left-10 w-64 h-64 bg-blue-500/10 rounded-full filter blur-3xl" />
+      <div className="absolute bottom-10 right-10 w-80 h-80 bg-brand-gold/5 rounded-full filter blur-3xl" />
+      
       <div className="container mx-auto px-4 relative">
         <motion.div
           initial="hidden"
