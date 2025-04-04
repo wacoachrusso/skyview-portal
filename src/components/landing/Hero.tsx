@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 export function Hero() {
   const [showVideo, setShowVideo] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(false);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing-section');
@@ -14,6 +16,13 @@ export function Hero() {
       pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    // Ensure logo has rich styling immediately on load
+    const preloadLogo = new Image();
+    preloadLogo.src = "/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png";
+    preloadLogo.onload = () => setLogoLoaded(true);
+  }, []);
 
   return (
     <section className="relative min-h-screen bg-premium-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner">
@@ -25,19 +34,39 @@ export function Hero() {
       <div className="container mx-auto px-4 relative">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24">
           <div className="w-full lg:w-1/2 text-center lg:text-left">
-            <div className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-base mb-4 animate-fade-up backdrop-blur-sm shadow-sm">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-base mb-4 backdrop-blur-sm shadow-sm"
+            >
               <span className="mr-2">✦</span>
               Tailored for flight attendants and pilots across all airlines
               <span className="ml-2">✦</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight animate-fade-up" style={{ animationDelay: "0.1s" }}>
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight"
+            >
               Navigate Your Contract <br className="hidden md:block" />
               <span className="text-gradient">Confidently</span>
-            </h1>
-            <p className="text-base md:text-lg text-gray-200 mb-12 max-w-xl mx-auto lg:mx-0 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-base md:text-lg text-gray-200 mb-12 max-w-xl mx-auto lg:mx-0"
+            >
               Get instant, accurate answers to your contract questions with SkyGuide. Our advanced system helps you navigate complex contract details, ensuring you understand your rights and make informed decisions with ease.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-up mb-8 lg:mb-0" style={{ animationDelay: "0.3s" }}>
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8 lg:mb-0"
+            >
               <Button 
                 size="lg"
                 className="premium-button bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-gold transform transition-all duration-200 hover:scale-105 hover:shadow-gold-hover text-base"
@@ -64,25 +93,27 @@ export function Hero() {
                 <Play className="mr-2 h-4 w-4" aria-hidden="true" />
                 Watch Demo
               </Button>
-            </div>
+            </motion.div>
           </div>
-          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8" style={{ animationDelay: "0.4s" }}>
-            <div className="relative w-full max-w-sm">
+          <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 lg:pl-8">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="relative w-full max-w-sm"
+            >
               <div className="relative animate-float">
                 <img 
                   src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
                   alt="SkyGuide interface demonstration showing the chat interface and contract interpretation features" 
-                  className="w-full h-auto"
+                  className="w-full h-auto premium-logo-glow"
                   style={{ 
-                    mixBlendMode: 'lighten', 
-                    filter: 'drop-shadow(0 0 0 transparent)',
-                    backgroundColor: 'transparent',
-                    outline: 'none',
-                    border: 'none'
+                    filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.3))',
+                    backgroundColor: 'transparent'
                   }}
                 />
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

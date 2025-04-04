@@ -58,14 +58,57 @@
   animation: float 3s ease-in-out infinite;
 }
 
+/* Premium logo styling with rich outline */
+.premium-logo-glow {
+  filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4)) !important;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
+  transition: all 0.3s ease;
+}
+
+/* Ensure premium styling applies on hover */
+.premium-logo-glow:hover {
+  filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.6)) !important;
+}
+
 /* Completely remove any potential box shadow, border, or outline from images */
 img[src*="c54bfa73-7d1d-464c-81d8-df88abe9a73a.png"] {
-  box-shadow: none !important;
-  border: none !important;
-  outline: none !important;
   background: transparent !important;
   -webkit-box-shadow: none !important;
   -moz-box-shadow: none !important;
+}
+
+/* Premium button effects */
+.premium-button {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+}
+
+.premium-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: transform 0.6s ease;
+}
+
+.premium-button:hover::after {
+  transform: rotate(30deg) translateX(100%);
 }
 
 /* Additional styles to ensure transparent background on all logo instances */
@@ -73,4 +116,66 @@ img[src*="c54bfa73-7d1d-464c-81d8-df88abe9a73a.png"] {
   background-color: transparent !important;
   outline: none !important;
   border: none !important;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced animations */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer-effect {
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Rich text styling */
+.rich-text {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: -0.01em;
+}
+
+/* Refined animation timing */
+.animate-fade-up {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Premium scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
 }
