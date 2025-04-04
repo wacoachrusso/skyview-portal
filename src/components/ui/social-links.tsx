@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 interface Social {
@@ -12,7 +12,7 @@ interface Social {
   ariaLabel?: string
 }
 
-interface SocialLinksProps extends React.HTMLAttributes<HTMLDivElement> {
+interface SocialLinksProps extends Omit<HTMLMotionProps<"div">, "variants"> {
   socials: Social[]
   layout?: "horizontal" | "grid"
 }
