@@ -2,7 +2,9 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pizza, Palmtree, Users, Bed, Building } from "lucide-react";
+import { Pizza, Palmtree, Users, Bed, Building, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Item {
   name: string;
@@ -18,6 +20,8 @@ interface CategorySectionProps {
 }
 
 export const CategorySection = ({ category, items, isOpen, onToggle }: CategorySectionProps) => {
+  const [activeItem, setActiveItem] = useState<number | null>(null);
+  
   const getIconForCategory = (category: string) => {
     switch(category) {
       case 'foodAndCoffee':
@@ -48,6 +52,12 @@ export const CategorySection = ({ category, items, isOpen, onToggle }: CategoryS
     }
   };
 
+  const handleItemClick = (index: number, item: Item) => {
+    setActiveItem(index === activeItem ? null : index);
+    console.log(`Selected recommendation: ${item.name}`);
+    // In a real implementation, this could open a detail view or map
+  };
+
   return (
     <Collapsible 
       open={isOpen}
@@ -63,26 +73,37 @@ export const CategorySection = ({ category, items, isOpen, onToggle }: CategoryS
         </h3>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <ScrollArea className="h-56 pr-4">
-          <div className="grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollArea className="h-48 pr-4"> {/* Reduced height */}
+          <div className="grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-2"> {/* Reduced to 2 columns max */}
             {items.map((item, index) => (
-              <Card 
-                key={index} 
-                className="border-brand-slate/10 transition-all duration-200 hover:shadow-md cursor-pointer"
-                onClick={() => console.log(`Clicked on ${item.name}`)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-base font-medium">{item.name}</h4>
-                      <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                    </div>
-                    <div className="flex items-center rounded-full bg-brand-purple/10 px-2 py-1 text-xs font-medium text-brand-purple">
-                      {item.rating}★
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <TooltipProvider key={index}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card 
+                      className={`border-brand-slate/10 transition-all duration-200 hover:shadow-md cursor-pointer ${
+                        activeItem === index ? 'ring-2 ring-brand-purple/50 shadow-md' : ''
+                      }`}
+                      onClick={() => handleItemClick(index, item)}
+                    >
+                      <CardContent className="p-3 flex items-start justify-between"> {/* Reduced padding */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium truncate flex items-center">
+                            {item.name}
+                            <ExternalLink className="h-3 w-3 ml-1 text-muted-foreground" />
+                          </h4>
+                          <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                        </div>
+                        <div className="flex items-center rounded-full bg-brand-purple/10 px-2 py-1 text-xs font-medium text-brand-purple ml-2 shrink-0">
+                          {item.rating}★
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Click for more details</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ))}
           </div>
         </ScrollArea>

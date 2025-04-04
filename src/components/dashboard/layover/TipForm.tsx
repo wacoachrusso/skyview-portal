@@ -76,7 +76,7 @@ export const TipForm = ({ open, onOpenChange, airportCode }: TipFormProps) => {
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-popover border border-border shadow-md">
                       <SelectItem value="foodAndCoffee">Food & Coffee</SelectItem>
                       <SelectItem value="thingsToDo">Things to Do</SelectItem>
                       <SelectItem value="crewTips">Crew Tips</SelectItem>

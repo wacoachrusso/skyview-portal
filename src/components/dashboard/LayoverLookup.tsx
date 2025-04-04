@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Coffee } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Import all the new components
+// Import all the components
 import { SearchBar } from "./layover/SearchBar";
 import { ResultsView } from "./layover/ResultsView";
 import { EmptyState } from "./layover/EmptyState";
@@ -29,11 +29,12 @@ export const LayoverLookup = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className="max-w-3xl mx-auto" // Added max-width constraint
     >
       <Card className="overflow-hidden border-brand-purple/10">
-        <CardHeader className="bg-gradient-to-r from-brand-purple/10 to-brand-magenta/10 pb-8">
-          <CardTitle className="flex items-center text-2xl">
-            <Coffee className="mr-2 h-6 w-6 text-brand-purple" />
+        <CardHeader className="bg-gradient-to-r from-brand-purple/10 to-brand-magenta/10 py-4"> {/* Reduced padding */}
+          <CardTitle className="flex items-center text-xl"> {/* Reduced text size */}
+            <Coffee className="mr-2 h-5 w-5 text-brand-purple" /> {/* Smaller icon */}
             Layover Lookup
           </CardTitle>
           <SearchBar 
@@ -44,7 +45,7 @@ export const LayoverLookup = () => {
           />
         </CardHeader>
 
-        <CardContent className="p-6">
+        <CardContent className="p-4"> {/* Reduced padding */}
           {error && <ErrorMessage message={error} />}
 
           {searchResults && (
