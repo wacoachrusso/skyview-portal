@@ -76,7 +76,9 @@ export function Hero() {
                   style={{ 
                     mixBlendMode: 'lighten', 
                     filter: 'drop-shadow(0 0 0 transparent)',
-                    backgroundColor: 'transparent'
+                    backgroundColor: 'transparent',
+                    outline: 'none',
+                    border: 'none'
                   }}
                 />
               </div>
