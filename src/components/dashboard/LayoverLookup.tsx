@@ -260,10 +260,10 @@ export const LayoverLookup = () => {
                     onOpenChange={() => toggleCategory(category)}
                     className="space-y-2"
                   >
-                    <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md bg-slate-50 px-4 py-2 text-left hover:bg-slate-100">
+                    <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md bg-slate-100 dark:bg-slate-800 px-4 py-2 text-left hover:bg-slate-200 dark:hover:bg-slate-700">
                       <h3 className="flex items-center text-lg font-semibold">
                         {getIconForCategory(category)}
-                        <span className="ml-2">
+                        <span className="ml-2 text-foreground">
                           {getCategoryTitle(category)}
                         </span>
                       </h3>

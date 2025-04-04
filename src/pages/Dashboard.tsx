@@ -22,12 +22,20 @@ export default function Dashboard() {
   const mounted = useRef(true);
 
   useEffect(() => {
+    // Use a smaller timeout to show content faster
+    const timer = setTimeout(() => {
+      if (isLoading && mounted.current) {
+        setIsLoading(false);
+      }
+    }, 1500); // Reduced timeout for better UX
+
     console.log('Dashboard mounted, checking session...');
     checkSession();
 
     return () => {
       console.log('Dashboard unmounting, cleanup...');
       mounted.current = false;
+      clearTimeout(timer);
     };
   }, []);
 
