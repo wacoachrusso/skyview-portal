@@ -49,7 +49,7 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-48 sm:w-56 bg-background/95 backdrop-blur-sm border border-border shadow-md p-1 rounded-lg"
+          className="w-48 sm:w-56 bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg p-1 rounded-lg"
         >
           {!isAccountPage && (
             <DropdownMenuItem asChild className={`rounded-md my-1 px-3 py-2 ${location.pathname === '/account' ? "bg-accent/50" : ""}`}>

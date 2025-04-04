@@ -16,7 +16,7 @@ export function ContractUpload() {
         <Button
           variant="outline"
           size="sm"
-          className="bg-white/5 border-white/10 hover:bg-white/10 text-white transition-all duration-300"
+          className="bg-white/5 border-white/10 hover:bg-white/10 hover:border-brand-gold/30 text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
           onClick={handleContractClick}
         >
           <FileText className="h-4 w-4 mr-2 text-brand-gold" />
