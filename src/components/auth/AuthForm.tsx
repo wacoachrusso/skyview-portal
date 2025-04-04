@@ -41,6 +41,9 @@ export function AuthForm() {
     setLoading(true);
 
     try {
+      // Set a flag to prevent SessionCheck from redirecting during login
+      localStorage.setItem('login_in_progress', 'true');
+      
       if (isLogin) {
         // Login
         const { data: authData, error } = await supabase.auth.signInWithPassword({
@@ -55,6 +58,7 @@ export function AuthForm() {
             title: "Login failed",
             description: error.message,
           });
+          localStorage.removeItem('login_in_progress');
           setLoading(false);
           return;
         }
@@ -67,6 +71,7 @@ export function AuthForm() {
           
           await createNewSession(authData.session.user.id);
           await handleSession();
+          navigate("/chat");
         }
       } else {
         // Sign up
@@ -82,6 +87,7 @@ export function AuthForm() {
             title: "Signup failed",
             description: error.message,
           });
+          localStorage.removeItem('login_in_progress');
           setLoading(false);
           return;
         }
@@ -114,6 +120,7 @@ export function AuthForm() {
             title: "Check your email",
             description: "We've sent you a verification link.",
           });
+          localStorage.removeItem('login_in_progress');
         }
       }
     } catch (error) {
@@ -123,6 +130,7 @@ export function AuthForm() {
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
       });
+      localStorage.removeItem('login_in_progress');
     } finally {
       setLoading(false);
     }
@@ -192,7 +200,10 @@ export function AuthForm() {
           </form>
         </Form>
         
-        <AuthFormFooter isLogin={isLogin} />
+        <AuthFormFooter 
+          isLogin={isLogin} 
+          onToggle={() => setIsLogin(!isLogin)} 
+        />
       </CardContent>
     </Card>
   );

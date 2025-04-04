@@ -21,7 +21,6 @@ export const GoogleAuthHandler = () => {
 
         // Prevent auth-related redirects during processing
         localStorage.setItem('login_in_progress', 'true');
-        sessionStorage.setItem('recently_signed_up', 'true');
         
         // Get the session to verify the user is authenticated
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -29,17 +28,17 @@ export const GoogleAuthHandler = () => {
         if (sessionError || !session) {
           console.error("No session found:", sessionError || "Session is null");
           setError("Failed to authenticate with Google. Please try again.");
+          localStorage.removeItem('login_in_progress');
           navigate("/login?error=Authentication failed. Please try again.", { replace: true });
           return;
         }
 
         console.log("GoogleAuthHandler: User authenticated with ID:", session.user.id);
         
-        // Set session tokens in cookies for persistence
-        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
-        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
-        document.cookie = `session_user_id=${session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
-
+        // Set session tokens for persistence
+        localStorage.setItem('auth_access_token', session.access_token);
+        localStorage.setItem('auth_refresh_token', session.refresh_token);
+        
         // Check if user profile exists
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -63,17 +62,15 @@ export const GoogleAuthHandler = () => {
                           session.user.user_metadata.name || 
                           session.user.email;
 
-          // See if we can find an assistant for the user
-          let assistantId = null;
           // Default to first available assistant
           const { data: defaultAssistant } = await supabase
             .from("openai_assistants")
             .select("assistant_id")
             .eq("is_active", true)
             .limit(1)
-            .single();
+            .maybeSingle();
             
-          assistantId = defaultAssistant?.assistant_id;
+          const assistantId = defaultAssistant?.assistant_id;
 
           const { error: insertError } = await supabase
             .from('profiles')
@@ -98,10 +95,6 @@ export const GoogleAuthHandler = () => {
             return;
           }
 
-          // Set flag for new signup
-          localStorage.setItem('new_user_signup', 'true');
-          sessionStorage.setItem('recently_signed_up', 'true');
-          
           // Create session
           await createNewSession(session.user.id);
           
@@ -109,25 +102,6 @@ export const GoogleAuthHandler = () => {
             title: "Account Created", 
             description: "Your account has been created successfully." 
           });
-          
-          // Send welcome email
-          try {
-            const { error: emailError } = await supabase.functions.invoke('send-free-trial-welcome', {
-              body: { 
-                email: session.user.email,
-                name: fullName
-              }
-            });
-
-            if (emailError) {
-              console.error("Error sending welcome email:", emailError);
-            } else {
-              console.log("Welcome email sent successfully");
-            }
-          } catch (emailError) {
-            console.error("Failed to send welcome email:", emailError);
-            // Continue regardless of email error
-          }
           
           // Remove login processing flag
           localStorage.removeItem('login_in_progress');
@@ -148,21 +122,10 @@ export const GoogleAuthHandler = () => {
           description: "Welcome back!" 
         });
         
-        // Check if user is admin and redirect to admin dashboard
-        if (profile.is_admin) {
-          console.log("Admin user detected, redirecting to admin dashboard");
-          // Store admin status in localStorage for quick access
-          localStorage.setItem('user_is_admin', 'true');
-          navigate("/admin", { replace: true });
-        } else {
-          // Ensure admin flag is removed for non-admin users
-          localStorage.removeItem('user_is_admin');
-          
-          // Set flag to prevent pricing redirects
-          sessionStorage.setItem('recently_signed_up', 'true');
-          
-          navigate("/chat", { replace: true });
-        }
+        // Store flag to prevent pricing redirects
+        sessionStorage.setItem('recently_signed_up', 'true');
+        
+        navigate("/chat", { replace: true });
 
       } catch (error) {
         console.error("GoogleAuthHandler: Unexpected error in auth callback", error);

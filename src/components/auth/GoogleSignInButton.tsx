@@ -21,10 +21,14 @@ export const GoogleSignInButton = () => {
       // Sign out first to ensure a clean state
       await supabase.auth.signOut({ scope: 'local' });
       
+      // Get the current origin to use as base for redirect
+      const redirectUrl = `${window.location.origin}/auth/callback?provider=google`;
+      console.log("Setting redirect URL to:", redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?provider=google`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
@@ -41,6 +45,8 @@ export const GoogleSignInButton = () => {
         });
       } else {
         console.log("Google sign in initiated, awaiting redirect...");
+        // Set a flag to indicate login is in progress - prevents redirect loops
+        localStorage.setItem('login_in_progress', 'true');
       }
     } catch (error) {
       console.error("Unexpected error during Google sign in:", error);

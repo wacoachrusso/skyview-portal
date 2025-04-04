@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -14,7 +15,7 @@ import Account from "@/pages/Account";
 import Chat from "@/pages/Chat";
 import Settings from "@/pages/Settings";
 import AdminDashboard from "@/pages/AdminDashboard";
-import AuthCallbackHandler from "@/components/auth/AuthCallbackHandler";
+import AuthCallback from "@/components/auth/AuthCallback";
 import About from "@/pages/About";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Refunds from "@/pages/Refunds";
@@ -46,12 +47,10 @@ export function AppRoutes() {
       <Route path="/referrals" element={<Referrals />} />
       
       {/* Auth callback routes */}
-      <Route path="/auth/callback" element={<AuthCallbackHandler />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       
       {/* Fallback route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
-
-// This component handles the auth callback and extracts parameters
