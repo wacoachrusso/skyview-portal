@@ -1,10 +1,9 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export function useUserProfile() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);

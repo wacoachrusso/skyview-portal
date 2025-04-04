@@ -1,6 +1,6 @@
 
 import { useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigation } from "./useNavigation";
 
 interface UserProfile {
   subscription_plan: string;
@@ -15,7 +15,7 @@ export function useChatAvailability(
   userProfile: UserProfile | null,
   currentUserId: string | null
 ) {
-  const navigate = useNavigate();
+  const { navigateTo } = useNavigation();
 
   // Determine if the chat should be disabled
   const shouldDisableChat = useMemo(() => {
@@ -54,9 +54,9 @@ export function useChatAvailability(
     
     if (shouldDisableChat && currentUserId) {
       console.log("[useChatAvailability] Chat is disabled, redirecting to pricing");
-      navigate("/?scrollTo=pricing-section", { replace: true });
+      navigateTo("/?scrollTo=pricing-section", { replace: true });
     }
-  }, [shouldDisableChat, navigate, currentUserId, userProfile]);
+  }, [shouldDisableChat, navigateTo, currentUserId, userProfile]);
 
   return { shouldDisableChat };
 }

@@ -1,11 +1,11 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigation } from "./useNavigation";
 
 export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
-  const navigate = useNavigate();
+  const { navigateTo } = useNavigation();
   const { toast } = useToast();
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isTrialEnded, setIsTrialEnded] = useState(false);
@@ -105,7 +105,7 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
           });
           
           console.log("[useFreeTrial] Redirecting to pricing section");
-          navigate("/?scrollTo=pricing-section", { replace: true });
+          navigateTo("/?scrollTo=pricing-section", { replace: true });
         } else {
           console.log("[useFreeTrial] Skipping redirect due to special state flags");
         }
@@ -116,7 +116,7 @@ export function useFreeTrial(currentUserId: string | null, isOffline: boolean) {
       console.error("[useFreeTrial] Error checking trial status:", error);
       setLoadError("Failed to check subscription status");
     }
-  }, [currentUserId, isOffline, navigate, toast]);
+  }, [currentUserId, isOffline, navigateTo, toast]);
 
   // Check trial status on component mount and when dependencies change
   useEffect(() => {

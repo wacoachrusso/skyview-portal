@@ -1,11 +1,11 @@
 
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigation } from "./useNavigation";
 
 export function useChatAccess(currentUserId: string | null) {
-  const navigate = useNavigate();
+  const { navigateTo } = useNavigation();
   const { toast } = useToast();
   const [isChatDisabled, setIsChatDisabled] = useState(false);
   const [isTrialEnded, setIsTrialEnded] = useState(false);
@@ -30,7 +30,7 @@ export function useChatAccess(currentUserId: string | null) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       console.log("No session found, redirecting to home...");
-      navigate("/"); // Redirect to home if no session
+      navigateTo("/"); // Redirect to home if no session
       return;
     }
 
@@ -65,9 +65,9 @@ export function useChatAccess(currentUserId: string | null) {
         duration: 5000,
       });
       
-      navigate("/?scrollTo=pricing-section", { replace: true });
+      navigateTo("/?scrollTo=pricing-section", { replace: true });
     }
-  }, [currentUserId, navigate, toast]);
+  }, [currentUserId, navigateTo, toast]);
 
   useEffect(() => {
     checkAccess();
