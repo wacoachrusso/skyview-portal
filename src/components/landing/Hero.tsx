@@ -5,11 +5,9 @@ import { Play } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { WebView } from "@/components/shared/WebView";
 
 export function Hero() {
   const [showVideo, setShowVideo] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
   const [logoLoaded, setLogoLoaded] = useState(false);
 
   const scrollToPricing = () => {
@@ -67,7 +65,7 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center lg:justify-start mb-8 lg:mb-0"
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8 lg:mb-0"
             >
               <Button 
                 size="lg"
@@ -95,15 +93,6 @@ export function Hero() {
                 <Play className="mr-2 h-4 w-4" aria-hidden="true" />
                 Watch Demo
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="premium-button border-2 border-brand-gold/50 bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 hover:border-brand-gold/70 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg transform transition-all duration-200 hover:scale-105 text-base"
-                onClick={() => setShowDemo(true)}
-                aria-label="Try interactive demo"
-              >
-                Interactive Demo
-              </Button>
             </motion.div>
           </div>
           <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 lg:pl-8">
@@ -129,7 +118,6 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Demo Video Dialog */}
       <Dialog open={showVideo} onOpenChange={setShowVideo}>
         <DialogContent className="sm:max-w-[800px] p-0 bg-transparent border-none">
           <div className="relative pt-[56.25%] w-full overflow-hidden rounded-lg">
@@ -140,20 +128,6 @@ export function Hero() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             ></iframe>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Interactive Demo Dialog */}
-      <Dialog open={showDemo} onOpenChange={setShowDemo}>
-        <DialogContent className="sm:max-w-[900px] p-0 bg-gradient-to-b from-brand-navy to-brand-slate border border-brand-gold/20">
-          <div className="p-1">
-            <WebView 
-              url="https://demo.skyguide.app" 
-              title="SkyGuide Interactive Demo" 
-              height="600px"
-              className="rounded-lg border-0 shadow-xl"
-            />
           </div>
         </DialogContent>
       </Dialog>
