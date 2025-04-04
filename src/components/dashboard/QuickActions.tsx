@@ -3,27 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, RefreshCcw, Settings, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
-interface ActionCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  onClick: () => void;
-}
-
-const ActionCard: React.FC<ActionCardProps> = ({ icon, title, description, onClick }) => {
+// Custom icon wrapper component with animations
+const IconWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
-    <Card className="bg-card-foreground border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer">
-      <CardContent className="p-4 flex flex-col items-start justify-start h-full" onClick={onClick}>
-        <div className="rounded-full bg-muted p-2 mb-2">{icon}</div>
-        <h3 className="text-lg font-semibold mb-1">{title}</h3>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+    <motion.div 
+      className="rounded-full p-3 bg-gradient-to-br from-brand-purple/10 to-brand-purple/5 transition-all duration-300 group-hover:bg-brand-purple/20"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+    >
+      {children}
+    </motion.div>
   );
 };
 
-export function QuickActions() {
+const QuickActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -34,39 +29,66 @@ export function QuickActions() {
     });
   };
 
+  const actions = [
+    {
+      icon: <RefreshCcw className="h-5 w-5 text-brand-purple" />,
+      title: "Chat with SkyGuide",
+      description: "Ask questions about your contract",
+      onClick: () => navigate('/chat')
+    },
+    {
+      icon: <Users className="h-5 w-5 text-brand-purple" />,
+      title: "My Referrals",
+      description: "View and manage your referrals",
+      onClick: () => navigate('/referrals')
+    },
+    {
+      icon: <FileText className="h-5 w-5 text-brand-purple" />,
+      title: "Your Contract",
+      description: "View your union contract document",
+      onClick: handleContractUpload
+    },
+    {
+      icon: <Settings className="h-5 w-5 text-brand-purple" />,
+      title: "Account Settings",
+      description: "Update your profile information",
+      onClick: () => navigate('/account')
+    }
+  ];
+
   return (
     <div className="bg-card border rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <ActionCard
-          icon={<RefreshCcw className="h-5 w-5" />}
-          title="Chat with SkyGuide"
-          description="Ask questions about your contract"
-          onClick={() => navigate('/chat')}
-        />
-        
-        <ActionCard
-          icon={<Users className="h-5 w-5" />}
-          title="My Referrals"
-          description="View and manage your referrals"
-          onClick={() => navigate('/referrals')}
-        />
-        
-        <ActionCard
-          icon={<FileText className="h-5 w-5" />}
-          title="Your Contract"
-          description="View your union contract document"
-          onClick={handleContractUpload}
-        />
-        
-        <ActionCard
-          icon={<Settings className="h-5 w-5" />}
-          title="Account Settings"
-          description="Update your profile information"
-          onClick={() => navigate('/account')}
-        />
+        {actions.map((action, index) => (
+          <motion.div 
+            key={index}
+            whileHover={{ y: -5 }}
+            whileTap={{ y: 0 }}
+          >
+            <Card 
+              className="hover-lift-premium h-full border border-brand-purple/10 bg-gradient-to-br from-background to-background/95 backdrop-blur-sm cursor-pointer group overflow-hidden"
+              onClick={action.onClick}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+                <IconWrapper>
+                  {action.icon}
+                </IconWrapper>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1 group-hover:text-brand-purple transition-colors">
+                    {action.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {action.description}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
-}
+};
+
+export { QuickActions };
