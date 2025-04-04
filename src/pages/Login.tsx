@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { handleSignIn } from "@/utils/signInUtils";
 import { navigateWithoutRedirectCheck } from "@/utils/navigation";
+import { ArrowLeft } from "lucide-react";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -149,6 +150,16 @@ const Login = () => {
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
       <div className="w-full max-w-md space-y-6">
+        {/* Back to home link */}
+        <Link 
+          to="/" 
+          className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6"
+          aria-label="Back to home page"
+        >
+          <ArrowLeft size={18} />
+          <span>Back to Home</span>
+        </Link>
+
         <div className="flex flex-col items-center justify-center space-y-2 text-center">
           <img
             src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png"

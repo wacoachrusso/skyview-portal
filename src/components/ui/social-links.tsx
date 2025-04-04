@@ -64,9 +64,9 @@ export function SocialLinks({
           : "grid grid-cols-3 gap-4",
         className
       )}
-      variants={containerVariants}
       initial="initial"
       animate="animate"
+      variants={containerVariants}
       {...props}
     >
       {socials.map((social, index) => (
