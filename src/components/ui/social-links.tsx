@@ -14,13 +14,13 @@ interface Social {
 
 interface SocialLinksProps extends Omit<HTMLMotionProps<"div">, "variants"> {
   socials: Social[]
-  layout?: "horizontal" | "grid"
+  layoutType?: "horizontal" | "grid"
 }
 
 export function SocialLinks({ 
   socials, 
   className, 
-  layout = "horizontal",
+  layoutType = "horizontal",
   ...props 
 }: SocialLinksProps) {
   const [hoveredSocial, setHoveredSocial] = React.useState<string | null>(null)
@@ -59,7 +59,7 @@ export function SocialLinks({
   return (
     <motion.div
       className={cn(
-        layout === "horizontal" 
+        layoutType === "horizontal" 
           ? "flex items-center justify-center gap-4" 
           : "grid grid-cols-3 gap-4",
         className
@@ -79,7 +79,7 @@ export function SocialLinks({
             hoveredSocial && hoveredSocial !== social.name
               ? "opacity-50"
               : "opacity-100",
-            layout === "grid" 
+            layoutType === "grid" 
               ? "flex flex-col items-center justify-center p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20" 
               : "flex items-center justify-center"
           )}
@@ -90,11 +90,11 @@ export function SocialLinks({
         >
           <span className={cn(
             "text-brand-gold group-hover:text-white transition-colors duration-300",
-            layout === "grid" ? "" : "h-5 w-5"
+            layoutType === "grid" ? "" : "h-5 w-5"
           )}>
             {social.icon}
           </span>
-          {layout === "grid" && (
+          {layoutType === "grid" && (
             <span className="mt-1 text-xs">{social.name}</span>
           )}
         </motion.a>

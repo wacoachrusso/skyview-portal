@@ -3,6 +3,7 @@ import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail } from "lucide-react";
 import { motion } from "framer-motion";
+import { SocialLinks } from "@/components/ui/social-links";
 
 export function Footer() {
   const scrollToTop = () => {
@@ -130,23 +131,7 @@ export function Footer() {
           {/* Social links */}
           <div className="space-y-4">
             <h3 className="font-bold text-xl text-white mb-4 border-b border-white/10 pb-2">Connect</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {socials.map((social, index) => (
-                <motion.a
-                  key={index}
-                  href={social.href}
-                  aria-label={social.ariaLabel}
-                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-white/5 hover:border-white/20"
-                  whileHover={{ y: -5 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <span className="text-brand-gold hover:text-white transition-colors duration-300">
-                    {social.icon}
-                  </span>
-                  <span className="mt-1 text-xs">{social.name}</span>
-                </motion.a>
-              ))}
-            </div>
+            <SocialLinks socials={socials} layoutType="grid" />
           </div>
         </div>
         
