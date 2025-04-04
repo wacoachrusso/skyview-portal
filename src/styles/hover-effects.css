@@ -18,7 +18,7 @@
 
 .hover-lift-premium:hover {
   transform: translateY(-4px);
-  box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.25), 0 10px 15px -3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 15px 30px -5px rgba(30, 64, 175, 0.25), 0 10px 15px -3px rgba(30, 64, 175, 0.15);
 }
 
 /* Gold premium lift for featured elements */
@@ -28,8 +28,8 @@
 
 .hover-lift-gold:hover {
   transform: translateY(-4px);
-  box-shadow: 0 15px 30px -5px rgba(212, 175, 55, 0.25), 0 10px 15px -3px rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 15px 30px -5px rgba(176, 138, 31, 0.25), 0 10px 15px -3px rgba(176, 138, 31, 0.15);
+  border-color: rgba(176, 138, 31, 0.4);
 }
 
 /* Button hover effects */
@@ -88,6 +88,28 @@
   transform: scale(1.05);
 }
 
+/* Accessibility improvements for focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #0078D4;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.4);
+}
+
+/* High contrast focus rings on dark backgrounds */
+.dark-bg button:focus-visible,
+.dark-bg a:focus-visible,
+.dark-bg input:focus-visible,
+.dark-bg select:focus-visible,
+.dark-bg textarea:focus-visible {
+  outline: 3px solid #FFFFFF;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+}
+
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .hover-lift:hover {
@@ -97,4 +119,30 @@
   .button-hover:hover {
     box-shadow: 0 6px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
   }
+  
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 3px solid #FFFFFF;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Accessible skip links for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #FFFFFF;
+  color: #000000;
+  padding: 8px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
 }

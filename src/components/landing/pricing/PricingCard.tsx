@@ -78,11 +78,15 @@ export const PricingCard = ({
   };
 
   return (
-    <Card className={`w-full max-w-sm mx-auto relative ${popular ? 'border-brand-gold shadow-xl hover-lift-gold' : 'border-gray-200 hover-lift'}`}>
+    <Card 
+      className={`w-full max-w-sm mx-auto relative ${popular ? 'border-brand-gold shadow-xl hover-lift-gold' : 'border-gray-200 hover-lift'}`}
+      aria-labelledby={`pricing-plan-${name.toLowerCase().replace(/\s+/g, '-')}`}
+    >
       {savingsBadge && (
         <Badge 
           variant="success" 
           className="absolute -top-3 right-4 px-3 py-1 font-semibold shadow-md animate-pulse-subtle"
+          aria-label={`Special offer: ${savingsBadge}`}
         >
           {savingsBadge}
         </Badge>
@@ -104,7 +108,8 @@ export const PricingCard = ({
             popular
               ? 'cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-black'
               : 'cta-button primary-cta bg-brand-navy hover:bg-brand-navy/90 text-white'
-          }`}
+          } high-contrast-focus`}
+          aria-label={`${getButtonText()} for ${name} plan at ${price}`}
         >
           {getButtonText()}
         </Button>

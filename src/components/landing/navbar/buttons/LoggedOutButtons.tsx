@@ -15,11 +15,12 @@ export function LoggedOutButtons({ isMobile = false, scrollToPricing }: LoggedOu
         asChild 
         variant={isMobile ? "ghost" : "secondary"}
         size="sm"
-        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'} cta-button`}
+        className={`${isMobile ? 'w-full justify-start' : 'text-white hover:text-white/90'} cta-button high-contrast-focus`}
+        aria-label="Sign in to your account"
       >
         <Link to="/login">
-          <LogIn className="mr-2 h-4 w-4" />
-          Sign In
+          <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
+          <span>Sign In</span>
         </Link>
       </Button>
       
@@ -27,7 +28,8 @@ export function LoggedOutButtons({ isMobile = false, scrollToPricing }: LoggedOu
         onClick={scrollToPricing}
         size="sm"
         variant={isMobile ? "ghost" : "default"}
-        className={`${isMobile ? 'w-full justify-start' : 'primary-cta text-white hover:text-white/90'} cta-button`}
+        className={`${isMobile ? 'w-full justify-start' : 'primary-cta text-white hover:text-white/90'} cta-button high-contrast-focus`}
+        aria-label="Get started with a free trial"
       >
         Get Started Free
       </Button>

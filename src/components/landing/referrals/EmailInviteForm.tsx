@@ -108,29 +108,35 @@ export function EmailInviteForm() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-xl border border-white/5 p-6">
-      <h3 className="text-2xl font-bold text-white mb-2">Invite by Email</h3>
+    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-xl border border-white/5 p-6" role="region" aria-labelledby="invite-form-heading">
+      <h3 id="invite-form-heading" className="text-2xl font-bold text-white mb-2">Invite by Email</h3>
       <p className="text-gray-300 mb-4">Send a direct invitation to a colleague</p>
       
       <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+        <label htmlFor="colleague-email" className="sr-only">Colleague Email</label>
         <input 
           type="email" 
+          id="colleague-email"
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
           placeholder="colleague@airline.com" 
           className="flex-grow px-4 py-3 rounded-lg bg-slate-700/60 border border-white/10 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
           required
+          aria-required="true"
+          aria-describedby="email-hint"
         />
+        <span id="email-hint" className="sr-only">Enter your colleague's email address to send them an invitation</span>
         <Button 
           type="submit"
-          className="cta-button primary-cta bg-brand-gold hover:bg-brand-gold/90 text-brand-navy flex items-center space-x-2"
+          className="cta-button primary-cta bg-brand-gold hover:bg-brand-gold/90 text-brand-navy flex items-center space-x-2 high-contrast-focus"
           disabled={sendingInvite || !inviteEmail}
+          aria-busy={sendingInvite}
         >
           {sendingInvite ? (
             <span>Sending...</span>
           ) : (
             <>
-              <Send size={16} />
+              <Send size={16} aria-hidden="true" />
               <span>Share with Colleague</span>
             </>
           )}

@@ -62,9 +62,11 @@
 
 /* Gold button special effects */
 .gold-cta {
-  background: linear-gradient(135deg, #d4af37 0%, #f2d066 50%, #d4af37 100%);
+  /* Updated for WCAG compliance - darker gold for better contrast */
+  background: linear-gradient(135deg, #B08A1F 0%, #D4AF37 50%, #B08A1F 100%);
   background-size: 200% 200%;
   animation: gold-shine 3s infinite ease-in-out;
+  color: #000 !important; /* Ensuring dark text on gold background for contrast */
 }
 
 .gold-cta:hover {
@@ -75,4 +77,28 @@
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* High contrast focus styles for accessibility */
+.high-contrast-focus:focus {
+  outline: 3px solid #0078D4;
+  outline-offset: 2px;
+}
+
+/* Accessible focus style for dark backgrounds */
+.dark-focus:focus {
+  outline: 3px solid #FFFFFF;
+  outline-offset: 2px;
+}
+
+/* Accessible disabled state */
+.accessible-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* WCAG compliant focus visible styles */
+*:focus-visible {
+  outline: 3px solid #0078D4;
+  outline-offset: 2px;
 }

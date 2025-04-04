@@ -25,7 +25,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-screen bg-premium-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner">
+    <section className="relative min-h-screen bg-premium-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner" aria-labelledby="hero-heading">
       {/* Layered background effects */}
       <div className="absolute inset-0 bg-[url('/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png')] opacity-5 bg-repeat animate-slide" aria-hidden="true" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" aria-hidden="true" />
@@ -40,11 +40,12 @@ export function Hero() {
               transition={{ duration: 0.6 }}
               className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-medium text-base mb-4 backdrop-blur-sm shadow-sm"
             >
-              <span className="mr-2">✦</span>
+              <span className="mr-2" aria-hidden="true">✦</span>
               Tailored for flight attendants and pilots across all airlines
-              <span className="ml-2">✦</span>
+              <span className="ml-2" aria-hidden="true">✦</span>
             </motion.div>
             <motion.h1 
+              id="hero-heading"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
@@ -69,7 +70,7 @@ export function Hero() {
             >
               <Button 
                 size="lg"
-                className="cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-gold text-base"
+                className="cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-gold text-base high-contrast-focus"
                 onClick={scrollToPricing}
                 aria-label="Start your free trial today"
               >
@@ -77,16 +78,16 @@ export function Hero() {
               </Button>
               <Button 
                 size="lg"
-                className="cta-button primary-cta bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-8 shadow-premium text-base"
+                className="cta-button primary-cta bg-gradient-to-r from-sky-700 to-sky-600 hover:from-sky-800 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-8 shadow-premium text-base high-contrast-focus"
                 onClick={scrollToPricing}
-                aria-label="Get instant answers to your contract questions"
+                aria-label="Experience SkyGuide features and capabilities"
               >
                 Experience SkyGuide Now
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="premium-button border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg text-base"
+                className="premium-button border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg text-base high-contrast-focus"
                 onClick={() => setShowVideo(true)}
                 aria-label="Watch demo video"
               >
@@ -131,6 +132,9 @@ export function Hero() {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Skip link for keyboard navigation */}
+      <a href="#pricing-section" className="skip-link">Skip to pricing section</a>
     </section>
   );
 }
