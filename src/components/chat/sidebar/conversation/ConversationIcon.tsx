@@ -8,7 +8,7 @@ interface ConversationIconProps {
 export function ConversationIcon({ isSelected }: ConversationIconProps) {
   return (
     <div 
-      className={`p-2 rounded-lg transition-colors ${
+      className={`p-2 rounded-lg ${
         isSelected 
           ? "bg-brand-gold/20" 
           : "bg-white/5"

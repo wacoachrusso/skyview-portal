@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
-import { ChatWidget } from "@/components/chat/support/ChatWidget";
 
 export default function Index() {
   const location = useLocation();
@@ -105,7 +104,6 @@ export default function Index() {
       </main>
       <Footer />
       <ReleaseNotePopup />
-      <ChatWidget />
 
       <Sheet open={showIOSPrompt} onOpenChange={handleClosePrompt}>
         <SheetContent 
