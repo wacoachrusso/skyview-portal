@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -89,7 +88,9 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["Inter", "Poppins", "system-ui", "sans-serif"],
+        heading: ["Inter", "Poppins", "system-ui", "sans-serif"],
+        display: ["Poppins", "Inter", "system-ui", "sans-serif"],
       },
       keyframes: {
         "fade-up": {
@@ -123,6 +124,7 @@ export default {
         "fade-up": "fade-up 0.5s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
         "pulse-subtle": "pulse-subtle 3s infinite ease-in-out",
+        'slide': 'shimmer 25s linear infinite',
       },
     },
   },

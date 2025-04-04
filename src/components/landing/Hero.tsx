@@ -38,7 +38,7 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-semibold text-base mb-4 backdrop-blur-sm shadow-sm"
+              className="inline-block px-3 py-1 bg-brand-gold/20 rounded-full text-brand-gold font-medium text-base mb-4 backdrop-blur-sm shadow-sm"
             >
               <span className="mr-2">✦</span>
               Tailored for flight attendants and pilots across all airlines
@@ -48,16 +48,16 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight"
+              className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight tracking-tight"
             >
               Navigate Your Contract <br className="hidden md:block" />
-              <span className="text-gradient">Confidently</span>
+              <span className="text-gradient font-bold">Confidently</span>
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-base md:text-lg text-gray-200 mb-12 max-w-xl mx-auto lg:mx-0"
+              className="text-base md:text-lg text-gray-200 mb-12 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
               Get instant, accurate answers to your contract questions with SkyGuide. Our advanced system helps you navigate complex contract details, ensuring you understand your rights and make informed decisions with ease.
             </motion.p>

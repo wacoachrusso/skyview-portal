@@ -1,5 +1,4 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -62,11 +61,13 @@
     scroll-behavior: smooth;
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
+    font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+    letter-spacing: -0.015em;
   }
   
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "ss02" 1;
     min-height: 100vh;
     min-height: -webkit-fill-available;
     -webkit-overflow-scrolling: touch;
@@ -143,6 +144,36 @@
       }
     }
   }
+
+  /* Typography enhancements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold tracking-tight;
+    letter-spacing: -0.03em;
+  }
+
+  h1 {
+    @apply text-4xl sm:text-5xl md:text-6xl;
+    line-height: 1.1;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl md:text-5xl;
+    line-height: 1.2;
+  }
+
+  h3 {
+    @apply text-2xl sm:text-3xl;
+    line-height: 1.3;
+  }
+
+  p {
+    @apply text-base md:text-lg leading-relaxed;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-brand-gold/90 to-brand-gold/80;
+    letter-spacing: -0.02em;
+  }
 }
 
 @layer components {
@@ -177,6 +208,7 @@
   
   .premium-button {
     @apply relative overflow-hidden rounded-lg shadow-lg transition-all duration-300;
+    letter-spacing: -0.01em;
   }
   
   .premium-button:after {
@@ -222,6 +254,7 @@
   
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-brand-gold/90 to-brand-gold/80;
+    letter-spacing: -0.02em;
   }
 
   /* Responsive utilities */

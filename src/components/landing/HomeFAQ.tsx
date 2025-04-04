@@ -1,3 +1,4 @@
+
 import {
   Accordion,
   AccordionContent,
@@ -34,8 +35,8 @@ export const HomeFAQ = () => {
     <section className="py-16 bg-background">
       <div className="container max-w-4xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-3xl font-bold mb-4 tracking-tight">Frequently Asked Questions</h2>
+          <p className="text-muted-foreground text-lg">
             Find answers to common questions about SkyGuide
           </p>
         </div>
@@ -43,10 +44,10 @@ export const HomeFAQ = () => {
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="px-6">
+                <AccordionTrigger className="px-6 font-medium text-lg">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="px-6 text-muted-foreground">
+                <AccordionContent className="px-6 text-muted-foreground text-base leading-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

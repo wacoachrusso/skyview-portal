@@ -7,7 +7,7 @@ export function Testimonials() {
     <div className="relative py-20 bg-testimonial-gradient overflow-hidden">
       <div className="absolute inset-0 bg-glow-gradient opacity-30" />
       <div className="container mx-auto px-4 relative">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4 tracking-tight">
           What Aviation Professionals Say
         </h2>
         <p className="text-lg text-gray-300 text-center mb-12 max-w-2xl mx-auto">
@@ -43,10 +43,10 @@ export function Testimonials() {
                   ))}
                 </div>
                 <div className="mb-6">
-                  <p className="font-semibold text-white text-lg">{testimonial.author}</p>
-                  <p className="text-sm text-gray-400">{testimonial.role}</p>
+                  <p className="font-semibold text-white text-lg tracking-tight">{testimonial.author}</p>
+                  <p className="text-sm text-gray-400 font-medium">{testimonial.role}</p>
                 </div>
-                <p className="text-gray-300 mb-6 italic text-lg leading-relaxed">"{testimonial.quote}"</p>
+                <p className="text-gray-300 mb-6 italic text-lg leading-relaxed font-light">{testimonial.quote}</p>
                 <div className="border-t border-gray-700 pt-4">
                   <p className="text-sm text-brand-gold font-medium">{testimonial.years}</p>
                 </div>
