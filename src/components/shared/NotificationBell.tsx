@@ -3,7 +3,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { NotificationDialog } from "./notifications/NotificationDialog";
 import { NotificationItem } from "./notifications/NotificationItem";
@@ -11,6 +14,7 @@ import { NotificationBellButton } from "./notifications/NotificationBellButton";
 import { useNotificationState } from "@/hooks/notifications/useNotificationState";
 import { useEffect } from "react";
 import { clearNotificationBadge } from "@/utils/pushNotifications";
+import { Bell, MessageSquare, Clock, RefreshCw } from "lucide-react";
 
 export const NotificationBell = () => {
   const {
@@ -18,18 +22,13 @@ export const NotificationBell = () => {
     setOpen,
     selectedNotification,
     setSelectedNotification,
-    notifications,
+    categories,
     unreadCount,
     handleDelete,
     handleNotificationClick,
   } = useNotificationState();
 
-  console.log('Rendering NotificationBell with state:', { 
-    open, 
-    unreadCount, 
-    notificationsCount: notifications?.length,
-    notifications 
-  });
+  console.log('Rendering NotificationBell with categories:', categories);
 
   const handleOpenChange = (isOpen: boolean) => {
     console.log('Dropdown open state changing to:', isOpen);
@@ -48,6 +47,9 @@ export const NotificationBell = () => {
     }
   }, [unreadCount]);
 
+  // Check if there are any notifications at all
+  const hasNotifications = Object.values(categories).some(cat => cat.length > 0);
+
   return (
     <>
       <DropdownMenu open={open} onOpenChange={handleOpenChange}>
@@ -58,22 +60,86 @@ export const NotificationBell = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-[280px] md:w-[320px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+          className="w-[320px] md:w-[380px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 max-h-[80vh] overflow-y-auto"
           sideOffset={5}
         >
-          {!notifications || notifications.length === 0 ? (
-            <DropdownMenuItem disabled className="text-center text-muted-foreground">
-              No notifications
-            </DropdownMenuItem>
+          <div className="px-2 py-2 sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
+            <h3 className="font-medium text-lg flex items-center">
+              <Bell className="w-4 h-4 mr-2" /> 
+              Notifications
+              {unreadCount > 0 && (
+                <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                  {unreadCount} new
+                </span>
+              )}
+            </h3>
+          </div>
+
+          {!hasNotifications ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground px-4">
+              <Bell className="h-10 w-10 mb-2 text-muted-foreground/50" />
+              <p>No notifications yet</p>
+              <p className="text-sm mt-1">We'll notify you of important updates and messages</p>
+            </div>
           ) : (
-            notifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onDelete={handleDelete}
-                onClick={() => handleNotificationClick(notification)}
-              />
-            ))
+            <>
+              {categories.updates.length > 0 && (
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="flex items-center">
+                    <RefreshCw className="h-4 w-4 mr-2 text-blue-500" />
+                    Updates
+                  </DropdownMenuLabel>
+                  {categories.updates.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onDelete={handleDelete}
+                      onClick={() => handleNotificationClick(notification)}
+                      type="update"
+                    />
+                  ))}
+                  {(categories.messages.length > 0 || categories.reminders.length > 0) && 
+                    <DropdownMenuSeparator />}
+                </DropdownMenuGroup>
+              )}
+
+              {categories.messages.length > 0 && (
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="flex items-center">
+                    <MessageSquare className="h-4 w-4 mr-2 text-green-500" />
+                    Messages
+                  </DropdownMenuLabel>
+                  {categories.messages.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onDelete={handleDelete}
+                      onClick={() => handleNotificationClick(notification)}
+                      type="message"
+                    />
+                  ))}
+                  {categories.reminders.length > 0 && <DropdownMenuSeparator />}
+                </DropdownMenuGroup>
+              )}
+
+              {categories.reminders.length > 0 && (
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2 text-amber-500" />
+                    Reminders
+                  </DropdownMenuLabel>
+                  {categories.reminders.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onDelete={handleDelete}
+                      onClick={() => handleNotificationClick(notification)}
+                      type="reminder"
+                    />
+                  ))}
+                </DropdownMenuGroup>
+              )}
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
