@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
@@ -68,17 +67,12 @@ export function Hero() {
           </div>
           <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-sm">
-              {/* Glow effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-brand-gold/20 rounded-xl blur-xl opacity-75 animate-pulse-subtle" aria-hidden="true" />
               <div className="relative animate-float">
                 <img 
                   src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
                   alt="SkyGuide interface demonstration showing the chat interface and contract interpretation features" 
-                  className="w-full h-auto rounded-lg shadow-2xl"
+                  className="w-full h-auto"
                 />
-                {/* Decorative elements */}
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-brand-purple/20 to-transparent rounded-full blur-xl" />
-                <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-gradient-to-tr from-brand-gold/20 to-transparent rounded-full blur-xl" />
               </div>
             </div>
           </div>
