@@ -196,7 +196,7 @@ export function Features() {
                 y: -5,
                 boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 8px 10px -6px rgba(59, 130, 246, 0.2)"
               }}
-              className="relative bg-gradient-to-b from-slate-800/80 to-slate-900/90 p-6 rounded-lg shadow-lg border border-white/5 hover:border-white/10 transition-all duration-300 group"
+              className="relative bg-gradient-to-b from-slate-800/80 to-slate-900/90 p-6 rounded-lg shadow-lg border border-white/5 hover-lift-premium hover:border-white/10 transition-all duration-300 group"
             >
               <div className="absolute inset-0 bg-glow-gradient opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-lg" />
               <div className="relative">

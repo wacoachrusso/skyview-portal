@@ -1,0 +1,54 @@
+
+/* Logo specific styles */
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+/* Premium logo styling with rich outline */
+.premium-logo-glow {
+  filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4)) !important;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
+  transition: all 0.3s ease;
+}
+
+/* Ensure premium styling applies on hover */
+.premium-logo-glow:hover {
+  filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.6)) !important;
+}
+
+/* Completely remove any potential box shadow, border, or outline from images */
+img[src*="c54bfa73-7d1d-464c-81d8-df88abe9a73a.png"] {
+  background: transparent !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+/* Additional styles to ensure transparent background on all logo instances */
+[alt*="SkyGuide Logo"] {
+  background-color: transparent !important;
+  outline: none !important;
+  border: none !important;
+}
+
+/* Premium 3D Icon Styling */
+.premium-icon {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+  transition: all 0.3s ease;
+}
+
+.premium-icon:hover {
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
+  transform: translateY(-2px);
+}

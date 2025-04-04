@@ -34,12 +34,12 @@ export function Testimonials() {
               years: "12 years in aviation"
             }
           ].map((testimonial, index) => (
-            <Card key={index} className="card-hover relative bg-card-gradient border-gray-700 group">
+            <Card key={index} className="card-hover hover-lift relative bg-card-gradient border-gray-700 group">
               <div className="absolute inset-0 bg-glow-gradient opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
               <CardContent className="relative pt-6">
                 <div className="flex mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-brand-gold text-brand-gold" />
+                    <Star key={i} className="w-5 h-5 fill-brand-gold text-brand-gold hover-scale" />
                   ))}
                 </div>
                 <div className="mb-6">

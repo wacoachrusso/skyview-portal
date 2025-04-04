@@ -62,7 +62,7 @@ export const PricingCard = ({
   };
 
   return (
-    <Card className={`w-full max-w-sm mx-auto ${popular ? 'border-brand-gold shadow-xl' : 'border-gray-200'}`}>
+    <Card className={`w-full max-w-sm mx-auto ${popular ? 'border-brand-gold shadow-xl hover-lift-gold' : 'border-gray-200 hover-lift'}`}>
       <PricingHeader
         name={name}
         price={price}

@@ -1,0 +1,63 @@
+
+/* Hover effects for interactive elements */
+
+/* Subtle lift and shadow for cards */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Premium lift and shadow for cards */
+.hover-lift-premium {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.25), 0 10px 15px -3px rgba(59, 130, 246, 0.15);
+}
+
+/* Gold premium lift for featured elements */
+.hover-lift-gold {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hover-lift-gold:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px -5px rgba(212, 175, 55, 0.25), 0 10px 15px -3px rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+/* Button hover effects */
+.button-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.button-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Subtle scale effect for icons and smaller elements */
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .hover-lift:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  }
+  
+  .button-hover:hover {
+    box-shadow: 0 6px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  }
+}
