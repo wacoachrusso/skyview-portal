@@ -66,7 +66,15 @@ export default function Dashboard() {
       if (mounted.current) {
         console.log('Setting user data...');
         setUserEmail(session.user.email || "");
-        setUserName(profile.full_name || "");
+        
+        // Only set the user name if full_name exists and is not empty
+        if (profile.full_name && profile.full_name.trim() !== '') {
+          setUserName(profile.full_name);
+        } else {
+          // Leave userName as empty string if full_name doesn't exist
+          setUserName("");
+        }
+        
         setIsAdmin(profile.is_admin || false);
         setIsLoading(false);
       }
