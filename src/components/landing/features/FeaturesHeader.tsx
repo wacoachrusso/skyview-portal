@@ -27,7 +27,7 @@ export function FeaturesHeader() {
         variants={textVariants}
         className="text-lg text-gray-300 text-center mb-12 max-w-2xl mx-auto"
       >
-        Get instant, accurate answers to your contract questions with our advanced AI technology.
+        Get instant, accurate answers to your contract questions with our advanced contract interpretation technology.
       </motion.p>
     </>
   );
