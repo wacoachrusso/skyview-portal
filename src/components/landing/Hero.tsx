@@ -1,10 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { AviationBackground } from "./animations/AviationBackground";
 
 export function Hero() {
   const [showVideo, setShowVideo] = useState(false);
@@ -26,11 +26,8 @@ export function Hero() {
 
   return (
     <section className="relative min-h-screen bg-premium-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner">
-      {/* Aviation themed animated background */}
-      <AviationBackground />
-      
-      {/* Layered background effects - keep but adjusted opacity */}
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png')] opacity-3 bg-repeat animate-slide" aria-hidden="true" />
+      {/* Layered background effects */}
+      <div className="absolute inset-0 bg-[url('/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png')] opacity-5 bg-repeat animate-slide" aria-hidden="true" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" aria-hidden="true" />
       <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" aria-hidden="true" />
       
