@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
-import { ContactDirectory } from "@/components/contact/ContactDirectory";
+import { LayoverLookup } from "@/components/dashboard/LayoverLookup";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -134,7 +135,7 @@ export default function Dashboard() {
           </div>
           
           <div className="w-full">
-            <ContactDirectory />
+            <LayoverLookup />
           </div>
           
           <div className="w-full">
