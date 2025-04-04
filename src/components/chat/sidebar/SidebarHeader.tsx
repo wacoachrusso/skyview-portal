@@ -37,7 +37,7 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
         <img 
           src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
           alt="SkyGuide Logo" 
-          className="h-7 w-auto sm:h-8"
+          className="h-7 w-auto sm:h-8 mix-blend-lighten"
         />
         <span className="text-white font-semibold text-sm sm:text-base">Ask SkyGuide</span>
       </a>

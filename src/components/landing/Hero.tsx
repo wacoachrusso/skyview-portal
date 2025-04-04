@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
@@ -67,11 +68,12 @@ export function Hero() {
           </div>
           <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-sm">
-              <div className="relative animate-float">
+              <div className="relative animate-float mix-blend-lighten">
                 <img 
                   src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
                   alt="SkyGuide interface demonstration showing the chat interface and contract interpretation features" 
                   className="w-full h-auto"
+                  style={{ mixBlendMode: 'lighten' }}
                 />
               </div>
             </div>

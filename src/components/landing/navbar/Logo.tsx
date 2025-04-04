@@ -21,7 +21,7 @@ export function Logo({ handleLogoClick }: LogoProps) {
       <img 
         src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
         alt="SkyGuide Logo - Your trusted companion for contract interpretation" 
-        className="h-6 w-auto md:h-8"
+        className="h-6 w-auto md:h-8 mix-blend-lighten"
       />
       <span className="text-foreground text-xl md:text-2xl font-bold">SkyGuide</span>
     </Link>

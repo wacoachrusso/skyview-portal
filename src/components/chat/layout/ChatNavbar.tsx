@@ -32,7 +32,7 @@ export function ChatNavbar() {
           <img 
             src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
             alt="SkyGuide Logo" 
-            className="h-8 w-auto"
+            className="h-8 w-auto mix-blend-lighten"
           />
           <span className="text-lg font-semibold text-foreground/90 hidden sm:inline-block">
             SkyGuide

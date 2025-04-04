@@ -18,7 +18,7 @@ export const AuthFormHeader = ({ isSignUp = true }: AuthFormHeaderProps) => {
         <img 
           src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
           alt="SkyGuide Logo" 
-          className="h-12 w-auto"
+          className="h-12 w-auto mix-blend-lighten"
         />
       </div>
 

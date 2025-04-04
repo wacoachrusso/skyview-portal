@@ -36,7 +36,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
           <img 
             src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
             alt="SkyGuide Logo" 
-            className="h-7 w-auto"
+            className="h-7 w-auto mix-blend-lighten"
           />
           <h1 className="text-lg font-semibold text-foreground leading-none">SkyGuide</h1>
         </div>
