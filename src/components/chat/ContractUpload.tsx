@@ -20,7 +20,7 @@ export function ContractUpload() {
           onClick={handleContractClick}
         >
           <FileText className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">View Contract</span>
+          <span className="hidden sm:inline">Your Contract</span>
           <span className="sm:hidden">Contract</span>
         </Button>
       </div>

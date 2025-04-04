@@ -6,7 +6,6 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { FAQ } from "@/components/dashboard/FAQ";
 import { ContactDirectory } from "@/components/contact/ContactDirectory";
 
@@ -120,13 +119,8 @@ export default function Dashboard() {
             <QuickActions />
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <ContactDirectory />
-            </div>
-            <div className="lg:col-span-1">
-              <RecentActivity />
-            </div>
+          <div className="w-full">
+            <ContactDirectory />
           </div>
           
           <div className="w-full">

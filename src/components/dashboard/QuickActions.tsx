@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, RefreshCcw, Settings, Users } from "lucide-react";
@@ -29,7 +30,7 @@ export function QuickActions() {
   const handleContractUpload = () => {
     toast({
       title: "Feature Coming Soon",
-      description: "Contract upload functionality will be available in a future update.",
+      description: "Contract viewing functionality will be available in a future update.",
     });
   };
 
@@ -54,8 +55,8 @@ export function QuickActions() {
         
         <ActionCard
           icon={<FileText className="h-5 w-5" />}
-          title="Upload Contract"
-          description="Add your union contract document"
+          title="Your Contract"
+          description="View your union contract document"
           onClick={handleContractUpload}
         />
         
