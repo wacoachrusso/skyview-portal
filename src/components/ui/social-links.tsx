@@ -1,76 +1,104 @@
+
 "use client"
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
 
 interface Social {
   name: string
   icon: React.ReactNode
   href: string
+  ariaLabel?: string
 }
 
 interface SocialLinksProps extends React.HTMLAttributes<HTMLDivElement> {
   socials: Social[]
+  layout?: "horizontal" | "grid"
 }
 
-export function SocialLinks({ socials, className, ...props }: SocialLinksProps) {
+export function SocialLinks({ 
+  socials, 
+  className, 
+  layout = "horizontal",
+  ...props 
+}: SocialLinksProps) {
   const [hoveredSocial, setHoveredSocial] = React.useState<string | null>(null)
-  const [rotation, setRotation] = React.useState<number>(0)
-  const [clicked, setClicked] = React.useState<boolean>(false)
-
-  const animation = {
-    scale: clicked ? [1, 1.3, 1] : 1,
-    transition: { duration: 0.3 },
+  
+  const containerVariants = {
+    initial: { opacity: 0 },
+    animate: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.1 
+      } 
+    }
+  }
+  
+  const itemVariants = {
+    initial: { y: 20, opacity: 0 },
+    animate: { 
+      y: 0, 
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 15
+      }
+    },
+    hover: { 
+      y: -5,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    }
   }
 
-  React.useEffect(() => {
-    const handleClick = () => {
-      setClicked(true)
-      setTimeout(() => {
-        setClicked(false)
-      }, 200)
-    }
-    window.addEventListener("click", handleClick)
-    return () => window.removeEventListener("click", handleClick)
-  }, [clicked])
-
   return (
-    <AnimatePresence>
-      <div
-        className={cn("flex items-center justify-center gap-4", className)}
-        {...props}
-      >
-        {socials.map((social, index) => (
-          <a
-            href={social.href}
-            className={cn(
-              "relative cursor-pointer transition-opacity duration-200 hover:text-white",
-              hoveredSocial && hoveredSocial !== social.name
-                ? "opacity-50"
-                : "opacity-100"
-            )}
-            key={index}
-            onMouseEnter={() => {
-              setHoveredSocial(social.name)
-              setRotation(Math.random() * 20 - 10)
-            }}
-            onMouseLeave={() => setHoveredSocial(null)}
-            onClick={() => {
-              setClicked(true)
-            }}
-            aria-label={social.name}
-          >
-            <motion.div
-              className="h-5 w-5"
-              animate={animation}
-            >
-              {social.icon}
-            </motion.div>
-          </a>
-        ))}
-      </div>
-    </AnimatePresence>
+    <motion.div
+      className={cn(
+        layout === "horizontal" 
+          ? "flex items-center justify-center gap-4" 
+          : "grid grid-cols-3 gap-4",
+        className
+      )}
+      variants={containerVariants}
+      initial="initial"
+      animate="animate"
+      {...props}
+    >
+      {socials.map((social, index) => (
+        <motion.a
+          key={index}
+          href={social.href}
+          aria-label={social.ariaLabel || `Visit our ${social.name} page`}
+          className={cn(
+            "relative transition-colors duration-200 group",
+            hoveredSocial && hoveredSocial !== social.name
+              ? "opacity-50"
+              : "opacity-100",
+            layout === "grid" 
+              ? "flex flex-col items-center justify-center p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20" 
+              : "flex items-center justify-center"
+          )}
+          onMouseEnter={() => setHoveredSocial(social.name)}
+          onMouseLeave={() => setHoveredSocial(null)}
+          variants={itemVariants}
+          whileHover="hover"
+        >
+          <span className={cn(
+            "text-brand-gold group-hover:text-white transition-colors duration-300",
+            layout === "grid" ? "" : "h-5 w-5"
+          )}>
+            {social.icon}
+          </span>
+          {layout === "grid" && (
+            <span className="mt-1 text-xs">{social.name}</span>
+          )}
+        </motion.a>
+      ))}
+    </motion.div>
   )
 }
