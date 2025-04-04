@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const checkQueryLimit = async (userId: string): Promise<{ canQuery: boolean; message?: string }> => {
@@ -17,7 +18,7 @@ export const checkQueryLimit = async (userId: string): Promise<{ canQuery: boole
     }
 
     // Check query count for free users
-    if (profile.query_count >= 1) {
+    if (profile.query_count >= 2) {
       return {
         canQuery: false,
         message: "You've reached your free trial limit. Please upgrade to continue querying."

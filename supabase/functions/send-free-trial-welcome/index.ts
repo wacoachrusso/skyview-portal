@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -63,8 +64,8 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
               <h3 style="color: #1a1f2c; margin-top: 0;">Your Free Trial Details</h3>
               <ul style="list-style-type: none; padding: 0;">
-                <li style="margin: 10px 0;">✨ You have <strong>1 contract query</strong> to explore SkyGuide</li>
-                <li style="margin: 10px 0;">🎯 Make it count! Ask something specific about your contract</li>
+                <li style="margin: 10px 0;">✨ You have <strong>2 contract queries</strong> to explore SkyGuide</li>
+                <li style="margin: 10px 0;">🎯 Make them count! Ask something specific about your contract</li>
                 <li style="margin: 10px 0;">⚡ Get instant, accurate answers about your union agreement</li>
               </ul>
             </div>
