@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ChartBarIcon, LightBulbIcon, ListChecksIcon } from "lucide-react";
+import { ChartBarIcon, LightbulbIcon, ListChecksIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -113,7 +113,7 @@ export const MyInsights = ({ userId, queryCount }: MyInsightsProps) => {
               
               <div className="bg-brand-purple/5 p-3 rounded-lg border border-brand-purple/10">
                 <h3 className="text-sm font-medium flex items-center mb-2">
-                  <LightBulbIcon className="h-4 w-4 mr-1 text-brand-purple" />
+                  <LightbulbIcon className="h-4 w-4 mr-1 text-brand-purple" />
                   Suggested Next Step
                 </h3>
                 <p className="text-sm text-muted-foreground">{getNextStepSuggestion()}</p>
