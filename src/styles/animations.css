@@ -1,4 +1,3 @@
-
 /* Animation styles */
 
 @keyframes logo-spin {
@@ -31,6 +30,18 @@
   }
 }
 
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
@@ -44,6 +55,11 @@
   );
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
+}
+
+.animate-slide {
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease infinite;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -88,4 +104,9 @@
 .focus-glow:focus {
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.5);
   outline: none;
+}
+
+/* Premium logo glow effect */
+.premium-logo-glow {
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
 }
