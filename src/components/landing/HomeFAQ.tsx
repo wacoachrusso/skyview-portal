@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
 export const HomeFAQ = () => {
   const faqs = [
@@ -31,30 +32,59 @@ export const HomeFAQ = () => {
     }
   ];
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
   return (
     <section className="py-16 bg-background">
-      <div className="container max-w-4xl">
-        <div className="text-center mb-12">
+      <motion.div 
+        className="container max-w-4xl"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={containerVariants}
+      >
+        <motion.div className="text-center mb-12" variants={itemVariants}>
           <h2 className="text-3xl font-bold mb-4 tracking-tight">Frequently Asked Questions</h2>
           <p className="text-muted-foreground text-lg">
             Find answers to common questions about SkyGuide
           </p>
-        </div>
-        <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
-          <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="px-6 font-medium text-lg">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="px-6 text-muted-foreground text-base leading-relaxed">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </Card>
-      </div>
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
+            <Accordion type="single" collapsible className="w-full">
+              {faqs.map((faq, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="px-6 font-medium text-lg">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="px-6 text-muted-foreground text-base leading-relaxed">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </Card>
+        </motion.div>
+      </motion.div>
     </section>
   );
-};
+}
