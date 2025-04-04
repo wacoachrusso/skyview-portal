@@ -6,9 +6,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
 
 export const HomeFAQ = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const faqs = [
     {
       question: "Why should I use SkyGuide?",
@@ -31,6 +36,18 @@ export const HomeFAQ = () => {
       answer: "Yes. We prioritize your privacy and security. All conversations are private and only accessible to you."
     }
   ];
+
+  // Filter FAQs based on search query
+  const filteredFaqs = useMemo(() => {
+    if (!searchQuery.trim()) return faqs;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return faqs.filter(
+      faq => 
+        faq.question.toLowerCase().includes(query) || 
+        faq.answer.toLowerCase().includes(query)
+    );
+  }, [searchQuery, faqs]);
 
   // Animation variants
   const containerVariants = {
@@ -62,25 +79,51 @@ export const HomeFAQ = () => {
         viewport={{ once: true, margin: "-100px" }}
         variants={containerVariants}
       >
-        <motion.div className="text-center mb-12" variants={itemVariants}>
+        <motion.div className="text-center mb-8" variants={itemVariants}>
           <h2 className="text-3xl font-bold mb-4 tracking-tight">Frequently Asked Questions</h2>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-lg mb-6">
             Find answers to common questions about SkyGuide
           </p>
+          
+          {/* Search input */}
+          <div className="relative max-w-md mx-auto mb-8">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              type="text"
+              placeholder="Search FAQs..."
+              className="pl-10 bg-card/50 backdrop-blur-sm border border-border/50"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </motion.div>
+        
         <motion.div variants={itemVariants}>
           <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
             <Accordion type="single" collapsible className="w-full">
-              {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="px-6 font-medium text-lg">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 text-muted-foreground text-base leading-relaxed">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
+              {filteredFaqs.length > 0 ? (
+                filteredFaqs.map((faq, index) => (
+                  <AccordionItem key={index} value={`item-${index}`} className="overflow-hidden">
+                    <AccordionTrigger className="px-6 font-medium text-lg">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 text-muted-foreground text-base leading-relaxed">
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {faq.answer}
+                      </motion.div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))
+              ) : (
+                <div className="p-6 text-center text-muted-foreground">
+                  No FAQs matching your search. Try different keywords.
+                </div>
+              )}
             </Accordion>
           </Card>
         </motion.div>

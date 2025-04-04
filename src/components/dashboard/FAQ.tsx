@@ -1,3 +1,4 @@
+
 import {
   Accordion,
   AccordionContent,
@@ -5,8 +6,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 
 export const FAQ = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const faqs = [
     {
       question: "How do I get started with SkyGuide?",
@@ -30,22 +37,60 @@ export const FAQ = () => {
     }
   ];
 
+  // Filter FAQs based on search query
+  const filteredFaqs = useMemo(() => {
+    if (!searchQuery.trim()) return faqs;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return faqs.filter(
+      faq => 
+        faq.question.toLowerCase().includes(query) || 
+        faq.answer.toLowerCase().includes(query)
+    );
+  }, [searchQuery, faqs]);
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4 text-foreground/90">Frequently Asked Questions</h2>
+      
+      {/* Search input */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input 
+          type="text"
+          placeholder="Search FAQs..."
+          className="pl-10 bg-card/50 backdrop-blur-sm border border-border/50"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      
       <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
         <CardContent className="p-6">
           <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+            {filteredFaqs.length > 0 ? (
+              filteredFaqs.map((faq, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {faq.answer}
+                    </motion.div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))
+            ) : (
+              <div className="py-4 text-center text-muted-foreground">
+                No FAQs matching your search. Try different keywords.
+              </div>
+            )}
           </Accordion>
         </CardContent>
       </Card>
