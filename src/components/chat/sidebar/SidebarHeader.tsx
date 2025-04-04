@@ -28,7 +28,7 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
   };
 
   return (
-    <div className="p-3 sm:p-4 flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#1E1E2E] to-[#2A2F3C]">
+    <div className="p-3 sm:p-4 flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#1A1F2C] to-[#2A2F3C]">
       <a 
         href="/"
         onClick={handleLogoClick}
@@ -38,14 +38,10 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
           <img 
             src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
             alt="SkyGuide Logo" 
-            className="h-7 w-auto sm:h-8"
-            style={{ 
-              mixBlendMode: 'lighten', 
-              filter: 'drop-shadow(0 0 0 transparent)'
-            }}
+            className="h-7 w-auto sm:h-8 premium-logo-glow"
           />
         </div>
-        <span className="text-white font-semibold text-sm sm:text-base">Ask SkyGuide</span>
+        <span className="text-white font-semibold text-sm sm:text-base gradient-text">SkyGuide</span>
       </a>
       <div className="flex items-center gap-2">
         <AlertDialog>
@@ -53,12 +49,12 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/10"
+              className="text-white hover:bg-white/10 transition-colors"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="bg-[#1E1E2E] border border-white/10">
+          <AlertDialogContent className="bg-[#1E1E2E] border border-white/10 rounded-lg">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-white">Clear All Conversations</AlertDialogTitle>
               <AlertDialogDescription className="text-gray-400">
@@ -66,9 +62,9 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600 transition-colors">Cancel</AlertDialogCancel>
               <AlertDialogAction
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 transition-colors"
                 onClick={onDeleteAll}
               >
                 Delete All

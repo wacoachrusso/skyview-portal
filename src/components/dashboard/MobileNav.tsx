@@ -49,10 +49,10 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-48 sm:w-56 bg-background/95 backdrop-blur-sm border border-border shadow-md"
+          className="w-48 sm:w-56 bg-background/95 backdrop-blur-sm border border-border shadow-md p-1 rounded-lg"
         >
           {!isAccountPage && (
-            <DropdownMenuItem asChild className={location.pathname === '/account' ? "bg-accent/50" : ""}>
+            <DropdownMenuItem asChild className={`rounded-md my-1 px-3 py-2 ${location.pathname === '/account' ? "bg-accent/50" : ""}`}>
               <Link to="/account" className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
                 Account
@@ -60,7 +60,7 @@ export const MobileNav = ({ isAccountPage, onSignOut }: MobileNavProps) => {
             </DropdownMenuItem>
           )}
           <DropdownMenuItem 
-            className="text-destructive focus:text-destructive hover:bg-destructive/10"
+            className="text-destructive focus:text-destructive hover:bg-destructive/10 rounded-md my-1 px-3 py-2"
             onClick={onSignOut}
           >
             <LogOut className="mr-2 h-4 w-4" />

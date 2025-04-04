@@ -21,7 +21,7 @@ export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
           asChild
           variant="secondary"
           size="sm"
-          className={`transition-all duration-200 ${
+          className={`transition-all duration-300 ${
             isChatActive 
               ? "bg-brand-gold/20 text-brand-gold hover:bg-brand-gold/30 hover:text-black border border-brand-gold/50" 
               : "text-white hover:bg-brand-gold hover:text-black"
@@ -38,7 +38,7 @@ export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
           asChild
           variant="secondary"
           size="sm"
-          className={`transition-all duration-200 ${
+          className={`transition-all duration-300 ${
             location.pathname === '/account'
               ? "bg-accent/80 text-accent-foreground"
               : "text-white hover:bg-accent/60 hover:text-accent-foreground"
@@ -54,7 +54,7 @@ export const DesktopNav = ({ isAccountPage, onSignOut }: DesktopNavProps) => {
         variant="secondary" 
         size="sm"
         onClick={onSignOut}
-        className="bg-secondary/80 text-secondary-foreground hover:bg-secondary hover:text-destructive transition-colors duration-200"
+        className="bg-secondary/80 text-secondary-foreground hover:bg-secondary hover:text-destructive transition-colors duration-300"
       >
         <LogOut className="h-4 w-4 lg:mr-2" />
         <span className="hidden lg:inline">Sign Out</span>

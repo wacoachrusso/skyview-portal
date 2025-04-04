@@ -72,7 +72,7 @@ export function ChatMessage({ message, isCurrentUser, onCopy, isLastInGroup, isS
           </div>
           
           {/* Subtle shine effect on hover */}
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
         </div>
       </div>
       <FlagFeedbackDialog

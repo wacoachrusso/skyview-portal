@@ -11,15 +11,15 @@ export function ContractUpload() {
   const { handleContractClick } = useContractHandler();
 
   return (
-    <div className="w-full bg-gradient-to-r from-[#1A1F2C] to-[#2A2F3C] border-b border-white/10 p-2 sm:p-3">
+    <div className="w-full bg-gradient-to-r from-brand-navy to-brand-slate border-b border-white/10 p-2 sm:p-3">
       <div className="max-w-screen-xl mx-auto flex justify-center items-center">
         <Button
           variant="outline"
           size="sm"
-          className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
+          className="bg-white/5 border-white/10 hover:bg-white/10 text-white transition-all duration-300"
           onClick={handleContractClick}
         >
-          <FileText className="h-4 w-4 mr-2" />
+          <FileText className="h-4 w-4 mr-2 text-brand-gold" />
           <span className="hidden sm:inline">Your Contract</span>
           <span className="sm:hidden">Contract</span>
         </Button>

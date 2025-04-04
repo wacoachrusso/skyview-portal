@@ -26,14 +26,10 @@ export const DashboardLogo = () => {
           <img 
             src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
             alt="SkyGuide Logo" 
-            className="h-8 w-auto"
-            style={{ 
-              filter: 'drop-shadow(0 0 5px rgba(212, 175, 55, 0.3))',
-              transition: 'filter 0.3s ease'
-            }}
+            className="h-8 w-auto premium-logo-glow"
           />
         </div>
-        <span className="text-xl font-semibold text-foreground/90 rich-text">
+        <span className="text-xl font-semibold text-foreground/90 gradient-text">
           SkyGuide
         </span>
       </a>
