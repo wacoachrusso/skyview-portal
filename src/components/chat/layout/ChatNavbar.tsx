@@ -29,11 +29,17 @@ export function ChatNavbar() {
       <div className="flex items-center justify-between">
         {/* Logo section */}
         <div className="flex items-center gap-2">
-          <img 
-            src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
-            alt="SkyGuide Logo" 
-            className="h-8 w-auto mix-blend-lighten"
-          />
+          <div className="flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
+              alt="SkyGuide Logo" 
+              className="h-8 w-auto"
+              style={{ 
+                mixBlendMode: 'lighten', 
+                filter: 'drop-shadow(0 0 0 transparent)'
+              }}
+            />
+          </div>
           <span className="text-lg font-semibold text-foreground/90 hidden sm:inline-block">
             SkyGuide
           </span>

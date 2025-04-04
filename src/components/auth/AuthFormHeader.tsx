@@ -15,11 +15,17 @@ export const AuthFormHeader = ({ isSignUp = true }: AuthFormHeaderProps) => {
       </Link>
 
       <div className="mb-6 flex justify-center">
-        <img 
-          src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
-          alt="SkyGuide Logo" 
-          className="h-12 w-auto mix-blend-lighten"
-        />
+        <div className="flex items-center justify-center">
+          <img 
+            src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
+            alt="SkyGuide Logo" 
+            className="h-12 w-auto"
+            style={{ 
+              mixBlendMode: 'lighten', 
+              filter: 'drop-shadow(0 0 0 transparent)'
+            }}
+          />
+        </div>
       </div>
 
       <h1 className="text-2xl font-bold text-white text-center mb-2">

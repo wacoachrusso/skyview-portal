@@ -1,3 +1,4 @@
+
 #root {
   width: 100%;
   margin: 0;
@@ -55,4 +56,11 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Remove any potential box shadow or border from images */
+img[src*="c54bfa73-7d1d-464c-81d8-df88abe9a73a.png"] {
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
 }

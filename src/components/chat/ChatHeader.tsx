@@ -33,11 +33,17 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
           </Button>
         )}
         <div className={`flex items-center gap-2 ${isMobile ? 'ml-10' : ''}`}>
-          <img 
-            src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
-            alt="SkyGuide Logo" 
-            className="h-7 w-auto mix-blend-lighten"
-          />
+          <div className="flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
+              alt="SkyGuide Logo" 
+              className="h-7 w-auto"
+              style={{ 
+                mixBlendMode: 'lighten', 
+                filter: 'drop-shadow(0 0 0 transparent)'
+              }}
+            />
+          </div>
           <h1 className="text-lg font-semibold text-foreground leading-none">SkyGuide</h1>
         </div>
       </div>

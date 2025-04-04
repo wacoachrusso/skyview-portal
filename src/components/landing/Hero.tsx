@@ -68,12 +68,16 @@ export function Hero() {
           </div>
           <div className="w-full lg:w-1/2 flex items-center justify-center mt-8 sm:mt-0 animate-fade-up lg:pl-8" style={{ animationDelay: "0.4s" }}>
             <div className="relative w-full max-w-sm">
-              <div className="relative animate-float mix-blend-lighten">
+              <div className="relative animate-float">
                 <img 
                   src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
                   alt="SkyGuide interface demonstration showing the chat interface and contract interpretation features" 
                   className="w-full h-auto"
-                  style={{ mixBlendMode: 'lighten' }}
+                  style={{ 
+                    mixBlendMode: 'lighten', 
+                    filter: 'drop-shadow(0 0 0 transparent)',
+                    backgroundColor: 'transparent'
+                  }}
                 />
               </div>
             </div>

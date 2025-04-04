@@ -34,11 +34,17 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
         onClick={handleLogoClick}
         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
       >
-        <img 
-          src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
-          alt="SkyGuide Logo" 
-          className="h-7 w-auto sm:h-8 mix-blend-lighten"
-        />
+        <div className="flex items-center justify-center">
+          <img 
+            src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
+            alt="SkyGuide Logo" 
+            className="h-7 w-auto sm:h-8"
+            style={{ 
+              mixBlendMode: 'lighten', 
+              filter: 'drop-shadow(0 0 0 transparent)'
+            }}
+          />
+        </div>
         <span className="text-white font-semibold text-sm sm:text-base">Ask SkyGuide</span>
       </a>
       <div className="flex items-center gap-2">
