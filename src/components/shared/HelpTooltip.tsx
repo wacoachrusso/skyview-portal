@@ -28,12 +28,12 @@ export const HelpTooltip = ({
   // Use HoverCard for expanded tooltips with videos
   if (expanded) {
     return (
-      <HoverCard>
+      <HoverCard openDelay={100} closeDelay={200}>
         <HoverCardTrigger asChild>
           <Button 
             variant="ghost" 
             size="icon" 
-            className={`h-5 w-5 rounded-full p-0 ${className}`}
+            className={`h-5 w-5 rounded-full p-0 hover:bg-background/80 ${className}`}
           >
             <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
             <span className="sr-only">Help</span>
@@ -59,16 +59,16 @@ export const HelpTooltip = ({
     );
   }
   
-  // Use Tooltip for simple text tooltips
+  // Use Tooltip for simple text tooltips - adding explicit delays to ensure it shows
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={300}>
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
         <TooltipTrigger asChild>
           {children || (
             <Button 
               variant="ghost" 
               size="icon" 
-              className={`h-5 w-5 rounded-full p-0 ${className}`}
+              className={`h-5 w-5 rounded-full p-0 hover:bg-background/80 ${className}`}
             >
               <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
               <span className="sr-only">Help</span>

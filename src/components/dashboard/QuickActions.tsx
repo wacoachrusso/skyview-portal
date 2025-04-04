@@ -5,6 +5,7 @@ import { FileText, RefreshCcw, Settings, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { HelpTooltip } from "@/components/shared/HelpTooltip";
+import { useNavigation } from "@/hooks/useNavigation";
 
 // Custom icon wrapper component with animations
 const IconWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -20,7 +21,7 @@ const IconWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 const QuickActions = () => {
-  const navigate = useNavigate();
+  const { navigateTo } = useNavigation();
   const { toast } = useToast();
 
   const handleContractUpload = () => {
@@ -36,14 +37,14 @@ const QuickActions = () => {
       title: "Chat with SkyGuide",
       description: "Ask questions about your contract",
       tooltip: "Ask any questions about your union contract terms, benefits, policies, or provisions.",
-      onClick: () => navigate('/chat')
+      onClick: () => navigateTo('/chat')
     },
     {
       icon: <Users className="h-5 w-5 text-brand-purple" />,
       title: "My Referrals",
       description: "View and manage your referrals",
       tooltip: "Track your referrals and see who you've invited to join SkyGuide.",
-      onClick: () => navigate('/referrals')
+      onClick: () => navigateTo('/referrals')
     },
     {
       icon: <FileText className="h-5 w-5 text-brand-purple" />,
@@ -57,7 +58,7 @@ const QuickActions = () => {
       title: "Account Settings",
       description: "Update your profile information",
       tooltip: "Manage your account settings, profile information, and preferences.",
-      onClick: () => navigate('/account')
+      onClick: () => navigateTo('/account')
     }
   ];
 
