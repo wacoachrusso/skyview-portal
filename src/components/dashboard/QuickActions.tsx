@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FileText, RefreshCcw, Settings, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { HelpTooltip } from "@/components/shared/HelpTooltip";
 import { useNavigation } from "@/hooks/useNavigation";
 
 // Custom icon wrapper component with animations
@@ -36,28 +35,24 @@ const QuickActions = () => {
       icon: <RefreshCcw className="h-5 w-5 text-brand-purple" />,
       title: "Chat with SkyGuide",
       description: "Ask questions about your contract",
-      tooltip: "Ask any questions about your union contract terms, benefits, policies, or provisions.",
       onClick: () => navigateTo('/chat')
     },
     {
       icon: <Users className="h-5 w-5 text-brand-purple" />,
       title: "My Referrals",
       description: "View and manage your referrals",
-      tooltip: "Track your referrals and see who you've invited to join SkyGuide.",
       onClick: () => navigateTo('/referrals')
     },
     {
       icon: <FileText className="h-5 w-5 text-brand-purple" />,
       title: "Your Contract",
       description: "View your union contract document",
-      tooltip: "Access and view your full union contract document. Coming soon!",
       onClick: handleContractUpload
     },
     {
       icon: <Settings className="h-5 w-5 text-brand-purple" />,
       title: "Account Settings",
       description: "Update your profile information",
-      tooltip: "Manage your account settings, profile information, and preferences.",
       onClick: () => navigateTo('/account')
     }
   ];
@@ -66,10 +61,6 @@ const QuickActions = () => {
     <div className="bg-card border rounded-lg p-6">
       <div className="flex items-center mb-6">
         <h2 className="text-2xl font-bold">Quick Actions</h2>
-        <HelpTooltip 
-          text="These quick actions provide access to key features of SkyGuide. Click any card to navigate to that feature."
-          className="ml-2"
-        />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {actions.map((action, index) => (
@@ -82,9 +73,6 @@ const QuickActions = () => {
               className="hover-lift-premium h-full border border-brand-purple/10 bg-gradient-to-br from-background to-background/95 backdrop-blur-sm cursor-pointer group overflow-hidden relative"
               onClick={action.onClick}
             >
-              <div className="absolute top-2 right-2 z-10">
-                <HelpTooltip text={action.tooltip} />
-              </div>
               <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
                 <IconWrapper>
                   {action.icon}

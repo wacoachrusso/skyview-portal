@@ -1,7 +1,6 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { HelpTooltip } from "@/components/shared/HelpTooltip";
 
 interface WelcomeCardProps {
   userName?: string;
@@ -30,19 +29,12 @@ export const WelcomeCard = ({ userName }: WelcomeCardProps) => {
         
         <CardContent className="p-8 sm:p-10 relative z-10">
           <div className="flex flex-col items-center text-center space-y-4">
-            <div className="h-16 w-16 mb-2 relative">
+            <div className="h-16 w-16 mb-2">
               <img 
                 src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
                 alt="SkyGuide Logo" 
                 className="h-full w-auto object-contain premium-logo-glow"
               />
-              <div className="absolute -top-2 -right-2">
-                <HelpTooltip 
-                  text="Welcome to SkyGuide! This is your personal assistant for all union contract questions."
-                  expanded
-                  videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                />
-              </div>
             </div>
             
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight rich-text">
