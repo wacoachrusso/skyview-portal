@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 
 interface LoadingSpinnerProps {
@@ -13,10 +14,10 @@ export const LoadingSpinner = ({ className, size = "md" }: LoadingSpinnerProps) 
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[100px]">
+    <div className="flex items-center justify-center">
       <div 
         className={cn(
-          "animate-spin rounded-full border-t-2 border-b-2 border-primary",
+          "animate-spin rounded-full border-t-2 border-b-2 border-brand-gold",
           sizeClasses[size],
           className
         )}

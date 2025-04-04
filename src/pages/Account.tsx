@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthManagement } from "@/hooks/useAuthManagement";
@@ -10,34 +11,49 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { CancelSubscriptionDialog } from "@/components/account/CancelSubscriptionDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const Account = () => {
   const navigate = useNavigate();
   const { handleSignOut } = useAuthManagement();
-  const { isLoading, userEmail, profile, handleCancelSubscription } = useAccountManagement();
+  const { 
+    isLoading, 
+    loadError, 
+    userEmail, 
+    profile, 
+    handleCancelSubscription,
+    retryLoading 
+  } = useAccountManagement();
+  
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [mounted, setMounted] = useState(true);
-  const [timeoutOccurred, setTimeoutOccurred] = useState(false);
-
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  
+  // Set a timeout for loading to improve user experience
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      if (mounted && isLoading) {
-        console.log("Account page loading timeout triggered");
-        setTimeoutOccurred(true);
-      }
-    }, 5000); // 5-second safety timeout
-
+    let timeoutId: number;
+    
+    if (isLoading && !loadingTimeout) {
+      timeoutId = window.setTimeout(() => {
+        if (mounted) {
+          console.log("Setting loading timeout flag");
+          setLoadingTimeout(true);
+        }
+      }, 5000); // 5-second loading experience timeout
+    }
+    
     return () => {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isLoading]);
+  }, [isLoading, loadingTimeout]);
 
   useEffect(() => {
     setMounted(true);
     
-    if (timeoutOccurred && userEmail && !profile) {
-      console.log("Loading basic account data after timeout");
+    // Reset timeout flag if loading state changes
+    if (!isLoading) {
+      setLoadingTimeout(false);
     }
     
     const checkAlphaTester = async () => {
@@ -65,7 +81,7 @@ const Account = () => {
     return () => {
       setMounted(false);
     };
-  }, [profile?.id, timeoutOccurred, userEmail]);
+  }, [profile?.id, isLoading]);
 
   const handlePlanChange = (newPlan: string) => {
     navigate('/?scrollTo=pricing-section');
@@ -84,30 +100,55 @@ const Account = () => {
     navigate('/refunds', { state: { fromCancellation: true } });
   };
 
-  if (isLoading && !timeoutOccurred) {
-    console.log("Account page is loading...");
+  const handleRefresh = () => {
+    retryLoading();
+    setLoadingTimeout(false);
+  };
+
+  // Show loading state
+  if (isLoading && !loadingTimeout) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
         <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-          <LoadingSpinner size="lg" />
+          <div className="text-center">
+            <LoadingSpinner size="lg" className="mx-auto mb-4 border-brand-gold" />
+            <h2 className="text-xl font-semibold mb-2 text-white">Loading your account...</h2>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (timeoutOccurred && !profile) {
+  // Show loading timeout or error message
+  if ((loadingTimeout && isLoading) || loadError) {
+    const isTimeout = loadingTimeout && isLoading;
+    const errorMessage = isTimeout 
+      ? "This is taking longer than expected." 
+      : loadError || "Unable to load your profile information.";
+      
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
         <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
-          <h2 className="text-xl font-semibold mb-4 text-white">Loading your account...</h2>
-          <p className="text-muted-foreground mb-6">This is taking longer than expected.</p>
-          <div className="flex gap-4">
-            <Button onClick={() => window.location.reload()} variant="outline">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-4">
+          <h2 className="text-2xl font-semibold mb-4 text-white text-center">
+            {isTimeout ? "Loading your account..." : "Account Error"}
+          </h2>
+          <p className="text-muted-foreground mb-8 text-center max-w-md">{errorMessage}</p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button 
+              onClick={handleRefresh} 
+              variant="outline"
+              className="bg-white/10 border-white/20 hover:bg-white/20 text-white flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
               Refresh Page
             </Button>
-            <Button onClick={() => navigate('/dashboard')} variant="default">
+            <Button 
+              onClick={() => navigate('/dashboard')} 
+              variant="default"
+              className="bg-gradient-to-r from-brand-purple to-brand-magenta text-white hover:opacity-90"
+            >
               Return to Dashboard
             </Button>
           </div>
@@ -116,21 +157,39 @@ const Account = () => {
     );
   }
 
+  // If profile couldn't be loaded after all attempts
   if (!profile) {
     console.log("No profile found for account page");
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
         <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-          <div className="text-center text-white">
-            <h2 className="text-xl font-semibold mb-2">Profile Not Found</h2>
-            <p>Unable to load your profile information.</p>
+          <div className="text-center max-w-md px-4">
+            <h2 className="text-xl font-semibold mb-4 text-white">Profile Not Found</h2>
+            <p className="text-muted-foreground mb-6">Unable to load your profile information. Please try again later or contact support.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                onClick={handleRefresh} 
+                variant="outline"
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+              >
+                Try Again
+              </Button>
+              <Button 
+                onClick={() => navigate('/dashboard')} 
+                variant="default"
+                className="bg-gradient-to-r from-brand-purple to-brand-magenta text-white hover:opacity-90"
+              >
+                Return to Dashboard
+              </Button>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Render account page when data is available
   console.log("Account page rendering with profile:", profile.id);
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
