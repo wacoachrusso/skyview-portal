@@ -52,7 +52,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!req.body) {
+      throw new Error("Request body is empty");
+    }
+    
     const { email, inviteUrl, inviterName } = await req.json() as EmailRequest;
+    
+    if (!email || !inviteUrl) {
+      throw new Error("Missing required fields: email and inviteUrl are required");
+    }
+    
     console.log(`Sending invite email to ${email} from ${inviterName || "anonymous"}`);
     console.log("Invite URL:", inviteUrl);
 

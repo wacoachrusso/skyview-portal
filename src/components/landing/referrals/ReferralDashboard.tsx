@@ -61,17 +61,32 @@ export function ReferralDashboard() {
         } else if (generatedCode) {
           setReferralCode(generatedCode);
           
+          // We need a placeholder email since referee_email is required
+          const placeholderEmail = "pending@placeholder.com";
+          
           // Save the newly generated code
           const { error: insertError } = await supabase
             .from('referrals')
             .insert({ 
               referrer_id: userId, 
               referral_code: generatedCode,
+              referee_email: placeholderEmail,
               status: 'pending'
             });
             
           if (insertError) {
             console.error("Error saving referral code:", insertError);
+            toast.error("Failed to save referral code");
+          } else {
+            // Fetch the newly created referral
+            const { data: newReferrals } = await supabase
+              .from('referrals')
+              .select('*')
+              .eq('referrer_id', userId);
+              
+            if (newReferrals) {
+              setReferrals(newReferrals);
+            }
           }
         }
       }
@@ -104,6 +119,7 @@ export function ReferralDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("You must be logged in to send invites");
+        setSendingInvite(false);
         return;
       }
       
@@ -275,22 +291,24 @@ export function ReferralDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {referrals.map((referral) => (
-                      <tr key={referral.id} className="border-t border-white/5">
-                        <td className="px-4 py-3 text-gray-200">{referral.referee_email}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            referral.status === 'completed' 
-                              ? 'bg-green-500/20 text-green-300' 
-                              : 'bg-yellow-500/20 text-yellow-300'
-                          }`}>
-                            {referral.status === 'completed' ? 'Joined' : 'Pending'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-300">
-                          {new Date(referral.created_at).toLocaleDateString()}
-                        </td>
-                      </tr>
+                    {referrals
+                      .filter(referral => referral.referee_email !== "pending@placeholder.com")
+                      .map((referral) => (
+                        <tr key={referral.id} className="border-t border-white/5">
+                          <td className="px-4 py-3 text-gray-200">{referral.referee_email}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              referral.status === 'completed' 
+                                ? 'bg-green-500/20 text-green-300' 
+                                : 'bg-yellow-500/20 text-yellow-300'
+                            }`}>
+                              {referral.status === 'completed' ? 'Joined' : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-300">
+                            {new Date(referral.created_at).toLocaleDateString()}
+                          </td>
+                        </tr>
                     ))}
                   </tbody>
                 </table>
