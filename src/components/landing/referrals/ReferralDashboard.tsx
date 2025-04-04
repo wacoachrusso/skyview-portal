@@ -5,59 +5,91 @@ import { ThankYouModal } from "./ThankYouModal";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Copy, Send } from "lucide-react";
+import { useLoadingState } from "@/hooks/useLoadingState";
 
 export function ReferralDashboard() {
   const [referralCode, setReferralCode] = useState<string>("");
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isLoading, startLoading, stopLoading } = useLoadingState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [showThankYou, setShowThankYou] = useState(false);
   const [sendingInvite, setSendingInvite] = useState(false);
 
   useEffect(() => {
-    async function fetchReferralData() {
-      try {
-        setLoading(true);
-        // Get current user
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) return;
-        
-        const userId = session.user.id;
-        
-        // Fetch user's referrals
-        const { data: referralData } = await supabase
-          .from('referrals')
-          .select('*')
-          .eq('referrer_id', userId);
-        
-        if (referralData && referralData.length > 0) {
-          setReferrals(referralData);
-          
-          // Use the latest referral code if we have one
-          setReferralCode(referralData[0].referral_code);
-        } else {
-          // Generate a new code if none exists
-          const { data: generatedCode } = await supabase
-            .rpc('generate_referral_code');
-            
-          if (generatedCode) {
-            setReferralCode(generatedCode);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching referral data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
     fetchReferralData();
   }, []);
 
+  async function fetchReferralData() {
+    try {
+      startLoading();
+      // Get current user
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        stopLoading();
+        return;
+      }
+      
+      const userId = session.user.id;
+      
+      // Fetch user's referrals
+      const { data: referralData, error } = await supabase
+        .from('referrals')
+        .select('*')
+        .eq('referrer_id', userId);
+      
+      if (error) {
+        console.error("Error fetching referrals:", error);
+        toast.error("Failed to load referrals");
+        stopLoading();
+        return;
+      }
+
+      if (referralData && referralData.length > 0) {
+        setReferrals(referralData);
+        
+        // Use the existing referral code
+        setReferralCode(referralData[0].referral_code);
+      } else {
+        // Generate a new code if none exists
+        const { data: generatedCode, error: rpcError } = await supabase
+          .rpc('generate_referral_code');
+          
+        if (rpcError) {
+          console.error("Error generating referral code:", rpcError);
+          toast.error("Failed to generate referral code");
+        } else if (generatedCode) {
+          setReferralCode(generatedCode);
+          
+          // Save the newly generated code
+          const { error: insertError } = await supabase
+            .from('referrals')
+            .insert({ 
+              referrer_id: userId, 
+              referral_code: generatedCode,
+              status: 'pending'
+            });
+            
+          if (insertError) {
+            console.error("Error saving referral code:", insertError);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error in fetchReferralData:", error);
+      toast.error("Failed to load referral data");
+    } finally {
+      stopLoading();
+    }
+  }
+
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(referralCode);
-    toast.success("Referral code copied to clipboard");
+    if (referralCode) {
+      navigator.clipboard.writeText(referralCode);
+      toast.success("Referral code copied to clipboard");
+    } else {
+      toast.error("No referral code to copy");
+    }
   };
 
   const handleSendInvite = async () => {
@@ -78,9 +110,14 @@ export function ReferralDashboard() {
       // Check if we need to generate a new code
       let currentReferralCode = referralCode;
       if (!currentReferralCode) {
-        const { data: generatedCode } = await supabase
+        const { data: generatedCode, error: codeError } = await supabase
           .rpc('generate_referral_code');
           
+        if (codeError) {
+          console.error("Error generating referral code:", codeError);
+          throw new Error("Failed to generate referral code");
+        }
+        
         if (generatedCode) {
           currentReferralCode = generatedCode;
           setReferralCode(generatedCode);
@@ -90,24 +127,39 @@ export function ReferralDashboard() {
       }
       
       // Get user's name for the email
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
-      // Insert the referral record
-      const { error: referralError } = await supabase
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
+      
+      // Check if a referral already exists for this email
+      const { data: existingReferrals } = await supabase
         .from('referrals')
-        .insert({ 
-          referrer_id: session.user.id, 
-          referral_code: currentReferralCode,
-          referee_email: inviteEmail,
-          status: 'pending' 
-        });
+        .select('*')
+        .eq('referrer_id', session.user.id)
+        .eq('referee_email', inviteEmail);
       
-      if (referralError) {
-        throw referralError;
+      // If no referral exists for this email, create one
+      if (!existingReferrals || existingReferrals.length === 0) {
+        // Insert the referral record
+        const { error: referralError } = await supabase
+          .from('referrals')
+          .insert({ 
+            referrer_id: session.user.id, 
+            referral_code: currentReferralCode,
+            referee_email: inviteEmail,
+            status: 'pending' 
+          });
+        
+        if (referralError) {
+          console.error("Error creating referral:", referralError);
+          throw referralError;
+        }
       }
       
       // Construct the invite URL
@@ -123,21 +175,25 @@ export function ReferralDashboard() {
       });
       
       if (inviteError) {
+        console.error("Error invoking send-invite function:", inviteError);
         throw inviteError;
       }
       
       // Fetch updated referrals list
-      const { data: updatedReferrals } = await supabase
+      const { data: updatedReferrals, error: referralsError } = await supabase
         .from('referrals')
         .select('*')
         .eq('referrer_id', session.user.id);
         
-      if (updatedReferrals) {
+      if (referralsError) {
+        console.error("Error fetching updated referrals:", referralsError);
+      } else if (updatedReferrals) {
         setReferrals(updatedReferrals);
       }
       
       setShowThankYou(true);
       setInviteEmail("");
+      toast.success("Invitation sent successfully!");
       
     } catch (error) {
       console.error("Error sending invite:", error);
@@ -160,12 +216,13 @@ export function ReferralDashboard() {
           
           <div className="flex items-center space-x-3">
             <div className="bg-slate-700/60 px-4 py-3 rounded-lg border border-white/10 text-xl font-mono text-brand-gold flex-grow">
-              {referralCode || "Loading..."}
+              {isLoading ? "Loading..." : referralCode}
             </div>
             <Button 
               onClick={handleCopyCode} 
               variant="outline" 
               className="flex items-center space-x-2 bg-slate-700/40 border-white/10 hover:bg-slate-600/50"
+              disabled={isLoading || !referralCode}
             >
               <Copy size={16} />
               <span>Copy</span>
@@ -188,7 +245,7 @@ export function ReferralDashboard() {
             <Button 
               onClick={handleSendInvite} 
               className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy flex items-center space-x-2"
-              disabled={sendingInvite}
+              disabled={sendingInvite || !inviteEmail}
             >
               {sendingInvite ? (
                 <span>Sending...</span>
@@ -205,7 +262,7 @@ export function ReferralDashboard() {
         <div>
           <h3 className="text-2xl font-bold text-white mb-2">Your Referrals</h3>
           <div className="space-y-4">
-            {loading ? (
+            {isLoading ? (
               <p className="text-gray-300">Loading referrals...</p>
             ) : referrals.length > 0 ? (
               <div className="bg-slate-700/40 rounded-lg border border-white/10 overflow-hidden">

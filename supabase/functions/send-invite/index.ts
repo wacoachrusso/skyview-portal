@@ -53,7 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { email, inviteUrl, inviterName } = await req.json() as EmailRequest;
-    console.log(`Sending invite email to ${email} from ${inviterName}`);
+    console.log(`Sending invite email to ${email} from ${inviterName || "anonymous"}`);
     console.log("Invite URL:", inviteUrl);
 
     if (!RESEND_API_KEY) {
