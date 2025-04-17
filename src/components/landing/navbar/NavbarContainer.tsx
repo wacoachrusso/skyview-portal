@@ -1,4 +1,3 @@
-
 import { Logo } from "./Logo";
 import { NavbarActions } from "./NavbarActions";
 import { MobileMenu } from "./MobileMenu";
@@ -20,21 +19,20 @@ export function NavbarContainer() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-14">
           <Logo handleLogoClick={handleLogoClick} />
-          
-          <NavbarActions 
-            isLoggedIn={isLoggedIn} 
-            isLoading={isLoading} 
-          />
-          
+
           <div className="hidden md:flex items-center space-x-4">
-            <AuthButtons 
-              isLoading={isLoading} 
-              isLoggedIn={isLoggedIn} 
+            {/* First put NavbarActions for logged-in users */}
+            {isLoggedIn && <NavbarActions isLoggedIn={isLoggedIn} isLoading={isLoading} />}
+            
+            {/* Then include auth buttons */}
+            <AuthButtons
+              isLoading={isLoading}
+              isLoggedIn={isLoggedIn}
               scrollToPricing={scrollToPricing}
             />
           </div>
 
-          <MobileMenu 
+          <MobileMenu
             isLoggedIn={isLoggedIn}
             isLoading={isLoading}
             isMobileMenuOpen={isMobileMenuOpen}
