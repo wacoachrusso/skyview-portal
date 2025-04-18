@@ -23,7 +23,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
           <div className="flex items-center">
-            {!isDashboard && (
+            {/* {!isDashboard && (
               <Button 
                 asChild
                 variant="ghost" 
@@ -35,7 +35,7 @@ export const DashboardHeader = ({ userEmail, onSignOut }: DashboardHeaderProps) 
                   {!isMobile && <span className="ml-1">Dashboard</span>}
                 </Link>
               </Button>
-            )}
+            )} */}
             <DashboardLogo />
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
