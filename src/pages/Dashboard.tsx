@@ -9,6 +9,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Dashboard() {
   const [userId, setUserId] = useState<string | null>(null);
   const mounted = useRef(true);
   const isMobile = useIsMobile();
-
+  const { handleLogout } = useLogout();
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading && mounted.current) {
@@ -101,22 +102,17 @@ export default function Dashboard() {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      console.log('Signing out...');
-      setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast({
-        variant: "destructive",
-        title: "Error signing out",
-        description: "Please try again."
-      });
-    }
-  };
+    // Handle custom sign out to clear cached data
+    const handleSignOut = async () => {
+      try {
+        // Clear cached data on sign out
+        sessionStorage.removeItem("cached_user_profile");
+        sessionStorage.removeItem("cached_auth_user");
+        handleLogout();
+      } catch (error) {
+        console.error("Error during sign out:", error);
+      }
+    };
 
   if (isLoading) {
     return (

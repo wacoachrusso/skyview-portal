@@ -114,11 +114,11 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
               <span className="font-medium text-brand-navy">Current Plan:</span>
               <span className="col-span-2 text-gray-700 capitalize">{profile?.subscription_plan || 'Free'}</span>
             </div>
-            <div className="grid grid-cols-3 items-center gap-4">
+            <div className="grid-cols-3 items-center gap-4 hidden">
               <span className="font-medium text-brand-navy">Status:</span>
               <span className="col-span-2 text-gray-700 capitalize">{profile?.subscription_status || 'Inactive'}</span>
             </div>
-            <div className="grid grid-cols-3 items-center gap-4">
+            <div className="grid-cols-3 items-center gap-4 hidden">
               <span className="font-medium text-brand-navy">Queries Used:</span>
               <span className="col-span-2 text-gray-700">{profile?.query_count || 0}</span>
             </div>

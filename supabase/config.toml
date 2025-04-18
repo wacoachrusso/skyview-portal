@@ -62,7 +62,7 @@ enable_confirmations = true
 
 [functions]
 # Port to use for Functions server.
-port = 54328
+
 
 [functions.send-invite]
 verify_jwt = true
