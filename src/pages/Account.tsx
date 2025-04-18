@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { useAccountManagement } from "@/hooks/useAccountManagement";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AccountHeader } from "@/components/account/AccountHeader";
@@ -11,10 +10,10 @@ import { CancelSubscriptionDialog } from "@/components/account/CancelSubscriptio
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { useLogout } from "@/hooks/useLogout";
 
 const Account = () => {
   const navigate = useNavigate();
-  const { handleSignOut } = useAuthManagement();
   const { 
     isLoading, 
     loadError, 
@@ -23,11 +22,46 @@ const Account = () => {
     handleCancelSubscription,
     retryLoading 
   } = useAccountManagement();
-  
+  const { handleLogout } = useLogout();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [mounted, setMounted] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Handle custom sign out to clear cached data
+  const handleSignOut = async () => {
+    try {
+      // Clear cached data on sign out
+      sessionStorage.removeItem("cached_user_profile");
+      sessionStorage.removeItem("cached_auth_user");
+      handleLogout();
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
+
+  const handlePlanChange = () => {
+    navigate('/?scrollTo=pricing-section');
+  };
+
+  const handleInitialCancelClick = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleCancelDialogClose = () => {
+    setShowCancelDialog(false);
+  };
+
+  const handleReadRefundPolicy = () => {
+    setShowCancelDialog(false);
+    navigate('/refunds', { state: { fromCancellation: true } });
+  };
+
+  const handleRefresh = () => {
+    console.log("Manually refreshing profile data");
+    retryLoading();
+    setLoadingTimeout(false);
+  };
   
   // Modified to handle both first load and subsequent loads
   useEffect(() => {
@@ -86,47 +120,11 @@ const Account = () => {
       setMounted(false);
     };
   }, [profile?.id, isLoading]);
-
-  // Handle custom sign out to clear cached data
-  const handleCustomSignOut = async () => {
-    try {
-      // Clear cached data on sign out
-      sessionStorage.removeItem("cached_user_profile");
-      sessionStorage.removeItem("cached_auth_user");
-      await handleSignOut();
-    } catch (error) {
-      console.error("Error during sign out:", error);
-    }
-  };
-
-  const handlePlanChange = () => {
-    navigate('/?scrollTo=pricing-section');
-  };
-
-  const handleInitialCancelClick = () => {
-    setShowCancelDialog(true);
-  };
-
-  const handleCancelDialogClose = () => {
-    setShowCancelDialog(false);
-  };
-
-  const handleReadRefundPolicy = () => {
-    setShowCancelDialog(false);
-    navigate('/refunds', { state: { fromCancellation: true } });
-  };
-
-  const handleRefresh = () => {
-    console.log("Manually refreshing profile data");
-    retryLoading();
-    setLoadingTimeout(false);
-  };
-
   // Show loading state
   if (isLoading && !loadingTimeout) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-        <DashboardHeader userEmail={userEmail} onSignOut={handleCustomSignOut} />
+        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
           <div className="text-center">
             <LoadingSpinner size="lg" className="mx-auto mb-4 border-brand-gold" />
@@ -152,7 +150,7 @@ const Account = () => {
     console.log("No profile found for account page");
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-        <DashboardHeader userEmail={userEmail} onSignOut={handleCustomSignOut} />
+        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
           <div className="text-center max-w-md px-4">
             <h2 className="text-xl font-semibold mb-4 text-white">Profile Not Found</h2>
@@ -183,7 +181,7 @@ const Account = () => {
   console.log("Account page rendering with profile:", profile.id);
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-      <DashboardHeader userEmail={userEmail} onSignOut={handleCustomSignOut} />
+      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
       <main className="container mx-auto px-4 py-8 max-w-4xl relative">
         <AccountHeader />
         <div className="space-y-6">

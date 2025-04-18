@@ -24,6 +24,17 @@ export function ChatNavbar() {
   const { handleLogout } = useLogout();
   const isMobile = useIsMobile();
   
+  // Handle custom sign out to clear cached data
+  const handleSignOut = async () => {
+    try {
+      // Clear cached data on sign out
+      sessionStorage.removeItem("cached_user_profile");
+      sessionStorage.removeItem("cached_auth_user");
+      handleLogout();
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
   return (
     <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm py-3 px-4">
       <div className="flex items-center justify-between">
@@ -120,7 +131,7 @@ export function ChatNavbar() {
                   Account
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => handleLogout()}
+                  onClick={() => handleSignOut()}
                   className="text-red-500 focus:text-red-500 focus:bg-red-500/10"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
