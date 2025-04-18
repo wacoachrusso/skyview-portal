@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthManagement } from "@/hooks/useAuthManagement";
 import { useAccountManagement } from "@/hooks/useAccountManagement";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AccountHeader } from "@/components/account/AccountHeader";
@@ -12,10 +10,10 @@ import { CancelSubscriptionDialog } from "@/components/account/CancelSubscriptio
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { useLogout } from "@/hooks/useLogout";
 
 const Account = () => {
   const navigate = useNavigate();
-  const { handleSignOut } = useAuthManagement();
   const { 
     isLoading, 
     loadError, 
@@ -24,12 +22,52 @@ const Account = () => {
     handleCancelSubscription,
     retryLoading 
   } = useAccountManagement();
-  
+  const { handleLogout } = useLogout();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [mounted, setMounted] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Handle custom sign out to clear cached data
+  const handleSignOut = async () => {
+    try {
+      // Clear cached data on sign out
+      sessionStorage.removeItem("cached_user_profile");
+      sessionStorage.removeItem("cached_auth_user");
+      handleLogout();
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
+
+  const handlePlanChange = () => {
+    navigate('/?scrollTo=pricing-section');
+  };
+
+  const handleInitialCancelClick = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleCancelDialogClose = () => {
+    setShowCancelDialog(false);
+  };
+
+  const handleReadRefundPolicy = () => {
+    setShowCancelDialog(false);
+    navigate('/refunds', { state: { fromCancellation: true } });
+  };
+
+  const handleRefresh = () => {
+    console.log("Manually refreshing profile data");
+    retryLoading();
+    setLoadingTimeout(false);
+  };
   
+  // Modified to handle both first load and subsequent loads
+  useEffect(() => {
+    console.log("Account component mounted or profile updated:", profile?.id);
+  }, [profile]);
+
   // Set a timeout for loading to improve user experience
   useEffect(() => {
     let timeoutId: number;
@@ -82,30 +120,6 @@ const Account = () => {
       setMounted(false);
     };
   }, [profile?.id, isLoading]);
-
-  const handlePlanChange = () => {
-    navigate('/?scrollTo=pricing-section');
-  };
-
-  const handleInitialCancelClick = () => {
-    setShowCancelDialog(true);
-  };
-
-  const handleCancelDialogClose = () => {
-    setShowCancelDialog(false);
-  };
-
-  const handleReadRefundPolicy = () => {
-    setShowCancelDialog(false);
-    navigate('/refunds', { state: { fromCancellation: true } });
-  };
-
-  const handleRefresh = () => {
-    console.log("Manually refreshing profile data");
-    retryLoading();
-    setLoadingTimeout(false);
-  };
-
   // Show loading state
   if (isLoading && !loadingTimeout) {
     return (
@@ -124,43 +138,6 @@ const Account = () => {
             >
               <RefreshCw className="h-3 w-3 mr-2" />
               Refresh
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading timeout or error message
-  if ((loadingTimeout && isLoading) || loadError) {
-    const isTimeout = loadingTimeout && isLoading;
-    const errorMessage = isTimeout 
-      ? "This is taking longer than expected." 
-      : loadError || "Unable to load your profile information.";
-      
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-4">
-          <h2 className="text-2xl font-semibold mb-4 text-white text-center">
-            {isTimeout ? "Loading your account..." : "Account Error"}
-          </h2>
-          <p className="text-muted-foreground mb-8 text-center max-w-md">{errorMessage}</p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              onClick={handleRefresh} 
-              variant="outline"
-              className="bg-white/10 border-white/20 hover:bg-white/20 text-white flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh Page
-            </Button>
-            <Button 
-              onClick={() => navigate('/dashboard')} 
-              variant="default"
-              className="bg-gradient-to-r from-brand-purple to-brand-magenta text-white hover:opacity-90"
-            >
-              Return to Dashboard
             </Button>
           </div>
         </div>

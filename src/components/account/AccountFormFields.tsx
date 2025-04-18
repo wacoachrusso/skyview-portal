@@ -29,7 +29,7 @@ export const AccountFormFields = ({
     { name: "airline", label: "Airline", required: true, disableAfterSet: true },
     { name: "employee_id", label: "Employee ID", optional: true },
     { name: "address", label: "Address", optional: true },
-    { name: "phone_number", label: "Phone Number", optional: true },
+    // { name: "phone_number", label: "Phone Number", optional: true },
   ];
 
   return (

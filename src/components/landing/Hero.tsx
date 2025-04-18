@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
@@ -66,11 +65,11 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8 lg:mb-0"
+              className="flex flex-wrap md:flex-row gap-4 justify-center lg:justify-start"
             >
               <Button 
                 size="lg"
-                className="cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold w-full sm:w-auto px-8 shadow-gold text-base high-contrast-focus"
+                className="bg-brand-gold hover:bg-brand-gold/90 text-brand-navy font-semibold px-6 py-3 rounded-md shadow-lg w-full sm:w-auto"
                 onClick={scrollToPricing}
                 aria-label="Start your free trial today"
               >
@@ -78,7 +77,7 @@ export function Hero() {
               </Button>
               <Button 
                 size="lg"
-                className="cta-button primary-cta bg-gradient-to-r from-sky-700 to-sky-600 hover:from-sky-800 hover:to-sky-700 text-white font-semibold w-full sm:w-auto px-8 shadow-premium text-base high-contrast-focus"
+                className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-md shadow-lg w-full sm:w-auto"
                 onClick={scrollToPricing}
                 aria-label="Experience SkyGuide features and capabilities"
               >
@@ -87,7 +86,7 @@ export function Hero() {
               <Button
                 size="lg"
                 variant="outline"
-                className="premium-button border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold w-full sm:w-auto px-6 backdrop-blur-sm shadow-lg text-base high-contrast-focus"
+                className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 font-semibold px-6 py-3 rounded-md backdrop-blur-sm shadow-lg w-full sm:w-auto"
                 onClick={() => setShowVideo(true)}
                 aria-label="Watch demo video"
               >
@@ -134,7 +133,7 @@ export function Hero() {
       </Dialog>
       
       {/* Skip link for keyboard navigation */}
-      <a href="#pricing-section" className="skip-link">Skip to pricing section</a>
+      <a href="#pricing-section" className="skip-link hidden">Skip to pricing section</a>
     </section>
   );
 }

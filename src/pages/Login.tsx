@@ -1,10 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { handleAuthSession, handlePasswordReset } from "@/utils/auth/sessionHandler";
+import {
+  handleAuthSession,
+  handlePasswordReset,
+} from "@/utils/auth/sessionHandler";
 import { createNewSession, validateSessionToken } from "@/services/session";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,22 +29,24 @@ const Login = () => {
   useEffect(() => {
     const checkAuth = async () => {
       // Skip this check if we're already in login flow
-      if (localStorage.getItem('login_in_progress') === 'true') {
+      if (localStorage.getItem("login_in_progress") === "true") {
         setInitialCheckDone(true);
         return;
       }
-      
+
       // Check if user is already logged in
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         console.log("User already authenticated, redirecting to chat");
         // Use the utility to break potential redirect loops
-        localStorage.setItem('skip_initial_redirect', 'true');
-        navigate('/chat', { replace: true });
+        localStorage.setItem("skip_initial_redirect", "true");
+        navigate("/chat", { replace: true });
       }
       setInitialCheckDone(true);
     };
-    
+
     checkAuth();
   }, [navigate]);
 
@@ -53,12 +57,17 @@ const Login = () => {
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: errorParam || "Failed to complete authentication. Please try again."
+        description:
+          errorParam || "Failed to complete authentication. Please try again.",
       });
     }
   }, [errorParam, toast, initialCheckDone]);
 
-  const handleLogin = async (email: string, password?: string, rememberMe?: boolean) => {
+  const handleLogin = async (
+    email: string,
+    password?: string,
+    rememberMe?: boolean
+  ) => {
     if (!email || !password) {
       toast({
         variant: "destructive",
@@ -71,32 +80,49 @@ const Login = () => {
     setLoading(true);
     try {
       // Set a flag to prevent SessionCheck from redirecting during login
-      localStorage.setItem('login_in_progress', 'true');
-      
+      localStorage.setItem("login_in_progress", "true");
+
       const success = await handleSignIn(email, password, rememberMe);
-      
+
       if (success) {
         console.log("Login successful");
+
+        // IMPORTANT: Set auth status immediately for instant UI updates
+        localStorage.setItem("auth_status", "logged_in");
+
         toast({
           title: "Login Successful",
           description: "You have successfully logged in.",
         });
 
         // Get current user after successful login
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (user) {
+          // Check if user is admin and store that as well
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("is_admin")
+            .eq("id", user.id)
+            .single();
+
+          if (profile?.is_admin) {
+            localStorage.setItem("user_is_admin", "true");
+          }
+
           await handleAuthSession(user.id, createNewSession, navigate);
           // Use the utility to break potential redirect loops
-          navigateWithoutRedirectCheck('/chat');
+          navigateWithoutRedirectCheck("/chat");
         }
       } else {
-        localStorage.removeItem('login_in_progress');
+        localStorage.removeItem("login_in_progress");
         setLoading(false);
       }
     } catch (error) {
       console.error("Unexpected error during login:", error);
-      localStorage.removeItem('login_in_progress');
+      localStorage.removeItem("login_in_progress");
       toast({
         variant: "destructive",
         title: "Login Error",
@@ -151,8 +177,8 @@ const Login = () => {
     <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
       <div className="w-full max-w-md space-y-6">
         {/* Back to home link */}
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6"
           aria-label="Back to home page"
         >
