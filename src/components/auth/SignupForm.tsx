@@ -6,128 +6,96 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { createNewSession } from "@/services/session";
 import { useSessionHandler } from "@/hooks/useSessionHandler";
-import { AuthFormFooter } from "./AuthFormFooter";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 
-const authFormSchema = z.object({
+const signupFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
   password: z.string().min(6, "Password must be at least 6 characters."),
-});
+})
 
-type AuthFormValues = z.infer<typeof authFormSchema>;
+type SignupFormValues = z.infer<typeof signupFormSchema>;
 
-export function AuthForm() {
-  const [isLogin, setIsLogin] = useState(false); // Default to signup mode when on signup page
+export function SignupForm() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { handleSession } = useSessionHandler();
 
-  const form = useForm<AuthFormValues>({
-    resolver: zodResolver(authFormSchema),
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupFormSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: AuthFormValues) => {
+  const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
 
     try {
-      // Set a flag to prevent SessionCheck from redirecting during login
+      // Set a flag to prevent SessionCheck from redirecting during signup
       localStorage.setItem('login_in_progress', 'true');
       
-      if (isLogin) {
-        // Login
-        const { data: authData, error } = await supabase.auth.signInWithPassword({
-          email: data.email,
-          password: data.password,
+      // Sign up
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        console.error("Signup error:", error);
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: error.message,
         });
+        localStorage.removeItem('login_in_progress');
+        setLoading(false);
+        return;
+      }
 
-        if (error) {
-          console.error("Login error:", error);
-          toast({
-            variant: "destructive",
-            title: "Login failed",
-            description: error.message,
-          });
-          localStorage.removeItem('login_in_progress');
-          setLoading(false);
-          return;
-        }
-
-        if (authData.session) {
-          toast({
-            title: "Login successful",
-            description: "Welcome back!",
+      if (authData.session) {
+        // Add the user to the profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user?.id,
+            email: data.email,
+            subscription_plan: 'free',
+            account_status: 'active',
           });
           
-          await createNewSession(authData.session.user.id);
-          await handleSession();
-          
-          // Clean up before navigation
-          localStorage.removeItem('login_in_progress');
-          navigate("/chat", { replace: true });
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
         }
-      } else {
-        // Sign up
-        const { data: authData, error } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-        });
-
-        if (error) {
-          console.error("Signup error:", error);
-          toast({
-            variant: "destructive",
-            title: "Signup failed",
-            description: error.message,
-          });
-          localStorage.removeItem('login_in_progress');
-          setLoading(false);
-          return;
-        }
-
-        // Set signups to go to chat instead of asking for email verification
-        if (authData.session) {
-          toast({
-            title: "Signup successful",
-            description: "Welcome to SkyGuide!",  // Correct welcome message for signup
-          });
-          
-          // Add the user to the profiles table
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authData.user?.id,
-              email: data.email,
-              subscription_plan: 'free',
-              account_status: 'active',
-            });
-            
-          if (profileError) {
-            console.error("Error creating profile:", profileError);
+        
+        await createNewSession(authData.session.user.id);
+        
+        // Sign out the user after successful signup to force them to log in explicitly
+        await supabase.auth.signOut();
+        
+        // Clean up before navigation
+        localStorage.removeItem('login_in_progress');
+        
+        // Pass email to login form for convenience
+        navigate("/login", { 
+          replace: true,
+          state: { 
+            from_signup: true,
+            email: data.email 
           }
-          
-          await createNewSession(authData.session.user.id);
-          await handleSession(); // Make sure we handle the session before navigating
-          
-          // Clean up before navigation
-          localStorage.removeItem('login_in_progress');
-          navigate("/chat", { replace: true }); // Use replace to prevent back navigation issues
-        } else {
-          toast({
-            title: "Check your email",
-            description: "We've sent you a verification link.",
-          });
-          localStorage.removeItem('login_in_progress');
-        }
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a verification link.",
+        });
+        localStorage.removeItem('login_in_progress');
       }
     } catch (error) {
       console.error("Authentication error:", error);
@@ -147,12 +115,10 @@ export function AuthForm() {
       <CardContent className="pt-6">
         <div className="mb-6 text-center">
           <h2 className="text-xl font-bold text-white">
-            {isLogin ? "Sign In to Your Account" : "Create a New Account"}
+            Create a New Account
           </h2>
           <p className="text-sm text-gray-400 mt-1">
-            {isLogin 
-              ? "Enter your credentials to access your account" 
-              : "Fill in the details below to get started"}
+            Fill in the details below to get started
           </p>
         </div>
         
@@ -200,10 +166,10 @@ export function AuthForm() {
               {loading ? (
                 <div className="flex items-center justify-center">
                   <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-brand-navy border-t-transparent" />
-                  <span>{isLogin ? "Signing in..." : "Creating account..."}</span>
+                  <span>Creating account...</span>
                 </div>
               ) : (
-                <span>{isLogin ? "Sign In" : "Create Account"}</span>
+                <span>Create Account</span>
               )}
             </Button>
             
@@ -214,13 +180,17 @@ export function AuthForm() {
             </div>
 
             <GoogleSignInButton />
+            
+            <div className="text-center mt-4">
+              <span className="text-sm text-gray-400">
+                Already have an account?{" "}
+                <Link to="/login" className="text-brand-gold hover:text-brand-gold/80 transition-colors">
+                  Sign in
+                </Link>
+              </span>
+            </div>
           </form>
         </Form>
-        
-        <AuthFormFooter 
-          isLogin={isLogin} 
-          onToggle={() => setIsLogin(!isLogin)} 
-        />
       </CardContent>
     </Card>
   );
