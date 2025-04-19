@@ -1,4 +1,3 @@
-
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -8,7 +7,7 @@ import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
@@ -17,10 +16,24 @@ import { ViewportManager } from "@/components/utils/ViewportManager";
 export default function Index() {
   const location = useLocation();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
+  // Check if user is logged in using local storage
   useEffect(() => {
     console.log('Index page mounted');
     
+    // Check auth status from local storage and redirect if needed
+    const authStatus = localStorage.getItem("auth_status");
+    
+    if (authStatus === "logged_in") {
+      console.log("User is logged in, redirecting to chat");
+      navigate("/chat", { replace: true });
+    } else {
+      setIsLoading(false);
+    }
+
+    // Continue with other initialization logic
     // Check for pricing section scroll
     const searchParams = new URLSearchParams(location.search);
     const scrollTo = searchParams.get('scrollTo');
@@ -48,7 +61,7 @@ export default function Index() {
     return () => {
       console.log('Index page unmounted');
     };
-  }, [location]);
+  }, [location, navigate]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
@@ -59,6 +72,15 @@ export default function Index() {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.5 } }
   };
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-luxury-dark flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
