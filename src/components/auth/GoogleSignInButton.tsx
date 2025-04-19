@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
 export const GoogleSignInButton = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();

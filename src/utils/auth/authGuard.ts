@@ -5,7 +5,7 @@
  * Returns true if authenticated, false otherwise
  */
 export function isAuthenticated(): boolean {
-    return localStorage.getItem("auth_status") === "logged_in";
+    return localStorage.getItem("auth_status") === "authenticated";
   }
   
   /**

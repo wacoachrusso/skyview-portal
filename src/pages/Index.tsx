@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
 import { ViewportManager } from "@/components/utils/ViewportManager";
+import { Button } from "@/components/ui/button";
 
 export default function Index() {
   const location = useLocation();
@@ -26,7 +27,7 @@ export default function Index() {
     // Check auth status from local storage and redirect if needed
     const authStatus = localStorage.getItem("auth_status");
     
-    if (authStatus === "logged_in") {
+    if (authStatus === "authenticated") {
       console.log("User is logged in, redirecting to chat");
       navigate("/chat", { replace: true });
     } else {
@@ -65,6 +66,10 @@ export default function Index() {
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
+  };
+
+  const handleReferralClick = () => {
+    navigate("/login", { state: { redirectTo: "/referral" } });
   };
 
   // Animation variants for sections
@@ -127,13 +132,27 @@ export default function Index() {
             <HomeFAQ />
           </motion.div>
           
+          {/* Replace ReferralSection with a CTA to login for referrals */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={sectionVariants}
           >
-            <ReferralSection />
+            <div className="container mx-auto px-4 py-16 text-center">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Invite Friends & Earn Rewards
+              </h2>
+              <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+                Sign in to access our referral program and earn rewards when your friends join SkyGuide.
+              </p>
+              <Button 
+                onClick={handleReferralClick}
+                className="premium-button bg-brand-gold text-brand-navy font-semibold py-3 px-8 rounded-lg hover:bg-brand-gold/90 transition-colors shadow-gold hover:shadow-gold-hover"
+              >
+                Sign in to refer friends
+              </Button>
+            </div>
           </motion.div>
         </div>
       </main>

@@ -22,7 +22,11 @@ const loginFormSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-export function AuthLoginForm() {
+interface AuthLoginFormProps {
+  redirectPath?: string;
+}
+
+export function AuthLoginForm({ redirectPath = "/chat" }: AuthLoginFormProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -61,7 +65,7 @@ export function AuthLoginForm() {
 
       if (authData.session) {
         // IMPORTANT: Set auth status immediately for instant UI updates
-        localStorage.setItem('auth_status', 'logged_in');
+        localStorage.setItem('auth_status', 'authenticated');
         
         toast({
           title: "Login successful",
@@ -75,8 +79,8 @@ export function AuthLoginForm() {
         
         await createNewSession(authData.session.user.id);
         
-        // Directly navigate to chat
-        window.location.href = "/chat";
+        // Redirect to the specified path or default to chat
+        window.location.href = redirectPath;
         return; // Stop execution here
       }
     } catch (error) {
@@ -100,6 +104,11 @@ export function AuthLoginForm() {
           </h2>
           <p className="text-sm text-gray-400 mt-1">
             Enter your credentials to access your account
+            {redirectPath !== "/chat" && (
+              <span className="block mt-1 text-brand-gold">
+                {redirectPath === "/referral" ? "Sign in to access the referral program" : `Sign in to access ${redirectPath.replace('/', '')}`}
+              </span>
+            )}
           </p>
         </div>
         
@@ -196,7 +205,10 @@ export function AuthLoginForm() {
             <div className="text-center mt-4">
               <span className="text-sm text-gray-400">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-brand-gold hover:text-brand-gold/80 transition-colors">
+                <Link 
+                  to={`/signup${redirectPath !== "/chat" ? `?redirectTo=${encodeURIComponent(redirectPath)}` : ""}`}
+                  className="text-brand-gold hover:text-brand-gold/80 transition-colors"
+                >
                   Sign up
                 </Link>
               </span>

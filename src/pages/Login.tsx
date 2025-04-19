@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,10 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  const location = useLocation();
+
+  // Store redirectTo path from state if it exists
+  const redirectPath = location.state?.redirectTo || "/chat";
 
   // Check if user is already logged in
   useEffect(() => {
@@ -29,16 +33,18 @@ const Login = () => {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) {
-        console.log("User already authenticated, redirecting to chat");
+        console.log(`User already authenticated, redirecting to ${redirectPath}`);
+        // Set auth status in local storage
+        localStorage.setItem("auth_status", "authenticated");
         // Use the utility to break potential redirect loops
         localStorage.setItem("skip_initial_redirect", "true");
-        navigate("/chat", { replace: true });
+        navigate(redirectPath, { replace: true });
       }
       setInitialCheckDone(true);
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, redirectPath]);
 
   // Check for error param in URL (from Google auth callback)
   const errorParam = searchParams.get("error");
@@ -52,6 +58,13 @@ const Login = () => {
       });
     }
   }, [errorParam, toast, initialCheckDone]);
+
+  // Component to modify AuthLoginForm to handle custom redirects
+  const EnhancedAuthLoginForm = () => {
+    // This is a wrapper component that would pass the redirectPath to AuthLoginForm
+    // You might need to modify AuthLoginForm to accept a redirectPath prop
+    return <AuthLoginForm redirectPath={redirectPath} />;
+  };
 
   // Hide the login form until initial check is complete to prevent flashing
   if (!initialCheckDone) {
@@ -86,10 +99,15 @@ const Login = () => {
           </h1>
           <p className="text-sm text-gray-400">
             Enter your credentials to access your account
+            {redirectPath !== "/chat" && redirectPath === "/referral" && (
+              <span className="block mt-1 text-brand-gold">
+                Sign in to access the referral program
+              </span>
+            )}
           </p>
         </div>
 
-        <AuthLoginForm />
+        <EnhancedAuthLoginForm />
       </div>
     </div>
   );
