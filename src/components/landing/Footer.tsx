@@ -1,4 +1,3 @@
-
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail } from "lucide-react";
@@ -10,6 +9,13 @@ export function Footer() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const companyLinks = [
     { label: "About Us", href: "/about" },
     { label: "Privacy Policy", href: "/privacy-policy" },
@@ -18,7 +24,14 @@ export function Footer() {
   ];
 
   const supportLinks = [
-    { label: "FAQs", href: "/#faq" },
+    { 
+      label: "FAQs", 
+      href: "#faq", 
+      onClick: (e: React.MouseEvent) => {
+        e.preventDefault();
+        scrollToSection("faq");
+      }
+    },
     { label: "Contact Support", href: "mailto:support@skyguide.site" },
   ];
 
@@ -118,6 +131,7 @@ export function Footer() {
                   <a 
                     href={link.href} 
                     className="text-sm hover:text-white transition-colors flex items-center space-x-1 w-fit hover:translate-x-1 duration-200"
+                    onClick={link.onClick}
                   >
                     <span className="text-brand-gold">•</span>
                     <span>{link.label}</span>
