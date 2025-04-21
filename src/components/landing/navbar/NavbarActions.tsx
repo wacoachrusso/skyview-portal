@@ -10,7 +10,7 @@ interface NavbarActionsProps {
 export function NavbarActions({ isLoggedIn, isLoading }: NavbarActionsProps) {
   // Create an immediate state based on localStorage
   const [shouldShowActions, setShouldShowActions] = useState(() => {
-    return localStorage.getItem('auth_status') === 'logged_in';
+    return localStorage.getItem('auth_status') === 'authenticated';
   });
   
   // Update our local state whenever props change (after API call completes)

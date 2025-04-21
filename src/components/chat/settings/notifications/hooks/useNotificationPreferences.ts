@@ -3,16 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export interface NotificationPreferences {
-  emailNotifications: boolean;
   pushNotifications: boolean;
 }
 
 export function useNotificationPreferences() {
   const [preferences, setPreferences] = useState<NotificationPreferences>({
-    emailNotifications: true,
-    pushNotifications: true,
+    pushNotifications: false,
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -20,29 +18,36 @@ export function useNotificationPreferences() {
   }, []);
 
   const loadPreferences = async () => {
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
-          .select('email_notifications, push_notifications')
+          .select('push_notifications')
           .eq('id', user.id)
           .single();
+          
+        if (error) {
+          console.error("Error loading profile:", error);
+          return;
+        }
           
         if (profile) {
           console.log("Loaded notification preferences:", profile);
           setPreferences({
-            emailNotifications: profile.email_notifications ?? true,
-            pushNotifications: profile.push_notifications ?? true,
+            pushNotifications: profile.push_notifications ?? false,
           });
         }
       }
     } catch (error) {
       console.error("Error loading preferences:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const savePreferences = async (emailEnabled: boolean, pushEnabled: boolean) => {
+  const savePreferences = async (pushEnabled: boolean) => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -51,15 +56,14 @@ export function useNotificationPreferences() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          email_notifications: emailEnabled,
           push_notifications: pushEnabled
         })
         .eq('id', user.id);
 
       if (error) throw error;
 
+      // Update local state
       setPreferences({
-        emailNotifications: emailEnabled,
         pushNotifications: pushEnabled
       });
 
@@ -67,6 +71,8 @@ export function useNotificationPreferences() {
         title: "Preferences Updated",
         description: "Your notification preferences have been saved.",
       });
+      
+      return true;
     } catch (error) {
       console.error("Error saving preferences:", error);
       toast({
@@ -74,6 +80,7 @@ export function useNotificationPreferences() {
         description: "Failed to save preferences. Please try again.",
         variant: "destructive",
       });
+      return false;
     } finally {
       setLoading(false);
     }

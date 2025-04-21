@@ -20,7 +20,7 @@ export function FontSizeSelector({ fontSize, setFontSize }: FontSizeSelectorProp
         <SelectTrigger className="w-full bg-background border-input">
           <SelectValue placeholder="Select font size" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-[#020817] border-white/10">
           <SelectItem value="small">Small</SelectItem>
           <SelectItem value="medium">Medium</SelectItem>
           <SelectItem value="large">Large</SelectItem>

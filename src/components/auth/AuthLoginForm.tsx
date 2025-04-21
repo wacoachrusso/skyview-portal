@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { createNewSession } from "@/services/session";
-import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,13 +25,11 @@ interface AuthLoginFormProps {
   redirectPath?: string;
 }
 
-export function AuthLoginForm({ redirectPath = "/chat" }: AuthLoginFormProps) {
+export function AuthLoginForm({ redirectPath = "/dashboard" }: AuthLoginFormProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const { handleSession } = useSessionHandler();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),

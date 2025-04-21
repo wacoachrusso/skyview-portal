@@ -1,6 +1,11 @@
-
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, LayoutDashboard, LogOut, UserCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  LayoutDashboard,
+  LogOut,
+  UserCircle,
+} from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "@/hooks/useLogout";
@@ -14,10 +19,25 @@ interface ChatHeaderProps {
   isLoading?: boolean;
 }
 
-export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoading = false }: ChatHeaderProps) {
+export function ChatHeader({
+  onNewChat,
+  onBack,
+  showBackButton = false,
+  isLoading = false,
+}: ChatHeaderProps) {
   const isMobile = useIsMobile();
   const { handleLogout } = useLogout();
-
+  // Handle custom sign out to clear cached data
+  const handleSignOut = async () => {
+    try {
+      // Clear cached data on sign out
+      sessionStorage.removeItem("cached_user_profile");
+      sessionStorage.removeItem("cached_auth_user");
+      handleLogout();
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
   return (
     <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border/60 bg-background/95 backdrop-blur-md sticky top-0 z-50 shadow-sm supports-[backdrop-filter]:bg-background/60 safe-top">
       <div className="flex items-center space-x-4">
@@ -32,24 +52,28 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
-        <div className={`hidden items-center gap-2 ${isMobile ? 'ml-10' : ''}`}>
+        <div className={`hidden items-center gap-2 ${isMobile ? "ml-10" : ""}`}>
           <div className="items-center justify-center">
-            <img 
-              src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png" 
-              alt="SkyGuide Logo" 
+            <img
+              src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png"
+              alt="SkyGuide Logo"
               className="h-7 w-auto premium-logo-glow transition-all duration-300"
             />
           </div>
-          <h1 className="text-lg font-semibold text-foreground leading-none gradient-text">SkyGuide</h1>
+          <h1 className="text-lg font-semibold text-foreground leading-none gradient-text">
+            SkyGuide
+          </h1>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        {isLoading && <Icons.spinner className="h-4 w-4 mr-2 text-brand-gold" />}
+        {isLoading && (
+          <Icons.spinner className="h-4 w-4 mr-2 text-brand-gold" />
+        )}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => forceNavigate('/dashboard')}
+          onClick={() => forceNavigate("/dashboard")}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center transition-colors"
         >
           <LayoutDashboard className="h-4 w-4" />
@@ -58,7 +82,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => forceNavigate('/account')}
+          onClick={() => forceNavigate("/account")}
           className="text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center transition-colors"
         >
           <UserCircle className="h-4 w-4" />
@@ -78,7 +102,7 @@ export function ChatHeader({ onNewChat, onBack, showBackButton = false, isLoadin
           size="sm"
           onClick={(e) => {
             e.preventDefault();
-            handleLogout();
+            handleSignOut();
           }}
           className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
         >

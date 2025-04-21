@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -7,52 +7,37 @@ import { Info } from "lucide-react";
 interface PushNotificationToggleProps {
   enabled: boolean;
   loading: boolean;
+  disabled?: boolean;
   onToggle: (enabled: boolean) => void;
-  onPermissionRequest: () => void;
 }
 
 export function PushNotificationToggle({ 
   enabled, 
   loading, 
-  onToggle,
-  onPermissionRequest 
+  disabled = false,
+  onToggle 
 }: PushNotificationToggleProps) {
   const { toast } = useToast();
   const [showHelp, setShowHelp] = useState(false);
   
+  // Check if notifications are blocked on component mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "denied") {
+      setShowHelp(true);
+    }
+  }, []);
+  
   const handleToggle = async (checked: boolean) => {
     console.log("Push notifications toggle clicked:", checked);
     
-    if (checked) {
-      if (!("Notification" in window)) {
-        console.log("Browser doesn't support notifications");
-        toast({
-          title: "Notifications Not Supported",
-          description: "Your browser doesn't support notifications. Please try using a modern browser.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (Notification.permission === "granted") {
-        onToggle(true);
-        setShowHelp(false);
-      } else if (Notification.permission === "denied") {
-        setShowHelp(true);
-        toast({
-          title: "Notifications Blocked",
-          description: "Please enable notifications in your browser settings to receive updates.",
-          variant: "destructive",
-        });
-      } else {
-        onPermissionRequest();
-      }
-    } else {
-      onToggle(false);
+    // Always call onToggle to update the database preference
+    onToggle(checked);
+    
+    if (!checked) {
       setShowHelp(false);
       toast({
         title: "Notifications Disabled",
-        description: "You won't receive any notifications.",
+        description: "You won't receive any new notifications.",
       });
     }
   };
@@ -62,7 +47,10 @@ export function PushNotificationToggle({
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <label className="text-sm font-medium text-foreground">Push Notifications</label>
-          <p className="text-sm text-muted-foreground">Get browser notifications for important updates</p>
+          <p className="text-sm text-muted-foreground">
+            Get browser notifications for important updates. 
+            When disabled, you won't receive any new notifications.
+          </p>
         </div>
         <Switch
           checked={enabled}
