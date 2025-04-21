@@ -7,38 +7,62 @@ import { Info } from "lucide-react";
 interface PushNotificationToggleProps {
   enabled: boolean;
   loading: boolean;
-  disabled?: boolean;
   onToggle: (enabled: boolean) => void;
+  onPermissionRequest: () => void;
 }
 
-export function PushNotificationToggle({ 
-  enabled, 
-  loading, 
-  disabled = false,
-  onToggle 
+export function PushNotificationToggle({
+  enabled,
+  loading,
+  onToggle,
+  onPermissionRequest,
 }: PushNotificationToggleProps) {
   const { toast } = useToast();
   const [showHelp, setShowHelp] = useState(false);
-  
-  // Check if notifications are blocked on component mount
-  useEffect(() => {
-    if ("Notification" in window && Notification.permission === "denied") {
-      setShowHelp(true);
-    }
-  }, []);
-  
+
   const handleToggle = async (checked: boolean) => {
     console.log("Push notifications toggle clicked:", checked);
     
-    // Always call onToggle to update the database preference
-    onToggle(checked);
-    
+    // If turning off, just do it
     if (!checked) {
+      onToggle(false);
       setShowHelp(false);
       toast({
         title: "Notifications Disabled",
-        description: "You won't receive any new notifications.",
+        description: "You won't receive any notifications.",
       });
+      return;
+    }
+    
+    // If turning on
+    if (!("Notification" in window)) {
+      toast({
+        title: "Notifications Not Supported",
+        description: "Your browser doesn't support notifications.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check current permission status
+    if (Notification.permission === "granted") {
+      // Already have permission, just enable
+      onToggle(true);
+      toast({
+        title: "Notifications Enabled",
+        description: "You'll now receive important updates.",
+      });
+    } else if (Notification.permission === "denied") {
+      // Show instructions to enable in browser settings
+      setShowHelp(true);
+      toast({
+        title: "Notifications Blocked",
+        description: "Please enable notifications in your browser settings.",
+        variant: "destructive",
+      });
+    } else {
+      // Request permission
+      onPermissionRequest();
     }
   };
 
@@ -46,16 +70,16 @@ export function PushNotificationToggle({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <label className="text-sm font-medium text-foreground">Push Notifications</label>
+          <label className="text-sm font-medium text-foreground">
+            Push Notifications
+          </label>
           <p className="text-sm text-muted-foreground">
-            Get browser notifications for important updates. 
-            When disabled, you won't receive any new notifications.
+            Get browser notifications for important updates
           </p>
         </div>
         <Switch
           checked={enabled}
           onCheckedChange={handleToggle}
-          disabled={loading}
           className="data-[state=checked]:bg-primary"
         />
       </div>
