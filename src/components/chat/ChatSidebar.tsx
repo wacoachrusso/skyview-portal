@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Conversation } from "@/types/chat";
-import { ConversationList } from "./sidebar/ConversationList";
-import { SearchBar } from "./sidebar/SearchBar";
-import { SidebarHeader } from "./sidebar/SidebarHeader";
-import { ChatLimitWarning } from "./sidebar/ChatLimitWarning";
+import { ConversationList } from "../../chat/sidebar/ConversationList";
+import { SearchBar } from "../../chat/sidebar/SearchBar";
+import { SidebarHeader } from "../../chat/SidebarHeader";
 import { useConversations } from "./sidebar/hooks/useConversations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { ChatLimitWarning } from "@/chat/sidebar/ChatLimitWarning";
 
 interface ChatSidebarProps {
   currentConversationId: string | null;

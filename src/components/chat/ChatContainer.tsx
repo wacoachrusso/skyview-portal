@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { Message } from "@/types/chat";
 import { ChatMessage } from "./ChatMessage";
 import { LoadingMessage } from "./LoadingMessage";
-import { WelcomeMessage } from "./WelcomeMessage";
+import { WelcomeMessage } from "../../chat/WelcomeMessage";
 
 interface ChatContainerProps {
   messages: Message[];

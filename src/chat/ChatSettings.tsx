@@ -4,11 +4,11 @@ import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ThemeSelector } from "./settings/ThemeSelector";
-import { FontSizeSelector } from "./settings/FontSizeSelector";
-import { NotificationPreferences } from "./settings/notifications/NotificationPreferences";
-import { AccountInfo } from "./settings/AccountInfo";
-import { LogoutButton } from "./settings/LogoutButton";
+import { ThemeSelector } from "../components/chat/settings/ThemeSelector";
+import { FontSizeSelector } from "../components/chat/settings/FontSizeSelector";
+import { NotificationPreferences } from "../components/chat/settings/notifications/NotificationPreferences";
+import { AccountInfo } from "../components/chat/settings/AccountInfo";
+import { LogoutButton } from "../components/chat/settings/LogoutButton";
 
 export function ChatSettings() {
   const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");

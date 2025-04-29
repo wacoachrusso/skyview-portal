@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SendButton } from "./SendButton";
-import { MicButton } from "./MicButton";
+import { SendButton } from "../../chat/SendButton";
+import { MicButton } from "../../chat/MicButton";
 import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContractHandler } from "@/hooks/useContractHandler";

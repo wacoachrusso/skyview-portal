@@ -39,6 +39,40 @@ export function AuthLoginForm({ redirectPath = "/dashboard" }: AuthLoginFormProp
     },
   });
 
+  // Function to fetch user profile directly
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      // Direct API call to fetch user profile
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+      }
+      
+      // Set admin status in localStorage for quick access
+      if (profile.is_admin) {
+        localStorage.setItem('user_is_admin', 'true');
+        console.log("Admin status set in localStorage: true");
+      } else {
+        localStorage.removeItem('user_is_admin');
+        console.log("Admin status removed from localStorage");
+      }
+      
+      // Store profile in localStorage for immediate access
+      localStorage.setItem('user_profile', JSON.stringify(profile));
+      
+      return profile;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+  };
+
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true);
 
@@ -74,7 +108,11 @@ export function AuthLoginForm({ redirectPath = "/dashboard" }: AuthLoginFormProp
           localStorage.setItem('extended_session', 'true');
         }
         
+        // Create new session
         await createNewSession(authData.session.user.id);
+        
+        // Fetch user profile directly before redirect
+        await fetchUserProfile(authData.session.user.id);
         
         // Redirect to the specified path or default to chat
         window.location.href = redirectPath;

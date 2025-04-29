@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { DownloadDialog } from "../DownloadDialog";
+import { DownloadDialog } from "../sidebar/DownloadDialog";
 import { useDownloadChat } from "@/hooks/useDownloadChat";
 
 interface DownloadHandlerProps {

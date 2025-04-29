@@ -7,7 +7,7 @@ import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { useProfileVerification } from "@/hooks/useProfileVerification";
 import { useChatAvailability } from "@/hooks/useChatAvailability";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
-import { TrialEndedState } from "./TrialEndedState";
+import { TrialEndedState } from "../../chat/TrialEndedState";
 
 interface ChatContentProps {
   messages: Message[];

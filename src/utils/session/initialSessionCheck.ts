@@ -172,11 +172,11 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
   }
   
   // Free trial ended or inactive subscription - go to pricing
-  if ((profile?.subscription_plan === 'free' && profile?.query_count >= 2) ||
-      (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
-    console.log("[Initial Session] Free trial ended/inactive subscription, going to pricing");
-    navigate('/?scrollTo=pricing-section', { replace: true });
-  }
+  // if ((profile?.subscription_plan === 'free' && profile?.query_count >= 2) ||
+  //     (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
+  //   console.log("[Initial Session] Free trial ended/inactive subscription, going to pricing");
+  //   navigate('/?scrollTo=pricing-section', { replace: true });
+  // }
 };
 
 /**

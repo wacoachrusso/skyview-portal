@@ -6,7 +6,7 @@ import { MessageContent } from "./message/MessageContent";
 import { MessageActions } from "./message/MessageActions";
 import { MessageMetadata } from "./message/MessageMetadata";
 import { useFeedbackHandling } from "./message/useFeedbackHandling";
-import { FlagFeedbackDialog } from "./FlagFeedbackDialog";
+import { FlagFeedbackDialog } from "../../chat/FlagFeedbackDialog";
 
 interface ChatMessageProps {
   message: Message;
