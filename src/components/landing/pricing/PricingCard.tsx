@@ -1,10 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PricingHeader } from "./pricing-card/PricingHeader";
 import { PricingFeatures } from "./pricing-card/PricingFeatures";
-import { usePricingCard } from "./pricing-card/usePricingCard";
 import { usePricingHandler } from "@/hooks/usePricingHandler";
 
 interface PricingCardProps {
@@ -17,6 +15,7 @@ interface PricingCardProps {
   popular?: boolean;
   onSelect?: () => Promise<void>;
   savingsBadge?: string;
+  returnUrl?: string;
 }
 
 export const PricingCard = ({ 
@@ -28,9 +27,9 @@ export const PricingCard = ({
   mode = 'subscription',
   popular = false,
   onSelect,
-  savingsBadge
+  savingsBadge,
+  returnUrl = '/chat'
 }: PricingCardProps) => {
-  const { handlePlanSelection: handleCardSelection } = usePricingCard();
   const { handlePlanSelection } = usePricingHandler();
 
   const handlePlanClick = async () => {
@@ -43,21 +42,13 @@ export const PricingCard = ({
         return;
       }
       
-      // Special handling for free trial
-      if (name.toLowerCase() === 'free' || name.toLowerCase() === 'free trial') {
-        console.log("Free trial selected, using pricing handler directly");
-        
-        // Always use the pricing handler directly for free trial to ensure it works
-        await handlePlanSelection({
-          name: name,
-          priceId: priceId,
-          mode: mode
-        });
-        return;
-      }
-      
-      // For other plans, use the pricing card hook for compatibility
-      await handleCardSelection(name, priceId, mode);
+      // Use the unified pricing handler
+      await handlePlanSelection({
+        name: name,
+        priceId: priceId,
+        mode: mode,
+        returnUrl: returnUrl
+      });
       
     } catch (error) {
       console.error("Error handling plan selection:", error);

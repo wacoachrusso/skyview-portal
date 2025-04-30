@@ -8,7 +8,6 @@ import { useProfileVerification } from "@/hooks/useProfileVerification";
 import { useChatAvailability } from "@/hooks/useChatAvailability";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { TrialEndedState } from "./TrialEndedState";
-
 interface ChatContentProps {
   messages: Message[];
   currentUserId: string;

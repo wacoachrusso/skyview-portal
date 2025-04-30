@@ -5,7 +5,7 @@ import { lazy } from "react";
 export const Index = lazy(() => import("@/pages/Index"));
 export const Login = lazy(() => import("@/pages/Login"));
 export const SignUp = lazy(() => import("@/pages/SignUp"));
-export const Chat = lazy(() => import("@/pages/Chat"));
+export const Chat = lazy(() => import("@/components/deprecated/Chat"));
 export const Account = lazy(() => import("@/pages/Account"));
 export const Settings = lazy(() => import("@/pages/Settings"));
 export const Dashboard = lazy(() => import("@/pages/Dashboard"));

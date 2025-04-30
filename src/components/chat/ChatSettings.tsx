@@ -4,16 +4,14 @@ import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ThemeSelector } from "./settings/ThemeSelector";
+import { LogoutButton } from "./settings/LogoutButton";
+import { AccountInfo } from "./settings/AccountInfo";
 import { FontSizeSelector } from "./settings/FontSizeSelector";
 import { NotificationPreferences } from "./settings/notifications/NotificationPreferences";
-import { AutoSaveToggle } from "./settings/AutoSaveToggle";
-import { AccountInfo } from "./settings/AccountInfo";
-import { LogoutButton } from "./settings/LogoutButton";
+import { ThemeSelector } from "./settings/ThemeSelector";
 
 export function ChatSettings() {
   const [fontSize, setFontSize] = useState(() => localStorage.getItem("chat-font-size") || "medium");
-  const [autoSave, setAutoSave] = useState(() => localStorage.getItem("chat-auto-save") !== "false");
   const [isOpen, setIsOpen] = useState(false);
   
   const isMobile = useIsMobile();
@@ -39,7 +37,6 @@ export function ChatSettings() {
           <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
           <FontSizeSelector fontSize={fontSize} setFontSize={setFontSize} />
           <NotificationPreferences />
-          <AutoSaveToggle autoSave={autoSave} setAutoSave={setAutoSave} />
           <AccountInfo />
           <LogoutButton />
         </div>

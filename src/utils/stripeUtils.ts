@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateCheckoutSessionProps {
@@ -7,6 +6,7 @@ interface CreateCheckoutSessionProps {
   sessionToken?: string;
   mode?: 'subscription' | 'payment';
   planType?: 'monthly' | 'annual';
+  successUrl?: string; // Added successUrl parameter
 }
 
 export const createStripeCheckoutSession = async ({
@@ -14,7 +14,8 @@ export const createStripeCheckoutSession = async ({
   email,
   sessionToken,
   mode = 'subscription',
-  planType = priceId.includes('QxETH') ? 'monthly' : 'annual'
+  planType = priceId.includes('QxETH') ? 'monthly' : 'annual',
+  successUrl // Include successUrl in the function parameters
 }: CreateCheckoutSessionProps): Promise<string> => {
   console.log('[stripeUtils] Creating Stripe checkout session:', { priceId, email, planType });
   
@@ -81,7 +82,8 @@ export const createStripeCheckoutSession = async ({
         email,
         sessionToken,
         origin,
-        metadata
+        metadata,
+        successUrl // Pass successUrl to the backend function if provided
       }),
       headers: refreshedSession ? {
         Authorization: `Bearer ${refreshedSession.access_token}`

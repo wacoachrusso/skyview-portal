@@ -1,7 +1,7 @@
 import { Conversation } from "@/types/chat";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConversationItem } from "./ConversationItem";
-import { BulkActions } from "./BulkActions";
+import { BulkActions } from "../BulkActions";
 import { useOfflineConversations } from "@/hooks/useOfflineConversations";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 

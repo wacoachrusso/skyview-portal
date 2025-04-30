@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { Conversation } from "@/types/chat";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ConversationMetadata } from "./conversation/ConversationMetadata";
-import { ConversationIcon } from "./conversation/ConversationIcon";
-import { ConversationTitle } from "./conversation/ConversationTitle";
-import { DownloadHandler } from "./conversation/DownloadHandler";
-import { useConversationInteraction } from "./conversation/useConversationInteraction";
+import { ConversationMetadata } from "../conversation/ConversationMetadata";
+import { ConversationIcon } from "../conversation/ConversationIcon";
+import { ConversationTitle } from "../conversation/ConversationTitle";
+import { DownloadHandler } from "../conversation/DownloadHandler";
+import { useConversationInteraction } from "../conversation/useConversationInteraction";
 
 interface ConversationItemProps {
   conversation: Conversation;

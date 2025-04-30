@@ -1,43 +1,35 @@
-
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { createStripeCheckoutSession } from "@/utils/stripeUtils";
 import { useErrorState } from "@/hooks/useErrorState";
 
-export const usePricingCard = () => {
+interface PlanSelectionProps {
+  name: string;
+  priceId: string;
+  mode: 'subscription' | 'payment';
+  returnUrl?: string;
+}
+
+export const usePricingHandler = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { handleError } = useErrorState();
 
-  const handlePlanSelection = async (
-    name: string,
-    priceId: string,
-    mode: 'subscription' | 'payment',
-    onSelect?: () => Promise<void>
-  ) => {
-    if (onSelect) {
-      try {
-        await onSelect();
-      } catch (error: any) {
-        console.error('Custom onSelect handler error:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || "Failed to process custom selection. Please try again.",
-        });
-      }
-      return;
-    }
-
+  const handlePlanSelection = async ({
+    name,
+    priceId,
+    mode,
+    returnUrl = '/chat'
+  }: PlanSelectionProps) => {
     // Store a timestamp to measure performance
     const startTime = Date.now();
     let processingToast: any = null;
 
     try {
-      console.log('Starting plan selection in usePricingCard for:', name, 'with priceId:', priceId);
+      console.log('Starting plan selection in usePricingHandler for:', name, 'with priceId:', priceId);
       
-      // Show processing toast immediately with longer duration (5 minutes)
+      // Show processing toast immediately with longer duration
       processingToast = toast({
         variant: "default",
         title: "Processing",
@@ -49,25 +41,37 @@ export const usePricingCard = () => {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error('Session error in usePricingCard:', sessionError);
+        console.error('Session error in usePricingHandler:', sessionError);
         processingToast?.dismiss();
         toast({
           variant: "destructive",
           title: "Authentication Error",
           description: "Please log in to continue.",
         });
-        navigate('/login', { state: { returnTo: 'pricing' } });
+        
+        // Set a return URL to come back to after login
+        navigate('/login', { 
+          state: { 
+            redirectTo: window.location.pathname,
+            selectedPlan: name.toLowerCase(),
+            priceId,
+            mode 
+          } 
+        });
         return;
       }
       
       if (!session) {
         console.log('User not logged in, redirecting to signup with plan:', name.toLowerCase());
         processingToast?.dismiss();
+        
+        // Include more detailed info in the state
         navigate('/signup', { 
           state: { 
             selectedPlan: name.toLowerCase(),
             priceId,
-            mode
+            mode,
+            redirectTo: window.location.pathname
           }
         });
         return;
@@ -84,7 +88,14 @@ export const usePricingCard = () => {
           title: "Session Error",
           description: "Failed to refresh your session. Please log in again.",
         });
-        navigate('/login', { state: { returnTo: 'pricing' } });
+        navigate('/login', { 
+          state: { 
+            redirectTo: window.location.pathname,
+            selectedPlan: name.toLowerCase(),
+            priceId,
+            mode
+          } 
+        });
         return;
       }
 
@@ -98,7 +109,7 @@ export const usePricingCard = () => {
           title: "Session Error",
           description: "Could not retrieve your session. Please log in again.",
         });
-        navigate('/login', { state: { returnTo: 'pricing' } });
+        navigate('/login', { state: { redirectTo: window.location.pathname } });
         return;
       }
 
@@ -117,13 +128,20 @@ export const usePricingCard = () => {
       // Get session token for additional security
       const sessionToken = localStorage.getItem('session_token') || refreshedSession.refresh_token || '';
       
+      // Set flag to indicate a payment is in progress
+      localStorage.setItem("payment_in_progress", "true");
+      
+      // Build success URL with payment success flag
+      const successUrl = `${window.location.origin}${returnUrl}?payment_success=true&source=pricing`;
+      
       // Call the utility function to create checkout session
       try {
         console.log('Creating checkout session with priceId:', priceId);
         const checkoutUrl = await createStripeCheckoutSession({
           priceId,
           email: userEmail,
-          sessionToken
+          sessionToken,
+          successUrl // Pass the success URL
         });
         
         // Measure how long it took to create the checkout session
@@ -131,15 +149,16 @@ export const usePricingCard = () => {
         console.log(`Checkout session created in ${processingTime}ms`);
         
         processingToast?.dismiss();
-        console.log('Redirecting to checkout URL from usePricingCard:', checkoutUrl);
+        console.log('Redirecting to checkout URL from usePricingHandler:', checkoutUrl);
         
         // Add a small delay before redirect to ensure toast is dismissed
         setTimeout(() => {
           window.location.href = checkoutUrl;
         }, 500);
       } catch (error: any) {
+        localStorage.removeItem("payment_in_progress");
         processingToast?.dismiss();
-        console.error('Error in createStripeCheckoutSession from usePricingCard:', error);
+        console.error('Error in createStripeCheckoutSession from usePricingHandler:', error);
         
         // Customize error message based on error type
         if (error.message?.includes('Authentication') || 
@@ -152,29 +171,12 @@ export const usePricingCard = () => {
             title: "Authentication Error",
             description: "Authentication required. Please log in and try again.",
           });
-          navigate('/login', { state: { returnTo: 'pricing' } });
+          navigate('/login', { state: { redirectTo: window.location.pathname } });
         } else if (error.message?.includes('network') || error.message?.includes('timed out')) {
           toast({
             variant: "destructive",
             title: "Connection Error",
             description: "Network error. Please check your connection and try again.",
-          });
-        } else if (error.message?.includes('temporarily unavailable') || 
-                  error.message?.includes('maintenance') ||
-                  error.message?.includes('configuration issues')) {
-          
-          toast({
-            variant: "destructive",
-            title: "Service Temporarily Unavailable",
-            description: "The payment service is temporarily unavailable. Please try again in a few minutes or contact support if the issue persists.",
-          });
-        } else if (error.message?.includes('Edge Function') || 
-                  error.message?.includes('non-2xx status code')) {
-          
-          toast({
-            variant: "destructive",
-            title: "Service Error",
-            description: "We're experiencing technical difficulties with our payment processor. Please try again later or contact support.",
           });
         } else {
           toast({
@@ -188,8 +190,9 @@ export const usePricingCard = () => {
         handleError(error);
       }
     } catch (error: any) {
+      localStorage.removeItem("payment_in_progress");
       processingToast?.dismiss();
-      console.error('Error in usePricingCard:', error);
+      console.error('Error in usePricingHandler:', error);
       
       toast({
         variant: "destructive",

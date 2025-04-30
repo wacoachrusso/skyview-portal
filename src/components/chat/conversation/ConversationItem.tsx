@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Conversation } from "@/types/chat";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DownloadDialog } from "../DownloadDialog";
+import { DownloadDialog } from "../sidebar/DownloadDialog";
 import { useDownloadChat } from "@/hooks/useDownloadChat";
 import { ConversationMetadata } from "./ConversationMetadata";
 import { ConversationIcon } from "./ConversationIcon";
