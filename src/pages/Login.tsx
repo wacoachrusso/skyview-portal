@@ -1,29 +1,23 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  handleAuthSession,
-  handlePasswordReset,
-} from "@/utils/auth/sessionHandler";
-import { createNewSession, validateSessionToken } from "@/services/session";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { handlePasswordReset } from "@/utils/auth/sessionHandler";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { handleSignIn } from "@/utils/signInUtils";
-import { navigateWithoutRedirectCheck } from "@/utils/navigation";
 import { ArrowLeft } from "lucide-react";
+import { AuthLoginForm } from "@/components/auth/AuthLoginForm";
 
 const Login = () => {
-  const [loading, setLoading] = useState(false);
-  const [passwordResetEmail, setPasswordResetEmail] = useState("");
-  const [isPasswordResetting, setIsPasswordResetting] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
   const isMobile = useIsMobile();
+  const location = useLocation();
+
+  // Store redirectTo path from state if it exists
+  const redirectPath = location.state?.redirectTo || "/chat";
 
   // Check if user is already logged in
   useEffect(() => {
@@ -39,16 +33,18 @@ const Login = () => {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) {
-        console.log("User already authenticated, redirecting to chat");
+        console.log(`User already authenticated, redirecting to ${redirectPath}`);
+        // Set auth status in local storage
+        localStorage.setItem("auth_status", "authenticated");
         // Use the utility to break potential redirect loops
         localStorage.setItem("skip_initial_redirect", "true");
-        navigate("/chat", { replace: true });
+        navigate(redirectPath, { replace: true });
       }
       setInitialCheckDone(true);
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, redirectPath]);
 
   // Check for error param in URL (from Google auth callback)
   const errorParam = searchParams.get("error");
@@ -63,105 +59,11 @@ const Login = () => {
     }
   }, [errorParam, toast, initialCheckDone]);
 
-  const handleLogin = async (
-    email: string,
-    password?: string,
-    rememberMe?: boolean
-  ) => {
-    if (!email || !password) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Please provide both email and password.",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Set a flag to prevent SessionCheck from redirecting during login
-      localStorage.setItem("login_in_progress", "true");
-
-      const success = await handleSignIn(email, password, rememberMe);
-
-      if (success) {
-        console.log("Login successful");
-
-        // IMPORTANT: Set auth status immediately for instant UI updates
-        localStorage.setItem("auth_status", "logged_in");
-
-        toast({
-          title: "Login Successful",
-          description: "You have successfully logged in.",
-        });
-
-        // Get current user after successful login
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          // Check if user is admin and store that as well
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("is_admin")
-            .eq("id", user.id)
-            .single();
-
-          if (profile?.is_admin) {
-            localStorage.setItem("user_is_admin", "true");
-          }
-
-          await handleAuthSession(user.id, createNewSession, navigate);
-          // Use the utility to break potential redirect loops
-          navigateWithoutRedirectCheck("/chat");
-        }
-      } else {
-        localStorage.removeItem("login_in_progress");
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error("Unexpected error during login:", error);
-      localStorage.removeItem("login_in_progress");
-      toast({
-        variant: "destructive",
-        title: "Login Error",
-        description: "An unexpected error occurred. Please try again.",
-      });
-      setLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsPasswordResetting(true);
-
-    if (!passwordResetEmail) {
-      toast({
-        variant: "destructive",
-        title: "Reset Error",
-        description: "Please enter your email address.",
-      });
-      setIsPasswordResetting(false);
-      return;
-    }
-
-    const { success, error } = await handlePasswordReset(passwordResetEmail);
-
-    if (success) {
-      toast({
-        title: "Reset Email Sent",
-        description: "Check your inbox to reset your password.",
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Reset Error",
-        description: error || "Failed to send password reset email.",
-      });
-    }
-
-    setIsPasswordResetting(false);
+  // Component to modify AuthLoginForm to handle custom redirects
+  const EnhancedAuthLoginForm = () => {
+    // This is a wrapper component that would pass the redirectPath to AuthLoginForm
+    // You might need to modify AuthLoginForm to accept a redirectPath prop
+    return <AuthLoginForm redirectPath={redirectPath} />;
   };
 
   // Hide the login form until initial check is complete to prevent flashing
@@ -182,7 +84,7 @@ const Login = () => {
           className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6"
           aria-label="Back to home page"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={isMobile ? 16 : 18} />
           <span>Back to Home</span>
         </Link>
 
@@ -197,12 +99,15 @@ const Login = () => {
           </h1>
           <p className="text-sm text-gray-400">
             Enter your credentials to access your account
+            {redirectPath !== "/chat" && redirectPath === "/referral" && (
+              <span className="block mt-1 text-brand-gold">
+                Sign in to access the referral program
+              </span>
+            )}
           </p>
         </div>
 
-        <div className="rounded-xl bg-card-gradient border border-white/10 p-6 shadow-xl backdrop-blur-sm">
-          <LoginForm onSubmit={handleLogin} loading={loading} />
-        </div>
+        <EnhancedAuthLoginForm />
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail } from "lucide-react";
@@ -10,6 +9,13 @@ export function Footer() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const companyLinks = [
     { label: "About Us", href: "/about" },
     { label: "Privacy Policy", href: "/privacy-policy" },
@@ -18,8 +24,14 @@ export function Footer() {
   ];
 
   const supportLinks = [
-    { label: "FAQs", href: "/#faq" },
-    { label: "Help Center", href: "/help-center" },
+    { 
+      label: "FAQs", 
+      href: "#faq", 
+      onClick: (e: React.MouseEvent) => {
+        e.preventDefault();
+        scrollToSection("faq");
+      }
+    },
     { label: "Contact Support", href: "mailto:support@skyguide.site" },
   ];
 
@@ -119,6 +131,7 @@ export function Footer() {
                   <a 
                     href={link.href} 
                     className="text-sm hover:text-white transition-colors flex items-center space-x-1 w-fit hover:translate-x-1 duration-200"
+                    onClick={link.onClick}
                   >
                     <span className="text-brand-gold">•</span>
                     <span>{link.label}</span>
@@ -136,25 +149,10 @@ export function Footer() {
         </div>
         
         {/* Bottom divider and copyright */}
-        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10 flex justify-center items-center">
             <p className="text-sm">
               © {new Date().getFullYear()} SkyGuide. All rights reserved.
             </p>
-            <div className="mt-4 md:mt-0 flex items-center space-x-4">
-              <a href="#" className="text-xs hover:text-white transition-colors">
-                Accessibility
-              </a>
-              <span className="text-white/20">|</span>
-              <a href="#" className="text-xs hover:text-white transition-colors">
-                Sitemap
-              </a>
-              <span className="text-white/20">|</span>
-              <a href="#" className="text-xs hover:text-white transition-colors">
-                Legal
-              </a>
-            </div>
-          </div>
         </div>
       </div>
       

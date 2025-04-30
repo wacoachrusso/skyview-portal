@@ -1,5 +1,4 @@
-
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -10,7 +9,7 @@ export function useChannelSubscription() {
   const isMountedRef = useRef(true);
 
   // Cleanup function for channel subscription
-  const cleanupChannel = () => {
+  const cleanupChannel = useCallback(() => {
     if (activeChannelRef.current) {
       console.log(`Cleaning up channel: ${activeChannelRef.current}`);
       try {
@@ -20,14 +19,14 @@ export function useChannelSubscription() {
       }
       activeChannelRef.current = null;
     }
-  };
+  }, []);
 
-  // Set the current channel
-  const setActiveChannel = (channel: any) => {
+  // Set the current channel - memoized with useCallback
+  const setActiveChannel = useCallback((channel: any) => {
     cleanupChannel();
     activeChannelRef.current = channel;
     console.log(`Active channel set: ${activeChannelRef.current}`);
-  };
+  }, [cleanupChannel]);
 
   // Component lifecycle management
   useEffect(() => {
@@ -39,7 +38,7 @@ export function useChannelSubscription() {
       isMountedRef.current = false;
       cleanupChannel();
     };
-  }, []);
+  }, [cleanupChannel]);  // Added cleanupChannel as a dependency
 
   return {
     activeChannel: activeChannelRef.current,

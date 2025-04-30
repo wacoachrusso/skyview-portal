@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -23,7 +22,7 @@ const authFormSchema = z.object({
 type AuthFormValues = z.infer<typeof authFormSchema>;
 
 export function AuthForm() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false); // Default to signup mode when on signup page
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -71,7 +70,10 @@ export function AuthForm() {
           
           await createNewSession(authData.session.user.id);
           await handleSession();
-          navigate("/chat");
+          
+          // Clean up before navigation
+          localStorage.removeItem('login_in_progress');
+          navigate("/chat", { replace: true });
         }
       } else {
         // Sign up
@@ -96,7 +98,7 @@ export function AuthForm() {
         if (authData.session) {
           toast({
             title: "Signup successful",
-            description: "Welcome to SkyGuide!",
+            description: "Welcome to SkyGuide!",  // Correct welcome message for signup
           });
           
           // Add the user to the profiles table
@@ -114,7 +116,11 @@ export function AuthForm() {
           }
           
           await createNewSession(authData.session.user.id);
-          navigate("/chat");
+          await handleSession(); // Make sure we handle the session before navigating
+          
+          // Clean up before navigation
+          localStorage.removeItem('login_in_progress');
+          navigate("/chat", { replace: true }); // Use replace to prevent back navigation issues
         } else {
           toast({
             title: "Check your email",
@@ -139,6 +145,17 @@ export function AuthForm() {
   return (
     <Card className="bg-card-gradient border border-white/10 shadow-xl backdrop-blur-sm">
       <CardContent className="pt-6">
+        <div className="mb-6 text-center">
+          <h2 className="text-xl font-bold text-white">
+            {isLogin ? "Sign In to Your Account" : "Create a New Account"}
+          </h2>
+          <p className="text-sm text-gray-400 mt-1">
+            {isLogin 
+              ? "Enter your credentials to access your account" 
+              : "Fill in the details below to get started"}
+          </p>
+        </div>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField

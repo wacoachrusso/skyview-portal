@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAccountManagement } from "@/hooks/useAccountManagement";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AccountHeader } from "@/components/account/AccountHeader";
 import { AccountInfo } from "@/components/account/AccountInfo";
@@ -11,17 +10,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useLogout } from "@/hooks/useLogout";
+import { useAccountActions } from "@/hooks/account-management/useAccountActions";
+import { useProfileContext } from "@/components/utils/ProfileProvider";
 
 const Account = () => {
   const navigate = useNavigate();
+  // Use global profile context instead of loading it again
   const { 
-    isLoading, 
-    loadError, 
+    isProfileLoading: isLoading, 
+    profileLoadError: loadError, 
     userEmail, 
     profile, 
-    handleCancelSubscription,
-    retryLoading 
-  } = useAccountManagement();
+    authUser,
+    refreshProfile: retryLoading 
+  } = useProfileContext();
+  
+  // Only initialize account actions
+  const { handleCancelSubscription } = useAccountActions(authUser?.id);
+  
   const { handleLogout } = useLogout();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -120,6 +126,7 @@ const Account = () => {
       setMounted(false);
     };
   }, [profile?.id, isLoading]);
+  
   // Show loading state
   if (isLoading && !loadingTimeout) {
     return (

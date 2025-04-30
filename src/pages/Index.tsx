@@ -1,4 +1,3 @@
-
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -7,30 +6,54 @@ import { PricingSection } from "@/components/landing/pricing/PricingSection";
 import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
 import { ViewportManager } from "@/components/utils/ViewportManager";
+import { Button } from "@/components/ui/button";
 
 export default function Index() {
   const location = useLocation();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const hasPricingSectionScrolled = useRef(false);
 
+  // Check if user is logged in using local storage
   useEffect(() => {
     console.log('Index page mounted');
     
-    // Check for pricing section scroll
+    // First check if we need to scroll to pricing section
     const searchParams = new URLSearchParams(location.search);
     const scrollTo = searchParams.get('scrollTo');
-    if (scrollTo === 'pricing-section') {
-      const pricingSection = document.getElementById('pricing-section');
-      if (pricingSection) {
-        pricingSection.scrollIntoView({ behavior: 'smooth' });
+    const needsToScrollToPricing = scrollTo === 'pricing-section';
+    
+    // Check auth status from local storage
+    const authStatus = localStorage.getItem("auth_status");
+    
+    // Only redirect if authenticated AND not trying to view pricing section
+    if (authStatus === "authenticated" && !needsToScrollToPricing) {
+      console.log("User is logged in, redirecting to chat");
+      navigate("/chat", { replace: true });
+    } else {
+      setIsLoading(false);
+      
+      // Handle scroll to pricing if needed (when page is fully loaded)
+      if (needsToScrollToPricing) {
+        // Use a small timeout to ensure the page has rendered properly
+        setTimeout(() => {
+          const pricingSection = document.getElementById('pricing-section');
+          if (pricingSection && !hasPricingSectionScrolled.current) {
+            pricingSection.scrollIntoView({ behavior: 'smooth' });
+            hasPricingSectionScrolled.current = true;
+          }
+        }, 500);
       }
     }
 
+    // Continue with other initialization logic
     // Check if it's iOS and not in standalone mode
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -48,10 +71,14 @@ export default function Index() {
     return () => {
       console.log('Index page unmounted');
     };
-  }, [location]);
+  }, [location, navigate]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
+  };
+
+  const handleReferralClick = () => {
+    navigate("/login", { state: { redirectTo: "/referral" } });
   };
 
   // Animation variants for sections
@@ -59,6 +86,15 @@ export default function Index() {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.5 } }
   };
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-luxury-dark flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
@@ -93,7 +129,9 @@ export default function Index() {
             variants={sectionVariants}
             id="pricing-section-container"
           >
-            <PricingSection />
+            <div id="pricing-section">
+              <PricingSection />
+            </div>
           </motion.div>
           
           <motion.div
@@ -105,13 +143,27 @@ export default function Index() {
             <HomeFAQ />
           </motion.div>
           
+          {/* Replace ReferralSection with a CTA to login for referrals */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={sectionVariants}
           >
-            <ReferralSection />
+            <div className="container mx-auto px-4 py-16 text-center">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Invite Friends & Earn Rewards
+              </h2>
+              <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+                Sign in to access our referral program and earn rewards when your friends join SkyGuide.
+              </p>
+              <Button 
+                onClick={handleReferralClick}
+                className="premium-button bg-brand-gold text-brand-navy font-semibold py-3 px-8 rounded-lg hover:bg-brand-gold/90 transition-colors shadow-gold hover:shadow-gold-hover"
+              >
+                Sign in to refer friends
+              </Button>
+            </div>
           </motion.div>
         </div>
       </main>

@@ -8,10 +8,12 @@ export interface Conversation {
 export interface Message {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  user_id: string | null;
+  role: "user" | "assistant";
   conversation_id: string;
   created_at: string;
-  user_id: string | null;
+  isTemp?: boolean; 
+  isStreaming?: boolean;  
 }
 
 export interface User {

@@ -345,7 +345,7 @@ export const useProfileLoader = (): UseProfileLoaderReturn => {
               description: "Please complete your account setup to continue.",
             });
           }
-          navigate('/?scrollTo=pricing-section');
+          // navigate('/?scrollTo=pricing-section');
         }
         
       } catch (error: any) {

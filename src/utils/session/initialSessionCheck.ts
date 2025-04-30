@@ -131,6 +131,13 @@ export const isPublicRoute = (pathname: string): boolean => {
  * Checks if the user has an active subscription
  */
 export const checkSubscriptionStatus = async (userId: string, navigate: NavigateFunction): Promise<void> => {
+  // Prevent redirect loop by checking if we're already on the pricing page
+  const isPricingPage = window.location.pathname === '/' && window.location.search.includes('scrollTo=pricing-section');
+  if (isPricingPage) {
+    console.log("[Initial Session] Already on pricing page, skipping redirect");
+    return;
+  }
+
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('subscription_plan, subscription_status, query_count, is_admin')
@@ -175,7 +182,19 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
   if ((profile?.subscription_plan === 'free' && profile?.query_count >= 2) ||
       (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
     console.log("[Initial Session] Free trial ended/inactive subscription, going to pricing");
-    navigate('/?scrollTo=pricing-section', { replace: true });
+    
+    // Add a flag to localStorage to prevent redirect loops
+    if (!localStorage.getItem('redirect_to_pricing')) {
+      localStorage.setItem('redirect_to_pricing', 'true');
+      navigate('/?scrollTo=pricing-section', { replace: true });
+      
+      // Clear the flag after a delay to allow future redirects after the user navigates elsewhere
+      setTimeout(() => {
+        localStorage.removeItem('redirect_to_pricing');
+      }, 5000);
+    } else {
+      console.log("[Initial Session] Preventing redirect loop to pricing page");
+    }
   }
 };
 

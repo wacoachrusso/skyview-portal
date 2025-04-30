@@ -1,4 +1,3 @@
-
 import {
   Accordion,
   AccordionContent,
@@ -71,7 +70,7 @@ export const HomeFAQ = () => {
   };
 
   return (
-    <section className="py-16 bg-background">
+    <section id="faq" className="py-16 bg-background">
       <motion.div 
         className="container max-w-4xl"
         initial="hidden"

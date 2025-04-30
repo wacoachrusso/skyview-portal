@@ -25,7 +25,7 @@ export function AuthButtons({
   
   // IMPORTANT: Use localStorage for immediate state
   const [localIsLoggedIn, setLocalIsLoggedIn] = useState(() => {
-    return localStorage.getItem('auth_status') === 'logged_in';
+    return localStorage.getItem('auth_status') === 'authenticated';
   });
   
   // Update from API response later
