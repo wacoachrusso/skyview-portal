@@ -1,5 +1,6 @@
 // src/components/StatusAlerts.jsx
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 // Offline alert component
 export const OfflineAlert = () => (
@@ -10,33 +11,37 @@ export const OfflineAlert = () => (
 );
 
 // Trial ended state component
-export const TrialEndedState = () => (
-  <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="64"
-      height="64"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-yellow-500 mb-4"
-    >
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-      <line x1="12" y1="9" x2="12" y2="13"></line>
-      <line x1="12" y1="17" x2="12.01" y2="17"></line>
-    </svg>
-    <h2 className="text-xl font-bold mb-2">Free Trial Ended</h2>
-    <p className="text-slate-300 mb-4">
-      You've used all your free messages. Upgrade to continue chatting.
-    </p>
-    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
-      Upgrade Now
-    </button>
-  </div>
-);
+export const TrialEndedState = ({ onViewPricingPlans }) => {
+  const navigate = useNavigate();
+  return(
+    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="64"
+        height="64"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-yellow-500 mb-4"
+      >
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <h2 className="text-xl font-bold mb-2">Free Trial Ended</h2>
+      <p className="text-slate-300 mb-4">
+        You've used all your free messages. Upgrade to continue chatting.
+      </p>
+      <button  onClick={onViewPricingPlans} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+        Upgrade Now
+      </button>
+    </div>
+  );
+} 
+  
 
 // Overlay for sidebar on mobile
 export const SidebarOverlay = ({ isOpen, onClose }) => (

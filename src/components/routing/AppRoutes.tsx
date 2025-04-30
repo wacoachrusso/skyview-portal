@@ -18,19 +18,51 @@ import Referrals from "@/pages/Referrals";
 import { NavigationProvider } from "./NavigationProvider";
 import { ProfileProvider } from "../utils/ProfileProvider";
 import Chat from "@/pages/Chat";
-
+import { ProtectedRoute } from "@/components/routing/ProtectedRoutes";
+import { AuthSuccessHandler } from "@/components/auth/AuthSuccessHandler";
 
 export function AppRoutes() {
   return (
     <NavigationProvider>
       <ProfileProvider>
+        {/* Auth Success Handler - Runs on every route to handle payment/auth success redirects */}
+        <AuthSuccessHandler />
+        
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route 
+            path="/login" 
+            element={
+              <ProtectedRoute redirectAuthenticatedTo="/chat">
+                <Login />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <ProtectedRoute redirectAuthenticatedTo="/chat">
+                <SignUp />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/forgot-password" 
+            element={
+              <ProtectedRoute redirectAuthenticatedTo="/chat">
+                <ForgotPassword />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/reset-password" 
+            element={
+              <ProtectedRoute redirectAuthenticatedTo="/chat">
+                <ResetPassword />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/about" element={<About />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/refunds" element={<Refunds />} />
@@ -38,12 +70,54 @@ export function AppRoutes() {
           <Route path="/help" element={<HelpCenter />} />
 
           {/* Protected routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/chat" element={<Chat/>} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/referrals" element={<Referrals />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute requireAuth>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/account" 
+            element={
+              <ProtectedRoute requireAuth>
+                <Account />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/chat" 
+            element={
+              <ProtectedRoute requireAuth>
+                <Chat/>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute requireAuth>
+                <Settings />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute requireAuth>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/referrals" 
+            element={
+              <ProtectedRoute requireAuth>
+                <Referrals />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* Auth callback routes */}
           <Route path="/auth/callback" element={<AuthCallback />} />

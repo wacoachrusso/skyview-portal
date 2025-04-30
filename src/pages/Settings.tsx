@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ThemeSelector } from "@/components/chat/settings/ThemeSelector";
-import { NotificationToggle } from "@/components/chat/settings/NotificationToggle";
-import { AutoSaveToggle } from "@/components/chat/settings/AutoSaveToggle";
-import { FontSizeSelector } from "@/components/chat/settings/FontSizeSelector";
-import { AccountInfo } from "@/components/chat/settings/AccountInfo";
 import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/hooks/use-toast";
+import { AccountInfo } from "@/components/chat/settings/AccountInfo";
+import { ThemeSelector } from "@/components/chat/settings/ThemeSelector";
+import { FontSizeSelector } from "@/components/chat/settings/FontSizeSelector";
+import { NotificationToggle } from "@/components/chat/settings/NotificationToggle";
+import { AutoSaveToggle } from "@/components/chat/settings/AutoSaveToggle";
+
 
 const Settings = () => {
   const navigate = useNavigate();

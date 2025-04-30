@@ -4,11 +4,11 @@ import { useChat } from "@/hooks/useChat";
 import { ChatLayout } from "@/components/chat/layout/ChatLayout";
 import { ChatContainer } from "@/components/chat/ChatContainer";
 import { ChatInput } from "@/components/chat/ChatInput";
-import { OfflineAlert } from "@/chat/OfflineAlert";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
-import { TrialEndedState } from "@/chat/TrialEndedState";
-import { ChatContent } from "@/components/chat/ChatContent";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { ChatContent } from "../chat/ChatContent";
+import { OfflineAlert } from "../chat/OfflineAlert";
+import { TrialEndedState } from "../chat/TrialEndedState";
 
 export default function Chat() {
   const {

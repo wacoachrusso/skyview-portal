@@ -1,35 +1,32 @@
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useLogout } from "@/hooks/useLogout";
-import { forceNavigate } from "@/utils/navigation";
 import {
   ArrowLeft,
+  Plus,
   LayoutDashboard,
   LogOut,
-  Plus,
   UserCircle,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
+import { useLogout } from "@/hooks/useLogout";
+import { Icons } from "@/components/icons";
+import { forceNavigate } from "@/utils/navigation";
 
 interface ChatHeaderProps {
-  startNewChat: () => void;
-  setIsSidebarOpen: (value: boolean) => void;
-  showBackButton?: boolean;
-  isSidebarOpen?: boolean;
-  userName: string;
+  onNewChat: () => void;
   onBack?: () => void;
+  showBackButton?: boolean;
+  isLoading?: boolean;
 }
 
-const ChatHeader = ({
-  isSidebarOpen,
-  setIsSidebarOpen,
-  userName,
-  startNewChat,
+export function ChatHeader({
+  onNewChat,
   onBack,
   showBackButton = false,
-}: ChatHeaderProps) => {
+  isLoading = false,
+}: ChatHeaderProps) {
   const isMobile = useIsMobile();
   const { handleLogout } = useLogout();
-  
   // Handle custom sign out to clear cached data
   const handleSignOut = async () => {
     try {
@@ -41,9 +38,8 @@ const ChatHeader = ({
       console.error("Error during sign out:", error);
     }
   };
-  
   return (
-    <header className="flex items-center justify-between bg-slate-800 text-white p-4 h-16 border-b border-slate-700">
+    <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border/60 bg-background/95 backdrop-blur-md sticky top-0 z-50 shadow-sm supports-[backdrop-filter]:bg-background/60 safe-top">
       <div className="flex items-center space-x-4">
         {showBackButton && (
           <Button
@@ -69,30 +65,11 @@ const ChatHeader = ({
           </h1>
         </div>
       </div>
-      <div className="hidden items-center">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="mr-4 p-2 rounded hover:bg-slate-700"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-semibold">SkyGuide</h1>
-      </div>
-      <div className="flex items-center gap-4">
+
+      <div className="flex items-center gap-2">
+        {isLoading && (
+          <Icons.spinner className="h-4 w-4 mr-2 text-brand-gold" />
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -114,7 +91,7 @@ const ChatHeader = ({
         <Button
           variant="secondary"
           size="sm"
-          onClick={startNewChat}
+          onClick={onNewChat}
           className="text-secondary-foreground bg-secondary/90 hover:bg-secondary hover:text-secondary-foreground transition-colors"
         >
           <Plus className="h-4 w-4" />
@@ -132,14 +109,7 @@ const ChatHeader = ({
           <LogOut className="h-4 w-4" />
           <span className="hidden sm:inline ml-2">Logout</span>
         </Button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white">
-            {userName ? userName.charAt(0).toUpperCase() : "U"}
-          </div>
-        </div>
       </div>
     </header>
   );
-};
-
-export default ChatHeader;
+}

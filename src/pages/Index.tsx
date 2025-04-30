@@ -6,7 +6,7 @@ import { PricingSection } from "@/components/landing/pricing/PricingSection";
 import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
@@ -19,32 +19,41 @@ export default function Index() {
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const hasPricingSectionScrolled = useRef(false);
 
   // Check if user is logged in using local storage
   useEffect(() => {
     console.log('Index page mounted');
     
-    // Check auth status from local storage and redirect if needed
+    // First check if we need to scroll to pricing section
+    const searchParams = new URLSearchParams(location.search);
+    const scrollTo = searchParams.get('scrollTo');
+    const needsToScrollToPricing = scrollTo === 'pricing-section';
+    
+    // Check auth status from local storage
     const authStatus = localStorage.getItem("auth_status");
     
-    if (authStatus === "authenticated") {
+    // Only redirect if authenticated AND not trying to view pricing section
+    if (authStatus === "authenticated" && !needsToScrollToPricing) {
       console.log("User is logged in, redirecting to chat");
       navigate("/chat", { replace: true });
     } else {
       setIsLoading(false);
-    }
-
-    // Continue with other initialization logic
-    // Check for pricing section scroll
-    const searchParams = new URLSearchParams(location.search);
-    const scrollTo = searchParams.get('scrollTo');
-    if (scrollTo === 'pricing-section') {
-      const pricingSection = document.getElementById('pricing-section');
-      if (pricingSection) {
-        pricingSection.scrollIntoView({ behavior: 'smooth' });
+      
+      // Handle scroll to pricing if needed (when page is fully loaded)
+      if (needsToScrollToPricing) {
+        // Use a small timeout to ensure the page has rendered properly
+        setTimeout(() => {
+          const pricingSection = document.getElementById('pricing-section');
+          if (pricingSection && !hasPricingSectionScrolled.current) {
+            pricingSection.scrollIntoView({ behavior: 'smooth' });
+            hasPricingSectionScrolled.current = true;
+          }
+        }, 500);
       }
     }
 
+    // Continue with other initialization logic
     // Check if it's iOS and not in standalone mode
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -120,7 +129,9 @@ export default function Index() {
             variants={sectionVariants}
             id="pricing-section-container"
           >
-            <PricingSection />
+            <div id="pricing-section">
+              <PricingSection />
+            </div>
           </motion.div>
           
           <motion.div
