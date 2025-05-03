@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import "@/styles/auth-autofill.css";
+import { AuthInputField } from "@/components/auth/AuthInputField";
 const loginFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
   password: z.string().min(6, "Password must be at least 6 characters."),
@@ -194,79 +195,19 @@ const Login = () => {
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
+          <AuthInputField
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email address</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="you@example.com"
-                    type="email"
-                    autoComplete="email"
-                    className="bg-background/30 border-white/10 focus-visible:ring-brand-gold autofill:shadow-[inset_0_0_0px_1000px_#0e101c]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Email address"
+            type="email"
+            placeholder="you@example.com"
+            form={form}
           />
-
-          <FormField
-            control={form.control}
+          <AuthInputField
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <div className="relative">
-                  <FormControl>
-                    <Input
-                      placeholder="••••••••"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      className="bg-background/30 border-white/10 focus-visible:ring-brand-gold autofill:shadow-[inset_0_0_0px_1000px_#0e101c]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center mt-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="rememberMe"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) =>
-                        setRememberMe(checked === true)
-                      }
-                      className="border-white/30 data-[state=checked]:bg-brand-gold data-[state=checked]:border-brand-gold"
-                    />
-                    <label
-                      htmlFor="rememberMe"
-                      className="text-xs text-gray-300 cursor-pointer"
-                    >
-                      Stay logged in for 30 days
-                    </label>
-                  </div>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs text-brand-gold hover:text-brand-gold/80 underline underline-offset-4"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            form={form}
           />
 
           <Button

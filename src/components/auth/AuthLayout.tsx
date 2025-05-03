@@ -14,7 +14,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({children, title, subtitle}) => {
     const isMobile = useIsMobile();
     return (
         <div className="flex flex-col gap-2 min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
-        <div className="w-full max-w-md space-y-6">
+        <div className="w-full max-w-lg space-y-6">
           <Link
             to="/"
             className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6"

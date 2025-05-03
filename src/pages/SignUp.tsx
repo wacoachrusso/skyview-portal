@@ -17,12 +17,40 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import "@/styles/auth-autofill.css";
+import { AuthInputField } from "@/components/auth/AuthInputField";
+import { JobAndAirlineSelector } from "@/components/auth/JobAndAirlineSelector";
+
 const signupFormSchema = z.object({
+  fullName: z.string().min(2, "Full name is required."),
   email: z.string().email("Please enter a valid email address."),
-  password: z.string().min(6, "Password must be at least 6 characters."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long.")
+    .refine(
+      (val) =>
+        /[a-z]/.test(val) &&
+        /[A-Z]/.test(val) &&
+        /[0-9]/.test(val) &&
+        /[!@#$%^&*(),.?":{}|<>]/.test(val),
+      {
+        message:
+          "Password must include uppercase, lowercase, number, and special character.",
+      }
+    ),
+  jobTitle: z.string().min(1, "Please select a job title."),
+  airline: z.string().min(1, "Please select an airline."),
 });
 
 type SignupFormValues = z.infer<typeof signupFormSchema>;
+
 export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -31,75 +59,59 @@ export default function SignUp() {
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
+      fullName: "",
       email: "",
       password: "",
+      jobTitle: "",
+      airline: "",
     },
   });
 
   const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
-
     try {
-      // Set a flag to prevent SessionCheck from redirecting during signup
-      localStorage.setItem("login_in_progress", "true");
-
-      // Sign up
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
       });
 
       if (error) {
-        console.error("Signup error:", error);
         toast({
           variant: "destructive",
           title: "Signup failed",
           description: error.message,
         });
-        localStorage.removeItem("login_in_progress");
-        setLoading(false);
         return;
       }
 
-      if (authData.session) {
-        // Add the user to the profiles table
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: authData.user?.id,
-          email: data.email,
-          subscription_plan: "free",
-          account_status: "active",
-        });
+      // Insert profile even if session is not available yet
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: authData.user?.id,
+        email: data.email,
+        full_name: data.fullName,
+        job_title: data.jobTitle,
+        airline: data.airline,
+        subscription_plan: "free",
+        account_status: "pending_verification", // optional
+      });
 
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-        }
-
-        // Clean up before navigation
-        localStorage.removeItem("login_in_progress");
-
-        // Pass email to login form for convenience
-        navigate("/login", {
-          replace: true,
-          state: {
-            from_signup: true,
-            email: data.email,
-          },
-        });
-      } else {
-        toast({
-          title: "Check your email",
-          description: "We've sent you a verification link.",
-        });
-        localStorage.removeItem("login_in_progress");
+      if (profileError) {
+        console.error("Error saving profile:", profileError);
       }
+
+      toast({
+        title: "Signup successful",
+        description:
+          "Check your email to verify your account before logging in.",
+      });
+
+      navigate("/login");
     } catch (error) {
-      console.error("Authentication error:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
       });
-      localStorage.removeItem("login_in_progress");
     } finally {
       setLoading(false);
     }
@@ -111,63 +123,38 @@ export default function SignUp() {
       subtitle="Create your account and start exploring"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <AuthInputField
+            name="fullName"
+            label="Full Name"
+            placeholder="John Doe"
+            form={form}
+          />
+          <AuthInputField
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email address</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="you@example.com"
-                    type="email"
-                    autoComplete="email"
-                    className="bg-background/30 border-white/10 focus-visible:ring-brand-gold autofill:shadow-[inset_0_0_0px_1000px_#0e101c]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Email address"
+            type="email"
+            placeholder="you@example.com"
+            form={form}
           />
-
-          <FormField
-            control={form.control}
+          <AuthInputField
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="••••••••"
-                    type="password"
-                    autoComplete="new-password"
-                    className="bg-background/30 border-white/10 focus-visible:ring-brand-gold autofill:shadow-[inset_0_0_0px_1000px_#0e101c]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            form={form}
           />
+          <JobAndAirlineSelector form={form} />
 
           <Button
             type="submit"
-            className="w-full bg-brand-gold text-brand-navy hover:bg-brand-gold/90"
+            className="w-full bg-brand-gold text-brand-navy hover:bg-brand-gold/90 transition-all duration-200 h-10 mt-2"
             disabled={loading}
           >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-brand-navy border-t-transparent" />
-                <span>Creating account...</span>
-              </div>
-            ) : (
-              <span>Create Account</span>
-            )}
+            {loading ? "Creating account..." : "Create Account"}
           </Button>
 
-          <div className="flex items-center my-4">
+          <div className="flex items-center my-3">
             <div className="flex-grow border-t border-white/10"></div>
             <span className="px-3 text-xs text-gray-400">OR</span>
             <div className="flex-grow border-t border-white/10"></div>
@@ -175,27 +162,24 @@ export default function SignUp() {
 
           <GoogleSignInButton />
 
-          <div className="text-center mt-6">
-            <div className="text-xs text-gray-400 mb-3">
-              By creating an account, you agree to our{" "}
-              <Link to="/terms" className="text-brand-gold hover:underline">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link to="/privacy" className="text-brand-gold hover:underline">
-                Privacy Policy
-              </Link>
-            </div>
-
-            <span className="text-sm text-gray-400">
+          <div className="text-center mt-4 text-xs text-gray-400">
+            By creating an account, you agree to our{" "}
+            <Link to="/terms" className="text-brand-gold hover:underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="text-brand-gold hover:underline">
+              Privacy Policy
+            </Link>
+            <div className="mt-1 text-sm">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-brand-gold hover:text-brand-gold/80 transition-colors underline underline-offset-4"
+                className="text-brand-gold underline underline-offset-4 hover:text-brand-gold/80"
               >
                 Sign in
               </Link>
-            </span>
+            </div>
           </div>
         </form>
       </Form>
