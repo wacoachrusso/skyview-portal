@@ -1,9 +1,7 @@
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
-import { Navbar } from "@/components/landing/Navbar";
 import { PricingSection } from "@/components/landing/pricing/PricingSection";
-import { ReferralSection } from "@/components/landing/ReferralSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState, useRef } from "react";
@@ -13,6 +11,7 @@ import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
 import { ViewportManager } from "@/components/utils/ViewportManager";
 import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar/Navbar";
 
 export default function Index() {
   const location = useLocation();

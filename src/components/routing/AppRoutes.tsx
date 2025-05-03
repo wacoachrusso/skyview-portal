@@ -27,42 +27,14 @@ export function AppRoutes() {
       <ProfileProvider>
         {/* Auth Success Handler - Runs on every route to handle payment/auth success redirects */}
         <AuthSuccessHandler />
-        
+
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Index />} />
-          <Route 
-            path="/login" 
-            element={
-              <ProtectedRoute redirectAuthenticatedTo="/chat">
-                <Login />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/signup" 
-            element={
-              <ProtectedRoute redirectAuthenticatedTo="/chat">
-                <SignUp />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/forgot-password" 
-            element={
-              <ProtectedRoute redirectAuthenticatedTo="/chat">
-                <ForgotPassword />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reset-password" 
-            element={
-              <ProtectedRoute redirectAuthenticatedTo="/chat">
-                <ResetPassword />
-              </ProtectedRoute>
-            } 
-          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/about" element={<About />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/refunds" element={<Refunds />} />
@@ -70,53 +42,53 @@ export function AppRoutes() {
           <Route path="/help" element={<HelpCenter />} />
 
           {/* Protected routes */}
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute requireAuth>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/account" 
+          <Route
+            path="/account"
             element={
               <ProtectedRoute requireAuth>
                 <Account />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/chat" 
+          <Route
+            path="/chat"
             element={
               <ProtectedRoute requireAuth>
-                <Chat/>
+                <Chat />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/settings" 
+          <Route
+            path="/settings"
             element={
               <ProtectedRoute requireAuth>
                 <Settings />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute requireAuth>
                 <AdminDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/referrals" 
+          <Route
+            path="/referrals"
             element={
               <ProtectedRoute requireAuth>
                 <Referrals />
               </ProtectedRoute>
-            } 
+            }
           />
 
           {/* Auth callback routes */}

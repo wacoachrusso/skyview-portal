@@ -198,27 +198,27 @@ const checkSession = async () => {
     }
 
     // Check if user has inactive subscription - avoid redirect loop by checking localStorage flag
-    const needsPricingRedirect =
-      ((profile.subscription_plan === "free" &&
-        (profile.query_count || 0) >= 2) ||
-        (profile.subscription_status === "inactive" &&
-          profile.subscription_plan !== "free")) &&
-      !localStorage.getItem("redirect_to_pricing");
+    // const needsPricingRedirect =
+    //   ((profile.subscription_plan === "free" &&
+    //     (profile.query_count || 0) >= 2) ||
+    //     (profile.subscription_status === "inactive" &&
+    //       profile.subscription_plan !== "free")) &&
+    //   !localStorage.getItem("redirect_to_pricing");
 
-    if (needsPricingRedirect) {
-      // Set flag to prevent redirect loops
-      localStorage.setItem("redirect_to_pricing", "true");
+    // if (needsPricingRedirect) {
+    //   // Set flag to prevent redirect loops
+    //   localStorage.setItem("redirect_to_pricing", "true");
 
-      // Redirect to pricing section
-      navigate("/?scrollTo=pricing-section", { replace: true });
+    //   // Redirect to pricing section
+    //   navigate("/?scrollTo=pricing-section", { replace: true });
 
-      // Clear the flag after a delay
-      setTimeout(() => {
-        localStorage.removeItem("redirect_to_pricing");
-      }, 5000);
+    //   // Clear the flag after a delay
+    //   setTimeout(() => {
+    //     localStorage.removeItem("redirect_to_pricing");
+    //   }, 5000);
 
-      return;
-    }
+    //   return;
+    // }
 
     if (mounted.current) {
       setUserEmail(session.user.email || "");
@@ -555,7 +555,7 @@ const checkSession = async () => {
 
   // Free plan limitation
   const isFreeTrialExhausted =
-    userProfile?.subscription_plan === "free" && (queryCount || 0) >= 2;
+    userProfile?.subscription_plan === "free" && (queryCount || 0) >= 20;
 
   return (
     <ChatLayout
