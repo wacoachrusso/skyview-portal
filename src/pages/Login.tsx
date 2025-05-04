@@ -3,17 +3,8 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import "@/styles/auth-autofill.css";
 import { AuthInputField } from "@/components/auth/AuthInputField";
+import AuthButton from "@/components/auth/AuthButton";
+import AuthDivider from "@/components/auth/AuthDivider";
+import AuthFooter from "@/components/auth/AuthFooter";
 const loginFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
   password: z.string().min(6, "Password must be at least 6 characters."),
@@ -35,7 +29,6 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const location = useLocation();
   const form = useForm<LoginFormValues>({
@@ -209,39 +202,41 @@ const Login = () => {
             placeholder="••••••••"
             form={form}
           />
-
-          <Button
-            type="submit"
-            className="w-full bg-brand-gold text-brand-navy hover:bg-brand-gold/90 transition-all duration-200"
-            disabled={loading}
-          >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-brand-navy border-t-transparent" />
-                <span>Signing in...</span>
-              </div>
-            ) : (
-              "Sign In"
-            )}
-          </Button>
-
-          <div className="flex items-center gap-3 text-gray-400 text-sm my-2">
-            <hr className="flex-grow border-t border-white/10" />
-            <span className="text-xs">OR</span>
-            <hr className="flex-grow border-t border-white/10" />
-          </div>
-
-          <GoogleSignInButton />
-
-          <p className="text-center text-sm text-gray-400 mt-4">
-            Don't have an account?{" "}
+          <div className="flex justify-between items-center mt-1">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+                className="border-white/30 data-[state=checked]:bg-brand-gold data-[state=checked]:border-brand-gold"
+              />
+              <label
+                htmlFor="rememberMe"
+                className="text-xs text-gray-300 cursor-pointer"
+              >
+                Stay logged in for 30 days
+              </label>
+            </div>
             <Link
-              to="/signup"
-              className="text-brand-gold hover:underline hover:text-brand-gold/80"
+              to="/forgot-password"
+              className="text-xs text-brand-gold hover:text-brand-gold/80 underline underline-offset-4"
             >
-              Sign up
+              Forgot Password?
             </Link>
-          </p>
+          </div>
+          <AuthButton
+            loading={loading}
+            loadingText="Signing in"
+            defaultText="Sign In"
+          />
+
+          <AuthDivider />
+          <GoogleSignInButton />
+          <AuthFooter
+            bottomText="Don't have an account?"
+            bottomLinkText="Sign up"
+            bottomLinkTo="/signup"
+          />
         </form>
       </Form>
     </AuthLayout>

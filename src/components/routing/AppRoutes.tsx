@@ -25,7 +25,6 @@ export function AppRoutes() {
   return (
     <NavigationProvider>
       <ProfileProvider>
-        {/* Auth Success Handler - Runs on every route to handle payment/auth success redirects */}
         <AuthSuccessHandler />
 
         <Routes>

@@ -24,7 +24,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-screen bg-premium-gradient pt-28 pb-16 md:pt-32 md:pb-20" role="banner" aria-labelledby="hero-heading">
+    <section className="relative min-h-screen flex justify-center items-center bg-premium-gradient" role="banner" aria-labelledby="hero-heading">
       {/* Layered background effects */}
       <div className="absolute inset-0 bg-[url('/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png')] opacity-5 bg-repeat animate-slide" aria-hidden="true" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent" aria-hidden="true" />

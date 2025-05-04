@@ -30,7 +30,7 @@ function App() {
             
             <div className="min-h-[100dvh] bg-luxury-dark">
               <Suspense fallback={<AppLoadingSpinner />}>
-                <InitialSessionCheck />
+                {/* <InitialSessionCheck /> */}
                 <AppRoutes />
               </Suspense>
             </div>

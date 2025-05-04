@@ -27,6 +27,9 @@ import {
 import "@/styles/auth-autofill.css";
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { JobAndAirlineSelector } from "@/components/auth/JobAndAirlineSelector";
+import AuthDivider from "@/components/auth/AuthDivider";
+import AuthButton from "@/components/auth/AuthButton";
+import AuthFooter from "@/components/auth/AuthFooter";
 
 const signupFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required."),
@@ -145,42 +148,19 @@ export default function SignUp() {
             form={form}
           />
           <JobAndAirlineSelector form={form} />
-
-          <Button
-            type="submit"
-            className="w-full bg-brand-gold text-brand-navy hover:bg-brand-gold/90 transition-all duration-200 h-10 mt-2"
-            disabled={loading}
-          >
-            {loading ? "Creating account..." : "Create Account"}
-          </Button>
-
-          <div className="flex items-center my-3">
-            <div className="flex-grow border-t border-white/10"></div>
-            <span className="px-3 text-xs text-gray-400">OR</span>
-            <div className="flex-grow border-t border-white/10"></div>
-          </div>
-
+          <AuthButton
+            loading={loading}
+            loadingText="Creating account"
+            defaultText="Create Account"
+          />
+          <AuthDivider />
           <GoogleSignInButton />
-
-          <div className="text-center mt-4 text-xs text-gray-400">
-            By creating an account, you agree to our{" "}
-            <Link to="/terms" className="text-brand-gold hover:underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link to="/privacy" className="text-brand-gold hover:underline">
-              Privacy Policy
-            </Link>
-            <div className="mt-1 text-sm">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className="text-brand-gold underline underline-offset-4 hover:text-brand-gold/80"
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
+          <AuthFooter
+            isPrivacyPolicyEnable={true}
+            bottomText="Already have an account?"
+            bottomLinkText="Sign in"
+            bottomLinkTo="/login"
+          />
         </form>
       </Form>
     </AuthLayout>

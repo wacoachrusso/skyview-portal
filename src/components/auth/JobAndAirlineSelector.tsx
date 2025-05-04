@@ -12,7 +12,7 @@ export const JobAndAirlineSelector = ({ form }: { form: any }) => {
   const jobTitle = form.watch("jobTitle");
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-4 mb-4">
       <FormField
         control={form.control}
         name="jobTitle"
@@ -20,7 +20,7 @@ export const JobAndAirlineSelector = ({ form }: { form: any }) => {
           <FormItem className="space-y-2">
             <FormLabel>Job Title</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger className="w-full bg-background border-input focus:ring-brand-gold">
+              <SelectTrigger className="w-full bg-background border-input focus:ring-brand-gold py-6">
                 <SelectValue placeholder="Select Job Title" />
               </SelectTrigger>
               <SelectContent className="bg-[#020817] border-white/10">
@@ -43,7 +43,7 @@ export const JobAndAirlineSelector = ({ form }: { form: any }) => {
           <FormItem className="space-y-2">
             <FormLabel>Airline</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger className="w-full bg-background border-input focus:ring-brand-gold">
+              <SelectTrigger className="w-full bg-background border-input focus:ring-brand-gold py-6">
                 <SelectValue placeholder="Select Airline" />
               </SelectTrigger>
               <SelectContent className="bg-[#020817] border-white/10">
