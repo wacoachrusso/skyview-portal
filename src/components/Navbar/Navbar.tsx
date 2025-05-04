@@ -5,7 +5,9 @@ import { NotificationBell } from "../shared/NotificationBell";
 import { AskSkyGuideButton } from "../landing/navbar/AskSkyGuideButton";
 import { Button } from "../ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { LogIn } from "lucide-react";
+import { LayoutDashboard, LogIn, MessageSquare, User } from "lucide-react";
+import { NavButton } from "./NavButton";
+import UserDropdown from "./UserDropdown";
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -64,7 +66,25 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
                 <NotificationBell />
-                <AskSkyGuideButton />
+                <NavButton
+                  to="/chat"
+                  icon={<MessageSquare className="h-4 w-4" />}
+                >
+                  Ask SkyGuide
+                </NavButton>
+
+                <NavButton to="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />} hideOnPath>
+                  Dashboard
+                </NavButton>
+
+                <NavButton
+                  to="/account"
+                  icon={<User className="h-4 w-4" />}
+                  hideOnPath
+                >
+                  Account
+                </NavButton>
+                <UserDropdown/>
               </div>
             ) : (
               <div

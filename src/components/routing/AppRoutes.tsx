@@ -24,9 +24,7 @@ import { AuthSuccessHandler } from "@/components/auth/AuthSuccessHandler";
 export function AppRoutes() {
   return (
     <NavigationProvider>
-      <ProfileProvider>
         <AuthSuccessHandler />
-
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Index />} />
@@ -96,7 +94,6 @@ export function AppRoutes() {
           {/* Fallback route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </ProfileProvider>
     </NavigationProvider>
   );
 }

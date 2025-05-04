@@ -19,7 +19,7 @@ export const NotificationBellButton = forwardRef<HTMLButtonElement, Notification
         type="button"
         variant="ghost" 
         size="icon"
-        className="relative w-8 h-8 md:w-9 md:h-9 hover:bg-accent/80 focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="relative w-8 h-8 md:w-9 md:h-9 hover:bg-secondary hover:text-white focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2"
         aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
       >
         <motion.div 

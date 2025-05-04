@@ -6,12 +6,19 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
 import { ViewportManager } from "@/components/utils/ViewportManager";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/navbar/Navbar";
+import { useProfile } from "@/components/utils/ProfileProvider";
 
 export default function Index() {
   const location = useLocation();
@@ -19,71 +26,69 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const hasPricingSectionScrolled = useRef(false);
+  // Access profile context to check if user is authenticated
+  const isAuthenticated = localStorage.getItem("auth_status");
 
-  // Check if user is logged in using local storage
   useEffect(() => {
-    console.log('Index page mounted');
-    
+    console.log("Index page mounted");
+
     // First check if we need to scroll to pricing section
     const searchParams = new URLSearchParams(location.search);
-    const scrollTo = searchParams.get('scrollTo');
-    const needsToScrollToPricing = scrollTo === 'pricing-section';
-    
-    // Check auth status from local storage
-    const authStatus = localStorage.getItem("auth_status");
-    
-    // Only redirect if authenticated AND not trying to view pricing section
-    if (authStatus === "authenticated" && !needsToScrollToPricing) {
-      console.log("User is logged in, redirecting to chat");
-      navigate("/chat", { replace: true });
-    } else {
-      setIsLoading(false);
-      
-      // Handle scroll to pricing if needed (when page is fully loaded)
-      if (needsToScrollToPricing) {
-        // Use a small timeout to ensure the page has rendered properly
-        setTimeout(() => {
-          const pricingSection = document.getElementById('pricing-section');
-          if (pricingSection && !hasPricingSectionScrolled.current) {
-            pricingSection.scrollIntoView({ behavior: 'smooth' });
-            hasPricingSectionScrolled.current = true;
-          }
-        }, 500);
-      }
+    const scrollTo = searchParams.get("scrollTo");
+    const needsToScrollToPricing = scrollTo === "pricing-section";
+
+    // Check if pricing section needs to be scrolled to
+    if (needsToScrollToPricing && !hasPricingSectionScrolled.current) {
+      // Use a small timeout to ensure the page has rendered properly
+      setTimeout(() => {
+        const pricingSection = document.getElementById("pricing-section");
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: "smooth" });
+          hasPricingSectionScrolled.current = true;
+        }
+      }, 500);
     }
 
-    // Continue with other initialization logic
+    // Always complete loading regardless of auth status
+    setIsLoading(false);
+
     // Check if it's iOS and not in standalone mode
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    
+    const isStandalone = window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches;
+
     // Check if the prompt has been shown before
-    const hasShownPrompt = localStorage.getItem('iosInstallPromptShown');
-    
-    console.log('Device checks:', { isIOS, isStandalone, hasShownPrompt });
-    
+    const hasShownPrompt = localStorage.getItem("iosInstallPromptShown");
+
+    console.log("Device checks:", { isIOS, isStandalone, hasShownPrompt });
+
     if (isIOS && !isStandalone && !hasShownPrompt) {
       setShowIOSPrompt(true);
-      localStorage.setItem('iosInstallPromptShown', 'true');
+      localStorage.setItem("iosInstallPromptShown", "true");
     }
 
     return () => {
-      console.log('Index page unmounted');
+      console.log("Index page unmounted");
     };
-  }, [location, navigate]);
+  }, [location]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
   };
 
   const handleReferralClick = () => {
-    navigate("/login", { state: { redirectTo: "/referral" } });
+    if (isAuthenticated) {
+      navigate("/referral");
+    } else {
+      navigate("/login", { state: { redirectTo: "/referral" } });
+    }
   };
 
   // Animation variants for sections
   const sectionVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5 } }
+    visible: { opacity: 1, transition: { duration: 0.5 } },
   };
 
   // Show loading state while checking auth
@@ -102,7 +107,7 @@ export default function Index() {
       <main className="flex-1 w-full">
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />
-          
+
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -111,7 +116,7 @@ export default function Index() {
           >
             <Features />
           </motion.div>
-          
+
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -120,7 +125,7 @@ export default function Index() {
           >
             <Testimonials />
           </motion.div>
-          
+
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -132,7 +137,7 @@ export default function Index() {
               <PricingSection />
             </div>
           </motion.div>
-          
+
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -141,8 +146,8 @@ export default function Index() {
           >
             <HomeFAQ />
           </motion.div>
-          
-          {/* Replace ReferralSection with a CTA to login for referrals */}
+
+          {/* Referral CTA section - customized based on auth status */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -154,13 +159,17 @@ export default function Index() {
                 Invite Friends & Earn Rewards
               </h2>
               <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                Sign in to access our referral program and earn rewards when your friends join SkyGuide.
+                {isAuthenticated
+                  ? "Share SkyGuide with your friends and earn rewards when they join."
+                  : "Sign in to access our referral program and earn rewards when your friends join SkyGuide."}
               </p>
-              <Button 
+              <Button
                 onClick={handleReferralClick}
                 className="premium-button bg-brand-gold text-brand-navy font-semibold py-3 px-8 rounded-lg hover:bg-brand-gold/90 transition-colors shadow-gold hover:shadow-gold-hover"
               >
-                Sign in to refer friends
+                {isAuthenticated
+                  ? "Access Referral Program"
+                  : "Sign in to refer friends"}
               </Button>
             </div>
           </motion.div>
@@ -170,10 +179,9 @@ export default function Index() {
       <ReleaseNotePopup />
 
       <Sheet open={showIOSPrompt} onOpenChange={handleClosePrompt}>
-        <SheetContent 
-          side="bottom" 
+        <SheetContent
+          side="bottom"
           className="glass-morphism border-t border-white/10 max-h-[80vh] overflow-y-auto pb-safe"
-          // Ensure the sheet is properly sized and scrollable
           style={{
             height: "auto",
             minHeight: "280px",
@@ -182,18 +190,34 @@ export default function Index() {
           }}
         >
           <SheetHeader>
-            <SheetTitle className="text-xl font-bold text-white">Install SkyGuide App</SheetTitle>
+            <SheetTitle className="text-xl font-bold text-white">
+              Install SkyGuide App
+            </SheetTitle>
             <SheetDescription className="text-base text-gray-300">
               <div className="space-y-4 pb-6">
-                <p>Install SkyGuide on your iOS device for the best experience:</p>
+                <p>
+                  Install SkyGuide on your iOS device for the best experience:
+                </p>
                 <ol className="list-decimal pl-5 space-y-2">
-                  <li className="text-sm sm:text-base">Tap the Share button <span className="inline-block w-5 h-5 align-middle">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L8 6h3v8h2V6h3L12 2zm0 10H3v10h18V12h-9zm-7 8v-6h14v6H5z"/>
-                    </svg>
-                  </span> in Safari</li>
-                  <li className="text-sm sm:text-base">Scroll down and tap "Add to Home Screen"</li>
-                  <li className="text-sm sm:text-base">Tap "Add" to install SkyGuide</li>
+                  <li className="text-sm sm:text-base">
+                    Tap the Share button{" "}
+                    <span className="inline-block w-5 h-5 align-middle">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M12 2L8 6h3v8h2V6h3L12 2zm0 10H3v10h18V12h-9zm-7 8v-6h14v6H5z" />
+                      </svg>
+                    </span>{" "}
+                    in Safari
+                  </li>
+                  <li className="text-sm sm:text-base">
+                    Scroll down and tap "Add to Home Screen"
+                  </li>
+                  <li className="text-sm sm:text-base">
+                    Tap "Add" to install SkyGuide
+                  </li>
                 </ol>
                 <div className="mt-6 mb-4">
                   <button

@@ -9,6 +9,7 @@ import {
   Plus,
   UserCircle,
 } from "lucide-react";
+import { ChatSettings } from "./ChatSettings";
 
 interface ChatHeaderProps {
   startNewChat: () => void;
@@ -111,6 +112,7 @@ const ChatHeader = ({
           <UserCircle className="h-4 w-4" />
           <span className="ml-2 hidden md:inline">Account</span>
         </Button>
+        <ChatSettings/>
         <Button
           variant="secondary"
           size="sm"

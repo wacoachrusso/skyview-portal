@@ -5,9 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Suspense } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
 import { BrowserRouter } from "react-router-dom";
-import { InitialSessionCheck } from "@/components/session/InitialSessionCheck";
 import { ViewportManager } from "@/components/utils/ViewportManager";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
+import { ProfileProvider } from "./components/utils/ProfileProvider";
+
 
 // Create QueryClient with default options
 const queryClient = new QueryClient({
@@ -30,8 +31,9 @@ function App() {
             
             <div className="min-h-[100dvh] bg-luxury-dark">
               <Suspense fallback={<AppLoadingSpinner />}>
-                {/* <InitialSessionCheck /> */}
-                <AppRoutes />
+                <ProfileProvider>
+                  <AppRoutes />
+                </ProfileProvider>
               </Suspense>
             </div>
             <Toaster />

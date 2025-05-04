@@ -63,7 +63,7 @@ export const NotificationBell = () => {
           className="w-[320px] md:w-[380px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 max-h-[80vh] overflow-y-auto"
           sideOffset={5}
         >
-          <div className="px-2 py-2 sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
+          <div className="px-2 py-2 sticky top-0 bg-background/95 hover:bg-white/10 hover:text-white backdrop-blur z-10 border-b">
             <h3 className="font-medium text-lg flex items-center">
               <Bell className="w-4 h-4 mr-2" /> 
               Notifications
