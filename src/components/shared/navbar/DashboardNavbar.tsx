@@ -1,10 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import Logo from "./Logo";
-import { NotificationBell } from "../shared/NotificationBell";
-import { useProfile } from "../utils/ProfileProvider";
-import { Button } from "../ui/button";
+import { NotificationBell } from "../NotificationBell";
+import { useProfile } from "../../utils/ProfileProvider";
+import { Button } from "../../ui/button";
 import { LogOut, Menu, MessageSquare, User } from "lucide-react";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Avatar, AvatarFallback } from "../../ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +11,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "../ui/dropdown-menu";
-import { ChatSettings } from "../chat/ChatSettings";
+} from "../../ui/dropdown-menu";
+import { ChatSettings } from "../../chat/ChatSettings";
 import { NavButton } from "./NavButton";
+import Logo from "./Logo";
 const DashboardNavbar = () => {
   const location = useLocation();
   const isAccountPage = location.pathname === "/account";

@@ -4,7 +4,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useProfile } from "@/components/utils/ProfileProvider";
 import { isAuthenticated } from "@/utils/auth/authGuard";
-import Navbar from "../navbar/Navbar";
+import Navbar from "../shared/navbar/Navbar";
 
 interface ProtectedLayoutProps {
   children: ReactNode;

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { NotificationBell } from "../shared/NotificationBell";
-import { Button } from "../ui/button";
+import { NotificationBell } from "../NotificationBell";
+import { Button } from "../../ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   LayoutDashboard,
@@ -12,7 +12,7 @@ import {
   MessageSquare,
   User,
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Avatar, AvatarFallback } from "../../ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +20,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import { NavButton } from "./NavButton";
-import { useProfile } from "../utils/ProfileProvider";
-import { ChatSettings } from "../chat/ChatSettings";
+import { useProfile } from "../../utils/ProfileProvider";
+import { ChatSettings } from "../../chat/ChatSettings";
+import Logo from "./Logo";
 
 const GlobalNavbar = () => {
   const location = useLocation();
@@ -81,38 +82,7 @@ const GlobalNavbar = () => {
           }`}
         >
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link
-              to="/"
-              className="flex items-center gap-2 hover:opacity-90 transition-opacity duration-200"
-              aria-label="SkyGuide"
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="flex items-center justify-center"
-              >
-                <img
-                  src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png"
-                  alt="SkyGuide Logo - Your trusted companion for contract interpretation"
-                  className="h-6 w-auto md:h-8"
-                  style={{
-                    filter: "drop-shadow(0 0 5px rgba(212, 175, 55, 0.3))",
-                    transition: "filter 0.3s ease",
-                  }}
-                />
-              </motion.div>
-              <motion.span
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-foreground text-xl md:text-2xl font-bold rich-text"
-              >
-                SkyGuide
-              </motion.span>
-            </Link>
-          </div>
+          <Logo/>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4">

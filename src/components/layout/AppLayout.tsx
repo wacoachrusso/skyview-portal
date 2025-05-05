@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import GlobalNavbar from "../navbar/GlobalNavbar";
+import GlobalNavbar from "../shared/navbar/GlobalNavbar";
 
 interface AppLayoutProps {
   children: ReactNode;

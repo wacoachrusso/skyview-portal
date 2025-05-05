@@ -17,9 +17,9 @@ import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
 import { ViewportManager } from "@/components/utils/ViewportManager";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/navbar/Navbar";
+import Navbar from "@/components/shared/navbar/Navbar";
 import { useProfile } from "@/components/utils/ProfileProvider";
-import GlobalNavbar from "@/components/navbar/GlobalNavbar";
+import GlobalNavbar from "@/components/shared/navbar/GlobalNavbar";
 
 export default function Index() {
   const location = useLocation();
