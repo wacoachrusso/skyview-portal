@@ -1,39 +1,168 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { SignupForm } from "@/components/auth/SignupForm";
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+import AuthLayout from "@/components/auth/AuthLayout";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { supabase } from "@/integrations/supabase/client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import "@/styles/auth-autofill.css";
+import { AuthInputField } from "@/components/auth/AuthInputField";
+import { JobAndAirlineSelector } from "@/components/auth/JobAndAirlineSelector";
+import AuthDivider from "@/components/auth/AuthDivider";
+import AuthButton from "@/components/auth/AuthButton";
+import AuthFooter from "@/components/auth/AuthFooter";
+
+const signupFormSchema = z.object({
+  fullName: z.string().min(2, "Full name is required."),
+  email: z.string().email("Please enter a valid email address."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long.")
+    .refine(
+      (val) =>
+        /[a-z]/.test(val) &&
+        /[A-Z]/.test(val) &&
+        /[0-9]/.test(val) &&
+        /[!@#$%^&*(),.?":{}|<>]/.test(val),
+      {
+        message:
+          "Password must include uppercase, lowercase, number, and special character.",
+      }
+    ),
+  jobTitle: z.string().min(1, "Please select a job title."),
+  airline: z.string().min(1, "Please select an airline."),
+});
+
+type SignupFormValues = z.infer<typeof signupFormSchema>;
 
 export default function SignUp() {
-  const isMobile = useIsMobile();
-  
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupFormSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      jobTitle: "",
+      airline: "",
+    },
+  });
+
+  const onSubmit = async (data: SignupFormValues) => {
+    setLoading(true);
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: error.message,
+        });
+        return;
+      }
+
+      // Insert profile even if session is not available yet
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: authData.user?.id,
+        email: data.email,
+        full_name: data.fullName,
+        job_title: data.jobTitle,
+        airline: data.airline,
+        subscription_plan: "free",
+        account_status: "pending_verification", // optional
+      });
+
+      if (profileError) {
+        console.error("Error saving profile:", profileError);
+      }
+
+      toast({
+        title: "Signup successful",
+        description:
+          "Check your email to verify your account before logging in.",
+      });
+
+      navigate("/login");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
-      <div className="w-full max-w-md space-y-6">
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-6 mt-4 sm:mt-6"
-          aria-label="Back to home page"
-        >
-          <ArrowLeft size={isMobile ? 16 : 18} />
-          <span>Back to Home</span>
-        </Link>
-        
-        <div className="flex flex-col items-center justify-center space-y-2 text-center">
-          <img
-            src="/lovable-uploads/030a54cc-8003-4358-99f1-47f47313de93.png"
-            alt="SkyGuide Logo"
-            className="h-12 w-auto mb-4"
+    <AuthLayout
+      title="Join SkyGuide"
+      subtitle="Create your account and start exploring"
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <AuthInputField
+            name="fullName"
+            label="Full Name"
+            placeholder="John Doe"
+            form={form}
           />
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Join SkyGuide
-          </h1>
-          <p className="text-sm text-gray-400">
-            Create your account and start exploring
-          </p>
-        </div>
-        
-        <SignupForm />
-      </div>
-    </div>
+          <AuthInputField
+            name="email"
+            label="Email address"
+            type="email"
+            placeholder="you@example.com"
+            form={form}
+          />
+          <AuthInputField
+            name="password"
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            form={form}
+          />
+          <JobAndAirlineSelector form={form} />
+          <AuthButton
+            loading={loading}
+            loadingText="Creating account"
+            defaultText="Create Account"
+          />
+          <AuthDivider />
+          <GoogleSignInButton />
+          <AuthFooter
+            isPrivacyPolicyEnable={true}
+            bottomText="Already have an account?"
+            bottomLinkText="Sign in"
+            bottomLinkTo="/login"
+          />
+        </form>
+      </Form>
+    </AuthLayout>
   );
 }

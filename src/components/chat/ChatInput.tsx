@@ -26,7 +26,7 @@ const ChatInput = ({
   const isSubmittingRef = useRef(false);
   
   // Determine if the chat input should be disabled
-  const isInputDisabled = disabled || isLoading || (subscriptionPlan === "free" && queryCount >= 2);
+  const isInputDisabled = disabled || isLoading || (subscriptionPlan === "free" && queryCount >= 20);
   
   // Handle selectedQuestion changes - key issue fixed here
   useEffect(() => {

@@ -1,34 +1,30 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { AccountHeader } from "@/components/account/AccountHeader";
 import { AccountInfo } from "@/components/account/AccountInfo";
 import { SubscriptionInfo } from "@/components/account/SubscriptionInfo";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { CancelSubscriptionDialog } from "@/components/account/CancelSubscriptionDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { useLogout } from "@/hooks/useLogout";
-import { useAccountActions } from "@/hooks/account-management/useAccountActions";
-import { useProfileContext } from "@/components/utils/ProfileProvider";
+import { useProfile } from "@/components/utils/ProfileProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const Account = () => {
   const navigate = useNavigate();
-  // Use global profile context instead of loading it again
-  const { 
-    isProfileLoading: isLoading, 
-    profileLoadError: loadError, 
-    userEmail, 
-    profile, 
+
+  // Use the profile context instead of manual loading
+  const {
+    isLoading,
+    loadError,
+    userEmail,
+    profile,
     authUser,
-    refreshProfile: retryLoading 
-  } = useProfileContext();
-  
-  // Only initialize account actions
-  const { handleCancelSubscription } = useAccountActions(authUser?.id);
-  
-  const { handleLogout } = useLogout();
+    refreshProfile,
+    handleCancelSubscription,
+    logout,
+  } = useProfile();
+
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [mounted, setMounted] = useState(true);
@@ -37,17 +33,15 @@ const Account = () => {
   // Handle custom sign out to clear cached data
   const handleSignOut = async () => {
     try {
-      // Clear cached data on sign out
-      sessionStorage.removeItem("cached_user_profile");
-      sessionStorage.removeItem("cached_auth_user");
-      handleLogout();
+      // Use the logout function from the profile context
+      await logout();
     } catch (error) {
       console.error("Error during sign out:", error);
     }
   };
 
   const handlePlanChange = () => {
-    navigate('/?scrollTo=pricing-section');
+    navigate("/?scrollTo=pricing-section");
   };
 
   const handleInitialCancelClick = () => {
@@ -60,15 +54,15 @@ const Account = () => {
 
   const handleReadRefundPolicy = () => {
     setShowCancelDialog(false);
-    navigate('/refunds', { state: { fromCancellation: true } });
+    navigate("/refunds", { state: { fromCancellation: true } });
   };
 
   const handleRefresh = () => {
     console.log("Manually refreshing profile data");
-    retryLoading();
+    refreshProfile();
     setLoadingTimeout(false);
   };
-  
+
   // Modified to handle both first load and subsequent loads
   useEffect(() => {
     console.log("Account component mounted or profile updated:", profile?.id);
@@ -77,7 +71,7 @@ const Account = () => {
   // Set a timeout for loading to improve user experience
   useEffect(() => {
     let timeoutId: number;
-    
+
     if (isLoading && !loadingTimeout) {
       timeoutId = window.setTimeout(() => {
         if (mounted) {
@@ -86,12 +80,12 @@ const Account = () => {
         }
       }, 12000); // Increased timeout to 12 seconds
     }
-    
+
     // Reset timeout flag if loading state changes
     if (!isLoading) {
       setLoadingTimeout(false);
     }
-    
+
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
@@ -99,15 +93,15 @@ const Account = () => {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const checkAlphaTester = async () => {
       if (!profile?.id || !mounted) return;
 
       try {
         const { data: alphaTester } = await supabase
-          .from('alpha_testers')
-          .select('*')
-          .eq('profile_id', profile.id)
+          .from("alpha_testers")
+          .select("*")
+          .eq("profile_id", profile.id)
           .maybeSingle();
 
         if (alphaTester?.temporary_password && mounted) {
@@ -121,22 +115,28 @@ const Account = () => {
     if (profile?.id) {
       checkAlphaTester();
     }
-    
+
     return () => {
       setMounted(false);
     };
   }, [profile?.id, isLoading]);
-  
+
   // Show loading state
   if (isLoading && !loadingTimeout) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4 border-brand-gold" />
-            <h2 className="text-xl font-semibold mb-2 text-white">Loading your account...</h2>
-            <p className="text-sm text-muted-foreground mb-4">This may take a moment</p>
+            <LoadingSpinner
+              size="lg"
+              className="mx-auto mb-4 border-brand-gold"
+            />
+            <h2 className="text-xl font-semibold mb-2 text-white">
+              Loading your account...
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              This may take a moment
+            </p>
             <Button
               onClick={handleRefresh}
               variant="outline"
@@ -157,21 +157,25 @@ const Account = () => {
     console.log("No profile found for account page");
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-        <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center max-w-md px-4">
-            <h2 className="text-xl font-semibold mb-4 text-white">Profile Not Found</h2>
-            <p className="text-muted-foreground mb-6">Unable to load your profile information. Please try again later or contact support.</p>
+            <h2 className="text-xl font-semibold mb-4 text-white">
+              Profile Not Found
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Unable to load your profile information. Please try again later or
+              contact support.
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                onClick={handleRefresh} 
+              <Button
+                onClick={handleRefresh}
                 variant="outline"
                 className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
               >
                 Try Again
               </Button>
-              <Button 
-                onClick={() => navigate('/dashboard')} 
+              <Button
+                onClick={() => navigate("/dashboard")}
                 variant="default"
                 className="bg-gradient-to-r from-brand-purple to-brand-magenta text-white hover:opacity-90"
               >
@@ -187,23 +191,34 @@ const Account = () => {
   // Render account page when data is available
   console.log("Account page rendering with profile:", profile.id);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy via-background to-brand-slate">
-      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-      <main className="container mx-auto px-4 py-8 max-w-4xl relative">
-        <AccountHeader />
-        <div className="space-y-6">
-          <AccountInfo 
-            userEmail={userEmail} 
-            profile={profile} 
+    <AppLayout maxWidth="max-w-4xl">
+      <div className="flex items-center justify-between mb-6 ">
+        <Button
+          variant="ghost"
+          className="text-sm text-white hover:text-brand-gold transition"
+          onClick={() => navigate("/dashboard")}
+        >
+          ← Back to Dashboard
+        </Button>
+      </div>
+
+      <div className="space-y-6">
+        <div className="rounded-2xl shadow-md border border-white/10 bg-white/5 backdrop-blur-md p-6">
+          <AccountInfo
+            userEmail={userEmail}
+            profile={profile}
             showPasswordChange={showPasswordChange}
           />
-          <SubscriptionInfo 
+        </div>
+
+        <div className="rounded-2xl shadow-md border border-white/10 bg-white/5 backdrop-blur-md p-6">
+          <SubscriptionInfo
             profile={profile}
             onPlanChange={handlePlanChange}
             onCancelSubscription={handleInitialCancelClick}
           />
         </div>
-      </main>
+      </div>
 
       <CancelSubscriptionDialog
         open={showCancelDialog}
@@ -211,7 +226,7 @@ const Account = () => {
         onConfirm={handleCancelSubscription}
         onReadPolicy={handleReadRefundPolicy}
       />
-    </div>
+    </AppLayout>
   );
 };
 

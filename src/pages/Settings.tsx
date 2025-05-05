@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useTheme } from "@/components/theme-provider";
@@ -11,6 +10,7 @@ import { ThemeSelector } from "@/components/chat/settings/ThemeSelector";
 import { FontSizeSelector } from "@/components/chat/settings/FontSizeSelector";
 import { NotificationToggle } from "@/components/chat/settings/NotificationToggle";
 import { AutoSaveToggle } from "@/components/chat/settings/AutoSaveToggle";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 
 const Settings = () => {
@@ -61,8 +61,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1A1F2C] to-[#2A2F3C]">
-      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
+    <AppLayout>
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <Card className="bg-[#2A2F3C] border-white/10">
@@ -99,7 +98,7 @@ const Settings = () => {
           </Card>
         </div>
       </main>
-    </div>
+    </AppLayout>
   );
 };
 

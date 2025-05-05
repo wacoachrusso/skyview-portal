@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { ChatSettings } from "./ChatSettings";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -72,7 +71,6 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <ChatSettings />
       </div>
     </div>
   );

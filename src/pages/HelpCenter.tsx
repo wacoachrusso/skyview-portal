@@ -1,5 +1,5 @@
 
-import { Navbar } from "@/components/landing/Navbar";
+
 import { Footer } from "@/components/landing/Footer";
 import {
   Accordion,
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import Navbar from "@/components/navbar/Navbar";
 
 export default function HelpCenter() {
   const [searchQuery, setSearchQuery] = useState("");

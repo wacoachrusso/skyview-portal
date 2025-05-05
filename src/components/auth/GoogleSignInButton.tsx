@@ -63,7 +63,7 @@ export const GoogleSignInButton = () => {
     <Button
       type="button"
       variant="outline"
-      className="w-full border-white/20 text-white hover:bg-white/10 hover:text-white"
+      className="w-full border-white/20 text-black bg-white hover:bg-white/10 hover:text-white"
       onClick={handleGoogleSignIn}
       disabled={loading}
     >
