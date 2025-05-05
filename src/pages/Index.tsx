@@ -17,8 +17,9 @@ import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
 import { ViewportManager } from "@/components/utils/ViewportManager";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/navbar/Navbar";
+import Navbar from "@/components/shared/navbar/Navbar";
 import { useProfile } from "@/components/utils/ProfileProvider";
+import GlobalNavbar from "@/components/shared/navbar/GlobalNavbar";
 
 export default function Index() {
   const location = useLocation();
@@ -103,7 +104,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
       <ViewportManager />
-      <Navbar />
+      <GlobalNavbar />
       <main className="flex-1 w-full">
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />

@@ -1,6 +1,6 @@
 // components/shared/NavButton.tsx
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { ReactNode } from "react";
 
 interface NavButtonProps {
