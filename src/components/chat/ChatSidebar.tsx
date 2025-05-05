@@ -1,10 +1,9 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { SidebarHeader } from "./SidebarHeader";
 import { SearchBar } from "./sidebar/SearchBar";
 import { ConversationList } from "./sidebar/ConversationList";
+import { useTheme } from "../theme-provider";
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -23,8 +22,9 @@ const ChatSidebar = ({
   onSelectConversation,
   onDeleteConversation,
   onDeleteAllConversations,
-  isLoading = false
+  isLoading = false,
 }: ChatSidebarProps) => {
+  const { theme } = useTheme();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
@@ -53,7 +53,13 @@ const ChatSidebar = ({
   );
 
   return (
-    <div className="w-80 bg-[#1A1F2C] border-r border-white/10 flex flex-col h-full">
+    <div
+      className={`w-80 border-r border-white/10 flex flex-col h-full ${
+        theme === "dark"
+          ? "bg-[#1A1F2C] "
+          : "bg-gray-100 text-gray-800  border-r border-gray-200 shadow-md"
+      }`}
+    >
       <SidebarHeader onDeleteAll={() => setDeleteConfirmOpen(true)} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
       <div className="flex-1 overflow-y-auto">
@@ -65,9 +71,15 @@ const ChatSidebar = ({
           isLoading={isLoading}
         />
       </div>
-      <div className="p-4 border-t border-slate-700">
-        <div className="text-sm text-slate-400">
-          <p>© 2025 SkyGuide</p>
+      <div
+        className={`p-4 border-t ${
+          theme === "dark" ? "border-slate-700 " : "border-gray-300 "
+        }`}
+      >
+        <div className={`text-sm ${
+          theme === "dark" ? "text-slate-400 " : "text-gray-800 "
+        }`}>
+          <p className="text-[15px]">© 2025 SkyGuide</p>
         </div>
       </div>
 

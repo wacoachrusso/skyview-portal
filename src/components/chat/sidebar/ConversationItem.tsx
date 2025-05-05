@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Conversation } from "@/types/chat";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,14 +6,21 @@ import { ConversationIcon } from "../conversation/ConversationIcon";
 import { ConversationTitle } from "../conversation/ConversationTitle";
 import { DownloadHandler } from "../conversation/DownloadHandler";
 import { useConversationInteraction } from "../conversation/useConversationInteraction";
+import { useTheme } from "@/components/theme-provider";
 
 interface ConversationItemProps {
   conversation: Conversation;
   isSelected: boolean;
   isOffline: boolean;
   onSelect: (conversationId: string) => void;
-  onDelete: (e: React.MouseEvent | React.TouchEvent, conversationId: string) => void;
-  onToggleOffline: (e: React.MouseEvent | React.TouchEvent, conversationId: string) => void;
+  onDelete: (
+    e: React.MouseEvent | React.TouchEvent,
+    conversationId: string
+  ) => void;
+  onToggleOffline: (
+    e: React.MouseEvent | React.TouchEvent,
+    conversationId: string
+  ) => void;
   showCheckbox?: boolean;
   isChecked?: boolean;
   onCheckChange?: (checked: boolean) => void;
@@ -32,7 +38,7 @@ export function ConversationItem({
   onCheckChange,
 }: ConversationItemProps) {
   const [downloadInProgress, setDownloadInProgress] = useState(false);
-  
+  const { theme } = useTheme();
   // Custom hook for handling conversation interaction
   const { handleInteraction } = useConversationInteraction({
     conversationId: conversation.id,
@@ -40,10 +46,12 @@ export function ConversationItem({
     downloadInProgress,
     onSelect,
     onCheckChange,
-    isChecked
+    isChecked,
   });
 
-  const handleToggleOffline = async (e: React.MouseEvent | React.TouchEvent) => {
+  const handleToggleOffline = async (
+    e: React.MouseEvent | React.TouchEvent
+  ) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -54,10 +62,14 @@ export function ConversationItem({
     }
 
     // Access the DownloadHandler element to trigger the dialog
-    const handler = document.querySelector(`[data-testid="download-handler-${conversation.id}"]`);
+    const handler = document.querySelector(
+      `[data-testid="download-handler-${conversation.id}"]`
+    );
     if (handler) {
       // Update the download in progress state from the handler
-      setDownloadInProgress(handler.getAttribute('data-download-in-progress') === 'true');
+      setDownloadInProgress(
+        handler.getAttribute("data-download-in-progress") === "true"
+      );
       // Trigger the dialog
       (handler as HTMLElement).click();
     }
@@ -81,10 +93,14 @@ export function ConversationItem({
         tabIndex={0}
         onClick={handleInteraction}
         onTouchEnd={handleInteraction}
-        className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/5 border-l-2 touch-manipulation ${
+        className={`group flex items-center px-3 py-3 cursor-pointer transition-all duration-200 touch-manipulation border-l-2 ${
           isSelected
-            ? "bg-white/10 border-l-brand-gold"
-            : "border-l-transparent hover:border-l-white/20"
+            ? theme === "dark"
+              ? "bg-white/10 border-l-brand-gold"
+              : "bg-gray-200 border-l-brand-gold"
+            : theme === "dark"
+            ? "hover:bg-white/5 border-l-transparent hover:border-l-white/20"
+            : "bg-gray-100 hover:bg-gray-200 border-l-transparent hover:border-l-gray-300"
         }`}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">

@@ -1,8 +1,10 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import sanitizeHtml from 'sanitize-html';
+import { useTheme } from "../theme-provider";
 
 const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
+  const {theme} = useTheme();
   const isUser = message.role === "user";
   const isStreaming = message.isStreaming;
   
@@ -28,17 +30,19 @@ const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
         className={`max-w-xs sm:max-w-md md:max-w-3xl lg:max-w-4xl p-4 rounded-2xl shadow-lg transform transition-all duration-200 ${
           isUser 
             ? "bg-blue-600 text-white rounded-br-sm hover:bg-blue-700" 
-            : "bg-slate-800 text-white rounded-bl-sm border border-slate-700 hover:border-slate-600"
+            : theme === "dark" 
+              ? "bg-slate-800 text-white rounded-bl-sm border border-slate-700 hover:border-slate-600"
+              : "bg-slate-200 text-slate-900 rounded-bl-sm border border-slate-300 hover:border-slate-400"
         }`}
       >
         <div className="flex justify-between items-start mb-2">
-          <span className={`font-medium text-sm ${isUser ? "text-blue-100" : "text-slate-300"}`}>
+          <span className={`font-medium text-sm ${isUser ? "text-blue-100" : theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
             {isUser ? "You" : "SkyGuide Assistant"}
           </span>
           {!isStreaming && (
             <button
               onClick={() => onCopyMessage(message.content)}
-              className="ml-2 text-slate-300 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className={`ml-2 ${isUser ? "text-blue-100" : theme === "dark" ? "text-slate-300" : "text-slate-500"} hover:text-white opacity-0 group-hover:opacity-100 transition-opacity`}
               aria-label="Copy message"
             >
               <svg
@@ -61,11 +65,11 @@ const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
         </div>
         
         {/* Message content with Markdown support */}
-        <div className={`text-sm text-white leading-relaxed prose prose-sm ${isUser ? "prose-invert" : "prose-slate"} max-w-none`}>
+        <div className={`text-sm leading-relaxed prose prose-sm ${isUser ? "prose-invert" : theme === "dark" ? "prose-invert" : "prose-slate"} max-w-none`}>
           {isUser ? (
             <p className="whitespace-pre-wrap text-sm">{message.content}</p>
           ) : (
-            <MessageContent content={message.content} />
+            <MessageContent content={message.content} theme={theme} />
           )}
         </div>
         
@@ -77,7 +81,7 @@ const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
               <span className="ml-2">Generating response</span>
             </div>
           ) : (
-            <span className={`opacity-70 ${isUser ? "text-blue-100" : "text-slate-400"}`}>
+            <span className={`opacity-70 ${isUser ? "text-blue-100" : theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
               {new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
             </span>
           )}
@@ -96,11 +100,18 @@ const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
   );
 };
 
-const MessageContent = ({ content }) => {
+const MessageContent = ({ content, theme }) => {
+  // Determine text color based on theme
+  const textColorClass = theme === "dark" ? "text-white" : "text-slate-900";
+  
   if (content.includes("<table>")) {
     return (
       <div 
-        className="table-wrapper overflow-x-auto bg-slate-900 p-2 rounded-lg border border-slate-700 text-white text-xs"
+        className={`table-wrapper overflow-x-auto p-2 rounded-lg border ${
+          theme === "dark" 
+            ? "border-slate-700 bg-slate-900 text-white" 
+            : "bg-slate-200 text-slate-900 border-slate-300"
+        }`}
         dangerouslySetInnerHTML={{ 
           __html: sanitizeHtml(content, {
             allowedTags: ['table', 'tr', 'td', 'th', 'thead', 'tbody', 'h3', 'h4', 'p', 'ul', 'li', 'ol', 'code', 'pre', 'strong', 'em']
@@ -110,17 +121,17 @@ const MessageContent = ({ content }) => {
     );
   }
 
-  // Custom renderers to apply Tailwind styles directly
+  // Apply theme-appropriate text color
   return (
-    <div className="text-white text-xs leading-relaxed">
+    <div className={`${textColorClass} text-xs leading-relaxed`}>
       <ReactMarkdown
         components={{
           p: ({ children }) => <p className="text-sm mb-2">{children}</p>,
           ul: ({ children }) => <ul className="list-disc ml-5 text-xs mb-2">{children}</ul>,
           ol: ({ children }) => <ol className="list-decimal ml-5 text-xs mb-2">{children}</ol>,
           li: ({ children }) => <li className="text-xs mb-1">{children}</li>,
-          code: ({ children }) => <code className="bg-slate-700 text-xs px-1 rounded">{children}</code>,
-          pre: ({ children }) => <pre className="bg-slate-800 text-xs p-2 rounded overflow-x-auto">{children}</pre>,
+          code: ({ children }) => <code className={`${theme === "dark" ? "bg-slate-700" : "bg-slate-300"} text-xs px-1 rounded`}>{children}</code>,
+          pre: ({ children }) => <pre className={`${theme === "dark" ? "bg-slate-800" : "bg-slate-300"} text-xs p-2 rounded overflow-x-auto`}>{children}</pre>,
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
           h1: ({ children }) => <h1 className="text-base font-bold mb-2">{children}</h1>,

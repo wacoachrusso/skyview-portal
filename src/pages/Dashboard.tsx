@@ -6,11 +6,12 @@ import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
 import { useProfile } from "@/components/utils/ProfileProvider";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useTheme } from "@/components/theme-provider";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const mounted = useRef(true);
-  
+  const {theme} = useTheme();
   // Use the ProfileProvider hook
   const { 
     isLoading: profileLoading, 
@@ -20,7 +21,10 @@ export default function Dashboard() {
   } = useProfile();
   
   const [isLoading, setIsLoading] = useState(true);
-
+  const bgStyles =
+    theme === "dark"
+      ? "bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white"
+      : "bg-gradient-to-br from-blue-50 via-slate-50 to-gray-100 text-gray-800";
   useEffect(() => {
     // Set a timeout to prevent indefinite loading
     const timer = setTimeout(() => {
@@ -48,7 +52,7 @@ export default function Dashboard() {
 
   if (isLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-navy via-background to-brand-slate">
+      <div className={`min-h-screen flex items-center justify-center ${bgStyles}`}>
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -56,7 +60,7 @@ export default function Dashboard() {
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-navy via-background to-brand-slate">
+      <div className={`min-h-screen flex items-center justify-center ${bgStyles}`}>
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">Failed to load profile</h2>
           <p className="text-muted-foreground mb-4">{loadError}</p>

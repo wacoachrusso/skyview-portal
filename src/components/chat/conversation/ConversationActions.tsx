@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Trash2, ArrowDown } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 
 interface ConversationActionsProps {
   isOffline: boolean;
@@ -14,26 +15,22 @@ export function ConversationActions({
   onDelete,
   onToggleOffline
 }: ConversationActionsProps) {
-  const handleDelete = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onDelete(e);
-  };
+  const { theme } = useTheme();
 
-  const handleToggleOffline = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onToggleOffline(e);
-  };
+  const arrowColor = isOffline
+    ? "text-brand-gold"
+    : theme === "dark"
+      ? "text-gray-400 hover:text-white"
+      : "text-gray-500 hover:text-black";
 
   return (
-    <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <Button
         variant="ghost"
         size="icon"
         className="h-6 w-6 p-0.5 touch-manipulation"
-        onClick={handleDelete}
-        onTouchEnd={handleDelete}
+        onClick={onDelete}
+        onTouchEnd={onDelete}
       >
         <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
       </Button>
@@ -41,15 +38,11 @@ export function ConversationActions({
         variant="ghost"
         size="icon"
         className="h-6 w-6 p-0.5 touch-manipulation"
-        onClick={handleToggleOffline}
-        onTouchEnd={handleToggleOffline}
+        onClick={onToggleOffline}
+        onTouchEnd={onToggleOffline}
         disabled={downloadInProgress}
       >
-        <ArrowDown className={`h-4 w-4 ${
-          isOffline 
-            ? "text-brand-gold" 
-            : "text-gray-400 hover:text-white"
-        }`} />
+        <ArrowDown className={`h-4 w-4 ${arrowColor}`} />
       </Button>
     </div>
   );
