@@ -1,31 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfile } from "@/components/utils/ProfileProvider";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
   const mounted = useRef(true);
   
   // Use the ProfileProvider hook
   const { 
     isLoading: profileLoading, 
     loadError,
-    profile, 
     authUser, 
-    userName, 
-    userEmail,
-    queryCount, 
-    isAdmin,
-    logout
+    userName
   } = useProfile();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -54,19 +45,6 @@ export default function Dashboard() {
     };
   }, [profileLoading, authUser, navigate]);
 
-  // Handle sign out using the logout function from ProfileProvider
-  const handleSignOut = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Error during sign out:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to sign out. Please try again."
-      });
-    }
-  };
 
   if (isLoading || profileLoading) {
     return (

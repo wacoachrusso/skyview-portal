@@ -64,8 +64,9 @@ const Login = () => {
         console.log("Admin status removed from localStorage");
       }
 
-      // Store profile in localStorage for immediate access
+      // Store profile and name in localStorage
       localStorage.setItem("user_profile", JSON.stringify(profile));
+      localStorage.setItem("auth_user_name", profile.full_name);
 
       return profile;
     } catch (error) {
@@ -108,7 +109,6 @@ const Login = () => {
         if (rememberMe) {
           localStorage.setItem("extended_session", "true");
         }
-
         // Create new session
         await createNewSession(authData.session.user.id);
 

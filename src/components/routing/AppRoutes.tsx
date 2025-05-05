@@ -16,7 +16,6 @@ import ReleaseNotes from "@/pages/ReleaseNotes";
 import HelpCenter from "@/pages/HelpCenter";
 import Referrals from "@/pages/Referrals";
 import { NavigationProvider } from "./NavigationProvider";
-import { ProfileProvider } from "../utils/ProfileProvider";
 import Chat from "@/pages/Chat";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoutes";
 import { AuthSuccessHandler } from "@/components/auth/AuthSuccessHandler";
