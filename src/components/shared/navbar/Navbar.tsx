@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { NotificationBell } from "../shared/NotificationBell";
-import { AskSkyGuideButton } from "../landing/navbar/AskSkyGuideButton";
-import { Button } from "../ui/button";
+import { NotificationBell } from "../NotificationBell";
+import { Button } from "../../ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LayoutDashboard, LogIn, MessageSquare, User } from "lucide-react";
 import { NavButton } from "./NavButton";

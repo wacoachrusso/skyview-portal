@@ -1,9 +1,9 @@
 import React from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { Button } from '../ui/button';
-import { Avatar, AvatarFallback } from '../ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../../ui/dropdown-menu';
+import { Button } from '../../ui/button';
+import { Avatar, AvatarFallback } from '../../ui/avatar';
 import { LogOut } from 'lucide-react';
-import { useProfile } from '../utils/ProfileProvider';
+import { useProfile } from '../../utils/ProfileProvider';
 
 const UserDropdown = () => {
     const { userName, logout } = useProfile();
