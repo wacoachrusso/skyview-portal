@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { NotificationBell } from "../NotificationBell";
 import { Button } from "../../ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   LayoutDashboard,
   LogIn,
   LogOut,
-  Menu,
   MessageSquare,
   User,
 } from "lucide-react";
@@ -22,39 +19,47 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import { NavButton } from "./NavButton";
-import { useProfile } from "../../utils/ProfileProvider";
 import { ChatSettings } from "../../chat/ChatSettings";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
+import UserDropdown from "./UserDropdown";
 
 const GlobalNavbar = () => {
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Determine if we're on a private route
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const isPrivateRoute = ["/dashboard", "/account", "/chat"].some((path) =>
     location.pathname.startsWith(path)
   );
 
   // Get user authentication state
-  const { userName, logout } = useProfile();
+  const userName = localStorage.getItem("auth_user_name");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  useEffect(() => {
-    const storedAuthStatus = localStorage.getItem("auth_status");
-    if (storedAuthStatus === "authenticated" || userName) {
-      setIsAuthenticated(true);
-    }
-  }, [userName]);
-
   const isAccountPage = location.pathname === "/account";
   const isDashboardPage = location.pathname === "/dashboard";
 
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem("auth_status");
+      localStorage.removeItem("userName");
+      localStorage.clear();
+      sessionStorage.removeItem("cached_user_profile");
+      sessionStorage.removeItem("cached_auth_user");
+      setIsAuthenticated(false);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+      });
+    }
+  };
   const handleSignOut = async () => {
     try {
-      localStorage.removeItem("auth_status");
-      // Any other local storage items that need to be cleared
-      localStorage.clear();
       await logout();
     } catch (error) {
       console.error("Error during sign out:", error);
@@ -72,7 +77,12 @@ const GlobalNavbar = () => {
   const navbarClasses = isPrivateRoute
     ? "bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 backdrop-blur-lg sticky top-0 z-50 shadow-lg border-b border-gray-800/50"
     : "fixed-nav fixed top-0 left-0 right-0 z-50 border-b border-border/40";
-
+    useEffect(() => {
+      const storedAuthStatus = localStorage.getItem("auth_status");
+      if (storedAuthStatus === "authenticated" || userName) {
+        setIsAuthenticated(true);
+      }
+    }, [userName]);
   return (
     <nav className={navbarClasses}>
       <div className="container mx-auto px-3 sm:px-4 lg:px-8">
@@ -82,7 +92,7 @@ const GlobalNavbar = () => {
           }`}
         >
           {/* Logo */}
-          <Logo/>
+          <Logo />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
@@ -116,43 +126,10 @@ const GlobalNavbar = () => {
                 {isPrivateRoute && <ChatSettings />}
 
                 {/* User Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild className="focus-visible:ring-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center space-x-2 ml-2 hover:bg-transparent hover:text-white transition-colors focus:outline-none focus-visible:ring-0"
-                    >
-                      <Avatar className="h-8 w-8 border border-white/20">
-                        <AvatarFallback className="bg-indigo-700 text-white font-medium">
-                          {userName ? userName.charAt(0).toUpperCase() : "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="hidden lg:inline text-sm text-white/90">
-                        {userName || "User"}
-                      </span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    sideOffset={5}
-                    className="w-56 bg-slate-900/95 backdrop-blur-lg border border-gray-700 shadow-xl mt-5"
-                  >
-                    <DropdownMenuLabel className="text-white/70">
-                      Signed in as{" "}
-                      <span className="font-semibold text-white">
-                        {userName || "User"}
-                      </span>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-gray-700/50" />
-                    <DropdownMenuItem
-                      onClick={handleSignOut}
-                      className="text-white focus:text-red-400 focus:bg-red-500/10 hover:bg-secondary my-1 cursor-pointer"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <UserDropdown
+                  userName={userName}
+                  setIsAuthenticated={setIsAuthenticated}
+                />
               </>
             ) : (
               // Public navigation options

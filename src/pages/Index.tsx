@@ -1,5 +1,4 @@
 import { Features } from "@/components/landing/Features";
-import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { PricingSection } from "@/components/landing/pricing/PricingSection";
 import { Testimonials } from "@/components/landing/Testimonials";
@@ -15,11 +14,8 @@ import {
 } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
-import { ViewportManager } from "@/components/utils/ViewportManager";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/shared/navbar/Navbar";
-import { useProfile } from "@/components/utils/ProfileProvider";
-import GlobalNavbar from "@/components/shared/navbar/GlobalNavbar";
+import PublicLayout from "@/components/layout/PublicLayout";
 
 export default function Index() {
   const location = useLocation();
@@ -102,9 +98,7 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-luxury-dark flex flex-col overflow-hidden">
-      <ViewportManager />
-      <GlobalNavbar />
+    <PublicLayout>
       <main className="flex-1 w-full">
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />
@@ -176,7 +170,6 @@ export default function Index() {
           </motion.div>
         </div>
       </main>
-      <Footer />
       <ReleaseNotePopup />
 
       <Sheet open={showIOSPrompt} onOpenChange={handleClosePrompt}>
@@ -233,6 +226,6 @@ export default function Index() {
           </SheetHeader>
         </SheetContent>
       </Sheet>
-    </div>
+      </PublicLayout>
   );
 }
