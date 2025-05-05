@@ -171,8 +171,8 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
       profile?.subscription_plan !== 'trial_ended') {
     console.log("[Initial Session] User has active subscription");
     
-    // Only redirect if on public pages
-    if (isPublicRoute(window.location.pathname)) {
+    // Only redirect if on login/signup pages - MODIFIED HERE
+    if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
       navigate('/chat', { replace: true });
     }
     return;
@@ -311,7 +311,7 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
         }
       }
       
-      // Don't automatically redirect authenticated users except from login/signup
+      // MODIFIED HERE: Only redirect from login/signup pages, allow access to home page
       if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
         navigate('/chat', { replace: true });
       }

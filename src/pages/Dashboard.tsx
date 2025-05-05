@@ -1,146 +1,113 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLogout } from "@/hooks/useLogout";
+import { useProfile } from "@/components/utils/ProfileProvider";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [userEmail, setUserEmail] = useState<string>("");
-  const [userName, setUserName] = useState<string>("");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [queryCount, setQueryCount] = useState(0);
-  const [userId, setUserId] = useState<string | null>(null);
-  const mounted = useRef(true);
   const isMobile = useIsMobile();
-  const { handleLogout } = useLogout();
+  const mounted = useRef(true);
+  
+  // Use the ProfileProvider hook
+  const { 
+    isLoading: profileLoading, 
+    loadError,
+    profile, 
+    authUser, 
+    userName, 
+    userEmail,
+    queryCount, 
+    isAdmin,
+    logout
+  } = useProfile();
+  
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
+    // Set a timeout to prevent indefinite loading
     const timer = setTimeout(() => {
       if (isLoading && mounted.current) {
         setIsLoading(false);
       }
     }, 1500);
 
-    console.log('Dashboard mounted, checking session...');
-    checkSession();
+    // If profile is not loading, we can stop our loading state
+    if (!profileLoading && mounted.current) {
+      setIsLoading(false);
+    }
+    
+    // Redirect if there's no authUser after profile is loaded
+    if (!profileLoading && !authUser && mounted.current) {
+      navigate('/login');
+    }
 
     return () => {
-      console.log('Dashboard unmounting, cleanup...');
       mounted.current = false;
       clearTimeout(timer);
     };
-  }, []);
+  }, [profileLoading, authUser, navigate]);
 
-  const checkSession = async () => {
+  // Handle sign out using the logout function from ProfileProvider
+  const handleSignOut = async () => {
     try {
-      console.log('Fetching session data...');
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw sessionError;
-      }
-
-      if (!session) {
-        console.log('No active session, redirecting to login');
-        navigate('/login');
-        return;
-      }
-
-      console.log('Session found, fetching profile...');
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-        throw profileError;
-      }
-
-      if (!profile) {
-        console.log('No profile found, redirecting to login');
-        navigate('/login');
-        return;
-      }
-
-      if (mounted.current) {
-        console.log('Setting user data...');
-        setUserEmail(session.user.email || "");
-        
-        if (profile.full_name && profile.full_name.trim() !== '') {
-          setUserName(profile.full_name);
-        } else {
-          setUserName("");
-        }
-        
-        setUserId(session.user.id);
-        setIsAdmin(profile.is_admin || false);
-        setQueryCount(profile.query_count || 0);
-        setIsLoading(false);
-      }
+      await logout();
     } catch (error) {
-      console.error('Error in checkSession:', error);
-      if (mounted.current) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "There was a problem loading your dashboard. Please try again."
-        });
-        navigate('/login');
-      }
+      console.error("Error during sign out:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to sign out. Please try again."
+      });
     }
   };
 
-    // Handle custom sign out to clear cached data
-    const handleSignOut = async () => {
-      try {
-        // Clear cached data on sign out
-        sessionStorage.removeItem("cached_user_profile");
-        sessionStorage.removeItem("cached_auth_user");
-        handleLogout();
-      } catch (error) {
-        console.error("Error during sign out:", error);
-      }
-    };
-
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-navy via-background to-brand-slate">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader userEmail={userEmail} onSignOut={handleSignOut} />
-      
-      <main className="container mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8 max-w-7xl">
-        <div className="space-y-4 sm:space-y-6 md:space-y-8">
-          <div className="w-full">
-            <WelcomeCard userName={userName} />
-          </div>
-          
-          <div className="w-full">
-            <QuickActions />
-          </div>
-          
-          <div className="w-full">
-            <FAQ />
-          </div>
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-navy via-background to-brand-slate">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Failed to load profile</h2>
+          <p className="text-muted-foreground mb-4">{loadError}</p>
+          <button 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+            onClick={() => navigate('/login')}
+          >
+            Return to Login
+          </button>
         </div>
-      </main>
-    </div>
+      </div>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <div className="space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="w-full">
+          <WelcomeCard userName={userName} />
+        </div>
+        
+        <div className="w-full">
+          <QuickActions />
+        </div>
+        
+        <div className="w-full">
+          <FAQ />
+        </div>
+      </div>
+    </AppLayout>
   );
-};
+}
