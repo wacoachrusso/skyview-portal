@@ -80,7 +80,7 @@ export function AccountInfo() {
           <span className="text-sm text-gray-600 dark:text-gray-400">Plan</span>
           <span className="text-sm text-gray-900 dark:text-white">{plan}</span>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="hidden justify-between items-center">
           <span className="text-sm text-gray-600 dark:text-gray-400">Queries Remaining</span>
           <span className="text-sm text-gray-900 dark:text-white">
             {queriesRemaining === -1 ? "Unlimited" : queriesRemaining}

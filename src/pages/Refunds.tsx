@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import PublicLayout from "@/components/layout/PublicLayout";
 
 const Refunds = () => {
   const location = useLocation();
@@ -57,7 +57,7 @@ const Refunds = () => {
   };
 
   return (
-    <AppLayout>
+    <PublicLayout>
       <main className="container mx-auto px-4 py-12 max-w-4xl">
         <Card className="p-8 bg-card/95 backdrop-blur-sm shadow-xl">
           <h1 className="text-4xl font-bold text-white mb-8 text-left">Refund and Cancellation Policy</h1>
@@ -181,7 +181,7 @@ const Refunds = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AppLayout>
+    </PublicLayout>
   );
 };
 

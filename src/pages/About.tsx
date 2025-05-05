@@ -1,10 +1,8 @@
-import Navbar from "@/components/shared/navbar/Navbar";
-import { Footer } from "@/components/landing/Footer";
+import PublicLayout from "@/components/layout/PublicLayout";
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <PublicLayout>
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto space-y-8">
           <h1 className="text-4xl font-bold text-center mb-8">About Us</h1>
@@ -21,7 +19,6 @@ export default function About() {
           </div>
         </div>
       </main>
-      <Footer />
-    </div>
+    </PublicLayout>
   );
 }
