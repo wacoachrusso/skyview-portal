@@ -1,6 +1,7 @@
 // Updated ChatLayout.tsx
 import React from "react";
 import ChatSidebar from "./ChatSidebar";
+import { useTheme } from "../theme-provider";
 
 interface ChatLayoutProps {
   children: React.ReactNode;
@@ -25,8 +26,9 @@ export function ChatLayout({
   onDeleteAllConversations,
   isLoading,
 }: ChatLayoutProps) {
+  const { theme } = useTheme();
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-900 text-white">
+    <div className={`flex h-screen overflow-hidden ${theme === "dark" ? "bg-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-slate-50 to-gray-100 text-gray-800"}`}>
       {/* Sidebar */}
       <div 
         className={`fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out transform ${

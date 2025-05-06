@@ -32,8 +32,8 @@ export function ChatSettings() {
         <Button
           variant="ghost"
           size={isMobile ? "sm" : "default"}
-          className={`"transition-all duration-300  hover:bg-secondary hover:text-white flex items-center gap-2 ${
-            isChatPage ? "text-muted-foreground" : "text-white"
+          className={`"transition-all duration-300  hover:text-white flex items-center gap-2 ${
+            theme === "dark" ? `${isChatPage ? "text-muted-foreground" :"trxt-white"}` : "text-slate-600"
           }`}
         >
           <Settings className="h-4 w-4 sm:h-5 sm:w-5" />

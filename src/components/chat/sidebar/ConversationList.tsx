@@ -4,6 +4,7 @@ import { ConversationItem } from "./ConversationItem";
 import { BulkActions } from "../BulkActions";
 import { useOfflineConversations } from "@/hooks/useOfflineConversations";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { useTheme } from "@/components/theme-provider";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -20,6 +21,7 @@ export function ConversationList({
   onDeleteConversation,
   isLoading,
 }: ConversationListProps) {
+  const { theme } = useTheme();
   const {
     offlineConversations,
     removeFromOfflineStorage,
