@@ -1,4 +1,4 @@
-
+import { useTheme } from "@/components/theme-provider";
 import { MessageSquare } from "lucide-react";
 
 interface ConversationIconProps {
@@ -6,22 +6,26 @@ interface ConversationIconProps {
 }
 
 export function ConversationIcon({ isSelected }: ConversationIconProps) {
+  const { theme } = useTheme();
+
+  const backgroundColor = isSelected
+    ? theme === "dark"
+      ? "bg-brand-gold/20"
+      : "bg-secondary/30"
+    : theme === "dark"
+    ? "bg-white/5"
+    : "bg-gray-200";
+  const iconColor = isSelected
+    ? theme === "dark"
+      ? "text-brand-gold"
+      : "text-secondary"
+    : theme === "dark"
+    ? "text-gray-400"
+    : "text-gray-500";
+
   return (
-    <div 
-      className={`p-2 rounded-lg ${
-        isSelected 
-          ? "bg-brand-gold/20" 
-          : "bg-white/5"
-      }`}
-      aria-hidden="true" // This is decorative and doesn't need to be announced by screen readers
-    >
-      <MessageSquare 
-        className={`h-4 w-4 ${
-          isSelected 
-            ? "text-brand-gold" 
-            : "text-gray-400"
-        }`} 
-      />
+    <div className={`p-2 rounded-lg ${backgroundColor}`} aria-hidden="true">
+      <MessageSquare className={`h-4 w-4 ${iconColor}`} />
     </div>
   );
 }

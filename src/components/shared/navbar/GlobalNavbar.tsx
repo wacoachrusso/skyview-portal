@@ -24,11 +24,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
 import UserDropdown from "./UserDropdown";
+import { useTheme } from "@/components/theme-provider";
 
 const GlobalNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme } = useTheme();
+
   const isPrivateRoute = ["/dashboard", "/account", "/chat"].some((path) =>
     location.pathname.startsWith(path)
   );
@@ -73,16 +76,36 @@ const GlobalNavbar = () => {
     }
   };
 
-  // Choose the appropriate navbar style based on private/public route
+  // Choose the appropriate navbar style based on private/public route and theme
+  const privateRouteNavbarClasses =
+    theme === "dark"
+      ? "bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 backdrop-blur-lg sticky top-0 z-50 shadow-lg border-b border-gray-800/50"
+      : "bg-gradient-to-br from-sky-100 via-blue-50 to-slate-100 backdrop-blur-lg sticky top-0 z-50 shadow-md border-b border-blue-200/70";
+
+  const publicRouteNavbarClasses =
+    theme === "dark"
+      ? "fixed-nav fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-slate-900/90 backdrop-blur-lg"
+      : "fixed-nav fixed top-0 left-0 right-0 z-50 border-b border-blue-200/50 bg-white/90 backdrop-blur-lg";
+
   const navbarClasses = isPrivateRoute
-    ? "bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 backdrop-blur-lg sticky top-0 z-50 shadow-lg border-b border-gray-800/50"
-    : "fixed-nav fixed top-0 left-0 right-0 z-50 border-b border-border/40";
-    useEffect(() => {
-      const storedAuthStatus = localStorage.getItem("auth_status");
-      if (storedAuthStatus === "authenticated" || userName) {
-        setIsAuthenticated(true);
-      }
-    }, [userName]);
+    ? privateRouteNavbarClasses
+    : publicRouteNavbarClasses;
+
+  const textColor = theme === "dark" ? "text-white" : "text-gray-800";
+  const dropdownBgClass = theme === "dark" 
+  ? "bg-slate-900/95 border-gray-700" 
+  : "bg-white border-blue-200 shadow-lg";
+
+  const hoverBgClass =
+    theme === "dark" ? "hover:bg-white/10" : "hover:bg-black/10";
+
+  useEffect(() => {
+    const storedAuthStatus = localStorage.getItem("auth_status");
+    if (storedAuthStatus === "authenticated" || userName) {
+      setIsAuthenticated(true);
+    }
+  }, [userName]);
+
   return (
     <nav className={navbarClasses}>
       <div className="container mx-auto px-3 sm:px-4 lg:px-8">
@@ -138,7 +161,7 @@ const GlobalNavbar = () => {
                   asChild
                   variant="secondary"
                   size="sm"
-                  className="text-white hover:text-white/90 cta-button high-contrast-focus"
+                  className={`${textColor} hover:opacity-90 cta-button high-contrast-focus`}
                   aria-label="Sign in to your account"
                 >
                   <Link to="/login">
@@ -151,7 +174,7 @@ const GlobalNavbar = () => {
                   onClick={scrollToPricing}
                   size="sm"
                   variant="default"
-                  className="primary-cta text-white hover:text-white/90 cta-button high-contrast-focus"
+                  className={`primary-cta ${textColor} hover:opacity-90 cta-button high-contrast-focus`}
                   aria-label="Get started with a free trial"
                 >
                   Get Started Free
@@ -170,7 +193,11 @@ const GlobalNavbar = () => {
                   asChild
                   variant="ghost"
                   size="icon"
-                  className="text-white/70 hover:text-white hover:bg-white/10 w-8 h-8 transition-colors"
+                  className={`${
+                    theme === "dark"
+                      ? "text-white/70 hover:text-white"
+                      : "text-gray-700 hover:text-gray-900"
+                  } ${hoverBgClass} w-8 h-8 transition-colors`}
                 >
                   <Link to="/chat">
                     <MessageSquare className="h-4 w-4" />
@@ -181,8 +208,16 @@ const GlobalNavbar = () => {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button className="flex items-center space-x-1 hover:bg-white/10 bg-transparent border-none">
-                      <Avatar className="h-7 w-7 border border-white/20">
+                    <Button
+                      className={`flex items-center space-x-1 ${hoverBgClass} bg-transparent border-none`}
+                    >
+                      <Avatar
+                        className={`h-7 w-7 border ${
+                          theme === "dark"
+                            ? "border-white/20"
+                            : "border-black/20"
+                        }`}
+                      >
                         <AvatarFallback className="bg-indigo-700 text-white text-xs font-medium">
                           {userName ? userName.charAt(0).toUpperCase() : "U"}
                         </AvatarFallback>
@@ -192,20 +227,38 @@ const GlobalNavbar = () => {
                   <DropdownMenuContent
                     align="end"
                     sideOffset={5}
-                    className="w-56 bg-slate-900/95 backdrop-blur-lg border border-gray-700 shadow-xl mt-2"
+                    className={`w-56 ${dropdownBgClass} backdrop-blur-lg shadow-xl mt-2`}
                   >
-                    <DropdownMenuLabel className="text-white/70 px-3 py-2">
+                    <DropdownMenuLabel
+                      className={
+                        theme === "dark"
+                          ? "text-white/70 px-3 py-2"
+                          : "text-gray-600 px-3 py-2"
+                      }
+                    >
                       Hello,{" "}
-                      <span className="font-semibold text-white">
+                      <span
+                        className={
+                          theme === "dark"
+                            ? "font-semibold text-white"
+                            : "font-semibold text-gray-900"
+                        }
+                      >
                         {userName || "User"}
                       </span>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-gray-700/50" />
+                    <DropdownMenuSeparator
+                      className={
+                        theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
+                      }
+                    />
 
                     {!isDashboardPage && (
                       <DropdownMenuItem
                         asChild
-                        className="rounded-md my-1 px-3 py-2 hover:bg-secondary focus:bg-white/10"
+                        className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
+                          theme === "dark" ? "bg-white/10" : "bg-black/10"
+                        }`}
                       >
                         <Link
                           to="/dashboard"
@@ -220,7 +273,9 @@ const GlobalNavbar = () => {
                     {!isAccountPage && (
                       <DropdownMenuItem
                         asChild
-                        className="rounded-md my-1 px-3 py-2 hover:bg-secondary focus:bg-white/10"
+                        className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
+                          theme === "dark" ? "bg-white/10" : "bg-black/10"
+                        }`}
                       >
                         <Link
                           to="/account"
@@ -232,9 +287,15 @@ const GlobalNavbar = () => {
                       </DropdownMenuItem>
                     )}
 
-                    <DropdownMenuSeparator className="bg-gray-700/50" />
+                    <DropdownMenuSeparator
+                      className={
+                        theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
+                      }
+                    />
                     <DropdownMenuItem
-                      className="text-white focus:text-red-400 focus:bg-red-500/10 hover:bg-secondary px-3 py-2 cursor-pointer"
+                      className={`${
+                        theme === "dark" ? "text-white" : "text-gray-800"
+                      } focus:text-red-400 focus:bg-red-500/10 hover:bg-secondary px-3 py-2 cursor-pointer`}
                       onClick={handleSignOut}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
@@ -249,7 +310,9 @@ const GlobalNavbar = () => {
                 asChild
                 variant="secondary"
                 size="sm"
-                className="text-white hover:text-white/90"
+                className={`${
+                  theme === "dark" ? "text-white" : "text-gray-800"
+                } hover:opacity-90`}
                 aria-label="Sign in to your account"
               >
                 <Link to="/login">

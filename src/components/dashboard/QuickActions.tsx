@@ -1,10 +1,10 @@
-
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, RefreshCcw, Settings, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { useNavigation } from "@/hooks/useNavigation";
+import { useTheme } from "@/components/theme-provider";
 
 // Custom icon wrapper component with animations
 const IconWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -22,6 +22,7 @@ const IconWrapper = ({ children }: { children: React.ReactNode }) => {
 const QuickActions = () => {
   const { navigateTo } = useNavigation();
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   const handleContractUpload = () => {
     toast({
@@ -57,8 +58,13 @@ const QuickActions = () => {
     }
   ];
 
+  const cardBg =
+    theme === "dark"
+      ? "bg-background/80 border-brand-purple/10"
+      : "bg-white/70 border-brand-purple/10";
+
   return (
-    <div className="bg-card border rounded-lg p-4 sm:p-6">
+    <div className={`border rounded-lg p-4 sm:p-6 ${theme === "dark" ? "bg-card " : "bg-white/70"}`}>
       <div className="flex items-center mb-4 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-bold">Quick Actions</h2>
       </div>
@@ -69,16 +75,20 @@ const QuickActions = () => {
             whileHover={{ y: -5 }}
             whileTap={{ y: 0 }}
           >
-            <Card 
-              className="hover-lift-premium h-full border border-brand-purple/10 bg-gradient-to-br from-background to-background/95 backdrop-blur-sm cursor-pointer group overflow-hidden relative"
+            <Card
+              className={`hover-lift-premium h-full cursor-pointer group overflow-hidden relative backdrop-blur-sm border ${cardBg}`}
               onClick={action.onClick}
             >
-              <CardContent className="p-4 sm:p-6 flex flex-col items-center text-center space-y-3 sm:space-y-4">
-                <IconWrapper>
-                  {action.icon}
-                </IconWrapper>
+              {/* Gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/10 via-brand-purple/5 to-transparent animate-slide opacity-80 z-0" />
+              <div className="absolute inset-0 bg-pattern opacity-5 z-0" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-purple/10 rounded-full -translate-x-1/3 -translate-y-1/2 blur-2xl z-0" />
+              <div className="absolute bottom-0 left-0 w-36 h-36 bg-brand-gold/10 rounded-full translate-x-1/4 translate-y-1/2 blur-2xl z-0" />
+
+              <CardContent className="p-4 sm:p-6 flex flex-col items-center text-center space-y-3 sm:space-y-4 relative z-10">
+                <IconWrapper>{action.icon}</IconWrapper>
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold mb-1 group-hover:text-brand-purple transition-colors">
+                  <h3 className={`text-base sm:text-lg font-semibold mb-1 group-hover:text-brand-purple transition-colors ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
                     {action.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">

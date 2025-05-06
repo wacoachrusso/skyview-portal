@@ -64,12 +64,12 @@ export function ThemeSelector({ currentTheme, onThemeChange }: ThemeSelectorProp
           >
             Dark
           </SelectItem>
-          <SelectItem 
+          {/* <SelectItem 
             value="system" 
             className={`${getTextClass()} ${getHighlightClass()}`}
           >
             System
-          </SelectItem>
+          </SelectItem> */}
         </SelectContent>
       </Select>
     </div>

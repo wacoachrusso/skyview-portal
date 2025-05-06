@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AccountFormFields } from "@/components/account/AccountFormFields";
+import { useTheme } from "@/components/theme-provider";
 
 interface AccountInfoCardProps {
   isEditing: boolean;
@@ -30,6 +31,7 @@ export const AccountInfoCard = ({
   onSave,
   onEdit
 }: AccountInfoCardProps) => {
+  const {theme} = useTheme();
   return (
     <Card className="bg-white/95 shadow-xl">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -43,6 +45,11 @@ export const AccountInfoCard = ({
               onEdit();
             }
           }}
+          className={`hover:bg-secondary flex items-center transition-colors ${
+            theme === "dark" 
+              ? "text-slate-300 hover:text-white" 
+              : "text-slate-700 hover:text-white bg-slate-300"
+          }`}
         >
           {isEditing ? 'Save Changes' : 'Edit Profile'}
         </Button>
