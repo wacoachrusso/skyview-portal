@@ -65,92 +65,119 @@ export async function addMessageToThread(threadId: string, content: string) {
   }
 }
 
-export async function runAssistant(threadId: string, assistantId: string) {
-  const effectiveAssistantId = assistantId?.trim() || defaultAssistantId;
+  export async function runAssistantStream({
+    threadId,
+    assistantId,
+  }: {
+    threadId: string;
+    assistantId: string;
+  }): Promise<ReadableStream<Uint8Array>> {
+    const effectiveAssistantId = assistantId?.trim() || defaultAssistantId;
+
+    // Validate the assistant ID
+    if (!effectiveAssistantId.startsWith('asst_')) {
+      console.warn(`Invalid assistant ID provided: ${effectiveAssistantId}. Using default assistant.`);
+    }
+
+    const finalAssistantId = effectiveAssistantId.startsWith('asst_') ? effectiveAssistantId : defaultAssistantId;
+
+    const instructions = `You are a union contract expert. When answering questions, you MUST:
+    1. ALWAYS include at least one specific reference from the contract in this exact format:
+      [REF]Section X.X (Section Title), Page Y: Exact quote from contract[/REF]
+    2. Use multiple references where relevant to provide comprehensive answers
+    3. Always include the Section Number, Section Title, and exact Page Number in your references
+    4. If a paragraph or subsection is applicable, include that as well
+    5. If no specific reference exists, clearly state "No specific contract reference was found for this query. Please consult your union representative for further clarification."
+    6. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
+    7. Format all contract references consistently using the [REF] tags
+    8. Do not fabricate or assume references if they don't exist in the contract
+    9. When presenting structured data like pay scales, rates, schedules, or numerical information, use HTML table format like this:
+      <table>
+        <tr><th>Header 1</th><th>Header 2</th></tr>
+        <tr><td>Data 1</td><td>Data 2</td></tr>
+      </table>
+    10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability
+    11. For every response, you MUST include at least one specific contract reference with section number, title, and page
+    12. NEVER respond without including at least one [REF] tag with a specific contract reference
+    13. This is CRITICAL: Always format references using [REF] tags even if you're not sure they're 100% accurate - it's better to provide the closest reference than none at all`;
+
+    const url = `https://api.openai.com/v1/threads/${threadId}/runs`;
   
+    const body = {
+          assistant_id: finalAssistantId,
+          instructions,
+          stream: true,
+        };
+  
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+  
+    if (!response.ok || !response.body) {
+      const text = await response.text();
+      throw new Error(`OpenAI API error: ${text}`);
+    }
+  
+    console.log('we are returning stream response')
+    console.log(response.body)
+    return response.body;
+  }
+  
+export async function runAssistant(threadId: string, assistantId: string, stream = false): Promise<any> {
+  const effectiveAssistantId = assistantId?.trim() || defaultAssistantId;
+
   // Validate the assistant ID
   if (!effectiveAssistantId.startsWith('asst_')) {
     console.warn(`Invalid assistant ID provided: ${effectiveAssistantId}. Using default assistant.`);
-    const defaultId = defaultAssistantId;
-    console.log('Running assistant on thread:', threadId, 'with default assistant ID:', defaultId);
-    
-    try {
-      const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          assistant_id: defaultId,
-          instructions: `You are a union contract expert. When answering questions, you MUST:
-          1. ALWAYS include at least one specific reference from the contract in this exact format:
-             [REF]Section X.X (Section Title), Page Y: Exact quote from contract[/REF]
-          2. Use multiple references where relevant to provide comprehensive answers
-          3. Always include the Section Number, Section Title, and exact Page Number in your references
-          4. If a paragraph or subsection is applicable, include that as well
-          5. If no specific reference exists, clearly state "No specific contract reference was found for this query. Please consult your union representative for further clarification."
-          6. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
-          7. Format all contract references consistently using the [REF] tags
-          8. Do not fabricate or assume references if they don't exist in the contract
-          9. When presenting structured data like pay scales, rates, schedules, or numerical information, use HTML table format like this:
-             <table>
-               <tr><th>Header 1</th><th>Header 2</th></tr>
-               <tr><td>Data 1</td><td>Data 2</td></tr>
-             </table>
-          10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability
-          11. For every response, you MUST include at least one specific contract reference with section number, title, and page
-          12. NEVER respond without including at least one [REF] tag with a specific contract reference
-          13. This is CRITICAL: Always format references using [REF] tags even if you're not sure they're 100% accurate - it's better to provide the closest reference than none at all`
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Run creation failed:', errorText);
-        throw new Error(`Failed to run assistant: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Assistant run started:', data.id);
-      return data;
-    } catch (error) {
-      console.error('Error in runAssistant with default assistant:', error);
-      throw error;
-    }
   }
-  
-  console.log('Running assistant on thread:', threadId, 'with assistant ID:', effectiveAssistantId);
-  
+
+  const finalAssistantId = effectiveAssistantId.startsWith('asst_') ? effectiveAssistantId : defaultAssistantId;
+
+  const instructions = `You are a union contract expert. When answering questions, you MUST:
+  1. ALWAYS include at least one specific reference from the contract in this exact format:
+     [REF]Section X.X (Section Title), Page Y: Exact quote from contract[/REF]
+  2. Use multiple references where relevant to provide comprehensive answers
+  3. Always include the Section Number, Section Title, and exact Page Number in your references
+  4. If a paragraph or subsection is applicable, include that as well
+  5. If no specific reference exists, clearly state "No specific contract reference was found for this query. Please consult your union representative for further clarification."
+  6. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
+  7. Format all contract references consistently using the [REF] tags
+  8. Do not fabricate or assume references if they don't exist in the contract
+  9. When presenting structured data like pay scales, rates, schedules, or numerical information, use HTML table format like this:
+     <table>
+       <tr><th>Header 1</th><th>Header 2</th></tr>
+       <tr><td>Data 1</td><td>Data 2</td></tr>
+     </table>
+  10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability
+  11. For every response, you MUST include at least one specific contract reference with section number, title, and page
+  12. NEVER respond without including at least one [REF] tag with a specific contract reference
+  13. This is CRITICAL: Always format references using [REF] tags even if you're not sure they're 100% accurate - it's better to provide the closest reference than none at all`;
+
+  const body = {
+    assistant_id: finalAssistantId,
+    instructions,
+    ...(stream ? { stream: true } : {})
+  };
+
   try {
     const response = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        assistant_id: effectiveAssistantId,
-        instructions: `You are a union contract expert. When answering questions, you MUST:
-        1. ALWAYS include at least one specific reference from the contract in this exact format:
-           [REF]Section X.X (Section Title), Page Y: Exact quote from contract[/REF]
-        2. Use multiple references where relevant to provide comprehensive answers
-        3. Always include the Section Number, Section Title, and exact Page Number in your references
-        4. If a paragraph or subsection is applicable, include that as well
-        5. If no specific reference exists, clearly state "No specific contract reference was found for this query. Please consult your union representative for further clarification."
-        6. If the question is not related to the contract, politely redirect the user to focus on contract-related topics
-        7. Format all contract references consistently using the [REF] tags
-        8. Do not fabricate or assume references if they don't exist in the contract
-        9. When presenting structured data like pay scales, rates, schedules, or numerical information, use HTML table format like this:
-           <table>
-             <tr><th>Header 1</th><th>Header 2</th></tr>
-             <tr><td>Data 1</td><td>Data 2</td></tr>
-           </table>
-        10. Always use tables for presenting numerical data, schedules, or tiered structures to improve readability
-        11. For every response, you MUST include at least one specific contract reference with section number, title, and page
-        12. NEVER respond without including at least one [REF] tag with a specific contract reference
-        13. This is CRITICAL: Always format references using [REF] tags even if you're not sure they're 100% accurate - it's better to provide the closest reference than none at all`
-      })
+      body: JSON.stringify(body)
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Run creation failed:', errorText);
-      throw new Error(`Failed to run assistant: ${errorText}`);
+    // if (!response.ok) {
+    //   const errorText = await response.text();
+    //   console.error('Run creation failed:', errorText);
+    //   throw new Error(`Failed to run assistant: ${errorText}`);
+    // }
+
+    if (stream) {
+      console.log('Streaming response initiated for assistant run.');
+      // console.log(response)
+      return response; // Return raw Response object for streaming
     }
 
     const data = await response.json();
@@ -161,6 +188,7 @@ export async function runAssistant(threadId: string, assistantId: string) {
     throw error;
   }
 }
+
 
 export async function getRunStatus(threadId: string, runId: string) {
   console.log('Getting run status:', runId, 'for thread:', threadId);

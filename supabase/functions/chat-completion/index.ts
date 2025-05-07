@@ -6,7 +6,8 @@ import {
   addMessageToThread, 
   runAssistant, 
   getRunStatus, 
-  getMessages 
+  getMessages, 
+  runAssistantStream
 } from "./utils/openAI.ts";
 import { cleanResponse, containsNonContractContent } from "./utils/validation.ts";
 import { withRetry } from "./utils/retryUtils.ts";
@@ -24,6 +25,7 @@ serve(async (req) => {
   }
 
   try {
+    console.time('serverResponse')
     // Parse the request body
     const { content, subscriptionPlan, assistantId, priority, stream, retryCount = 1 } = await req.json();
     
@@ -61,6 +63,25 @@ serve(async (req) => {
     });
     console.log('Message added to thread');
 
+    if (stream) {
+      console.log('we are on the stream block, let see how far we go')
+      // const run = await withRetry(() => runAssistantStream(thread.id, assistantId, true), { maxRetries, initialDelay: 300 });
+      const stream = await runAssistantStream({
+        threadId: thread.id,
+        assistantId: assistantId,
+      });
+      console.timeEnd('serverResponse')
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
+    
+    // regular code for non-stream
     // Run the assistant with the effective assistant ID with retry
     const run = await withRetry(() => runAssistant(thread.id, assistantId), {
       maxRetries,
