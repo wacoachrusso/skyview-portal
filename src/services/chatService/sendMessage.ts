@@ -142,6 +142,7 @@ export async function handleSendMessage({
     // Call the AI service
     console.time('benchmark');
     console.time('ttfb');
+    // const res = await fetch('http://localhost:54321/functions/v1/chat-completion', {
     const res = await fetch('https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/chat-completion', {
       method: 'POST',
       headers: {
@@ -220,9 +221,11 @@ export async function handleSendMessage({
 
     let buffer = '';
 
+    let partialLine = '';
+
     while (true) {
       const { done, value } = await reader.read();
-      
+
       if (done) {
         console.log('Stream ended.');
         aiResponse.onComplete?.();
@@ -230,40 +233,48 @@ export async function handleSendMessage({
       }
 
       buffer += decoder.decode(value, { stream: true });
-      // console.log(buffer)
 
+      // Combine leftover from last chunk
       const lines = buffer.split('\n');
+      buffer = ''; // Clear buffer — we’ll handle leftover manually
 
-      for (const line of lines) {
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+
+        // First, combine with partialLine if it exists
+        if (partialLine) {
+          line = partialLine + line;
+          partialLine = '';
+        }
+
         if (!line.startsWith('data: ')) continue;
 
-        const json = line.replace('data: ', '').trim();
-        if (json === '[DONE]') {
-          // console.log('we got the done')
+        let json = line.replace('data: ', '').trim();
+
+        // If it's the last line and not complete, store for next round
+        if (i === lines.length - 1 && json[json.length - 1] !== '}') {
+          partialLine = json;
           continue;
         }
 
+        if (json === '[DONE]') continue;
+
         try {
-          console.log(json)
           const event = JSON.parse(json);
+
           if (event.object === 'thread.message.delta') {
             const text = event.delta?.content?.[0]?.text?.value;
             if (text) {
-              if(!fullContent) {
-                console.timeEnd('ttfb')
-              }
-              // console.log(text)
-              aiResponse.onChunk(text)
-              // controller.enqueue(text);
+              if (!fullContent) console.timeEnd('ttfb');
+              aiResponse.onChunk(text);
             }
           }
         } catch (err) {
-          console.error('Stream parse error:', err);
-          aiResponse.onError?.(err);
+          console.error('Stream parse error:', err, '\nBroken JSON:', json);
+          // Keep partial if it's likely incomplete JSON
+          partialLine = json;
         }
       }
-
-      buffer = '';
     }
 
     // Update query count
