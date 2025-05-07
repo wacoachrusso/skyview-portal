@@ -244,6 +244,7 @@ export async function handleSendMessage({
         }
 
         try {
+          console.log(json)
           const event = JSON.parse(json);
           if (event.object === 'thread.message.delta') {
             const text = event.delta?.content?.[0]?.text?.value;
