@@ -134,75 +134,26 @@ export async function handleSendMessage({
       .eq("id", currentUserId)
       .single();
 
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    
+    console.log(`access token is found, so we can proceed for chat`)
     // Call the AI service
-    const { data, error } = await supabase.functions.invoke("chat-completion", {
-      body: {
-        content,
-        subscriptionPlan: profile?.subscription_plan || "free",
-        assistantId: profile?.assistant_id || "default_assistant_id",
-        priority: true,
-        stream: true
+    console.time('benchmark');
+    console.time('ttfb');
+    const res = await fetch('https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/chat-completion', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
       },
+      body: JSON.stringify({ content, subscriptionPlan: profile?.subscription_plan || "free", assistantId: profile?.assistant_id || "default_assistant_id", priority: true, stream: true }),
     });
-
-    if (error) throw error;
-
-    const aiResponse = data.response;
+    console.timeEnd('benchmark')
     let fullContent = "";
-
-    if (typeof aiResponse === "string") {
-      // Handle non-streaming response
-      fullContent = aiResponse;
-      
-      // Update streaming message with complete content
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === streamingId
-            ? { ...msg, content: fullContent, isStreaming: false }
-            : msg
-        )
-      );
-      
-      // Insert AI message to database
-      await insertAIMessage(fullContent, newConversationId);
-    } else if (aiResponse && typeof aiResponse.onChunk === "function") {
-      // Handle streaming response
-      aiResponse.onChunk((chunk: string) => {
-        fullContent += chunk;
-        
-        // Update streaming message with new content
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === streamingId ? { ...msg, content: fullContent } : msg
-          )
-        );
-      });
-
-      aiResponse.onComplete(async () => {
-        // Mark streaming as complete
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === streamingId ? { ...msg, isStreaming: false } : msg
-          )
-        );
-        
-        // Insert AI message to database
-        await insertAIMessage(fullContent, newConversationId as string);
-      });
-
-      aiResponse.onError((error: Error) => {
-        console.error("Error in AI response stream:", error);
-        toast({
-          title: "Error",
-          description: "Error receiving the complete response.",
-          variant: "destructive",
-          duration: 2000,
-        });
-        
-        // Remove streaming message
-        setMessages((prev) => prev.filter((msg) => msg.id !== streamingId));
-      });
-    } else {
+    if (!res.ok || !res.body) {
+      console.log('error happened during chat-completion request')
       // Fallback for unexpected response format
       fullContent = "I'm sorry, I couldn't generate a response.";
       
@@ -217,6 +168,101 @@ export async function handleSendMessage({
       
       // Insert AI message to database
       await insertAIMessage(fullContent, newConversationId);
+    }
+    
+    let lastProcessedContent = ""
+    const reader = res.body.getReader();
+    // const decoder = new TextDecoder("utf-8");
+    
+    const aiResponse = {
+      onChunk: null,
+      onComplete: null,
+      onError: null,
+    };
+
+    aiResponse.onChunk = (chunk: string) => {
+      fullContent += chunk;
+    
+      // Update streaming message with new content
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === streamingId ? { ...msg, content: fullContent } : msg
+        )
+      );
+    };
+    
+    aiResponse.onComplete = async () => {
+      // Mark streaming as complete
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === streamingId ? { ...msg, isStreaming: false } : msg
+        )
+      );
+    
+      // Insert AI message to the database
+      await insertAIMessage(fullContent, newConversationId as string);
+    };
+    aiResponse.onError = (error: Error) => {
+      console.error("Error in AI response stream:", error);
+      toast({
+        title: "Error",
+        description: "Error receiving the complete response.",
+        variant: "destructive",
+        duration: 2000,
+      });
+      
+      // Remove streaming message
+      setMessages((prev) => prev.filter((msg) => msg.id !== streamingId));
+    };
+
+    // const reader = stream.getReader();
+    const decoder = new TextDecoder();
+
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        console.log('Stream ended.');
+        aiResponse.onComplete?.();
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      // console.log(buffer)
+
+      const lines = buffer.split('\n');
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+
+        const json = line.replace('data: ', '').trim();
+        if (json === '[DONE]') {
+          // console.log('we got the done')
+          continue;
+        }
+
+        try {
+          const event = JSON.parse(json);
+          if (event.object === 'thread.message.delta') {
+            const text = event.delta?.content?.[0]?.text?.value;
+            if (text) {
+              if(!fullContent) {
+                console.timeEnd('ttfb')
+              }
+              // console.log(text)
+              aiResponse.onChunk(text)
+              // controller.enqueue(text);
+            }
+          }
+        } catch (err) {
+          console.error('Stream parse error:', err);
+          aiResponse.onError?.(err);
+        }
+      }
+
+      buffer = '';
     }
 
     // Update query count
