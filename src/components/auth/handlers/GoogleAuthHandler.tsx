@@ -1,17 +1,50 @@
-
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { createNewSession } from "@/services/session";
+import { useNavigate} from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { createNewSession } from "@/services/session";
 
 export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+
+  // Function to fetch user profile directly - same as in Login.tsx
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      // Direct API call to fetch user profile
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+      }
+
+      // Set admin status in localStorage for quick access
+      if (profile.is_admin) {
+        localStorage.setItem("user_is_admin", "true");
+        console.log("Admin status set in localStorage: true");
+      } else {
+        localStorage.removeItem("user_is_admin");
+        console.log("Admin status removed from localStorage");
+      }
+
+      // Store profile and name in localStorage
+      localStorage.setItem("user_profile", JSON.stringify(profile));
+      localStorage.setItem("auth_user_name", profile.full_name);
+
+      return profile;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -34,6 +67,9 @@ export const GoogleAuthHandler = () => {
         }
 
         console.log("GoogleAuthHandler: User authenticated with ID:", session.user.id);
+        
+        // IMPORTANT: Set auth status immediately for instant UI updates - same as in Login.tsx
+        localStorage.setItem("auth_status", "authenticated");
         
         // Set session tokens for persistence
         localStorage.setItem('auth_access_token', session.access_token);
@@ -98,6 +134,9 @@ export const GoogleAuthHandler = () => {
           // Create session
           await createNewSession(session.user.id);
           
+          // Fetch user profile directly before redirect - same as in Login.tsx
+          await fetchUserProfile(session.user.id);
+          
           toast({ 
             title: "Account Created", 
             description: "Your account has been created successfully." 
@@ -107,14 +146,18 @@ export const GoogleAuthHandler = () => {
           localStorage.removeItem('login_in_progress');
           
           // Redirect to chat
-          navigate("/chat", { replace: true });
+          window.location.href = "/chat"; // Using window.location.href like in Login.tsx
           return;
         }
 
         console.log("GoogleAuthHandler: Existing profile found, proceeding to login");
 
-        // Create session and redirect
+        // Create session
         await createNewSession(session.user.id);
+        
+        // Fetch user profile directly before redirect - same as in Login.tsx
+        await fetchUserProfile(session.user.id);
+        
         localStorage.removeItem('login_in_progress');
         
         toast({ 
@@ -125,7 +168,8 @@ export const GoogleAuthHandler = () => {
         // Store flag to prevent pricing redirects
         sessionStorage.setItem('recently_signed_up', 'true');
         
-        navigate("/chat", { replace: true });
+        // Use window.location.href to ensure full page reload like in Login.tsx
+        window.location.href = "/chat";
 
       } catch (error) {
         console.error("GoogleAuthHandler: Unexpected error in auth callback", error);
