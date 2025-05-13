@@ -4,7 +4,7 @@ import { PricingSection } from "@/components/landing/pricing/PricingSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ReleaseNotePopup } from "@/components/release-notes/ReleaseNotePopup";
 import { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -76,9 +76,9 @@ export default function Index() {
 
   const handleReferralClick = () => {
     if (isAuthenticated) {
-      navigate("/referral");
+      navigate("/referrals");
     } else {
-      navigate("/login", { state: { redirectTo: "/referral" } });
+      navigate("/login", { state: { redirectTo: "/referrals" } });
     }
   };
 
@@ -102,7 +102,6 @@ export default function Index() {
       <main className="flex-1 w-full">
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />
-
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -168,6 +167,7 @@ export default function Index() {
               </Button>
             </div>
           </motion.div>
+          
         </div>
       </main>
       <ReleaseNotePopup />

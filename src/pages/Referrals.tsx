@@ -43,7 +43,7 @@ export default function Referrals() {
 
   return (
     <AppLayout>
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">My Referrals</h1>
           <p className="text-gray-300 mt-2">
@@ -52,7 +52,7 @@ export default function Referrals() {
         </div>
 
         <ReferralSection />
-      </main>
+      </>
     </AppLayout>
   );
 }

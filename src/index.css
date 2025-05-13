@@ -101,7 +101,6 @@
 
   /* Navigation bar specific styles */
   nav.fixed-nav {
-    padding-top: max(env(safe-area-inset-top), 16px);
     background-color: rgba(26, 54, 93, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
