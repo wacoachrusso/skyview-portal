@@ -92,10 +92,10 @@ export default function SignUp() {
         id: authData.user?.id,
         email: data.email,
         full_name: data.fullName,
-        job_title: data.jobTitle,
+        user_type: data.jobTitle,
         airline: data.airline,
         subscription_plan: "free",
-        account_status: "pending_verification", // optional
+        account_status: "pending_verification",
       });
 
       if (profileError) {

@@ -2,11 +2,8 @@
 import { PricingCard } from "./PricingCard";
 import { PricingHeader } from "./PricingHeader";
 import { plans } from "./pricingPlans";
-import { usePricingHandler } from "@/hooks/usePricingHandler";
 
 export function PricingSection() {
-  const { handlePlanSelection } = usePricingHandler();
-
   return (
     <section id="pricing-section" className="py-20 relative overflow-hidden">
       <div className="absolute inset-0 bg-hero-gradient opacity-50" />
@@ -25,7 +22,7 @@ export function PricingSection() {
               priceId={plan.priceId}
               mode={plan.mode}
               popular={plan.isPopular}
-              savingsBadge={plan.name === "Annual" ? "Save $10 Annually!" : undefined}
+              savingsBadge={plan.name === "Annual" ? "2 months free!" : undefined}
             />
           ))}
         </div>

@@ -61,15 +61,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             .single();
 
           if (error) {
-            // No record exists or error occurred
-            if (error.code === 'PGSQL_NO_ROWS_RETURNED') {
-              setShowDisclaimer(true);
-            } else {
-              console.error('Error checking disclaimer:', error);
-            }
+            // Show disclaimer if no record exists (PGRST116) or any other error occurred
+            console.error('Error checking disclaimer:', error);
+            setShowDisclaimer(true);
           } else {
-            // Check if disclaimer has been accepted
-            setShowDisclaimer(data.status !== 'accepted');
+            // Check if disclaimer has been accepted - show if not accepted or null
+            setShowDisclaimer(!data || data.status !== 'accepted');
           }
         }
       } catch (err) {
