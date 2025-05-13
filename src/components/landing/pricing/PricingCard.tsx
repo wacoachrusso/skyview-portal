@@ -4,6 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { PricingHeader } from "./pricing-card/PricingHeader";
 import { PricingFeatures } from "./pricing-card/PricingFeatures";
 import { usePricingHandler } from "@/hooks/usePricingHandler";
+import { useEffect, useState } from "react";
+
+interface UserProfile {
+  id: string;
+  subscription_plan: string;
+  subscription_status: string;
+}
 
 interface PricingCardProps {
   name: string;
@@ -31,6 +38,35 @@ export const PricingCard = ({
   returnUrl = '/chat'
 }: PricingCardProps) => {
   const { handlePlanSelection } = usePricingHandler();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isActiveSubscription, setIsActiveSubscription] = useState(false);
+
+  useEffect(() => {
+    // Get user profile from local storage when component mounts
+    try {
+      const profileData = localStorage.getItem("user_profile");
+      if (profileData) {
+        const profile = JSON.parse(profileData);
+        setUserProfile(profile);
+        
+        // Check if this plan is the user's active subscription
+        const isActive = (
+          // For paid plans: check if plan names match and subscription is active
+          ((profile.subscription_plan.toLowerCase() === name.toLowerCase() ||
+           (profile.subscription_plan === "monthly" && name.toLowerCase() === "monthly") ||
+           (profile.subscription_plan === "annual" && name.toLowerCase() === "annual")) &&
+           profile.subscription_status === "active") ||
+          // For free plan: check if user is on free plan and this is the free trial card
+          (profile.subscription_plan === "free" && 
+           (name.toLowerCase() === "free" || name.toLowerCase() === "free trial"))
+        );
+        
+        setIsActiveSubscription(isActive);
+      }
+    } catch (error) {
+      console.error("Error retrieving user profile from local storage:", error);
+    }
+  }, [name]);
 
   const handlePlanClick = async () => {
     try {
@@ -55,9 +91,11 @@ export const PricingCard = ({
     }
   };
 
-  // Determine persuasive button text based on plan name
+  // Determine persuasive button text based on plan name and subscription status
   const getButtonText = () => {
-    if (name.toLowerCase() === 'free' || name.toLowerCase() === 'free trial') {
+    if (isActiveSubscription) {
+      return 'Current Plan';
+    } else if (name.toLowerCase() === 'free' || name.toLowerCase() === 'free trial') {
       return 'Start Your Free Trial';
     } else if (name.toLowerCase() === 'monthly') {
       return 'Get Monthly Access';
@@ -82,6 +120,15 @@ export const PricingCard = ({
           {savingsBadge}
         </Badge>
       )}
+      {isActiveSubscription && (
+        <Badge 
+          variant="secondary"
+          className="absolute -top-3 left-4 px-3 py-1 font-semibold shadow-md bg-brand-navy text-white"
+          aria-label="This is your current active plan"
+        >
+          Current Plan
+        </Badge>
+      )}
       <PricingHeader
         name={name}
         price={price}
@@ -95,10 +142,13 @@ export const PricingCard = ({
       <CardFooter>
         <Button
           onClick={handlePlanClick}
+          disabled={isActiveSubscription}
           className={`w-full ${
-            popular
-              ? 'cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-black'
-              : 'cta-button primary-cta bg-brand-navy hover:bg-brand-navy/90 text-white'
+            isActiveSubscription
+              ? 'bg-gray-300 hover:bg-gray-300 text-gray-700 cursor-not-allowed'
+              : popular
+                ? 'cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-black'
+                : 'cta-button primary-cta bg-brand-navy hover:bg-brand-navy/90 text-white'
           } high-contrast-focus`}
           aria-label={`${getButtonText()} for ${name} plan at ${price}`}
         >

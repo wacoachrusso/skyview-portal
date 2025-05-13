@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { createNewSession } from "@/services/session";
+import { GoogleAuthMissingInfoHandler } from "../GoogleAuthMissingInfoHandle";
 
 export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [redirectToInfoForm, setRedirectToInfoForm] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Function to fetch user profile directly - same as in Login.tsx
+  // Function to fetch user profile directly
   const fetchUserProfile = async (userId: string) => {
     try {
       // Direct API call to fetch user profile
@@ -68,7 +70,7 @@ export const GoogleAuthHandler = () => {
 
         console.log("GoogleAuthHandler: User authenticated with ID:", session.user.id);
         
-        // IMPORTANT: Set auth status immediately for instant UI updates - same as in Login.tsx
+        // IMPORTANT: Set auth status immediately for instant UI updates
         localStorage.setItem("auth_status", "authenticated");
         
         // Set session tokens for persistence
@@ -121,6 +123,8 @@ export const GoogleAuthHandler = () => {
               email_notifications: true,
               push_notifications: true,
               assistant_id: assistantId
+              // Note: user_type and airline are intentionally not set here
+              // to force the user to fill them in
             });
 
           if (insertError) {
@@ -134,28 +138,37 @@ export const GoogleAuthHandler = () => {
           // Create session
           await createNewSession(session.user.id);
           
-          // Fetch user profile directly before redirect - same as in Login.tsx
+          // Fetch user profile directly before redirect
           await fetchUserProfile(session.user.id);
           
           toast({ 
             title: "Account Created", 
-            description: "Your account has been created successfully." 
+            description: "Please complete your profile setup." 
           });
           
-          // Remove login processing flag
-          localStorage.removeItem('login_in_progress');
-          
-          // Redirect to chat
-          window.location.href = "/chat"; // Using window.location.href like in Login.tsx
+          // Show the missing info form
+          setRedirectToInfoForm(true);
+          setLoading(false);
           return;
         }
 
-        console.log("GoogleAuthHandler: Existing profile found, proceeding to login");
+        console.log("GoogleAuthHandler: Existing profile found, checking for required fields");
+        
+        // Check if the user_type and airline fields are set
+        if (!profile.user_type || !profile.airline) {
+          console.log("GoogleAuthHandler: Missing required fields, redirecting to info form");
+          // Redirect to the missing info handler
+          setRedirectToInfoForm(true);
+          setLoading(false);
+          return;
+        }
+
+        console.log("GoogleAuthHandler: All required fields present, proceeding to login");
 
         // Create session
         await createNewSession(session.user.id);
         
-        // Fetch user profile directly before redirect - same as in Login.tsx
+        // Fetch user profile directly before redirect
         await fetchUserProfile(session.user.id);
         
         localStorage.removeItem('login_in_progress');
@@ -168,7 +181,7 @@ export const GoogleAuthHandler = () => {
         // Store flag to prevent pricing redirects
         sessionStorage.setItem('recently_signed_up', 'true');
         
-        // Use window.location.href to ensure full page reload like in Login.tsx
+        // Use window.location.href to ensure full page reload
         window.location.href = "/chat";
 
       } catch (error) {
@@ -183,6 +196,10 @@ export const GoogleAuthHandler = () => {
 
     handleAuthCallback();
   }, [navigate, toast]);
+
+  if (redirectToInfoForm) {
+    return <GoogleAuthMissingInfoHandler />;
+  }
 
   if (error) {
     return (

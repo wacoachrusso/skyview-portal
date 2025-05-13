@@ -13,22 +13,19 @@ export function ConversationActions({
   isOffline,
   downloadInProgress,
   onDelete,
-  onToggleOffline
+  onToggleOffline,
 }: ConversationActionsProps) {
   const { theme } = useTheme();
 
-  const arrowColor = isOffline
-    ? "text-brand-gold"
-    : theme === "dark"
-      ? "text-gray-400 hover:text-white"
-      : "text-gray-500 hover:text-black";
-
   return (
-    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="flex items-center gap-1"
+      onClick={(e) => e.stopPropagation()}
+    >
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 p-0.5 touch-manipulation"
+        className="h-6 w-6 p-0.5 touch-manipulation hover:bg-red-500/20"
         onClick={onDelete}
         onTouchEnd={onDelete}
       >
@@ -42,7 +39,15 @@ export function ConversationActions({
         onTouchEnd={onToggleOffline}
         disabled={downloadInProgress}
       >
-        <ArrowDown className={`h-4 w-4 ${arrowColor}`} />
+        <ArrowDown
+          className={`h-4 w-4 ${
+            isOffline
+              ? "text-brand-gold"
+              : theme === "dark"
+              ? "text-gray-400 hover:text-white"
+              : "text-gray-500 hover:text-black"
+          }`}
+        />
       </Button>
     </div>
   );

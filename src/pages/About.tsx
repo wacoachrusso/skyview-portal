@@ -1,5 +1,6 @@
 import PublicLayout from "@/components/layout/PublicLayout";
 
+
 export default function About() {
   return (
     <PublicLayout>

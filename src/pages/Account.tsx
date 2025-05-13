@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useProfile } from "@/components/utils/ProfileProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { useTheme } from "@/components/theme-provider";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const Account = () => {
   const navigate = useNavigate();
