@@ -32,7 +32,7 @@ const GlobalNavbar = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
 
-  const isPrivateRoute = ["/dashboard", "/account", "/chat"].some((path) =>
+  const isPrivateRoute = ["/dashboard", "/account", "/chat", "/referrals"].some((path) =>
     location.pathname.startsWith(path)
   );
 
@@ -108,10 +108,10 @@ const GlobalNavbar = () => {
 
   return (
     <nav className={navbarClasses}>
-      <div className="container mx-auto px-3 sm:px-4 lg:px-8">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3">
         <div
           className={`flex justify-between items-center ${
-            isPrivateRoute ? "h-16 sm:h-20" : "h-14"
+            isPrivateRoute ? "h-16 sm:h-14" : "h-14"
           }`}
         >
           {/* Logo */}
