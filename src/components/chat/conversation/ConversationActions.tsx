@@ -19,34 +19,32 @@ export function ConversationActions({
 
   return (
     <div
-      className="flex items-center gap-1"
+      className="flex items-center"
       onClick={(e) => e.stopPropagation()}
     >
       <Button
-        variant="ghost"
         size="icon"
-        className="h-6 w-6 p-0.5 touch-manipulation hover:bg-red-500/20"
+        className="h-6 w-6 p-1 touch-manipulation rounded-sm text-destructive bg-transparent hover:text-[#ffffff] hover:bg-red-500 "
         onClick={onDelete}
         onTouchEnd={onDelete}
       >
-        <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
+        <Trash2 className="h-4 w-4" />
       </Button>
       <Button
-        variant="ghost"
         size="icon"
-        className="h-6 w-6 p-0.5 touch-manipulation"
+        className={`h-6 w-6 p-1 touch-manipulation rounded-sm bg-transparent hover:bg-secondary ${
+          isOffline
+            ? "text-brand-gold"
+            : theme === "dark"
+            ? "text-gray-400 hover:text-white"
+            : "text-gray-500 hover:text-white"
+        }`}
         onClick={onToggleOffline}
         onTouchEnd={onToggleOffline}
         disabled={downloadInProgress}
       >
         <ArrowDown
-          className={`h-4 w-4 ${
-            isOffline
-              ? "text-brand-gold"
-              : theme === "dark"
-              ? "text-gray-400 hover:text-white"
-              : "text-gray-500 hover:text-black"
-          }`}
+          className="h-4 w-4"
         />
       </Button>
     </div>

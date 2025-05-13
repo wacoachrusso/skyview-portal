@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThankYouModal } from "./ThankYouModal";
@@ -6,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Copy, Send } from "lucide-react";
 import { useLoadingState } from "@/hooks/useLoadingState";
+import { useTheme } from "@/components/theme-provider";
 
 export function ReferralDashboard() {
+  const { theme } = useTheme();
   const [referralCode, setReferralCode] = useState<string>("");
   const [referrals, setReferrals] = useState<any[]>([]);
   const { isLoading, startLoading, stopLoading } = useLoadingState(true);
@@ -224,20 +225,36 @@ export function ReferralDashboard() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-xl border border-white/5 p-6">
+    <div className={`${
+      theme === "dark" 
+        ? "bg-gradient-to-br from-slate-800 to-slate-900 border-white/5" 
+        : "bg-gradient-to-br from-slate-100 to-white border-slate-200"
+    } rounded-xl shadow-xl border p-6`}>
       <div className="space-y-8">
         <div>
-          <h3 className="text-2xl font-bold text-white mb-2">Your Referral Code</h3>
-          <p className="text-gray-300 mb-4">Share this code with friends to earn rewards</p>
+          <h3 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-slate-800"} mb-2`}>
+            Your Referral Code
+          </h3>
+          <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"} mb-4`}>
+            Share this code with friends to earn rewards
+          </p>
           
           <div className="flex items-center space-x-3">
-            <div className="bg-slate-700/60 px-4 py-3 rounded-lg border border-white/10 text-xl font-mono text-brand-gold flex-grow">
+            <div className={`${
+              theme === "dark" 
+                ? "bg-slate-700/60 border-white/10 text-brand-gold" 
+                : "bg-slate-100 border-slate-200 text-brand-gold"
+            } px-4 py-3 rounded-lg border text-xl font-mono flex-grow`}>
               {isLoading ? "Loading..." : referralCode}
             </div>
             <Button 
               onClick={handleCopyCode} 
               variant="outline" 
-              className="flex items-center space-x-2 bg-slate-700/40 border-white/10 hover:bg-slate-600/50"
+              className={`flex items-center space-x-2 ${
+                theme === "dark"
+                  ? "bg-slate-700/40 border-white/10 hover:bg-slate-600/50" 
+                  : "bg-slate-200/70 border-slate-300 hover:bg-slate-300/50"
+              }`}
               disabled={isLoading || !referralCode}
             >
               <Copy size={16} />
@@ -247,8 +264,12 @@ export function ReferralDashboard() {
         </div>
         
         <div>
-          <h3 className="text-2xl font-bold text-white mb-2">Invite by Email</h3>
-          <p className="text-gray-300 mb-4">Send a direct invitation to a colleague</p>
+          <h3 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-slate-800"} mb-2`}>
+            Invite by Email
+          </h3>
+          <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"} mb-4`}>
+            Send a direct invitation to a colleague
+          </p>
           
           <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
             <input 
@@ -256,7 +277,11 @@ export function ReferralDashboard() {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="colleague@airline.com" 
-              className="flex-grow px-4 py-3 rounded-lg bg-slate-700/60 border border-white/10 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
+              className={`flex-grow px-4 py-3 rounded-lg ${
+                theme === "dark" 
+                  ? "bg-slate-700/60 border-white/10 text-white placeholder:text-gray-400" 
+                  : "bg-slate-100 border-slate-200 text-slate-800 placeholder:text-gray-500"
+              } border focus:outline-none focus:ring-2 focus:ring-brand-gold/50`}
             />
             <Button 
               onClick={handleSendInvite} 
@@ -276,36 +301,62 @@ export function ReferralDashboard() {
         </div>
         
         <div>
-          <h3 className="text-2xl font-bold text-white mb-2">Your Referrals</h3>
+          <h3 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-slate-800"} mb-2`}>
+            Your Referrals
+          </h3>
           <div className="space-y-4">
             {isLoading ? (
-              <p className="text-gray-300">Loading referrals...</p>
+              <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                Loading referrals...
+              </p>
             ) : referrals.length > 0 ? (
-              <div className="bg-slate-700/40 rounded-lg border border-white/10 overflow-hidden">
+              <div className={`${
+                theme === "dark"
+                  ? "bg-slate-700/40 border-white/10" 
+                  : "bg-slate-100/80 border-slate-200"
+              } rounded-lg border overflow-hidden`}>
                 <table className="w-full text-left">
-                  <thead className="bg-slate-600/50">
+                  <thead className={`${
+                    theme === "dark" 
+                      ? "bg-slate-600/50" 
+                      : "bg-slate-200/60"
+                  }`}>
                     <tr>
-                      <th className="px-4 py-3 text-gray-200">Email</th>
-                      <th className="px-4 py-3 text-gray-200">Status</th>
-                      <th className="px-4 py-3 text-gray-200">Date</th>
+                      <th className={`px-4 py-3 ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                        Email
+                      </th>
+                      <th className={`px-4 py-3 ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                        Status
+                      </th>
+                      <th className={`px-4 py-3 ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                        Date
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {referrals
                       .filter(referral => referral.referee_email !== "pending@placeholder.com")
                       .map((referral) => (
-                        <tr key={referral.id} className="border-t border-white/5">
-                          <td className="px-4 py-3 text-gray-200">{referral.referee_email}</td>
+                        <tr key={referral.id} className={`border-t ${
+                          theme === "dark" ? "border-white/5" : "border-slate-200"
+                        }`}>
+                          <td className={`px-4 py-3 ${
+                            theme === "dark" ? "text-gray-200" : "text-gray-700"
+                          }`}>
+                            {referral.referee_email}
+                          </td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               referral.status === 'completed' 
-                                ? 'bg-green-500/20 text-green-300' 
-                                : 'bg-yellow-500/20 text-yellow-300'
-                            }`}>
+                                ? 'bg-green-500/20 text-green-700' 
+                                : 'bg-yellow-500/20 text-yellow-700'
+                            } ${theme === "dark" ? "text-opacity-90" : "text-opacity-100"}`}>
                               {referral.status === 'completed' ? 'Joined' : 'Pending'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-300">
+                          <td className={`px-4 py-3 ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-600"
+                          }`}>
                             {new Date(referral.created_at).toLocaleDateString()}
                           </td>
                         </tr>
@@ -314,7 +365,9 @@ export function ReferralDashboard() {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-300">You haven't made any referrals yet.</p>
+              <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                You haven't made any referrals yet.
+              </p>
             )}
           </div>
         </div>

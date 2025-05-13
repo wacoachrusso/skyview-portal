@@ -67,19 +67,25 @@ export function ConversationItem({
         onSelect={onSelect}
         downloadInProgress={downloadInProgress}
       >
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="flex items-center gap-4 min-w-0 w-full px-1 py-2">
           {showCheckbox && (
-            <Checkbox
-              checked={isChecked}
-              onCheckedChange={(checked) => 
-                onCheckChange?.(checked as boolean)
-              }
-              onClick={(e) => e.stopPropagation()}
-              className="data-[state=checked]:bg-destructive data-[state=checked]:border-destructive"
-            />
+            <div className="flex-shrink-0">
+              <Checkbox
+                checked={isChecked}
+                onCheckedChange={(checked) => 
+                  onCheckChange?.(checked as boolean)
+                }
+                onClick={(e) => e.stopPropagation()}
+                className="data-[state=checked]:bg-destructive data-[state=checked]:border-destructive"
+              />
+            </div>
           )}
-          <ConversationIcon isSelected={isSelected} />
-          <div className="flex flex-col min-w-0 flex-1">
+          
+          <div className="flex-shrink-0">
+            <ConversationIcon isSelected={isSelected} />
+          </div>
+          
+          <div className="flex flex-col min-w-0 flex-1 space-y-1">
             <ConversationTitle title={conversation.title} />
             <ConversationMetadata
               lastMessageAt={conversation.last_message_at}
