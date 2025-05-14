@@ -99,7 +99,6 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
   // Private route styling (theme-aware)
   const textColor = theme === "dark" ? "text-white" : "text-gray-800";
   const textColorMuted = theme === "dark" ? "text-white/90" : "text-gray-600";
-  const hoverBgClass = theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100";
   const dropdownBgClass = theme === "dark" 
     ? "bg-slate-900/95 border-gray-700" 
     : "bg-white/95 border-gray-300";
@@ -108,9 +107,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="focus-visible:ring-0">
         <Button
-          variant="ghost"
           size="sm"
-          className={`flex items-center space-x-2 ml-2 ${hoverBgClass} ${textColor} transition-colors focus:outline-none focus-visible:ring-0`}
+          className={`flex items-center space-x-2 ml-2 bg-transparent hover:bg-transparent  ${textColor} transition-colors focus:outline-none focus-visible:ring-0`}
         >
           <Avatar className={`h-8 w-8 border ${theme === "dark" ? "border-white/20" : "border-gray-300"}`}>
             <AvatarFallback className="bg-indigo-700 text-white font-medium">
