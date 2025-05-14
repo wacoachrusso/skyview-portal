@@ -1,12 +1,13 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { ThankYouModal } from "./ThankYouModal";
+import { useTheme } from "@/components/theme-provider";
 
 export function EmailInviteForm() {
+  const { theme } = useTheme();
   const [inviteEmail, setInviteEmail] = useState("");
   const [sendingInvite, setSendingInvite] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
@@ -108,9 +109,24 @@ export function EmailInviteForm() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-xl border border-white/5 p-6" role="region" aria-labelledby="invite-form-heading">
-      <h3 id="invite-form-heading" className="text-2xl font-bold text-white mb-2">Invite by Email</h3>
-      <p className="text-gray-300 mb-4">Send a direct invitation to a colleague</p>
+    <div 
+      className={`${
+        theme === "dark" 
+          ? "bg-gradient-to-br from-slate-800 to-slate-900 border-white/5" 
+          : "bg-gradient-to-br from-slate-100 to-white border-slate-200"
+      } rounded-xl shadow-xl border p-6`} 
+      role="region" 
+      aria-labelledby="invite-form-heading"
+    >
+      <h3 
+        id="invite-form-heading" 
+        className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-slate-800"} mb-2`}
+      >
+        Invite by Email
+      </h3>
+      <p className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"} mb-4`}>
+        Send a direct invitation to a colleague
+      </p>
       
       <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
         <label htmlFor="colleague-email" className="sr-only">Colleague Email</label>
@@ -120,7 +136,11 @@ export function EmailInviteForm() {
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
           placeholder="colleague@airline.com" 
-          className="flex-grow px-4 py-3 rounded-lg bg-slate-700/60 border border-white/10 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-gold/50"
+          className={`flex-grow px-4 py-3 rounded-lg ${
+            theme === "dark" 
+              ? "bg-slate-700/60 border-white/10 text-white placeholder:text-gray-400" 
+              : "bg-slate-100 border-slate-200 text-slate-800 placeholder:text-gray-500"
+          } border focus:outline-none focus:ring-2 focus:ring-brand-gold/50`}
           required
           aria-required="true"
           aria-describedby="email-hint"

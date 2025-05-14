@@ -12,7 +12,6 @@ import { NotificationToggle } from "@/components/chat/settings/NotificationToggl
 import { AutoSaveToggle } from "@/components/chat/settings/AutoSaveToggle";
 import { AppLayout } from "@/components/layout/AppLayout";
 
-
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();

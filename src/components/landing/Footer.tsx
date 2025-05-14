@@ -39,7 +39,7 @@ export function Footer() {
     {
       name: "Twitter",
       icon: <Twitter className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
-      href: "#",
+      href: "@skyguideapp",
       ariaLabel: "Visit our Twitter page"
     },
     {
@@ -51,19 +51,19 @@ export function Footer() {
     {
       name: "Facebook",
       icon: <Facebook className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
-      href: "#",
+      href: "https://www.facebook.com/share/1LUbugjpHZ/",
       ariaLabel: "Visit our Facebook page"
     },
     {
       name: "Instagram",
       icon: <Instagram className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
-      href: "#",
+      href: "https://www.instagram.com/skyguide.app?igsh=bWF5bGVwNGUzdnhh",
       ariaLabel: "Visit our Instagram page"
     },
     {
       name: "YouTube",
       icon: <Youtube className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
-      href: "#",
+      href: "https://www.youtube.com/@SkyGuideapp",
       ariaLabel: "Visit our YouTube channel"
     },
     {

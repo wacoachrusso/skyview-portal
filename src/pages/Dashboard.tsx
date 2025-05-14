@@ -5,8 +5,8 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
 import { useProfile } from "@/components/utils/ProfileProvider";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { useTheme } from "@/components/theme-provider";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 export default function Dashboard() {
   const navigate = useNavigate();

@@ -1,6 +1,4 @@
-// src/components/StatusAlerts.jsx
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useTheme } from "../theme-provider";
 
 // Offline alert component
 export const OfflineAlert = () => (
@@ -12,7 +10,7 @@ export const OfflineAlert = () => (
 
 // Trial ended state component
 export const TrialEndedState = ({ onViewPricingPlans }) => {
-  const navigate = useNavigate();
+  const { theme } = useTheme();
   return(
     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
       <svg
@@ -32,7 +30,7 @@ export const TrialEndedState = ({ onViewPricingPlans }) => {
         <line x1="12" y1="17" x2="12.01" y2="17"></line>
       </svg>
       <h2 className="text-xl font-bold mb-2">Free Trial Ended</h2>
-      <p className="text-slate-300 mb-4">
+      <p className={`text-md  mb-4 ${theme === "dark" ? "text-slate-300" : "text-black"}`}>
         You've used all your free messages. Upgrade to continue chatting.
       </p>
       <button  onClick={onViewPricingPlans} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">

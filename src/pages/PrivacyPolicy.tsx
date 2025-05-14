@@ -9,7 +9,6 @@ import { PrivacyRightsSection } from "@/components/privacy-policy/PrivacyRightsS
 import { InternationalTransfersSection } from "@/components/privacy-policy/InternationalTransfersSection";
 import { ContactSection } from "@/components/privacy-policy/ContactSection";
 import PublicLayout from "@/components/layout/PublicLayout";
-
 const PrivacyPolicy = () => {
   return (
     <PublicLayout>

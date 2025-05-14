@@ -18,7 +18,7 @@ interface ReleaseNote {
 }
 
 export function ReleaseNotePopup() {
-  const [open, setOpen] = useState(false); // Controls the visibility of the dialog
+  const [open, setOpen] = useState<boolean>(true); // Set to true by default to ensure dialog appears
   const [latestNote, setLatestNote] = useState<ReleaseNote | null>(null); // Stores the latest release note
   const [userId, setUserId] = useState<string | null>(null); // Stores the current user's ID
 
@@ -52,34 +52,50 @@ export function ReleaseNotePopup() {
           console.log("Latest release note:", latestReleaseNote.id);
 
           // Check if the user has already seen this release note
-          const { data: seenStatus, error: seenError } = await supabase
+          const { data: seenData, error: seenError } = await supabase
             .from("release_note_changes")
             .select("has_seen_release_note")
             .eq("user_id", session.user.id)
             .eq("release_note_id", latestReleaseNote.id)
             .single();
 
-          // Ignore the error if no record is found (user hasn't seen the note yet)
-          if (seenError && seenError.code !== "PGRST116") {
-            console.error("Error fetching seen status:", seenError);
-            return;
+          console.log("Seen data:", seenData, "Seen error:", seenError);
+          
+          // Default to showing the popup
+          let shouldShowPopup = true;
+          
+          // ONLY hide the popup if we have valid data AND has_seen_release_note is explicitly true
+          if (!seenError && seenData && seenData.has_seen_release_note === true) {
+            console.log("User has already seen this release note");
+            shouldShowPopup = false;
+          } else {
+            // Log the reason we're showing the popup
+            if (seenError) {
+              console.log("No record found or error checking release note status:", seenError);
+            } else if (!seenData) {
+              console.log("No seen data record exists");
+            } else {
+              console.log("has_seen_release_note is not true:", seenData.has_seen_release_note);
+            }
           }
-
-          const hasBeenViewed = seenStatus?.has_seen_release_note || false;
-          console.log("Has this note been viewed?", hasBeenViewed);
 
           // Check if the release note is recent (within the last 30 days)
           const releaseDate = new Date(latestReleaseNote.release_date);
           const thirtyDaysAgo = new Date();
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-          // Show the popup only if the note is recent and hasn't been viewed
-          if (!hasBeenViewed && releaseDate >= thirtyDaysAgo) {
+          if (releaseDate < thirtyDaysAgo) {
+            console.log("Release note is older than 30 days, not showing");
+            shouldShowPopup = false;
+          }
+
+          // Set state variables based on our decision
+          if (shouldShowPopup) {
             console.log("Showing release note popup for:", latestReleaseNote.title);
             setLatestNote(latestReleaseNote);
             setOpen(true);
           } else {
-            console.log("Release note already viewed or too old:", latestReleaseNote.id);
+            console.log("Not showing release note popup");
           }
         }
       } catch (error) {
@@ -123,20 +139,22 @@ export function ReleaseNotePopup() {
   if (!latestNote) return null;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) handleClose();
+    }}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {latestNote.title}
+            {latestNote?.title}
           </DialogTitle>
           <div className="text-sm text-muted-foreground">
-            Version {latestNote.version} • Released{" "}
-            {format(new Date(latestNote.release_date), "MMMM d, yyyy")}
+            Version {latestNote?.version} • Released{" "}
+            {latestNote && format(new Date(latestNote.release_date), "MMMM d, yyyy")}
           </div>
         </DialogHeader>
         <div className="mt-4 space-y-4">
           <div className="prose prose-sm dark:prose-invert">
-            {latestNote.description}
+            {latestNote?.description}
           </div>
           <div className="flex justify-end">
             <Button onClick={handleClose}>Got it</Button>
