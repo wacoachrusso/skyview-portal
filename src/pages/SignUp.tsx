@@ -30,6 +30,7 @@ import { JobAndAirlineSelector } from "@/components/auth/JobAndAirlineSelector";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthButton from "@/components/auth/AuthButton";
 import AuthFooter from "@/components/auth/AuthFooter";
+import { createNewSession } from "@/services/session";
 
 const signupFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required."),
@@ -95,20 +96,31 @@ export default function SignUp() {
         user_type: data.jobTitle,
         airline: data.airline,
         subscription_plan: "free",
-        account_status: "pending_verification",
+        account_status: "active",
       });
 
       if (profileError) {
         console.error("Error saving profile:", profileError);
       }
+      await createNewSession(authData.session.user.id);
 
+      // Sign out the user after successful signup to force them to log in explicitly
+      await supabase.auth.signOut();
+      // Clean up before navigation
+      localStorage.removeItem("login_in_progress");
+
+      navigate("/login", {
+        replace: true,
+        state: {
+          from_signup: true,
+          email: data.email,
+        },
+      });
       toast({
         title: "Signup successful",
         description:
           "Check your email to verify your account before logging in.",
       });
-
-      navigate("/login");
     } catch (error) {
       toast({
         variant: "destructive",
