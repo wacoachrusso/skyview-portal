@@ -19,6 +19,7 @@ import { NavigationProvider } from "./NavigationProvider";
 import Chat from "@/pages/Chat";
 import { AuthSuccessHandler } from "@/components/auth/AuthSuccessHandler";
 import { ProtectedRoute } from "../layout/ProtectedLayout";
+import TermsAndConditions from "@/pages/TermsAnsConditions";
 
 export function AppRoutes() {
   return (
@@ -33,6 +34,7 @@ export function AppRoutes() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/refunds" element={<Refunds />} />
         <Route path="/release-notes" element={<ReleaseNotes />} />
         <Route path="/help" element={<HelpCenter />} />
