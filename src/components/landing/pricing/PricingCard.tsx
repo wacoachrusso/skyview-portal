@@ -5,6 +5,7 @@ import { PricingHeader } from "./pricing-card/PricingHeader";
 import { PricingFeatures } from "./pricing-card/PricingFeatures";
 import { usePricingHandler } from "@/hooks/usePricingHandler";
 import { useEffect, useState } from "react";
+import { useProfileRefresh } from "@/utils/user/refreshProfile";
 
 interface UserProfile {
   id: string;
@@ -40,6 +41,7 @@ export const PricingCard = ({
   const { handlePlanSelection } = usePricingHandler();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isActiveSubscription, setIsActiveSubscription] = useState(false);
+  useProfileRefresh();
 
   useEffect(() => {
     // Get user profile from local storage when component mounts
@@ -66,6 +68,40 @@ export const PricingCard = ({
     } catch (error) {
       console.error("Error retrieving user profile from local storage:", error);
     }
+  }, [name]);
+
+  // Add a window focus listener to refresh user profile data when the tab regains focus
+  // This helps catch profile updates after returning from payment providers
+  useEffect(() => {
+    const handleFocus = () => {
+      try {
+        // Re-read the profile from localStorage in case it was updated
+        const profileData = localStorage.getItem("user_profile");
+        if (profileData) {
+          const profile = JSON.parse(profileData);
+          setUserProfile(profile);
+          
+          // Re-check active subscription status
+          const isActive = (
+            ((profile.subscription_plan.toLowerCase() === name.toLowerCase() ||
+             (profile.subscription_plan === "monthly" && name.toLowerCase() === "monthly") ||
+             (profile.subscription_plan === "annual" && name.toLowerCase() === "annual")) &&
+             profile.subscription_status === "active") ||
+            (profile.subscription_plan === "free" && 
+             (name.toLowerCase() === "free" || name.toLowerCase() === "free trial"))
+          );
+          
+          setIsActiveSubscription(isActive);
+        }
+      } catch (error) {
+        console.error("Error refreshing user profile on window focus:", error);
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [name]);
 
   const handlePlanClick = async () => {
