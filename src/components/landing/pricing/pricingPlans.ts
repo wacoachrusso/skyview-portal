@@ -39,7 +39,7 @@ export const plans = [
     name: "Annual",
     price: "$49.88",
     period: "/year",
-    description: "Best value - Save $10 annually",
+    description: "Best value - 2 months free!",
     features: [
       "Unlimited contract queries",
       "Advanced interpretation",

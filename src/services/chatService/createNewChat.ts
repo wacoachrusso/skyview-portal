@@ -6,7 +6,7 @@ export function createNewChat(
   setCurrentConversationId: (id: string | null) => void,
   setMessages: React.Dispatch<React.SetStateAction<any[]>>,
   setIsLoading: (isLoading: boolean) => void,
-  toast:any
+  toast: any
 ) {
   // Start a new chat - streamlined to prevent duplications
   const startNewChat = async () => {
@@ -33,7 +33,8 @@ export function createNewChat(
         setCurrentConversationId(null);
       }
     } catch (error) {
-        toast({
+      console.error("Error starting new chat:", error);
+      toast({
         title: "Error",
         description: "Failed to start new chat. Please try again.",
         variant: "destructive",

@@ -20,7 +20,8 @@ export async function handleSendMessage({
   setIsLoading,
   setConversations,
   setQueryCount,
-  toast
+  toast,
+  navigateToLogin
 }: {
   content: string;
   currentUserId: string | null;
@@ -31,6 +32,7 @@ export async function handleSendMessage({
   setConversations: React.Dispatch<React.SetStateAction<any[]>>;
   setQueryCount: React.Dispatch<React.SetStateAction<number>>;
   toast: any;
+  navigateToLogin: () => void;
 }): Promise<void> {
   // Validate required parameters
   if (!currentUserId) {
@@ -48,6 +50,7 @@ export async function handleSendMessage({
   
   let newConversationId = currentConversationId;
   let tempUserMessageId = `temp-${Date.now()}`;
+  let isNewConversation = !currentConversationId;
 
   try {
     // Create a new conversation if one doesn't exist
@@ -63,7 +66,14 @@ export async function handleSendMessage({
         .select()
         .single();
 
-      if (error) throw error;
+      // Check for JWT expired error
+      if (error) {
+        if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
+          handleTokenExpired(toast, navigateToLogin);
+          return;
+        }
+        throw error;
+      }
 
       newConversationId = newConversation.id;
       setCurrentConversationId(newConversationId);
@@ -97,7 +107,14 @@ export async function handleSendMessage({
       .select()
       .single();
 
-    if (userMessageError) throw userMessageError;
+    // Check for JWT expired error
+    if (userMessageError) {
+      if (userMessageError.code === "PGRST301" || userMessageError.message?.includes("JWT expired")) {
+        handleTokenExpired(toast, navigateToLogin);
+        return;
+      }
+      throw userMessageError;
+    }
 
     // Replace the temporary message with the saved message
     setMessages((prev) =>
@@ -112,6 +129,56 @@ export async function handleSendMessage({
         return msg;
       })
     );
+    
+    // Check if this is the first message in the conversation
+    const { data: messageCount, error: countError } = await supabase
+      .from("messages")
+      .select("id", { count: "exact" })
+      .eq("conversation_id", newConversationId);
+      
+    // Check for JWT expired error
+    if (countError) {
+      if (countError.code === "PGRST301" || countError.message?.includes("JWT expired")) {
+        handleTokenExpired(toast, navigateToLogin);
+        return;
+      }
+      console.error("Error checking message count:", countError);
+    }
+    
+    // If this is the first message (count would be 1, the one we just added)
+    // OR if it's a new conversation, update the conversation title
+    const isFirstMessage = messageCount && messageCount.length === 1;
+    
+    if (isFirstMessage || isNewConversation) {
+      // Create a title from the first message
+      const truncatedContent = content.length > 50 
+      ? content.substring(0, 50) + "..." 
+      : content
+      
+      // Update the conversation title in the database
+      const { error: titleUpdateError } = await supabase
+        .from("conversations")
+        .update({ title: truncatedContent })
+        .eq("id", newConversationId);
+        
+      // Check for JWT expired error
+      if (titleUpdateError) {
+        if (titleUpdateError.code === "PGRST301" || titleUpdateError.message?.includes("JWT expired")) {
+          handleTokenExpired(toast, navigateToLogin);
+          return;
+        }
+        console.error("Error updating conversation title:", titleUpdateError);
+      } else {
+        // Update the conversations list in state to reflect the new title
+        setConversations((prev) =>
+          prev.map((convo) =>
+            convo.id === newConversationId
+              ? { ...convo, title: truncatedContent }
+              : convo
+          )
+        );
+      }
+    }
 
     // Create a streaming indicator message
     const streamingId = `streaming-${Date.now()}`;
@@ -128,15 +195,28 @@ export async function handleSendMessage({
     setMessages((prev) => [...prev, streamingMessage]);
 
     // Get user profile for subscription info
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", currentUserId)
       .single();
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Check for JWT expired error
+    if (profileError) {
+      if (profileError.code === "PGRST301" || profileError.message?.includes("JWT expired")) {
+        handleTokenExpired(toast, navigateToLogin);
+        return;
+      }
+    }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    // Check for session error that might indicate expired token
+    if (sessionError || !session) {
+      console.error("Session error:", sessionError);
+      handleTokenExpired(toast, navigateToLogin);
+      return;
+    }
     
     console.log(`access token is found, so we can proceed for chat`)
     // Call the AI service
@@ -151,6 +231,14 @@ export async function handleSendMessage({
       },
       body: JSON.stringify({ content, subscriptionPlan: profile?.subscription_plan || "free", assistantId: profile?.assistant_id || "default_assistant_id", priority: true, stream: true }),
     });
+    
+    // Check for authentication errors in the response that might indicate expired token
+    if (res.status === 401 || res.status === 403) {
+      console.log('Authentication error during chat-completion request');
+      handleTokenExpired(toast, navigateToLogin);
+      return;
+    }
+    
     console.timeEnd('benchmark')
     let fullContent = "";
     if (!res.ok || !res.body) {
@@ -201,7 +289,14 @@ export async function handleSendMessage({
       );
     
       // Insert AI message to the database
-      await insertAIMessage(fullContent, newConversationId as string);
+      try {
+        await insertAIMessage(fullContent, newConversationId as string);
+      } catch (error: any) {
+        // Check if this is a JWT expired error
+        if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
+          handleTokenExpired(toast, navigateToLogin);
+        }
+      }
     };
     aiResponse.onError = (error: Error) => {
       console.error("Error in AI response stream:", error);
@@ -236,7 +331,7 @@ export async function handleSendMessage({
 
       // Combine leftover from last chunk
       const lines = buffer.split('\n');
-      buffer = ''; // Clear buffer — we’ll handle leftover manually
+      buffer = ''; // Clear buffer — we'll handle leftover manually
 
       for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
@@ -280,15 +375,31 @@ export async function handleSendMessage({
     // Update query count
     if (profile && profile.subscription_plan === "free") {
       const newQueryCount = (profile.query_count || 0) + 1;
-      await supabase
+      const { error: queryCountError } = await supabase
         .from("profiles")
         .update({ query_count: newQueryCount })
         .eq("id", currentUserId);
+        
+      // Check for JWT expired error
+      if (queryCountError) {
+        if (queryCountError.code === "PGRST301" || queryCountError.message?.includes("JWT expired")) {
+          handleTokenExpired(toast, navigateToLogin);
+          return;
+        }
+      }
+      
       setQueryCount(newQueryCount);
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in handleSendMessage:", error);
+    
+    // Check if this is a JWT expired error
+    if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
+      handleTokenExpired(toast, navigateToLogin);
+      return;
+    }
+    
     toast({
       title: "Error",
       description: "Failed to send message. Please try again.",
@@ -301,6 +412,25 @@ export async function handleSendMessage({
   } finally {
     setIsLoading(false);
   }
+}
+
+// Helper function to handle JWT token expiration
+function handleTokenExpired(toast: any, navigateToLogin: () => void): void {
+  console.log("JWT token expired. Logging out...");
+  
+  // Show toast notification
+  toast({
+    title: "Session Expired",
+    description: "Your session has expired. Please log in again.",
+    variant: "destructive",
+    duration: 3000,
+  });
+  
+  // Sign out the user
+  supabase.auth.signOut().then(() => {
+    // Navigate to login page
+    navigateToLogin();
+  });
 }
 
 // Helper function to insert AI messages
@@ -318,6 +448,10 @@ async function insertAIMessage(content: string, conversationId: string): Promise
       ]);
 
     if (error) {
+      if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
+        // Let the caller handle the JWT expired error
+        throw error;
+      }
       console.error("Error inserting AI message:", error);
       throw error;
     }
