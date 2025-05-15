@@ -20,7 +20,7 @@ export function Footer() {
     { label: "About Us", href: "/about" },
     { label: "Privacy Policy", href: "/privacy-policy" },
     { label: "Refund Policy", href: "/refunds" },
-    { label: "Terms of Service", href: "#" },
+    { label: "Terms of Service", href: "/terms" },
   ];
 
   const supportLinks = [
@@ -39,7 +39,7 @@ export function Footer() {
     {
       name: "Twitter",
       icon: <Twitter className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />,
-      href: "@skyguideapp",
+      href: "https://x.com/SkyGuideApp",
       ariaLabel: "Visit our Twitter page"
     },
     {
