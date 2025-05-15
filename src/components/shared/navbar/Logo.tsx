@@ -1,6 +1,16 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-const Logo = () => {
+import { useTheme } from "@/components/theme-provider";
+
+interface LogoProps {
+  isPublicRoute?: boolean;
+}
+
+const Logo = ({ isPublicRoute = false }: LogoProps) => {
+  const textColorClass = isPublicRoute 
+    ? "text-white" 
+    : "text-foreground";
+  
   return (
     <Link
       to="/"
@@ -27,7 +37,7 @@ const Logo = () => {
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="text-foreground text-xl md:text-2xl font-bold rich-text"
+        className={`${textColorClass} text-xl md:text-2xl font-bold rich-text`}
       >
         SkyGuide
       </motion.span>

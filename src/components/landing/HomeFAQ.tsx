@@ -70,7 +70,7 @@ export const HomeFAQ = () => {
   };
 
   return (
-    <section id="faq" className="py-16 bg-background">
+    <section id="faq" className="py-16 bg-[#020817]">
       <motion.div 
         className="container max-w-4xl"
         initial="hidden"
@@ -79,7 +79,7 @@ export const HomeFAQ = () => {
         variants={containerVariants}
       >
         <motion.div className="text-center mb-8" variants={itemVariants}>
-          <h2 className="text-3xl font-bold mb-4 tracking-tight">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-bold mb-4 tracking-tight text-[#ffffff]">Frequently Asked Questions</h2>
           <p className="text-muted-foreground text-lg mb-6">
             Find answers to common questions about SkyGuide
           </p>
@@ -90,7 +90,7 @@ export const HomeFAQ = () => {
             <Input 
               type="text"
               placeholder="Search FAQs..."
-              className="pl-10 bg-card/50 backdrop-blur-sm border border-border/50"
+              className="pl-10 bg-card/50 backdrop-blur-sm border border-[#00000080]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -98,11 +98,11 @@ export const HomeFAQ = () => {
         </motion.div>
         
         <motion.div variants={itemVariants}>
-          <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
+          <Card className="bg-card/50 backdrop-blur-sm border border-[#00000080]">
             <Accordion type="single" collapsible className="w-full">
               {filteredFaqs.length > 0 ? (
                 filteredFaqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`item-${index}`} className="overflow-hidden">
+                  <AccordionItem key={index} value={`item-${index}`} className="overflow-hidden ">
                     <AccordionTrigger className="px-6 font-medium text-lg">
                       {faq.question}
                     </AccordionTrigger>

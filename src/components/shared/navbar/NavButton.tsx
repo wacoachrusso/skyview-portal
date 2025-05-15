@@ -9,22 +9,44 @@ interface NavButtonProps {
   children: ReactNode;
   icon?: ReactNode;
   hideOnPath?: boolean;
+  isPublicRoute?: boolean;
 }
 
-export const NavButton = ({ to, children, icon, hideOnPath = false }: NavButtonProps) => {
+export const NavButton = ({
+  to,
+  children,
+  icon,
+  hideOnPath = false,
+  isPublicRoute = false,
+}: NavButtonProps) => {
   const location = useLocation();
   const { theme } = useTheme();
   const isActive = location.pathname === to;
 
   if (hideOnPath && isActive) return null;
 
-  // Theme-aware styling
+  // Public route styling (consistent regardless of theme)
+  if (isPublicRoute) {
+    return (
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="transition-all duration-300 text-white hover:bg-secondary hover:text-white"
+      >
+        <Link to={to} className="flex items-center">
+          {icon && <span className="mr-2">{icon}</span>}
+          {children}
+        </Link>
+      </Button>
+    );
+  }
+
+  // Private route styling (theme-aware)
   const textColor = theme === "dark" ? "text-white" : "text-gray-800";
   const activeBgClass = theme === "dark" ? "bg-white/20" : "bg-black/10";
-  const hoverClass = theme === "dark" 
-    ? "hover:bg-secondary hover:text-white" 
-    : "hover:bg-gray-200 hover:text-gray-900";
-  
+  const hoverClass = "hover:bg-secondary hover:text-white";
+
   return (
     <Button
       asChild
