@@ -11,7 +11,7 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
     const location = useLocation();
     const isHomePage = location.pathname === "/";
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-background to-brand-slate/5 flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-brand-navy/5 via-[#050d1d] to-brand-slate/5 flex flex-col overflow-hidden">
       <ViewportManager />
       <GlobalNavbar />
       <div className={`flex-1 w-full ${isHomePage ? "mt-0" : "mt-20"}`}>

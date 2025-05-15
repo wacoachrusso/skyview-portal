@@ -11,9 +11,14 @@ import { useTheme } from '@/components/theme-provider';
 interface UserDropdownProps {
   userName: string;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+  isPublicRoute?: boolean;
 }
 
-const UserDropdown: React.FC<UserDropdownProps> = ({setIsAuthenticated, userName}) => {
+const UserDropdown: React.FC<UserDropdownProps> = ({
+  setIsAuthenticated, 
+  userName,
+  isPublicRoute = false
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -47,10 +52,53 @@ const UserDropdown: React.FC<UserDropdownProps> = ({setIsAuthenticated, userName
     }
   };
   
-  // Theme-aware styling
+  // Styling based on route type
+  if (isPublicRoute) {
+    // Public route styling (consistent regardless of theme)
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild className="focus-visible:ring-0 bg-transparent hover:bg-transparent">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center space-x-2 ml-2  text-gray-800 transition-colors focus:outline-none focus-visible:ring-0"
+          >
+            <Avatar className="h-8 w-8 border border-gray-300">
+              <AvatarFallback className="bg-indigo-700 text-white font-medium">
+                {userName ? userName.charAt(0).toUpperCase() : "U"}
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden lg:inline text-sm text-white">
+              {userName || "User"}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          sideOffset={5}
+          className="w-56 bg-slate-900/95 border-gray-700 backdrop-blur-lg shadow-xl mt-4"
+        >
+          <DropdownMenuLabel className="text-white/70">
+            Signed in as{" "}
+            <span className="font-semibold text-white/90">
+              {userName || "User"}
+            </span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-gray-300/50" />
+          <DropdownMenuItem
+            onClick={handleSignOut}
+            className="text-white focus:text-red-400 focus:bg-red-500/10 hover:bg-secondary my-1 cursor-pointer"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+  
+  // Private route styling (theme-aware)
   const textColor = theme === "dark" ? "text-white" : "text-gray-800";
   const textColorMuted = theme === "dark" ? "text-white/90" : "text-gray-600";
-  const hoverBgClass = theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100";
   const dropdownBgClass = theme === "dark" 
     ? "bg-slate-900/95 border-gray-700" 
     : "bg-white/95 border-gray-300";
@@ -59,9 +107,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({setIsAuthenticated, userName
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="focus-visible:ring-0">
         <Button
-          variant="ghost"
           size="sm"
-          className={`flex items-center space-x-2 ml-2 ${hoverBgClass} ${textColor} transition-colors focus:outline-none focus-visible:ring-0`}
+          className={`flex items-center space-x-2 ml-2 bg-transparent hover:bg-transparent  ${textColor} transition-colors focus:outline-none focus-visible:ring-0`}
         >
           <Avatar className={`h-8 w-8 border ${theme === "dark" ? "border-white/20" : "border-gray-300"}`}>
             <AvatarFallback className="bg-indigo-700 text-white font-medium">
@@ -75,7 +122,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({setIsAuthenticated, userName
       </DropdownMenuTrigger>
       <DropdownMenuContent
         sideOffset={5}
-        className={`w-56 ${dropdownBgClass} backdrop-blur-lg shadow-xl mt-2`}
+        className={`w-56 ${dropdownBgClass} backdrop-blur-lg shadow-xl mt-4`}
       >
         <DropdownMenuLabel className={theme === "dark" ? "text-white/70" : "text-gray-600"}>
           Signed in as{" "}

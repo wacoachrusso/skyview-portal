@@ -28,9 +28,18 @@ export default function Index() {
 
   useEffect(() => {
     console.log("Index page mounted");
-
-    // First check if we need to scroll to pricing section
+    
+    // Get URL parameters
     const searchParams = new URLSearchParams(location.search);
+    
+    // Check if the user is authenticated and there are no URL parameters
+    if (isAuthenticated === "authenticated" && searchParams.toString() === "") {
+      // Redirect to /chat route
+      navigate("/chat", { replace: true });
+      return; // Stop execution of the rest of the effect
+    }
+
+    // Check if we need to scroll to pricing section
     const scrollTo = searchParams.get("scrollTo");
     const needsToScrollToPricing = scrollTo === "pricing-section";
 
@@ -68,7 +77,7 @@ export default function Index() {
     return () => {
       console.log("Index page unmounted");
     };
-  }, [location]);
+  }, [location, navigate, isAuthenticated]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
@@ -148,7 +157,7 @@ export default function Index() {
             viewport={{ once: true, margin: "-100px" }}
             variants={sectionVariants}
           >
-            <div className="container mx-auto px-4 py-16 text-center">
+            <div className="container mx-auto px-4 py-20 text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
                 Invite Friends & Earn Rewards
               </h2>

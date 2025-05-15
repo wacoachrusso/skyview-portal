@@ -91,13 +91,22 @@ const GlobalNavbar = () => {
     ? privateRouteNavbarClasses
     : publicRouteNavbarClasses;
 
-  const textColor = theme === "dark" ? "text-white" : "text-gray-800";
-  const dropdownBgClass = theme === "dark" 
-  ? "bg-slate-900/95 border-gray-700" 
-  : "bg-white border-blue-200 shadow-lg";
+  // Public route buttons always have consistent styling
+  const publicButtonTextColor = "text-gray-800";
+  const publicDropdownBgClass = "bg-white border-blue-200 shadow-lg";
+  const publicHoverBgClass = "hover:bg-black/10";
 
-  const hoverBgClass =
-    theme === "dark" ? "hover:bg-white/10" : "hover:bg-black/10";
+  // Private route buttons follow the theme
+  const privateTextColor = theme === "dark" ? "text-white" : "text-gray-800";
+  const privateDropdownBgClass = theme === "dark" 
+    ? "bg-slate-900/95 border-gray-700" 
+    : "bg-white border-blue-200 shadow-lg";
+  const privateHoverBgClass = theme === "dark" ? "hover:bg-white/10" : "hover:bg-black/10";
+
+  // Use the appropriate styling based on route type
+  const textColor = isPrivateRoute ? privateTextColor : publicButtonTextColor;
+  const dropdownBgClass = isPrivateRoute ? privateDropdownBgClass : publicDropdownBgClass;
+  const hoverBgClass = isPrivateRoute ? privateHoverBgClass : publicHoverBgClass;
 
   useEffect(() => {
     const storedAuthStatus = localStorage.getItem("auth_status");
@@ -115,7 +124,7 @@ const GlobalNavbar = () => {
           }`}
         >
           {/* Logo */}
-          <Logo />
+          <Logo isPublicRoute={!isPrivateRoute} />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
@@ -126,6 +135,7 @@ const GlobalNavbar = () => {
                 <NavButton
                   to="/chat"
                   icon={<MessageSquare className="h-4 w-4" />}
+                  isPublicRoute={!isPrivateRoute}
                 >
                   Ask SkyGuide
                 </NavButton>
@@ -134,6 +144,7 @@ const GlobalNavbar = () => {
                   to="/dashboard"
                   icon={<LayoutDashboard className="h-4 w-4" />}
                   hideOnPath
+                  isPublicRoute={!isPrivateRoute}
                 >
                   Dashboard
                 </NavButton>
@@ -142,6 +153,7 @@ const GlobalNavbar = () => {
                   to="/account"
                   icon={<User className="h-4 w-4" />}
                   hideOnPath
+                  isPublicRoute={!isPrivateRoute}
                 >
                   Account
                 </NavButton>
@@ -152,6 +164,7 @@ const GlobalNavbar = () => {
                 <UserDropdown
                   userName={userName}
                   setIsAuthenticated={setIsAuthenticated}
+                  isPublicRoute={!isPrivateRoute}
                 />
               </>
             ) : (
@@ -161,7 +174,7 @@ const GlobalNavbar = () => {
                   asChild
                   variant="secondary"
                   size="sm"
-                  className={`${textColor} hover:opacity-90 cta-button high-contrast-focus`}
+                  className={`text-white hover:opacity-90 cta-button high-contrast-focus`}
                   aria-label="Sign in to your account"
                 >
                   <Link to="/login">
@@ -174,7 +187,7 @@ const GlobalNavbar = () => {
                   onClick={scrollToPricing}
                   size="sm"
                   variant="default"
-                  className={`primary-cta ${textColor} hover:opacity-90 cta-button high-contrast-focus`}
+                  className={`primary-cta tezt-white hover:opacity-90 cta-button high-contrast-focus`}
                   aria-label="Get started with a free trial"
                 >
                   Get Started Free
@@ -193,11 +206,7 @@ const GlobalNavbar = () => {
                   asChild
                   variant="ghost"
                   size="icon"
-                  className={`${
-                    theme === "dark"
-                      ? "text-white/70 hover:text-white"
-                      : "text-gray-700 hover:text-gray-900"
-                  } ${hoverBgClass} w-8 h-8 transition-colors`}
+                  className={`${textColor} ${hoverBgClass} w-8 h-8 transition-colors`}
                 >
                   <Link to="/chat">
                     <MessageSquare className="h-4 w-4" />
@@ -213,7 +222,7 @@ const GlobalNavbar = () => {
                     >
                       <Avatar
                         className={`h-7 w-7 border ${
-                          theme === "dark"
+                          isPrivateRoute && theme === "dark"
                             ? "border-white/20"
                             : "border-black/20"
                         }`}
@@ -231,7 +240,7 @@ const GlobalNavbar = () => {
                   >
                     <DropdownMenuLabel
                       className={
-                        theme === "dark"
+                        isPrivateRoute && theme === "dark"
                           ? "text-white/70 px-3 py-2"
                           : "text-gray-600 px-3 py-2"
                       }
@@ -239,7 +248,7 @@ const GlobalNavbar = () => {
                       Hello,{" "}
                       <span
                         className={
-                          theme === "dark"
+                          isPrivateRoute && theme === "dark"
                             ? "font-semibold text-white"
                             : "font-semibold text-gray-900"
                         }
@@ -249,7 +258,7 @@ const GlobalNavbar = () => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator
                       className={
-                        theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
+                        isPrivateRoute && theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
                       }
                     />
 
@@ -257,7 +266,7 @@ const GlobalNavbar = () => {
                       <DropdownMenuItem
                         asChild
                         className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
-                          theme === "dark" ? "bg-white/10" : "bg-black/10"
+                          isPrivateRoute && theme === "dark" ? "bg-white/10" : "bg-black/10"
                         }`}
                       >
                         <Link
@@ -274,7 +283,7 @@ const GlobalNavbar = () => {
                       <DropdownMenuItem
                         asChild
                         className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
-                          theme === "dark" ? "bg-white/10" : "bg-black/10"
+                          isPrivateRoute && theme === "dark" ? "bg-white/10" : "bg-black/10"
                         }`}
                       >
                         <Link
@@ -289,13 +298,11 @@ const GlobalNavbar = () => {
 
                     <DropdownMenuSeparator
                       className={
-                        theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
+                        isPrivateRoute && theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
                       }
                     />
                     <DropdownMenuItem
-                      className={`${
-                        theme === "dark" ? "text-white" : "text-gray-800"
-                      } focus:text-red-400 focus:bg-red-500/10 hover:bg-secondary px-3 py-2 cursor-pointer`}
+                      className={`${textColor} focus:text-red-400 focus:bg-red-500/10 hover:bg-secondary px-3 py-2 cursor-pointer`}
                       onClick={handleSignOut}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
@@ -310,9 +317,7 @@ const GlobalNavbar = () => {
                 asChild
                 variant="secondary"
                 size="sm"
-                className={`${
-                  theme === "dark" ? "text-white" : "text-gray-800"
-                } hover:opacity-90`}
+                className={`${publicButtonTextColor} hover:opacity-90`}
                 aria-label="Sign in to your account"
               >
                 <Link to="/login">
