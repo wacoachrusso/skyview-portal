@@ -44,7 +44,8 @@ export default function Chat() {
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
   const [selectedQuestion, setSelectedQuestion] = useState("");
   const [isFetchingConversations, setIsFetchingConversations] = useState(false);
-
+  const [isTrialEnded, setIsTrialEnded] = useState(false);
+  
   // Redirect to login if profile fails to load
   useEffect(() => {
     if (!isProfileLoading && (profileError || !authUser)) {
@@ -65,6 +66,16 @@ export default function Chat() {
       mounted.current = false;
     };
   }, []);
+
+  // Check if free trial is exhausted
+  useEffect(() => {
+    const freeTrialExhausted = 
+      profile?.subscription_plan === "free" && (queryCount || 0) >= 2;
+    
+    if (freeTrialExhausted && !isLoading) {
+      setIsTrialEnded(true);
+    }
+  }, [queryCount, profile?.subscription_plan, isLoading]);
 
   // Load user conversations
   const loadUserConversations = async (userId) => {
@@ -145,6 +156,22 @@ export default function Chat() {
       return;
     }
 
+    // Check if free trial is exhausted
+    const freeTrialExhausted = 
+      profile?.subscription_plan === "free" && (queryCount || 0) >= 2;
+
+    if (freeTrialExhausted) {
+      toast({
+        variant: "destructive",
+        title: "Free Trial Ended",
+        description: "You've reached your free message limit. Please upgrade to continue.",
+      });
+      return;
+    }
+
+    // Reset the trial ended indicator when sending a new message
+    setIsTrialEnded(false);
+    
     await handleSendMessage({
       content,
       currentUserId: authUser.id,
@@ -352,10 +379,6 @@ export default function Chat() {
     navigate("/?scrollTo=pricing-section", { replace: true });
   };
 
-  // Free plan limitation
-  const isFreeTrialExhausted =
-    profile?.subscription_plan === "free" && (queryCount || 0) >= 2;
-
   return (
     <ChatLayout
       isSidebarOpen={isSidebarOpen}
@@ -381,8 +404,6 @@ export default function Chat() {
         <div className="flex flex-col h-full relative">
           {isOffline ? (
             <OfflineAlert />
-          ) : isFreeTrialExhausted ? (
-            <TrialEndedState onViewPricingPlans={handleViewPricingPlans} />
           ) : (
             <>
               {/* Chat messages - scrollable area */}
@@ -398,13 +419,29 @@ export default function Chat() {
 
               {/* Chat input area - fixed at bottom with proper space */}
               <div className="absolute bottom-0 left-0 right-0 z-10">
-                <ChatInput
-                  onSendMessage={onSendMessage}
-                  isLoading={isLoading}
-                  queryCount={queryCount}
-                  subscriptionPlan={profile?.subscription_plan}
-                  selectedQuestion={selectedQuestion}
-                />
+                {isTrialEnded ? (
+                  <div className="bg-white dark:bg-gray-900 p-4 border-t border-gray-200 dark:border-gray-800">
+                    <div className="flex flex-col items-center justify-center space-y-3 py-2">
+                      <p className="text-center text-sm text-gray-700 dark:text-gray-300">
+                        You've reached your free message limit. Upgrade to continue chatting.
+                      </p>
+                      <button
+                        onClick={handleViewPricingPlans}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        View Pricing Plans
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <ChatInput
+                    onSendMessage={onSendMessage}
+                    isLoading={isLoading}
+                    queryCount={queryCount}
+                    subscriptionPlan={profile?.subscription_plan}
+                    selectedQuestion={selectedQuestion}
+                  />
+                )}
               </div>
             </>
           )}

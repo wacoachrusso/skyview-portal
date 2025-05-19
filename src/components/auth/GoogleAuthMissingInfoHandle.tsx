@@ -77,7 +77,30 @@ export const GoogleAuthMissingInfoHandler = () => {
         setLoading(true);
         console.log("GoogleAuthMissingInfoHandler: Checking user information...");
 
-        // Get the session to verify the user is authenticated
+        // Check if we already know this is a new account from previous component
+        const needsProfileCompletion = localStorage.getItem('needs_profile_completion');
+        if (needsProfileCompletion === 'true') {
+          console.log("GoogleAuthMissingInfoHandler: Flag indicates profile needs completion");
+          localStorage.removeItem('needs_profile_completion'); // Clear the flag
+          
+          // Get session info to get user ID
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError || !session) {
+            console.error("No session found:", sessionError || "Session is null");
+            setError("Authentication error. Please try again.");
+            localStorage.removeItem('login_in_progress');
+            navigate("/login?error=Authentication failed. Please try again.", { replace: true });
+            return;
+          }
+          
+          setUserId(session.user.id);
+          setNeedsUserInfo(true);
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise, check session and profile as normal
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError || !session) {
