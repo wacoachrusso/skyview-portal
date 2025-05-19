@@ -20,6 +20,7 @@ import Chat from "@/pages/Chat";
 import { AuthSuccessHandler } from "@/components/auth/AuthSuccessHandler";
 import { ProtectedRoute } from "../layout/ProtectedLayout";
 import TermsAndConditions from "@/pages/TermsAnsConditions";
+import { AdminProtectedLayout } from "../layout/AdminProtectedLayout";
 
 export function AppRoutes() {
   return (
@@ -72,11 +73,13 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
+         <Route
           path="/admin"
           element={
             <ProtectedRoute>
-              <AdminDashboard />
+              <AdminProtectedLayout>
+                <AdminDashboard />
+              </AdminProtectedLayout>
             </ProtectedRoute>
           }
         />

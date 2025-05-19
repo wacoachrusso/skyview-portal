@@ -10,6 +10,7 @@ export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [redirectToInfoForm, setRedirectToInfoForm] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -95,6 +96,7 @@ export const GoogleAuthHandler = () => {
         // If no profile exists, create one
         if (!profile) {
           console.log("GoogleAuthHandler: No profile found, creating new profile");
+          setIsNewUser(true); // Flag that this is a new user
 
           const fullName = session.user.user_metadata.full_name || 
                           session.user.user_metadata.name || 
@@ -145,6 +147,9 @@ export const GoogleAuthHandler = () => {
             title: "Account Created", 
             description: "Please complete your profile setup." 
           });
+          
+          // Set a flag to force the redirect to the info form
+          localStorage.setItem('needs_profile_completion', 'true');
           
           // Show the missing info form
           setRedirectToInfoForm(true);
@@ -219,7 +224,9 @@ export const GoogleAuthHandler = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-luxury-dark">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <p className="mt-4 text-gray-300">Authenticating with Google...</p>
+        <p className="mt-4 text-gray-300">
+          {isNewUser ? "Setting up your new account..." : "Authenticating with Google..."}
+        </p>
       </div>
     );
   }
