@@ -9,7 +9,7 @@ import { GoogleAuthMissingInfoHandler } from "../GoogleAuthMissingInfoHandle";
 export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [redirectToInfoForm, setRedirectToInfoForm] = useState(false);
+  const [showProfileForm, setShowProfileForm] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -192,8 +192,11 @@ export const GoogleAuthHandler = () => {
             full_name: fullName,
           });
           
-          // Show the missing info form directly in this component
-          setRedirectToInfoForm(true);
+          // Only set the appropriate session flags
+          localStorage.setItem('needs_profile_completion', 'true');
+          
+          // Show the form directly without blocking navigation to public pages
+          setShowProfileForm(true);
           setLoading(false);
           return;
         }
@@ -205,8 +208,8 @@ export const GoogleAuthHandler = () => {
         if (!profile.user_type || !profile.airline) {
           console.log("GoogleAuthHandler: Missing required fields, showing profile form");
           
-          // Show the missing info form directly
-          setRedirectToInfoForm(true);
+          // Show the form directly without blocking navigation
+          setShowProfileForm(true);
           setLoading(false);
           return;
         }
@@ -247,7 +250,7 @@ export const GoogleAuthHandler = () => {
     handleAuthCallback();
   }, [navigate, toast]);
 
-  if (redirectToInfoForm) {
+  if (showProfileForm) {
     return (
       <GoogleAuthMissingInfoHandler 
         userId={userId}
@@ -255,6 +258,8 @@ export const GoogleAuthHandler = () => {
         userName={userName}
         userProfile={userProfile}
         isNewUser={isNewUser}
+        // Important: don't block home page navigation
+        blockNavigation={false}
       />
     );
   }

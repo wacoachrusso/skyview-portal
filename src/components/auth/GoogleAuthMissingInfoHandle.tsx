@@ -30,6 +30,7 @@ interface GoogleAuthMissingInfoHandlerProps {
   userName: string | null;
   userProfile: any;
   isNewUser: boolean;
+  blockNavigation?: boolean;
 }
 
 export const GoogleAuthMissingInfoHandler = ({
@@ -37,13 +38,15 @@ export const GoogleAuthMissingInfoHandler = ({
   userEmail: providedUserEmail,
   userName: providedUserName,
   userProfile: providedUserProfile,
-  isNewUser: providedIsNewUser = false
+  isNewUser: providedIsNewUser = false,
+  blockNavigation = false
 }: GoogleAuthMissingInfoHandlerProps = {
   userId: null,
   userEmail: null,
   userName: null,
   userProfile: null,
-  isNewUser: false
+  isNewUser: false,
+  blockNavigation: false
 }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -97,12 +100,17 @@ export const GoogleAuthMissingInfoHandler = ({
   
   // Function to handle the pricing section redirect
   const handlePricingRedirect = () => {
+    // Only block if blockNavigation is true
+    if (!blockNavigation) {
+      return false; // Don't block if blockNavigation is false
+    }
+    
     // Check if we're being redirected to pricing section
     const urlParams = new URLSearchParams(window.location.search);
     const scrollToSection = urlParams.get('scrollTo');
     
     if (scrollToSection === 'pricing-section') {
-      console.log("Blocking navigation to pricing section during profile setup");
+      console.log("Detected pricing section redirect during profile setup");
       
       // Remove the query parameter and stay on the current page
       const newUrl = window.location.pathname;
@@ -134,9 +142,8 @@ export const GoogleAuthMissingInfoHandler = ({
     
     // Add a beforeunload event to prevent the user from closing the tab/window
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Check if profile completion is required
-      if (sessionStorage.getItem('block_navigation_until_profile_complete') === 'true' || 
-          !isDirectAccess) { // Also block if coming directly from auth handler
+      // Only apply if blockNavigation is explicitly enabled
+      if (blockNavigation) {
         // Cancel the event
         e.preventDefault();
         // Chrome requires returnValue to be set
