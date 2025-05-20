@@ -21,11 +21,14 @@ import { AuthSuccessHandler } from "@/components/auth/AuthSuccessHandler";
 import { ProtectedRoute } from "../layout/ProtectedLayout";
 import TermsAndConditions from "@/pages/TermsAnsConditions";
 import { AdminProtectedLayout } from "../layout/AdminProtectedLayout";
+import ProfileSetupGuard from "../utils/ProfileSetupGuard";
+
 
 export function AppRoutes() {
   return (
     <NavigationProvider>
-      <AuthSuccessHandler />
+    <AuthSuccessHandler />
+    <ProfileSetupGuard>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Index />} />
@@ -73,7 +76,7 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/admin"
           element={
             <ProtectedRoute>
@@ -98,6 +101,7 @@ export function AppRoutes() {
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </NavigationProvider>
+    </ProfileSetupGuard>
+  </NavigationProvider>
   );
 }

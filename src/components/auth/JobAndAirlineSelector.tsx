@@ -2,10 +2,20 @@ import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/for
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 const jobTitles = ["Flight Attendant", "Pilot"];
-const airlines = ["United Airlines", "American Airlines", "Delta Airlines", "Southwest Airlines", "Alaska Airlines", "Other"];
+const airlines = ["United Airlines", "American Airlines", "Delta Airlines", "Southwest Airlines", "Alaska Airlines"];
 
 const isOptionEnabled = (airline: string, jobTitle: string) => {
-  return !(jobTitle.toLowerCase() === "flight attendant" && airline.toLowerCase() === "delta airlines");
+  // Southwest Airlines marked as "Coming Soon" for all job titles
+  if (airline.toLowerCase() === "southwest airlines") {
+    return false;
+  }
+  
+  // Delta Airlines only available for pilots, not for flight attendants
+  if (jobTitle.toLowerCase() === "flight attendant" && airline.toLowerCase() === "delta airlines") {
+    return false;
+  }
+  
+  return true;
 };
 
 export const JobAndAirlineSelector = ({ form }: { form: any }) => {
@@ -56,7 +66,7 @@ export const JobAndAirlineSelector = ({ form }: { form: any }) => {
                       disabled={disabled}
                       className={disabled ? "opacity-50 cursor-not-allowed" : ""}
                     >
-                      {airline} {disabled && "(Coming Soon)"}
+                      {airline} {disabled && airline.toLowerCase() === "southwest airlines" && "(Coming Soon)"}
                     </SelectItem>
                   );
                 })}
