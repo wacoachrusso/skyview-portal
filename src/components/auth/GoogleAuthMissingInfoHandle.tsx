@@ -70,12 +70,72 @@ export const GoogleAuthMissingInfoHandler = () => {
       return null;
     }
   };
+  
+  // Function to handle the pricing section redirect
+  const handlePricingRedirect = () => {
+    // Check if we're being redirected to pricing section
+    const urlParams = new URLSearchParams(window.location.search);
+    const scrollToSection = urlParams.get('scrollTo');
+    
+    if (scrollToSection === 'pricing-section') {
+      console.log("Blocking navigation to pricing section during profile setup");
+      
+      // Remove the query parameter and stay on the current page
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      // Show a toast notification
+      toast({
+        variant: "destructive",
+        title: "Profile Setup Required",
+        description: "Please complete your profile before continuing."
+      });
+      
+      return true; // Redirect was detected and handled
+    }
+    
+    return false; // No redirect detected
+  };
+
+  useEffect(() => {
+    // Check for pricing redirect when component mounts
+    handlePricingRedirect();
+    
+    // Setup event listener for URL changes
+    const handleUrlChange = () => {
+      handlePricingRedirect();
+    };
+    
+    window.addEventListener('popstate', handleUrlChange);
+    
+    // Add a beforeunload event to prevent the user from closing the tab/window
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Check if profile completion is required
+      if (sessionStorage.getItem('block_navigation_until_profile_complete') === 'true') {
+        // Cancel the event
+        e.preventDefault();
+        // Chrome requires returnValue to be set
+        e.returnValue = '';
+        return '';
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [toast]);
 
   useEffect(() => {
     const checkUserInfo = async () => {
       try {
         setLoading(true);
         console.log("GoogleAuthMissingInfoHandler: Checking user information...");
+
+        // Check for any unwanted redirects first
+        handlePricingRedirect();
 
         // Check if we already know this is a new account from previous component
         const needsProfileCompletion = localStorage.getItem('needs_profile_completion');
@@ -90,6 +150,7 @@ export const GoogleAuthMissingInfoHandler = () => {
             console.error("No session found:", sessionError || "Session is null");
             setError("Authentication error. Please try again.");
             localStorage.removeItem('login_in_progress');
+            sessionStorage.removeItem('block_navigation_until_profile_complete');
             navigate("/login?error=Authentication failed. Please try again.", { replace: true });
             return;
           }
@@ -107,6 +168,7 @@ export const GoogleAuthMissingInfoHandler = () => {
           console.error("No session found:", sessionError || "Session is null");
           setError("Authentication error. Please try again.");
           localStorage.removeItem('login_in_progress');
+          sessionStorage.removeItem('block_navigation_until_profile_complete');
           navigate("/login?error=Authentication failed. Please try again.", { replace: true });
           return;
         }
@@ -124,6 +186,7 @@ export const GoogleAuthMissingInfoHandler = () => {
         if (profileError && profileError.code !== 'PGRST116') {
           console.error("Error fetching profile:", profileError);
           setError("Failed to load your profile. Please try again.");
+          sessionStorage.removeItem('block_navigation_until_profile_complete');
           navigate("/login?error=Profile error. Please try again.", { replace: true });
           return;
         }
@@ -140,6 +203,7 @@ export const GoogleAuthMissingInfoHandler = () => {
         console.log("GoogleAuthMissingInfoHandler: User has all required information");
         setLoading(false);
         localStorage.removeItem('login_in_progress');
+        sessionStorage.removeItem('block_navigation_until_profile_complete');
         
         // Fetch complete user profile before redirect
         await fetchUserProfile(session.user.id);
@@ -150,13 +214,14 @@ export const GoogleAuthMissingInfoHandler = () => {
         console.error("GoogleAuthMissingInfoHandler: Unexpected error", error);
         setError("An unexpected error occurred. Please try again.");
         localStorage.removeItem('login_in_progress');
+        sessionStorage.removeItem('block_navigation_until_profile_complete');
         navigate("/login?error=Unexpected error. Please try again.", { replace: true });
         setLoading(false);
       }
     };
 
     checkUserInfo();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const onSubmit = async (data: InfoFormValues) => {
     try {
@@ -194,6 +259,7 @@ export const GoogleAuthMissingInfoHandler = () => {
       });
       
       localStorage.removeItem('login_in_progress');
+      sessionStorage.removeItem('block_navigation_until_profile_complete'); // Clear flag once profile is complete
       
       // Redirect to chat
       window.location.href = "/chat";
@@ -235,6 +301,13 @@ export const GoogleAuthMissingInfoHandler = () => {
           <p className="mb-6 text-gray-300 text-center">
             Please provide some additional information to complete your account setup.
           </p>
+          
+          {/* Added warning message */}
+          <div className="mb-6 p-3 bg-amber-900/50 border border-amber-500/50 rounded-md">
+            <p className="text-amber-300 text-sm">
+              <strong>Important:</strong> You must complete your profile before you can access the application.
+            </p>
+          </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
