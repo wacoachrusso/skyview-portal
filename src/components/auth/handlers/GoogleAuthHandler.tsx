@@ -11,6 +11,10 @@ export const GoogleAuthHandler = () => {
   const [error, setError] = useState<string | null>(null);
   const [redirectToInfoForm, setRedirectToInfoForm] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -113,6 +117,13 @@ export const GoogleAuthHandler = () => {
         localStorage.setItem('auth_access_token', session.access_token);
         localStorage.setItem('auth_refresh_token', session.refresh_token);
         
+        // Store user ID and email for the profile setup form if needed
+        setUserId(session.user.id);
+        setUserEmail(session.user.email);
+        setUserName(session.user.user_metadata.full_name || 
+                    session.user.user_metadata.name || 
+                    session.user.email);
+        
         // Check if user profile exists
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -161,7 +172,6 @@ export const GoogleAuthHandler = () => {
               push_notifications: true,
               assistant_id: assistantId
               // Note: user_type and airline are intentionally not set here
-              // to force the user to fill them in
             });
 
           if (insertError) {
@@ -175,36 +185,27 @@ export const GoogleAuthHandler = () => {
           // Create session
           await createNewSession(session.user.id);
           
-          // Fetch user profile directly before redirect
-          await fetchUserProfile(session.user.id);
-          
-          toast({ 
-            title: "Account Created", 
-            description: "Please complete your profile setup." 
+          // Set user profile for the form
+          setUserProfile({
+            id: session.user.id,
+            email: session.user.email,
+            full_name: fullName,
           });
           
-          // Set a flag to force the redirect to the info form
-          localStorage.setItem('needs_profile_completion', 'true');
-          
-          // IMPORTANT: Add a flag to block navigation until profile setup is complete
-          sessionStorage.setItem('block_navigation_until_profile_complete', 'true');
-          
-          // Show the missing info form
+          // Show the missing info form directly in this component
           setRedirectToInfoForm(true);
           setLoading(false);
           return;
         }
 
         console.log("GoogleAuthHandler: Existing profile found, checking for required fields");
+        setUserProfile(profile);
         
         // Check if the user_type and airline fields are set
         if (!profile.user_type || !profile.airline) {
-          console.log("GoogleAuthHandler: Missing required fields, redirecting to info form");
+          console.log("GoogleAuthHandler: Missing required fields, showing profile form");
           
-          // IMPORTANT: Add a flag to block navigation until profile setup is complete
-          sessionStorage.setItem('block_navigation_until_profile_complete', 'true');
-          
-          // Redirect to the missing info handler
+          // Show the missing info form directly
           setRedirectToInfoForm(true);
           setLoading(false);
           return;
@@ -247,7 +248,15 @@ export const GoogleAuthHandler = () => {
   }, [navigate, toast]);
 
   if (redirectToInfoForm) {
-    return <GoogleAuthMissingInfoHandler />;
+    return (
+      <GoogleAuthMissingInfoHandler 
+        userId={userId}
+        userEmail={userEmail}
+        userName={userName}
+        userProfile={userProfile}
+        isNewUser={isNewUser}
+      />
+    );
   }
 
   if (error) {
