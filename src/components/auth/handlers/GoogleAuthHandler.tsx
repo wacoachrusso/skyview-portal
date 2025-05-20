@@ -49,6 +49,41 @@ export const GoogleAuthHandler = () => {
     }
   };
 
+  // Function to handle the pricing section redirect
+  const handlePricingRedirect = () => {
+    // Check if we're being redirected to pricing section
+    const urlParams = new URLSearchParams(window.location.search);
+    const scrollToSection = urlParams.get('scrollTo');
+    
+    if (scrollToSection === 'pricing-section') {
+      console.log("Detected unwanted redirect to pricing section during auth flow");
+      
+      // Remove the query parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      return true; // Redirect was detected and handled
+    }
+    
+    return false; // No redirect was detected
+  };
+
+  useEffect(() => {
+    // Check for pricing redirect when component mounts
+    handlePricingRedirect();
+    
+    // Setup event listener for URL changes
+    const handleUrlChange = () => {
+      handlePricingRedirect();
+    };
+    
+    window.addEventListener('popstate', handleUrlChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
+
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
@@ -151,6 +186,9 @@ export const GoogleAuthHandler = () => {
           // Set a flag to force the redirect to the info form
           localStorage.setItem('needs_profile_completion', 'true');
           
+          // IMPORTANT: Add a flag to block navigation until profile setup is complete
+          sessionStorage.setItem('block_navigation_until_profile_complete', 'true');
+          
           // Show the missing info form
           setRedirectToInfoForm(true);
           setLoading(false);
@@ -162,6 +200,10 @@ export const GoogleAuthHandler = () => {
         // Check if the user_type and airline fields are set
         if (!profile.user_type || !profile.airline) {
           console.log("GoogleAuthHandler: Missing required fields, redirecting to info form");
+          
+          // IMPORTANT: Add a flag to block navigation until profile setup is complete
+          sessionStorage.setItem('block_navigation_until_profile_complete', 'true');
+          
           // Redirect to the missing info handler
           setRedirectToInfoForm(true);
           setLoading(false);
@@ -177,6 +219,7 @@ export const GoogleAuthHandler = () => {
         await fetchUserProfile(session.user.id);
         
         localStorage.removeItem('login_in_progress');
+        sessionStorage.removeItem('block_navigation_until_profile_complete'); // Clear flag for complete profiles
         
         toast({ 
           title: "Sign In Successful", 
@@ -192,6 +235,7 @@ export const GoogleAuthHandler = () => {
       } catch (error) {
         console.error("GoogleAuthHandler: Unexpected error in auth callback", error);
         localStorage.removeItem('login_in_progress');
+        sessionStorage.removeItem('block_navigation_until_profile_complete');
         setError("An unexpected error occurred. Please try again.");
         navigate("/login?error=Unexpected error. Please try again.", { replace: true });
       } finally {
