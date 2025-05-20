@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "../ui/use-toast";
 
 const ProfileSetupGuard = ({ children }: { children: React.ReactNode }) => {
@@ -8,88 +9,86 @@ const ProfileSetupGuard = ({ children }: { children: React.ReactNode }) => {
     const { toast } = useToast();
     
     useEffect(() => {
-      // Function to handle profile setup protection
-      const handleProfileSetupProtection = () => {
-        // Only apply protection if profile setup is required
-        const isProfileSetupRequired = sessionStorage.getItem('block_navigation_until_profile_complete') === 'true';
-        
-        if (isProfileSetupRequired) {
-          console.log("Profile setup protection active");
+      const checkProfileCompletion = async () => {
+        try {
+          // First, check if the user is authenticated at all
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
           
-          // Check URL parameters for pricing section
-          const urlParams = new URLSearchParams(window.location.search);
-          const scrollToSection = urlParams.get('scrollTo');
-          
-          if (scrollToSection === 'pricing-section') {
-            console.log("Blocking redirect to pricing section during profile setup");
-            
-            // Remove the query parameter
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
-            
-            // Get the auth callback URL
-            const callbackUrl = `${window.location.origin}/auth/callback?provider=google`;
-            
-            // Show toast and redirect back to auth flow
-            toast({
-              variant: "destructive",
-              title: "Profile Setup Required",
-              description: "Please complete your profile setup before continuing."
-            });
-            
-            // Redirect back to the auth flow
-            window.location.href = callbackUrl;
-            return true;
+          // If no valid session, don't enforce profile completion checks
+          if (sessionError || !session) {
+            return;
           }
           
-          // Allowlist of paths that are part of the auth flow
-          const allowedPaths = [
-            '/auth/callback', 
-            '/login'
-          ];
-          
-          // If we're not on an allowed path, redirect back to auth
-          const currentPath = location.pathname;
-          if (!allowedPaths.some(path => currentPath.includes(path))) {
-            console.log("Blocking navigation during profile setup:", currentPath);
+          // The user has a valid session, check if they have a complete profile
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("user_type, airline")
+            .eq("id", session.user.id)
+            .single();
             
-            // Show toast 
-            toast({
-              variant: "destructive",
-              title: "Profile Setup Required",
-              description: "Please complete your profile setup."
-            });
+          // If error other than not found, don't block
+          if (profileError && profileError.code !== 'PGRST116') {
+            return;
+          }
             
-            // Redirect back to the auth callback
-            const loginInProgress = localStorage.getItem('login_in_progress') === 'true';
-            if (loginInProgress) {
+          // Check if the profile requires completion
+          const needsProfileCompletion = !profile || !profile.user_type || !profile.airline;
+            
+          // Only enforce checks for authenticated users with incomplete profiles
+          if (needsProfileCompletion) {
+            console.log("User has incomplete profile, checking path...");
+            
+            // Allowlist of public paths that should never be blocked
+            const publicPaths = [
+              '/', 
+              '/login', 
+              '/signup', 
+              '/pricing', 
+              '/about',
+              '/contact',
+              '/terms',
+              '/privacy'
+            ];
+            
+            // Allowlist of paths that are part of the auth flow
+            const authPaths = [
+              '/auth/callback'
+            ];
+            
+            // Check if current path is in allowlist
+            const currentPath = location.pathname;
+            const isPublicPath = publicPaths.some(path => 
+              currentPath === path || currentPath.startsWith(`${path}/`)
+            );
+            const isAuthPath = authPaths.some(path => 
+              currentPath.startsWith(path)
+            );
+            
+            // If not public or auth path, and user has incomplete profile, redirect to profile setup
+            if (!isPublicPath && !isAuthPath) {
+              console.log("Redirecting to auth callback for profile completion");
+              
+              toast({
+                variant: "destructive",
+                title: "Profile Setup Required",
+                description: "You need to complete your profile before accessing this page."
+              });
+              
+              // Redirect to auth callback which will handle profile setup
               const callbackUrl = `${window.location.origin}/auth/callback?provider=google`;
-              window.location.href = callbackUrl;
-            } else {
-              navigate('/login', { replace: true });
+              navigate(callbackUrl, { replace: true });
+              return;
             }
-            
-            return true;
           }
+        } catch (error) {
+          console.error("Error in profile check:", error);
+          // In case of error, don't block navigation
         }
-        
-        return false; // No blocking needed
       };
       
-      // Initial check
-      handleProfileSetupProtection();
-      
-      // Setup event listeners
-      const handleUrlChange = () => {
-        handleProfileSetupProtection();
-      };
-      
-      window.addEventListener('popstate', handleUrlChange);
-      
-      return () => {
-        window.removeEventListener('popstate', handleUrlChange);
-      };
-    }, [location, navigate, toast]);
+      // Run check when location changes
+      checkProfileCompletion();
+    }, [location.pathname, navigate, toast]);
     
     return <>{children}</>;
   };
