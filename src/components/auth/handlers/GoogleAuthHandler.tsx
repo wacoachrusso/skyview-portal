@@ -9,12 +9,8 @@ import { GoogleAuthMissingInfoHandler } from "../GoogleAuthMissingInfoHandle";
 export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [redirectToInfoForm, setRedirectToInfoForm] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -53,41 +49,6 @@ export const GoogleAuthHandler = () => {
     }
   };
 
-  // Function to handle the pricing section redirect
-  const handlePricingRedirect = () => {
-    // Check if we're being redirected to pricing section
-    const urlParams = new URLSearchParams(window.location.search);
-    const scrollToSection = urlParams.get('scrollTo');
-    
-    if (scrollToSection === 'pricing-section') {
-      console.log("Detected unwanted redirect to pricing section during auth flow");
-      
-      // Remove the query parameter
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      
-      return true; // Redirect was detected and handled
-    }
-    
-    return false; // No redirect was detected
-  };
-
-  useEffect(() => {
-    // Check for pricing redirect when component mounts
-    handlePricingRedirect();
-    
-    // Setup event listener for URL changes
-    const handleUrlChange = () => {
-      handlePricingRedirect();
-    };
-    
-    window.addEventListener('popstate', handleUrlChange);
-    
-    return () => {
-      window.removeEventListener('popstate', handleUrlChange);
-    };
-  }, []);
-
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
@@ -117,13 +78,6 @@ export const GoogleAuthHandler = () => {
         localStorage.setItem('auth_access_token', session.access_token);
         localStorage.setItem('auth_refresh_token', session.refresh_token);
         
-        // Store user ID and email for the profile setup form if needed
-        setUserId(session.user.id);
-        setUserEmail(session.user.email);
-        setUserName(session.user.user_metadata.full_name || 
-                    session.user.user_metadata.name || 
-                    session.user.email);
-        
         // Check if user profile exists
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -144,6 +98,9 @@ export const GoogleAuthHandler = () => {
           console.log("GoogleAuthHandler: No profile found, creating new profile");
           setIsNewUser(true); // Flag that this is a new user
 
+          // CRITICAL FIX: For new users, explicitly prevent pricing redirects
+          localStorage.setItem('skip_pricing_redirect', 'true');
+          
           const fullName = session.user.user_metadata.full_name || 
                           session.user.user_metadata.name || 
                           session.user.email;
@@ -172,6 +129,7 @@ export const GoogleAuthHandler = () => {
               push_notifications: true,
               assistant_id: assistantId
               // Note: user_type and airline are intentionally not set here
+              // to force the user to fill them in
             });
 
           if (insertError) {
@@ -185,31 +143,34 @@ export const GoogleAuthHandler = () => {
           // Create session
           await createNewSession(session.user.id);
           
-          // Set user profile for the form
-          setUserProfile({
-            id: session.user.id,
-            email: session.user.email,
-            full_name: fullName,
+          // Fetch user profile directly before redirect
+          await fetchUserProfile(session.user.id);
+          
+          toast({ 
+            title: "Account Created", 
+            description: "Please complete your profile setup." 
           });
           
-          // Only set the appropriate session flags
+          // Set flags to ensure proper redirect flow
           localStorage.setItem('needs_profile_completion', 'true');
+          localStorage.setItem('new_user_signup', 'true');
+          localStorage.setItem('recently_signed_up', 'true');
           
-          // Show the form directly without blocking navigation to public pages
-          setShowProfileForm(true);
+          // Show the missing info form
+          setRedirectToInfoForm(true);
           setLoading(false);
           return;
         }
 
         console.log("GoogleAuthHandler: Existing profile found, checking for required fields");
-        setUserProfile(profile);
         
         // Check if the user_type and airline fields are set
         if (!profile.user_type || !profile.airline) {
-          console.log("GoogleAuthHandler: Missing required fields, showing profile form");
-          
-          // Show the form directly without blocking navigation
-          setShowProfileForm(true);
+          console.log("GoogleAuthHandler: Missing required fields, redirecting to info form");
+          // ADDED FIX: Ensure we don't redirect to pricing even for existing users with incomplete profiles
+          localStorage.setItem('skip_pricing_redirect', 'true');
+          // Redirect to the missing info handler
+          setRedirectToInfoForm(true);
           setLoading(false);
           return;
         }
@@ -223,7 +184,6 @@ export const GoogleAuthHandler = () => {
         await fetchUserProfile(session.user.id);
         
         localStorage.removeItem('login_in_progress');
-        sessionStorage.removeItem('block_navigation_until_profile_complete'); // Clear flag for complete profiles
         
         toast({ 
           title: "Sign In Successful", 
@@ -232,6 +192,7 @@ export const GoogleAuthHandler = () => {
         
         // Store flag to prevent pricing redirects
         sessionStorage.setItem('recently_signed_up', 'true');
+        localStorage.setItem('skip_pricing_redirect', 'true');
         
         // Use window.location.href to ensure full page reload
         window.location.href = "/chat";
@@ -239,7 +200,6 @@ export const GoogleAuthHandler = () => {
       } catch (error) {
         console.error("GoogleAuthHandler: Unexpected error in auth callback", error);
         localStorage.removeItem('login_in_progress');
-        sessionStorage.removeItem('block_navigation_until_profile_complete');
         setError("An unexpected error occurred. Please try again.");
         navigate("/login?error=Unexpected error. Please try again.", { replace: true });
       } finally {
@@ -250,18 +210,8 @@ export const GoogleAuthHandler = () => {
     handleAuthCallback();
   }, [navigate, toast]);
 
-  if (showProfileForm) {
-    return (
-      <GoogleAuthMissingInfoHandler 
-        userId={userId}
-        userEmail={userEmail}
-        userName={userName}
-        userProfile={userProfile}
-        isNewUser={isNewUser}
-        // Important: don't block home page navigation
-        blockNavigation={false}
-      />
-    );
+  if (redirectToInfoForm) {
+    return <GoogleAuthMissingInfoHandler />;
   }
 
   if (error) {
