@@ -377,6 +377,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("Profile query timed out or failed:", error.message);
         profileByIdError = error;
       }
+      // profileByIdData = ""
 
       console.log("Profile by ID query result:", {
         data: profileByIdData ? "data found" : "no data",
