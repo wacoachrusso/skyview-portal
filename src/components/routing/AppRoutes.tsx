@@ -22,13 +22,13 @@ import { ProtectedRoute } from "../layout/ProtectedLayout";
 import TermsAndConditions from "@/pages/TermsAnsConditions";
 import { AdminProtectedLayout } from "../layout/AdminProtectedLayout";
 import ProfileSetupGuard from "../utils/ProfileSetupGuard";
+import { GoogleAuthMissingInfoHandler } from "../auth/GoogleAuthMissingInfoHandle";
 
 
 export function AppRoutes() {
   return (
     <NavigationProvider>
     <AuthSuccessHandler />
-    <ProfileSetupGuard>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Index />} />
@@ -42,7 +42,7 @@ export function AppRoutes() {
         <Route path="/refunds" element={<Refunds />} />
         <Route path="/release-notes" element={<ReleaseNotes />} />
         <Route path="/help" element={<HelpCenter />} />
-
+        <Route path="/auth/complete-profile" element={<GoogleAuthMissingInfoHandler />} />
         {/* Protected routes */}
         <Route
           path="/dashboard"
@@ -101,7 +101,6 @@ export function AppRoutes() {
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </ProfileSetupGuard>
   </NavigationProvider>
   );
 }

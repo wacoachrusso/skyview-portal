@@ -272,7 +272,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
       const cachedData = getCachedProfileData();
 
       if (cachedData) {
-        console.log("Using cached profile data");
         if (isMounted.current) {
           setProfile(cachedData.profile);
           setAuthUser(cachedData.authUser);

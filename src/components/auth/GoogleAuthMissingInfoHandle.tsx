@@ -31,45 +31,25 @@ export const GoogleAuthMissingInfoHandler = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Get existing profile data to pre-populate form if available
+  const existingProfile = localStorage.getItem("user_profile");
+  const parsedProfile = existingProfile ? JSON.parse(existingProfile) : null;
+  
+  console.log("GoogleAuthMissingInfoHandler: Initial load with profile data:", 
+    parsedProfile ? { 
+      id: parsedProfile.id, 
+      name: parsedProfile.full_name,
+      job: parsedProfile.user_type || 'NOT_SET',
+      airline: parsedProfile.airline || 'NOT_SET'
+    } : 'NO_PROFILE_DATA');
+
   const form = useForm<InfoFormValues>({
     resolver: zodResolver(infoFormSchema),
     defaultValues: {
-      jobTitle: "",
-      airline: "",
+      jobTitle: parsedProfile?.user_type || "",
+      airline: parsedProfile?.airline || "",
     },
   });
-
-  // Function to fetch user profile directly
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user profile:", error);
-        return null;
-      }
-
-      // Set admin status in localStorage for quick access
-      if (profile.is_admin) {
-        localStorage.setItem("user_is_admin", "true");
-      } else {
-        localStorage.removeItem("user_is_admin");
-      }
-
-      // Store profile and name in localStorage
-      localStorage.setItem("user_profile", JSON.stringify(profile));
-      localStorage.setItem("auth_user_name", profile.full_name);
-
-      return profile;
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return null;
-    }
-  };
 
   useEffect(() => {
     const checkUserInfo = async () => {
@@ -80,20 +60,20 @@ export const GoogleAuthMissingInfoHandler = () => {
         // Check if we already know this is a new account from previous component
         const needsProfileCompletion = localStorage.getItem('needs_profile_completion');
         if (needsProfileCompletion === 'true') {
-          console.log("GoogleAuthMissingInfoHandler: Flag indicates profile needs completion");
-          localStorage.removeItem('needs_profile_completion'); // Clear the flag
+          console.log("GoogleAuthMissingInfoHandler: needs_profile_completion flag detected");
           
           // Get session info to get user ID
           const { data: { session }, error: sessionError } = await supabase.auth.getSession();
           
           if (sessionError || !session) {
-            console.error("No session found:", sessionError || "Session is null");
+            console.error("GoogleAuthMissingInfoHandler: No session found:", sessionError || "Session is null");
             setError("Authentication error. Please try again.");
             localStorage.removeItem('login_in_progress');
             navigate("/login?error=Authentication failed. Please try again.", { replace: true });
             return;
           }
           
+          console.log("GoogleAuthMissingInfoHandler: Session found with user ID:", session.user.id);
           setUserId(session.user.id);
           setNeedsUserInfo(true);
           setLoading(false);
@@ -140,9 +120,38 @@ export const GoogleAuthMissingInfoHandler = () => {
         console.log("GoogleAuthMissingInfoHandler: User has all required information");
         setLoading(false);
         localStorage.removeItem('login_in_progress');
+        localStorage.removeItem('needs_profile_completion');
         
-        // Fetch complete user profile before redirect
-        await fetchUserProfile(session.user.id);
+        // Get complete profile data
+        const { data: fullProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (fullProfile) {
+          console.log("GoogleAuthMissingInfoHandler: Complete profile found, storing data:", {
+            id: fullProfile.id,
+            name: fullProfile.full_name,
+            job: fullProfile.user_type,
+            airline: fullProfile.airline,
+            is_admin: fullProfile.is_admin || false
+          });
+          
+          // Store profile and name in localStorage
+          localStorage.setItem("user_profile", JSON.stringify(fullProfile));
+          localStorage.setItem("auth_user_name", fullProfile.full_name);
+          
+          // Set admin status if applicable
+          if (fullProfile.is_admin) {
+            localStorage.setItem("user_is_admin", "true");
+            console.log("GoogleAuthMissingInfoHandler: User is admin, setting admin flag");
+          } else {
+            localStorage.removeItem("user_is_admin");
+          }
+        } else {
+          console.warn("GoogleAuthMissingInfoHandler: Could not fetch complete profile data");
+        }
         
         // Redirect to chat
         window.location.href = "/chat";
@@ -162,11 +171,15 @@ export const GoogleAuthMissingInfoHandler = () => {
     try {
       setLoading(true);
       
+      console.log("GoogleAuthMissingInfoHandler: Form submitted with data:", data);
+      
       if (!userId) {
+        console.error("GoogleAuthMissingInfoHandler: No userId found for form submission");
         setError("User ID not found. Please try logging in again.");
         return;
       }
 
+      console.log("GoogleAuthMissingInfoHandler: Updating profile for user:", userId);
       // Update the profile with the new information
       const { error: updateError } = await supabase
         .from('profiles')
@@ -177,23 +190,55 @@ export const GoogleAuthMissingInfoHandler = () => {
         .eq('id', userId);
 
       if (updateError) {
-        console.error("Error updating profile:", updateError);
+        console.error("GoogleAuthMissingInfoHandler: Error updating profile:", updateError);
         setError("Failed to update your profile information. Please try again.");
         return;
       }
 
+      console.log("GoogleAuthMissingInfoHandler: Profile updated successfully");
+
       // Create session if needed
       await createNewSession(userId);
       
-      // Fetch updated user profile
-      await fetchUserProfile(userId);
+      // Get the updated complete profile
+      const { data: updatedProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError) {
+        console.error("GoogleAuthMissingInfoHandler: Error fetching updated profile:", profileError);
+      } else if (updatedProfile) {
+        console.log("GoogleAuthMissingInfoHandler: Storing updated profile in localStorage:", {
+          id: updatedProfile.id,
+          name: updatedProfile.full_name,
+          job: updatedProfile.user_type,
+          airline: updatedProfile.airline,
+          is_admin: updatedProfile.is_admin || false
+        });
+        
+        // Store complete profile and name in localStorage
+        localStorage.setItem("user_profile", JSON.stringify(updatedProfile));
+        localStorage.setItem("auth_user_name", updatedProfile.full_name);
+        
+        // Set admin status if applicable
+        if (updatedProfile.is_admin) {
+          localStorage.setItem("user_is_admin", "true");
+          console.log("GoogleAuthMissingInfoHandler: User is admin, setting admin flag");
+        } else {
+          localStorage.removeItem("user_is_admin");
+        }
+      }
       
       toast({ 
         title: "Information Updated", 
         description: "Your profile information has been saved." 
       });
       
+      console.log("GoogleAuthMissingInfoHandler: Clearing flags and redirecting to chat");
       localStorage.removeItem('login_in_progress');
+      localStorage.removeItem('needs_profile_completion');
       
       // Redirect to chat
       window.location.href = "/chat";
