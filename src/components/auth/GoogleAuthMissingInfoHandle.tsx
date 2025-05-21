@@ -6,11 +6,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { JobAndAirlineSelector } from "@/components/auth/JobAndAirlineSelector";
