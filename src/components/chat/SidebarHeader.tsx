@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -16,11 +16,13 @@ import { useTheme } from "../theme-provider";
 
 interface SidebarHeaderProps {
   onDeleteAll: () => void;
+  onCloseSidebar: () => void;
 }
 
-export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
+export function SidebarHeader({ onDeleteAll, onCloseSidebar }: SidebarHeaderProps) {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigate("/", { replace: true });
@@ -50,13 +52,15 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
           SkyGuide
         </span>
       </a>
-      <div className="flex items-center gap-2 mr-5 sm:mr-0">
+      <div className="flex items-center gap-2">
+        {/* Delete All Conversations Button */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
               className={`transition-colors ${theme === 'dark' ? "text-white hover:bg-white/10 " : "text-[#0F172A] hover:bg-secondary"}`}
+              title="Delete all conversations"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -84,6 +88,17 @@ export function SidebarHeader({ onDeleteAll }: SidebarHeaderProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Close Sidebar Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCloseSidebar}
+          className={`transition-colors block lg:hidden ${theme === 'dark' ? "text-white hover:bg-white/10 " : "text-[#0F172A] hover:bg-secondary"}`}
+          title="Close sidebar"
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

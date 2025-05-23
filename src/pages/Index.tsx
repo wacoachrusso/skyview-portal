@@ -21,69 +21,184 @@ export default function Index() {
   const location = useLocation();
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
   const hasPricingSectionScrolled = useRef(false);
-  // Access profile context to check if user is authenticated
-  const isAuthenticated = localStorage.getItem("auth_status");
 
-  useEffect(() => {
-    console.log("Index page mounted");
-    
-    // Get URL parameters
-    const searchParams = new URLSearchParams(location.search);
-    
-    // Check if the user is authenticated and there are no URL parameters
-    if (isAuthenticated === "authenticated" && searchParams.toString() === "") {
-      // Redirect to /chat route
-      navigate("/chat", { replace: true });
-      return; // Stop execution of the rest of the effect
+  // Enhanced authentication check function
+  const checkAuthenticationStatus = () => {
+    try {
+      // Check multiple possible auth indicators
+      const authStatus = localStorage.getItem("auth_status");
+      const authToken = localStorage.getItem("auth_token"); // if you use tokens
+      const userSession = localStorage.getItem("user_session"); // if you store user data
+      const loginInProgress = localStorage.getItem("login_in_progress");
+      // You might also want to check sessionStorage as a fallback
+      const sessionAuth = sessionStorage.getItem("auth_status");
+
+      // Don't redirect if login is in progress (OAuth flow)
+      if (loginInProgress === "true") {
+        console.log("Login in progress, skipping auth redirect");
+        return false;
+      }
+
+      // Return true if any authentication indicator is present
+      return (
+        authStatus === "authenticated" ||
+        authToken !== null ||
+        userSession !== null ||
+        sessionAuth === "authenticated"
+      );
+    } catch (error) {
+      console.error("Error checking authentication:", error);
+      return false;
+    }
+  };
+
+  // Check if running as PWA with better type safety
+  const isPWA = () => {
+    // Check for test parameter to simulate PWA
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("pwa-test") === "true") {
+      console.log("🧪 PWA test mode enabled");
+      return true;
     }
 
-    // Check if we need to scroll to pricing section
-    const scrollTo = searchParams.get("scrollTo");
-    const needsToScrollToPricing = scrollTo === "pricing-section";
-
-    // Check if pricing section needs to be scrolled to
-    if (needsToScrollToPricing && !hasPricingSectionScrolled.current) {
-      // Use a small timeout to ensure the page has rendered properly
-      setTimeout(() => {
-        const pricingSection = document.getElementById("pricing-section");
-        if (pricingSection) {
-          pricingSection.scrollIntoView({ behavior: "smooth" });
-          hasPricingSectionScrolled.current = true;
-        }
-      }, 500);
-    }
-
-    // Always complete loading regardless of auth status
-    setIsLoading(false);
-
-    // Check if it's iOS and not in standalone mode
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia(
+    // Check display mode (works on most modern browsers)
+    const isStandaloneDisplay = window.matchMedia(
       "(display-mode: standalone)"
     ).matches;
 
-    // Check if the prompt has been shown before
-    const hasShownPrompt = localStorage.getItem("iosInstallPromptShown");
+    // Check iOS standalone mode (iOS Safari specific)
+    const isIOSStandalone =
+      "standalone" in window.navigator &&
+      (window.navigator as any).standalone === true;
 
-    console.log("Device checks:", { isIOS, isStandalone, hasShownPrompt });
+    // Check if launched from Android home screen
+    const isAndroidPWA =
+      document.referrer.includes("android-app://") ||
+      window.location.search.includes("homescreen=1");
 
-    if (isIOS && !isStandalone && !hasShownPrompt) {
-      setShowIOSPrompt(true);
-      localStorage.setItem("iosInstallPromptShown", "true");
-    }
+    // Check for PWA-specific window properties
+    const hasPWAProperties =
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      window.matchMedia("(display-mode: minimal-ui)").matches;
+
+    return (
+      isStandaloneDisplay || isIOSStandalone || isAndroidPWA || hasPWAProperties
+    );
+  };
+
+  useEffect(() => {
+    console.log("Index page mounted");
+    console.log("Is PWA:", isPWA());
+
+    // Add a small delay for PWA context to fully initialize
+    const authCheckDelay = isPWA() ? 500 : 100;
+
+    setTimeout(() => {
+      const isAuthenticated = checkAuthenticationStatus();
+
+      // Enhanced debugging for PWA testing
+      const debugInfo = {
+        isPWA: isPWA(),
+        isAuthenticated,
+        displayMode: window.matchMedia("(display-mode: standalone)").matches,
+        fullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
+        minimalUI: window.matchMedia("(display-mode: minimal-ui)").matches,
+        referrer: document.referrer,
+        searchParams: location.search,
+        pathname: location.pathname,
+        localStorage: {
+          auth_status: localStorage.getItem("auth_status"),
+          auth_token: localStorage.getItem("auth_token"),
+        },
+      };
+
+      console.log("🔍 PWA Debug Info:", debugInfo);
+      console.log("🔐 Authentication status:", isAuthenticated);
+
+      // Get URL parameters
+      const searchParams = new URLSearchParams(location.search);
+
+      // Check if the user is authenticated and there are no URL parameters
+      if (isAuthenticated && searchParams.toString() === "") {
+        console.log("Redirecting authenticated user to /chat");
+        // For PWA, use replace to avoid back button issues
+        navigate("/chat", { replace: true });
+        return;
+      }
+
+      // Handle pricing section scrolling
+      const scrollTo = searchParams.get("scrollTo");
+      const needsToScrollToPricing = scrollTo === "pricing-section";
+
+      if (needsToScrollToPricing && !hasPricingSectionScrolled.current) {
+        setTimeout(() => {
+          const pricingSection = document.getElementById("pricing-section");
+          if (pricingSection) {
+            pricingSection.scrollIntoView({ behavior: "smooth" });
+            hasPricingSectionScrolled.current = true;
+          }
+        }, 500);
+      }
+
+      setAuthChecked(true);
+      setIsLoading(false);
+
+      // Handle iOS install prompt (only for iOS, not Android PWA)
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches;
+      const hasShownPrompt = localStorage.getItem("iosInstallPromptShown");
+
+      if (isIOS && !isStandalone && !hasShownPrompt) {
+        setShowIOSPrompt(true);
+        localStorage.setItem("iosInstallPromptShown", "true");
+      }
+    }, authCheckDelay);
 
     return () => {
       console.log("Index page unmounted");
     };
-  }, [location, navigate, isAuthenticated]);
+  }, [location, navigate]);
+
+  // Also add a secondary auth check that runs periodically for PWAs
+  useEffect(() => {
+    if (!isPWA() || !authChecked) return;
+
+    const authCheckInterval = setInterval(() => {
+      const isAuthenticated = checkAuthenticationStatus();
+      const searchParams = new URLSearchParams(location.search);
+
+      if (
+        isAuthenticated &&
+        searchParams.toString() === "" &&
+        location.pathname === "/"
+      ) {
+        console.log("Secondary auth check: redirecting to /chat");
+        navigate("/chat", { replace: true });
+      }
+    }, 2000); // Check every 2 seconds
+
+    // Clear interval after 10 seconds to avoid indefinite checking
+    const clearTimer = setTimeout(() => {
+      clearInterval(authCheckInterval);
+    }, 10000);
+
+    return () => {
+      clearInterval(authCheckInterval);
+      clearTimeout(clearTimer);
+    };
+  }, [authChecked, location, navigate]);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
   };
 
   const handleReferralClick = () => {
+    const isAuthenticated = checkAuthenticationStatus();
     if (isAuthenticated) {
       navigate("/referrals");
     } else {
@@ -105,6 +220,9 @@ export default function Index() {
       </div>
     );
   }
+
+  // Get current auth status for rendering
+  const isAuthenticated = checkAuthenticationStatus();
 
   return (
     <PublicLayout>
@@ -176,7 +294,6 @@ export default function Index() {
               </Button>
             </div>
           </motion.div>
-          
         </div>
       </main>
       <ReleaseNotePopup />
@@ -235,6 +352,6 @@ export default function Index() {
           </SheetHeader>
         </SheetContent>
       </Sheet>
-      </PublicLayout>
+    </PublicLayout>
   );
 }

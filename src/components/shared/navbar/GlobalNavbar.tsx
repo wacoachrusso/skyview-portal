@@ -50,6 +50,7 @@ const GlobalNavbar = () => {
       localStorage.clear();
       sessionStorage.removeItem("cached_user_profile");
       sessionStorage.removeItem("cached_auth_user");
+      sessionStorage.removeItem("auth_status");
       setIsAuthenticated(false);
       navigate("/login");
     } catch (error) {
@@ -206,7 +207,7 @@ const GlobalNavbar = () => {
                   asChild
                   variant="ghost"
                   size="icon"
-                  className={`${textColor} ${hoverBgClass} w-8 h-8 transition-colors`}
+                  className={`text-[#ffffff] ${hoverBgClass} w-8 h-8 transition-colors`}
                 >
                   <Link to="/chat">
                     <MessageSquare className="h-4 w-4" />
@@ -317,7 +318,7 @@ const GlobalNavbar = () => {
                 asChild
                 variant="secondary"
                 size="sm"
-                className={`${publicButtonTextColor} hover:opacity-90`}
+                className={`text-[#ffffff] hover:opacity-90`}
                 aria-label="Sign in to your account"
               >
                 <Link to="/login">
