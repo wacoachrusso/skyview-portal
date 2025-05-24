@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   LayoutDashboard,
   LogOut,
+  Menu,
   Plus,
   UserCircle,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const ChatHeader = ({
       // Clear cached data on sign out
       sessionStorage.removeItem("cached_user_profile");
       sessionStorage.removeItem("cached_auth_user");
+      sessionStorage.removeItem("auth_status");
       handleLogout();
     } catch (error) {
       console.error("Error during sign out:", error);
@@ -69,14 +71,21 @@ const ChatHeader = ({
             {!isMobile && <span className="ml-2">Back</span>}
           </Button>
         )}
-        <div className={`hidden items-center gap-2 ${isMobile ? "ml-10" : ""}`}>
-          <div className="items-center justify-center">
-            <img
-              src="/lovable-uploads/c54bfa73-7d1d-464c-81d8-df88abe9a73a.png"
-              alt="SkyGuide Logo"
-              className="h-7 w-auto premium-logo-glow transition-all duration-300"
-            />
-          </div>
+        <div className={`flex lg:hidden items-center gap-2 `}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={`p-2 transition-colors ${
+              theme === "dark"
+                ? "text-slate-300 hover:text-white hover:bg-slate-700"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-300"
+            }`}
+          >
+            <Menu className="h-4 w-4" />
+            {!isMobile && <span className="ml-2 sr-only">Toggle Sidebar</span>}
+          </Button>
+
           <h1
             className={`text-lg font-semibold leading-none gradient-text ${
               theme === "dark" ? "text-white" : "text-slate-900"

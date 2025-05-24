@@ -66,7 +66,7 @@ const Login = () => {
       if (authData.session) {
         // IMPORTANT: Set auth status immediately for instant UI updates
         localStorage.setItem("auth_status", "authenticated");
-
+        sessionStorage.setItem("auth_status", "authenticated");
         toast({
           title: "Login successful",
           description: "Welcome back!",
@@ -116,6 +116,7 @@ const Login = () => {
         );
         // Set auth status in local storage
         localStorage.setItem("auth_status", "authenticated");
+        sessionStorage.setItem("auth_status", "authenticated");
         // Use the utility to break potential redirect loops
         localStorage.setItem("skip_initial_redirect", "true");
         navigate(redirectPath, { replace: true });

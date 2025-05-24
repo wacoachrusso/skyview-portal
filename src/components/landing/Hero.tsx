@@ -26,7 +26,7 @@ export function Hero() {
 
   return (
     <section
-      className="relative min-h-screen flex justify-center items-center bg-premium-gradient"
+      className="relative min-h-screen pt-32 lg:pt-0 flex justify-center items-center bg-premium-gradient"
       role="banner"
       aria-labelledby="hero-heading"
     >

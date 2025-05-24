@@ -15,18 +15,20 @@ export const GoogleAuthHandler = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       console.log(`[AUTH-FLOW-] GoogleAuthHandler: Auth flow initiated`);
-      
+
       // Check if we're coming from profile completion
-      const fromProfileCompletion = searchParams.get("from_profile_completion") === "true";
-      const resumingAuthFlow = localStorage.getItem("resuming_auth_flow") === "true";
+      const fromProfileCompletion =
+        searchParams.get("from_profile_completion") === "true";
+      const resumingAuthFlow =
+        localStorage.getItem("resuming_auth_flow") === "true";
       const savedReturnPath = localStorage.getItem("auth_return_path");
-      
+
       console.log(`[AUTH-FLOW-] Auth context check:`, {
         fromProfileCompletion,
         resumingAuthFlow,
-        savedReturnPath: savedReturnPath || "none"
+        savedReturnPath: savedReturnPath || "none",
       });
-      
+
       try {
         setLoading(true);
         console.log(`[AUTH-FLOW-] Processing callback...`);
@@ -41,22 +43,27 @@ export const GoogleAuthHandler = () => {
           data: { session },
           error: sessionError,
         } = await supabase.auth.getSession();
-        
+
         console.log(`[AUTH-FLOW-] Session fetch result:`, {
           hasSession: !!session,
           hasError: !!sessionError,
-          errorMessage: sessionError?.message || 'None',
-          userId: session?.user?.id || 'None',
-          authProvider: session?.user?.app_metadata?.provider || 'Unknown',
+          errorMessage: sessionError?.message || "None",
+          userId: session?.user?.id || "None",
+          authProvider: session?.user?.app_metadata?.provider || "Unknown",
         });
 
         if (sessionError || !session) {
-          console.error(`[AUTH-FLOW-] No session found:`, sessionError || "Session is null");
+          console.error(
+            `[AUTH-FLOW-] No session found:`,
+            sessionError || "Session is null"
+          );
           setError("Failed to authenticate with Google. Please try again.");
           localStorage.removeItem("login_in_progress");
           localStorage.removeItem("resuming_auth_flow");
           localStorage.removeItem("auth_return_path");
-          console.log(`[AUTH-FLOW-] Removed auth flow flags due to session error`);
+          console.log(
+            `[AUTH-FLOW-] Removed auth flow flags due to session error`
+          );
           navigate("/login?error=Authentication failed. Please try again.", {
             replace: true,
           });
@@ -67,38 +74,46 @@ export const GoogleAuthHandler = () => {
           `[AUTH-FLOW-] User authenticated with ID: ${session.user.id}`,
           {
             email: session.user.email,
-            provider: session.user.app_metadata?.provider || 'Unknown',
+            provider: session.user.app_metadata?.provider || "Unknown",
             metadataKeys: Object.keys(session.user.user_metadata || {}),
           }
         );
-
+        localStorage.setItem("auth_status", "authenticated");
+        sessionStorage.setItem("auth_status", "authenticated");
+        console.log(`[AUTH-FLOW-] Set auth_status to authenticated`);
         // Set session tokens for persistence
         localStorage.setItem("auth_access_token", session.access_token);
         localStorage.setItem("auth_refresh_token", session.refresh_token);
         console.log(`[AUTH-FLOW-] Auth tokens stored in localStorage`);
 
         // Check if user profile exists
-        console.log(`[AUTH-FLOW-] Checking if profile exists for user: ${session.user.id}`);
+        console.log(
+          `[AUTH-FLOW-] Checking if profile exists for user: ${session.user.id}`
+        );
         let { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
           .single();
-          
+
         console.log(`[AUTH-FLOW-] Profile fetch result:`, {
           profileFound: !!profile,
           hasError: !!profileError,
-          errorCode: profileError?.code || 'None',
-          errorMessage: profileError?.message || 'None'
+          errorCode: profileError?.code || "None",
+          errorMessage: profileError?.message || "None",
         });
-        
+
         if (profileError && profileError.code !== "PGRST116") {
           console.error(`[AUTH-FLOW-] Error fetching profile:`, profileError);
           setError("Failed to load your profile. Please try again.");
           localStorage.removeItem("login_in_progress");
           localStorage.removeItem("resuming_auth_flow");
           localStorage.removeItem("auth_return_path");
-          console.log(`[AUTH-FLOW-] Removed auth flow flags due to profile error`);
+          localStorage.removeItem("auth_status");
+          sessionStorage.removeItem("auth_status");
+          console.log(
+            `[AUTH-FLOW-] Removed auth flow flags due to profile error`
+          );
           navigate("/login?error=Profile error. Please try again.", {
             replace: true,
           });
@@ -107,28 +122,37 @@ export const GoogleAuthHandler = () => {
 
         // If we're resuming an auth flow and have a return path, prioritize that
         if (resumingAuthFlow && savedReturnPath) {
-          console.log(`[AUTH-FLOW-] Resuming previous auth flow, will redirect to: ${savedReturnPath}`);
-          
+          console.log(
+            `[AUTH-FLOW-] Resuming previous auth flow, will redirect to: ${savedReturnPath}`
+          );
+
           // Make sure profile info is stored even when resuming flow
           if (profile) {
             console.log(`[AUTH-FLOW-] Storing profile for resumed flow`);
             localStorage.setItem("user_profile", JSON.stringify(profile));
             localStorage.setItem("auth_user_name", profile.full_name);
-            
+
             // If profile was incomplete and we're resuming from profile completion,
             // ensure the needs_profile_completion flag is set
-            if ((!profile.user_type || !profile.airline) && savedReturnPath.includes("complete-profile")) {
-              console.log(`[AUTH-FLOW-] Setting needs_profile_completion for resumed flow`);
+            if (
+              (!profile.user_type || !profile.airline) &&
+              savedReturnPath.includes("complete-profile")
+            ) {
+              console.log(
+                `[AUTH-FLOW-] Setting needs_profile_completion for resumed flow`
+              );
               localStorage.setItem("needs_profile_completion", "true");
             }
           }
-          
+
           // Clean up flow flags but keep the needs_profile_completion if needed
           localStorage.removeItem("login_in_progress");
           localStorage.removeItem("resuming_auth_flow");
           localStorage.removeItem("auth_return_path");
-          
-          console.log(`[AUTH-FLOW-] Redirecting to saved path: ${savedReturnPath}`);
+
+          console.log(
+            `[AUTH-FLOW-] Redirecting to saved path: ${savedReturnPath}`
+          );
           navigate(savedReturnPath, { replace: true });
           return;
         }
@@ -143,23 +167,24 @@ export const GoogleAuthHandler = () => {
             session.user.user_metadata.full_name ||
             session.user.user_metadata.name ||
             session.user.email;
-            
+
           console.log(`[AUTH-FLOW-] Using full name: ${fullName}`);
 
           // Default to first available assistant
           console.log(`[AUTH-FLOW-] Fetching default assistant...`);
-          const { data: defaultAssistant, error: assistantError } = await supabase
-            .from("openai_assistants")
-            .select("assistant_id")
-            .eq("is_active", true)
-            .limit(1)
-            .maybeSingle();
-            
+          const { data: defaultAssistant, error: assistantError } =
+            await supabase
+              .from("openai_assistants")
+              .select("assistant_id")
+              .eq("is_active", true)
+              .limit(1)
+              .maybeSingle();
+
           console.log(`[AUTH-FLOW-] Default assistant fetch result:`, {
             assistantFound: !!defaultAssistant,
-            assistantId: defaultAssistant?.assistant_id || 'None',
+            assistantId: defaultAssistant?.assistant_id || "None",
             hasError: !!assistantError,
-            errorMessage: assistantError?.message || 'None'
+            errorMessage: assistantError?.message || "None",
           });
 
           const assistantId = defaultAssistant?.assistant_id;
@@ -168,9 +193,9 @@ export const GoogleAuthHandler = () => {
             id: session.user.id,
             email: session.user.email,
             fullName,
-            assistantId: assistantId || 'None'
+            assistantId: assistantId || "None",
           });
-          
+
           const { error: insertError } = await supabase
             .from("profiles")
             .insert({
@@ -192,7 +217,11 @@ export const GoogleAuthHandler = () => {
             localStorage.removeItem("login_in_progress");
             localStorage.removeItem("resuming_auth_flow");
             localStorage.removeItem("auth_return_path");
-            console.log(`[AUTH-FLOW-] Removed auth flow flags due to profile creation error`);
+            localStorage.removeItem("auth_status");
+            sessionStorage.removeItem("auth_status");
+            console.log(
+              `[AUTH-FLOW-] Removed auth flow flags due to profile creation error`
+            );
             navigate(
               "/login?error=Profile creation failed. Please try again.",
               { replace: true }
@@ -200,7 +229,9 @@ export const GoogleAuthHandler = () => {
             return;
           }
 
-          console.log(`[AUTH-FLOW-] Profile created successfully, creating new session`);
+          console.log(
+            `[AUTH-FLOW-] Profile created successfully, creating new session`
+          );
           // Create session
           try {
             await createNewSession(session.user.id);
@@ -217,22 +248,19 @@ export const GoogleAuthHandler = () => {
             .select("*")
             .eq("id", session.user.id)
             .single();
-            
+
           console.log(`[AUTH-FLOW-] New profile fetch result:`, {
             profileFound: !!newProfile,
             hasError: !!newProfileError,
-            errorMessage: newProfileError?.message || 'None'
+            errorMessage: newProfileError?.message || "None",
           });
 
           if (newProfile) {
-            console.log(
-              `[AUTH-FLOW-] Storing new profile in localStorage:`,
-              {
-                id: newProfile.id,
-                email: newProfile.email,
-                name: newProfile.full_name,
-              }
-            );
+            console.log(`[AUTH-FLOW-] Storing new profile in localStorage:`, {
+              id: newProfile.id,
+              email: newProfile.email,
+              name: newProfile.full_name,
+            });
             // Store profile in localStorage
             localStorage.setItem("user_profile", JSON.stringify(newProfile));
             localStorage.setItem("auth_user_name", newProfile.full_name);
@@ -254,7 +282,7 @@ export const GoogleAuthHandler = () => {
           console.log(
             `[AUTH-FLOW-] Set needs_profile_completion flag and redirecting to profile completion`
           );
-          
+
           // Clean up flow state flags
           localStorage.removeItem("login_in_progress");
           localStorage.removeItem("resuming_auth_flow");
@@ -276,13 +304,10 @@ export const GoogleAuthHandler = () => {
 
         // Check if user has required job title and airline information
         if (!profile.user_type || !profile.airline) {
-          console.log(
-            `[AUTH-FLOW-] Missing required profile information`,
-            {
-              user_type: profile.user_type || "MISSING",
-              airline: profile.airline || "MISSING",
-            }
-          );
+          console.log(`[AUTH-FLOW-] Missing required profile information`, {
+            user_type: profile.user_type || "MISSING",
+            airline: profile.airline || "MISSING",
+          });
 
           console.log(
             `[AUTH-FLOW-] Storing partial profile data before redirecting`
@@ -296,13 +321,13 @@ export const GoogleAuthHandler = () => {
           console.log(
             `[AUTH-FLOW-] Set needs_profile_completion flag and redirecting to profile completion`
           );
-          
+
           // Clean up flow state flags
           localStorage.removeItem("login_in_progress");
           localStorage.removeItem("resuming_auth_flow");
           localStorage.removeItem("auth_return_path");
           console.log(`[AUTH-FLOW-] Removed auth flow flags before redirect`);
-          
+
           // Redirect to the missing info handler
           navigate("/auth/complete-profile", { replace: true });
           return;
@@ -317,7 +342,7 @@ export const GoogleAuthHandler = () => {
           console.error(`[AUTH-FLOW-] Error creating session:`, sessionError);
           // Continue despite session creation error
         }
-        
+
         // Clean up flow state flags
         localStorage.removeItem("login_in_progress");
         localStorage.removeItem("resuming_auth_flow");
@@ -359,15 +384,15 @@ export const GoogleAuthHandler = () => {
           console.log(`[AUTH-FLOW-] User is admin, setting admin flag`);
         } else {
           localStorage.removeItem("user_is_admin");
-          console.log(`[AUTH-FLOW-] User is not admin, removing admin flag if exists`);
+          console.log(
+            `[AUTH-FLOW-] User is not admin, removing admin flag if exists`
+          );
         }
 
         // Store complete profile and name in localStorage
         localStorage.setItem("user_profile", JSON.stringify(finalProfile));
         localStorage.setItem("auth_user_name", finalProfile.full_name);
-        console.log(
-          `[AUTH-FLOW-] Stored complete profile in localStorage`
-        );
+        console.log(`[AUTH-FLOW-] Stored complete profile in localStorage`);
 
         toast({
           title: "Sign In Successful",
@@ -376,26 +401,33 @@ export const GoogleAuthHandler = () => {
 
         // Store flag to prevent pricing redirects
         sessionStorage.setItem("recently_signed_up", "true");
-        console.log(`[AUTH-FLOW-] Set recently_signed_up flag in sessionStorage`);
+        console.log(
+          `[AUTH-FLOW-] Set recently_signed_up flag in sessionStorage`
+        );
 
-        console.log(`[AUTH-FLOW-] Auth flow completed successfully, redirecting to chat`);
+        console.log(
+          `[AUTH-FLOW-] Auth flow completed successfully, redirecting to chat`
+        );
         navigate("/chat", { replace: true });
       } catch (error) {
-        console.error(
-          `[AUTH-FLOW-] Unexpected error in auth callback:`,
-          error
-        );
+        console.error(`[AUTH-FLOW-] Unexpected error in auth callback:`, error);
         localStorage.removeItem("login_in_progress");
         localStorage.removeItem("resuming_auth_flow");
         localStorage.removeItem("auth_return_path");
-        console.log(`[AUTH-FLOW-] Removed auth flow flags due to unexpected error`);
+        localStorage.removeItem("auth_status");
+        sessionStorage.removeItem("auth_status");
+        console.log(
+          `[AUTH-FLOW-] Removed auth flow flags due to unexpected error`
+        );
         setError("An unexpected error occurred. Please try again.");
         navigate("/login?error=Unexpected error. Please try again.", {
           replace: true,
         });
       } finally {
         setLoading(false);
-        console.log(`[AUTH-FLOW-] Auth flow processing completed, loading state set to false`);
+        console.log(
+          `[AUTH-FLOW-] Auth flow processing completed, loading state set to false`
+        );
       }
     };
 

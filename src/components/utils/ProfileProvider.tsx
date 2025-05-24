@@ -124,6 +124,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       sessionStorage.removeItem(PROFILE_STORAGE_KEY);
       sessionStorage.removeItem(AUTH_USER_STORAGE_KEY);
+      sessionStorage.removeItem("auth_status");
       console.log("Cached profile data cleared");
     } catch (error) {
       console.error("Failed to clear cached profile data:", error);

@@ -13,6 +13,7 @@ interface ChatSidebarProps {
   onDeleteConversation: (conversationId: string) => void;
   onDeleteAllConversations: () => void;
   isLoading?: boolean;
+  setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
 const ChatSidebar = ({
@@ -23,6 +24,7 @@ const ChatSidebar = ({
   onDeleteConversation,
   onDeleteAllConversations,
   isLoading = false,
+  setIsSidebarOpen,
 }: ChatSidebarProps) => {
   const { theme } = useTheme();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -32,6 +34,11 @@ const ChatSidebar = ({
   const handleSelectConversation = async (conversationId: string) => {
     console.log("Selecting conversation:", conversationId);
     onSelectConversation(conversationId);
+    
+    // Auto-close sidebar on small/medium screens after selecting a conversation
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
@@ -48,6 +55,13 @@ const ChatSidebar = ({
     queryClient.invalidateQueries({ queryKey: ["conversations"] });
   };
 
+  const handleCloseSidebar = () => {
+    // Only allow closing sidebar on small/medium screens
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   const filteredConversations = conversations.filter((conversation) =>
     conversation.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -60,7 +74,7 @@ const ChatSidebar = ({
           : "bg-gray-100 text-gray-800  border-r border-gray-200 shadow-md"
       }`}
     >
-      <SidebarHeader onDeleteAll={() => setDeleteConfirmOpen(true)} />
+      <SidebarHeader onDeleteAll={() => setDeleteConfirmOpen(true)} onCloseSidebar={handleCloseSidebar} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
       <div className="flex-1 overflow-y-auto">
         <ConversationList
@@ -102,7 +116,7 @@ const ChatSidebar = ({
               </button>
               <button
                 onClick={() => {
-                  onDeleteAllConversations();
+                  handleDeleteAll();
                   setDeleteConfirmOpen(false);
                 }}
                 className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
