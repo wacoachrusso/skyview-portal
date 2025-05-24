@@ -7,7 +7,7 @@ const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
   const {theme} = useTheme();
   const isUser = message.role === "user";
   const isStreaming = message.isStreaming;
-  
+  const userName = localStorage.getItem("auth_user_name")
   return (
     <div 
       className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 transition-all duration-300 group`}
@@ -27,7 +27,7 @@ const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
       )}
       
       <div
-        className={`max-w-xs sm:max-w-md md:max-w-3xl lg:max-w-4xl p-4 rounded-2xl shadow-lg transform transition-all duration-200 ${
+        className={`max-w-md md:max-w-3xl lg:max-w-4xl p-4 rounded-2xl shadow-lg transform transition-all duration-200 ${
           isUser 
             ? "bg-blue-600 text-white rounded-br-sm hover:bg-blue-700" 
             : theme === "dark" 
@@ -92,7 +92,7 @@ const ChatMessage = ({ message, currentUserId, onCopyMessage }) => {
       {isUser && (
         <div className="flex-shrink-0 ml-3 mt-1">
           <div className="w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-semibold">
-            {currentUserId ? currentUserId.charAt(0).toUpperCase() : "U"}
+            {userName ? userName.charAt(0).toUpperCase() : "U"}
           </div>
         </div>
       )}
