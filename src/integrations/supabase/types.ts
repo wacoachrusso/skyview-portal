@@ -474,6 +474,7 @@ export type Database = {
           two_factor_backup_codes: string[] | null
           two_factor_enabled: boolean | null
           user_type: string | null
+          role_type: "Line Holder" | "Reserve" | null;
         }
         Insert: {
           account_status?: string | null
@@ -500,6 +501,7 @@ export type Database = {
           two_factor_backup_codes?: string[] | null
           two_factor_enabled?: boolean | null
           user_type?: string | null
+          role_type: "Line Holder" | "Reserve" | null;
         }
         Update: {
           account_status?: string | null
@@ -526,6 +528,7 @@ export type Database = {
           two_factor_backup_codes?: string[] | null
           two_factor_enabled?: boolean | null
           user_type?: string | null
+          role_type: "Line Holder" | "Reserve" | null;
         }
         Relationships: []
       }

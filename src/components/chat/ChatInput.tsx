@@ -74,7 +74,7 @@ const ChatInput = ({
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ role_type: newRole } as any)
+        .update({ role_type: newRole })
         .eq("id", userId);
 
       if (error) throw error;

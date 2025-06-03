@@ -130,7 +130,7 @@ export interface ProfilesTable {
     subscription_plan?: string | null;
     user_type?: string | null;
     account_status?: string | null;
-    role_type?: "Line Holder" | "Reserve";
+    role_type: "Line Holder" | "Reserve" | null;
   };
   Update: {
     airline?: string | null;
@@ -148,7 +148,7 @@ export interface ProfilesTable {
     subscription_plan?: string | null;
     user_type?: string | null;
     account_status?: string | null;
-    role_type?: "Line Holder" | "Reserve";
+    role_type: "Line Holder" | "Reserve" | null;
   };
 }
 
