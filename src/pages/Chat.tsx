@@ -9,6 +9,7 @@ import { Message } from "@/types/chat";
 import { handleSendMessage } from "@/services/chatService/sendMessage";
 import ChatLayout from "@/components/chat/ChatLayout";
 import ChatHeader from "@/components/chat/ChatHeader";
+// RoleToggle is now integrated into ChatInput
 import {
   DeleteConfirmationDialog,
   OfflineAlert,
@@ -33,6 +34,7 @@ export default function Chat() {
     setQueryCount,
     isLoading: isProfileLoading,
     loadError: profileError,
+    refreshProfile, // Add this to refresh profile after role change
   } = useProfile();
 
   // State variables
@@ -45,6 +47,7 @@ export default function Chat() {
   const [selectedQuestion, setSelectedQuestion] = useState("");
   const [isFetchingConversations, setIsFetchingConversations] = useState(false);
   const [isTrialEnded, setIsTrialEnded] = useState(false);
+  const [currentRoleType, setCurrentRoleType] = useState<'Line Holder' | 'Reserve'>('Line Holder');
   
   // Redirect to login if profile fails to load
   useEffect(() => {
@@ -57,8 +60,12 @@ export default function Chat() {
   useEffect(() => {
     if (!isProfileLoading && authUser?.id) {
       loadUserConversations(authUser.id);
+      // Set initial role type from profile
+      if (profile?.role_type) {
+        setCurrentRoleType(profile.role_type as 'Line Holder' | 'Reserve');
+      }
     }
-  }, [isProfileLoading, authUser]);
+  }, [isProfileLoading, authUser, profile?.role_type]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -76,6 +83,15 @@ export default function Chat() {
       setIsTrialEnded(true);
     }
   }, [queryCount, profile?.subscription_plan, isLoading]);
+
+  // Handle role change
+  const handleRoleChange = (newRole: 'Line Holder' | 'Reserve') => {
+    setCurrentRoleType(newRole);
+    // Optionally refresh profile to get updated data
+    if (refreshProfile) {
+      refreshProfile();
+    }
+  };
 
   // Load user conversations
   const loadUserConversations = async (userId) => {
@@ -325,6 +341,7 @@ export default function Chat() {
       setIsLoading(false);
     }
   };
+
   const handleCopyMessage = (content) => {
     copyToClipboard(content);
     toast({
@@ -374,6 +391,7 @@ export default function Chat() {
       setIsSidebarOpen(false);
     }
   };
+
   // Redirect to pricing section
   const handleViewPricingPlans = () => {
     navigate("/?scrollTo=pricing-section", { replace: true });
@@ -440,6 +458,9 @@ export default function Chat() {
                     queryCount={queryCount}
                     subscriptionPlan={profile?.subscription_plan}
                     selectedQuestion={selectedQuestion}
+                    userId={authUser?.id}
+                    initialRoleType={currentRoleType}
+                    onRoleChange={handleRoleChange}
                   />
                 )}
               </div>

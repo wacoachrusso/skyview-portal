@@ -86,7 +86,7 @@ export function WelcomeMessage({
           {/* Note about contract button */}
           <div className="w-full text-center">
             <p className="text-xs text-gray-400">
-              Use the Contract button in the chat input bar to view your full contract.
+            Access your full contact in the dashboard
             </p>
           </div>
         </div>
