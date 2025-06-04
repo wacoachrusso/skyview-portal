@@ -1,28 +1,48 @@
-import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { AirlinesRoles, Airlines, jobTitles } from "@/data/airlines";
 
-const jobTitles = ["Flight Attendant", "Pilot"];
-const airlines = ["United Airlines", "American Airlines", "Delta Airlines", "Southwest Airlines", "Alaska Airlines"];
+// Utility to filter available airlines per job title
+function getAirlinesForJobTitle(jobTitle: string) {
+  const lowerTitle = jobTitle.toLowerCase();
 
-const isOptionEnabled = (airline: string, jobTitle: string) => {
-  // Southwest Airlines marked as "Coming Soon" for all job titles
-  if (airline.toLowerCase() === "southwest airlines") {
-    return false;
-  }
-  
-  // Delta Airlines only available for pilots, not for flight attendants
-  if (jobTitle.toLowerCase() === "flight attendant" && airline.toLowerCase() === "delta airlines") {
-    return false;
-  }
-  
-  return true;
-};
+  const validAirlineIds = AirlinesRoles.filter(
+    (role) => role.name.toLowerCase() === lowerTitle
+  ).map((role) => role.airlinesId);
+
+  return Airlines.map((airline) => {
+    const isSupported = validAirlineIds.includes(airline.id);
+    const isComingSoon = airline.name.toLowerCase() === "southwest airlines";
+
+    return {
+      ...airline,
+      disabled: !isSupported || isComingSoon,
+      label: isComingSoon
+        ? `${airline.name} (Coming Soon)`
+        : airline.name,
+    };
+  });
+}
 
 export const JobAndAirlineSelector = ({ form }: { form: any }) => {
   const jobTitle = form.watch("jobTitle");
 
+  const filteredAirlines = getAirlinesForJobTitle(jobTitle || "");
+
   return (
     <div className="grid grid-cols-2 gap-4 mb-4">
+      {/* Job Title */}
       <FormField
         control={form.control}
         name="jobTitle"
@@ -46,6 +66,7 @@ export const JobAndAirlineSelector = ({ form }: { form: any }) => {
         )}
       />
 
+      {/* Airline */}
       <FormField
         control={form.control}
         name="airline"
@@ -57,19 +78,16 @@ export const JobAndAirlineSelector = ({ form }: { form: any }) => {
                 <SelectValue placeholder="Select Airline" />
               </SelectTrigger>
               <SelectContent className="bg-[#020817] border-white/10">
-                {airlines.map((airline) => {
-                  const disabled = !isOptionEnabled(airline, jobTitle);
-                  return (
-                    <SelectItem
-                      key={airline}
-                      value={airline.toLowerCase()}
-                      disabled={disabled}
-                      className={disabled ? "opacity-50 cursor-not-allowed" : ""}
-                    >
-                      {airline} {disabled && airline.toLowerCase() === "southwest airlines" && "(Coming Soon)"}
-                    </SelectItem>
-                  );
-                })}
+                {filteredAirlines.map((airline) => (
+                  <SelectItem
+                    key={airline.id}
+                    value={airline.name.toLowerCase()}
+                    disabled={airline.disabled}
+                    className={airline.disabled ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    {airline.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage className="text-xs" />

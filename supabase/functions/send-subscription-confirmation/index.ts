@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </ul>
               </div>
               
-              <p>You can now log in and start using SkyGuide™ to interpret your union contract with advanced AI assistance.</p>
+              <p>You can now log in and start using SkyGuide™ to interpret your union contract with advanced intelligent assistance.</p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="https://skyguide.site/chat" 
