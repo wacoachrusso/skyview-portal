@@ -222,7 +222,7 @@ export async function handleSendMessage({
     // Call the AI service
     console.time('benchmark');
     console.time('ttfb');
-    const res = await fetch('http://skyguide-chat-alb-471996317.us-east-2.elb.amazonaws.com/chat-completion', {
+    const res = await fetch('https://chat.skyguide.site/chat-completion', {
     // const res = await fetch('https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/chat-completion', {
       method: 'POST',
       headers: {
