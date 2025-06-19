@@ -2,33 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
-
-interface UserProfile {
-  id: string;
-  full_name: string;
-  user_type: string;
-  airline: string;
-  subscription_plan: string;
-  created_at: string;
-  query_count: number;
-  last_ip_address: string | null;
-  last_query_timestamp: string | null;
-  is_admin: boolean;
-  email_notifications: boolean;
-  push_notifications: boolean;
-  email: string;
-  push_subscription: string | null;
-  account_status: string;
-  two_factor_enabled: boolean;
-  two_factor_backup_codes: string | null;
-  login_attempts: number;
-  assistant_id: string | null;
-  address: string | null;
-  phone_number: string | null;
-  employee_id: string | null;
-  stripe_customer_id: string | null;
-  subscription_status: string;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminProtectedLayoutProps {
   children: React.ReactNode;
@@ -41,30 +15,31 @@ export const AdminProtectedLayout: React.FC<AdminProtectedLayoutProps> = ({ chil
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in and is an admin
-    const checkAdminStatus = () => {
+    const checkAdminStatus = async () => {
       try {
-        const userProfileString = localStorage.getItem("user_profile");
+        setIsLoading(true);
+
+        // Get current authenticated user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        if (!userProfileString) {
+        if (userError || !user) {
           setIsAdmin(false);
           setIsLoading(false);
           return;
         }
-        
-        const userProfile: UserProfile = JSON.parse(userProfileString);
-        
-        if (userProfile && userProfile.is_admin === true) {
-          setIsAdmin(true);
-        } else {
-          // User is logged in but not an admin
+
+        // Query the profiles table directly for admin status
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
           setIsAdmin(false);
-          // Show a toast notification
-          toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: "You don't have permission to access this section.",
-          });
+        } else {
+          setIsAdmin(profile?.is_admin || false);
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
@@ -75,18 +50,38 @@ export const AdminProtectedLayout: React.FC<AdminProtectedLayoutProps> = ({ chil
     };
 
     checkAdminStatus();
-  }, [toast]);
 
-  // Loading state
+    // Optional: Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        checkAdminStatus();
+      } else if (event === 'SIGNED_OUT') {
+        setIsAdmin(false);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Show loading spinner while checking admin status
   if (isLoading) {
     return <AppLoadingSpinner />;
   }
 
-  // If not admin, redirect to dashboard
+  // If not admin, show error and redirect
   if (!isAdmin) {
+    toast({
+      variant: "destructive",
+      title: "Access Denied",
+      description: "You don't have permission to access this section.",
+    });
+    
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 
   // Render children if admin
   return <>{children}</>;
-}
+};

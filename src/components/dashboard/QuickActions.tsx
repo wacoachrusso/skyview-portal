@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { useNavigation } from "@/hooks/useNavigation";
 import { useTheme } from "@/components/theme-provider";
+import { useProfile } from "@/components/utils/ProfileProvider";
 
 // Custom icon wrapper component with animations
 const IconWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -23,11 +24,48 @@ const QuickActions = () => {
   const { navigateTo } = useNavigation();
   const { toast } = useToast();
   const { theme } = useTheme();
+  const  userProfile  = sessionStorage.getItem('cached_user_profile');
+  const profile = JSON.parse(userProfile);
+  // URL mapper for different airline/user type combinations
+  const contractUrlMapper: Record<string, string> = {
+    "united airlines|pilot": "uap",
+    "united airlines|flight attendant": "uaf",
+    "delta airlines|pilot": "dp",
+    "alaska airlines|flight attendant": "aaf",
+    "american airlines|flight attendant": "amaf",
+    "american airlines|pilot": "amap",
+  };
 
   const handleContractUpload = () => {
+    if (!profile?.airline || !profile?.user_type) {
+      toast({
+        title: "Profile Information Missing",
+        description: "Please complete your profile to view your contract.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const key = `${profile.airline.toLowerCase()}|${profile.user_type.toLowerCase()}`;
+    const contractCode = contractUrlMapper[key];
+
+    if (!contractCode) {
+      toast({
+        title: "Contract Not Available",
+        description: "No contract found for your airline and position combination.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const contractUrl = `https://xnlzqsoujwsffoxhhybk.supabase.co/storage/v1/object/public/contracts/${contractCode}.pdf`;
+    
+    // Open PDF in new tab
+    window.open(contractUrl, '_blank', 'noopener,noreferrer');
+    
     toast({
-      title: "Feature Coming Soon",
-      description: "Contract viewing functionality will be available in a future update.",
+      title: "Opening Contract",
+      description: "Your contract document is opening in a new tab.",
     });
   };
 
