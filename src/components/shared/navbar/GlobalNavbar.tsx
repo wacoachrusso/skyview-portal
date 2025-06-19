@@ -8,6 +8,7 @@ import {
   LogOut,
   MessageSquare,
   User,
+  Shield,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "../../ui/avatar";
 import {
@@ -25,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
 import UserDropdown from "./UserDropdown";
 import { useTheme } from "@/components/theme-provider";
+import { useProfile } from "@/components/utils/ProfileProvider";
 
 const GlobalNavbar = () => {
   const location = useLocation();
@@ -38,6 +40,8 @@ const GlobalNavbar = () => {
 
   // Get user authentication state
   const userName = localStorage.getItem("auth_user_name");
+  const  userProfile  = sessionStorage.getItem('cached_user_profile');
+  const profile = JSON.parse(userProfile);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const isAccountPage = location.pathname === "/account";
   const isDashboardPage = location.pathname === "/dashboard";
@@ -159,6 +163,17 @@ const GlobalNavbar = () => {
                   Account
                 </NavButton>
 
+                {/* Admin Dashboard Button - only show if user is admin and on dashboard */}
+                {profile?.is_admin && isDashboardPage && (
+                  <NavButton
+                    to="/admin"
+                    icon={<Shield className="h-4 w-4" />}
+                    isPublicRoute={!isPrivateRoute}
+                  >
+                    Admin Dashboard
+                  </NavButton>
+                )}
+
                 {isPrivateRoute && <ChatSettings />}
 
                 {/* User Dropdown */}
@@ -213,6 +228,20 @@ const GlobalNavbar = () => {
                     <MessageSquare className="h-4 w-4" />
                   </Link>
                 </Button>
+
+                {/* Admin button for mobile - only show if user is admin and on dashboard */}
+                {profile?.is_admin && isDashboardPage && (
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="icon"
+                    className={`text-[#ffffff] ${hoverBgClass} w-8 h-8 transition-colors`}
+                  >
+                    <Link to="/admin">
+                      <Shield className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
 
                 {isPrivateRoute && <ChatSettings />}
 
@@ -293,6 +322,24 @@ const GlobalNavbar = () => {
                         >
                           <User className="mr-2 h-4 w-4" />
                           Account
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+
+                    {/* Admin Dashboard in mobile dropdown - only show if user is admin and on dashboard */}
+                    {profile?.is_admin && isDashboardPage && (
+                      <DropdownMenuItem
+                        asChild
+                        className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
+                          isPrivateRoute && theme === "dark" ? "bg-white/10" : "bg-black/10"
+                        }`}
+                      >
+                        <Link
+                          to="/admin"
+                          className="flex items-center w-full"
+                        >
+                          <Shield className="mr-2 h-4 w-4" />
+                          Admin Dashboard
                         </Link>
                       </DropdownMenuItem>
                     )}
