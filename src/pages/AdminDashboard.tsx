@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SetPasswordPanel } from "@/components/admin/SetPasswordPanel";
 import { EmailQueueManager } from "@/components/admin/EmailQueueManager";
 import { EmailTemplatePreview } from "@/components/admin/email-templates/EmailTemplatePreview";
+import ChatConfiguration from "@/components/admin/ChatConfiguration";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -75,6 +76,7 @@ const AdminDashboard = () => {
             <Mail className="h-4 w-4 mr-2" />
             Email Templates
           </TabsTrigger>
+          <TabsTrigger value="chat-configuration">Chat Configuration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview"><SystemStats /></TabsContent>
@@ -84,6 +86,7 @@ const AdminDashboard = () => {
         <TabsContent value="notifications"><NotificationManager /></TabsContent>
         <TabsContent value="emails"><EmailQueueManager /></TabsContent>
         <TabsContent value="email-templates"><EmailTemplatePreview /></TabsContent>
+        <TabsContent value="chat-configuration"><ChatConfiguration /></TabsContent>
       </Tabs>
     </div>
   );
