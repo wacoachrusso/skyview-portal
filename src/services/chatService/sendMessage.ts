@@ -21,12 +21,14 @@ export async function handleSendMessage({
   setConversations,
   setQueryCount,
   toast,
-  navigateToLogin
+  navigateToLogin,
 }: {
   content: string;
   currentUserId: string | null;
   currentConversationId: string | null;
-  setMessages: React.Dispatch<React.SetStateAction<MessageWithStreamingProps[]>>;
+  setMessages: React.Dispatch<
+    React.SetStateAction<MessageWithStreamingProps[]>
+  >;
   setCurrentConversationId: React.Dispatch<React.SetStateAction<string | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setConversations: React.Dispatch<React.SetStateAction<any[]>>;
@@ -47,7 +49,7 @@ export async function handleSendMessage({
 
   // Set loading state
   setIsLoading(true);
-  
+
   let newConversationId = currentConversationId;
   let tempUserMessageId = `temp-${Date.now()}`;
   let isNewConversation = !currentConversationId;
@@ -60,7 +62,8 @@ export async function handleSendMessage({
         .insert([
           {
             user_id: currentUserId,
-            title: content.substring(0, 30) + (content.length > 30 ? "..." : ""),
+            title:
+              content.substring(0, 30) + (content.length > 30 ? "..." : ""),
           },
         ])
         .select()
@@ -68,7 +71,10 @@ export async function handleSendMessage({
 
       // Check for JWT expired error
       if (error) {
-        if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
+        if (
+          error.code === "PGRST301" ||
+          error.message?.includes("JWT expired")
+        ) {
           handleTokenExpired(toast, navigateToLogin);
           return;
         }
@@ -88,7 +94,7 @@ export async function handleSendMessage({
       role: "user", // This is now explicitly "user", matching the Message type
       conversation_id: newConversationId,
       created_at: new Date().toISOString(),
-      isTemp: true
+      isTemp: true,
     };
 
     setMessages((prev) => [...prev, tempUserMessage]);
@@ -109,7 +115,10 @@ export async function handleSendMessage({
 
     // Check for JWT expired error
     if (userMessageError) {
-      if (userMessageError.code === "PGRST301" || userMessageError.message?.includes("JWT expired")) {
+      if (
+        userMessageError.code === "PGRST301" ||
+        userMessageError.message?.includes("JWT expired")
+      ) {
         handleTokenExpired(toast, navigateToLogin);
         return;
       }
@@ -129,41 +138,46 @@ export async function handleSendMessage({
         return msg;
       })
     );
-    
+
     // Check if this is the first message in the conversation
     const { data: messageCount, error: countError } = await supabase
       .from("messages")
       .select("id", { count: "exact" })
       .eq("conversation_id", newConversationId);
-      
+
     // Check for JWT expired error
     if (countError) {
-      if (countError.code === "PGRST301" || countError.message?.includes("JWT expired")) {
+      if (
+        countError.code === "PGRST301" ||
+        countError.message?.includes("JWT expired")
+      ) {
         handleTokenExpired(toast, navigateToLogin);
         return;
       }
       console.error("Error checking message count:", countError);
     }
-    
+
     // If this is the first message (count would be 1, the one we just added)
     // OR if it's a new conversation, update the conversation title
     const isFirstMessage = messageCount && messageCount.length === 1;
-    
+
     if (isFirstMessage || isNewConversation) {
       // Create a title from the first message
-      const truncatedContent = content.length > 50 
-      ? content.substring(0, 50) + "..." 
-      : content
-      
+      const truncatedContent =
+        content.length > 50 ? content.substring(0, 50) + "..." : content;
+
       // Update the conversation title in the database
       const { error: titleUpdateError } = await supabase
         .from("conversations")
         .update({ title: truncatedContent })
         .eq("id", newConversationId);
-        
+
       // Check for JWT expired error
       if (titleUpdateError) {
-        if (titleUpdateError.code === "PGRST301" || titleUpdateError.message?.includes("JWT expired")) {
+        if (
+          titleUpdateError.code === "PGRST301" ||
+          titleUpdateError.message?.includes("JWT expired")
+        ) {
           handleTokenExpired(toast, navigateToLogin);
           return;
         }
@@ -189,7 +203,7 @@ export async function handleSendMessage({
       role: "assistant", // Explicitly typed as "assistant"
       conversation_id: newConversationId,
       created_at: new Date().toISOString(),
-      isStreaming: true
+      isStreaming: true,
     };
 
     setMessages((prev) => [...prev, streamingMessage]);
@@ -203,49 +217,92 @@ export async function handleSendMessage({
 
     // Check for JWT expired error
     if (profileError) {
-      if (profileError.code === "PGRST301" || profileError.message?.includes("JWT expired")) {
+      if (
+        profileError.code === "PGRST301" ||
+        profileError.message?.includes("JWT expired")
+      ) {
         handleTokenExpired(toast, navigateToLogin);
         return;
       }
     }
+    // Fetch chat service configuration from app_configs table
+    const { data: configData, error: configError } = await supabase
+      .from("app_configs")
+      .select("key, value")
+      .in("key", ["chat_service_url", "chat_max_token"]);
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+    // Check for JWT expired error
+    if (configError) {
+      if (
+        configError.code === "PGRST301" ||
+        configError.message?.includes("JWT expired")
+      ) {
+        handleTokenExpired(toast, navigateToLogin);
+        return;
+      }
+      console.error("Error fetching app config:", configError);
+    }
+
+    // Parse configuration data
+    const config = Object.fromEntries(
+      (configData || []).map((item) => [item.key, item.value])
+    );
+
+    // Use configured chat service URL or fallback to default
+    const chatServiceUrl =
+      typeof config.chat_service_url === "string"
+        ? config.chat_service_url
+        : "https://chat.skyguide.site/chat-completion";
+
+    console.log(`Using chat service URL: ${chatServiceUrl}`);
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     // Check for session error that might indicate expired token
     if (sessionError || !session) {
       console.error("Session error:", sessionError);
       handleTokenExpired(toast, navigateToLogin);
       return;
     }
-    
-    console.log(`access token is found, so we can proceed for chat`)
+
+    console.log(`access token is found, so we can proceed for chat`);
     // Call the AI service
-    console.time('benchmark');
-    console.time('ttfb');
-    const res = await fetch('https://chat.skyguide.site/chat-completion', {
-    // const res = await fetch('https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/chat-completion', {
-      method: 'POST',
+    console.time("benchmark");
+    console.time("ttfb");
+    const res = await fetch(chatServiceUrl, {
+      // const res = await fetch('https://xnlzqsoujwsffoxhhybk.supabase.co/functions/v1/chat-completion', {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ content, conversationId: newConversationId, subscriptionPlan: profile?.subscription_plan || "free", assistantId: profile?.assistant_id || "default_assistant_id", priority: true, stream: true }),
+      body: JSON.stringify({
+        content,
+        conversationId: newConversationId,
+        subscriptionPlan: profile?.subscription_plan || "free",
+        assistantId: profile?.assistant_id || "default_assistant_id",
+        priority: true,
+        stream: true,
+      }),
     });
-    
+
     // Check for authentication errors in the response that might indicate expired token
     if (res.status === 401 || res.status === 403) {
-      console.log('Authentication error during chat-completion request');
+      console.log("Authentication error during chat-completion request");
       handleTokenExpired(toast, navigateToLogin);
       return;
     }
-    
-    console.timeEnd('benchmark')
+
+    console.timeEnd("benchmark");
     let fullContent = "";
     if (!res.ok || !res.body) {
-      console.log('error happened during chat-completion request')
+      console.log("error happened during chat-completion request");
       // Fallback for unexpected response format
       fullContent = "I'm sorry, I couldn't generate a response.";
-      
+
       // Update streaming message with fallback content
       setMessages((prev) =>
         prev.map((msg) =>
@@ -254,16 +311,16 @@ export async function handleSendMessage({
             : msg
         )
       );
-      
+
       // Insert AI message to database
       await insertAIMessage(fullContent, newConversationId);
     }
-    
-    let lastProcessedContent = ""
+
+    let lastProcessedContent = "";
     const reader = res.body.getReader();
-    console.log('stream found', reader)
+    console.log("stream found", reader);
     // const decoder = new TextDecoder("utf-8");
-    
+
     const aiResponse = {
       onChunk: null,
       onComplete: null,
@@ -272,7 +329,7 @@ export async function handleSendMessage({
 
     aiResponse.onChunk = (chunk: string) => {
       fullContent = chunk;
-    
+
       // Update streaming message with new content
       setMessages((prev) =>
         prev.map((msg) =>
@@ -280,7 +337,7 @@ export async function handleSendMessage({
         )
       );
     };
-    
+
     aiResponse.onComplete = async () => {
       // Mark streaming as complete
       setMessages((prev) =>
@@ -288,13 +345,16 @@ export async function handleSendMessage({
           msg.id === streamingId ? { ...msg, isStreaming: false } : msg
         )
       );
-    
+
       // Insert AI message to the database
       try {
         await insertAIMessage(fullContent, newConversationId as string);
       } catch (error: any) {
         // Check if this is a JWT expired error
-        if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
+        if (
+          error.code === "PGRST301" ||
+          error.message?.includes("JWT expired")
+        ) {
           handleTokenExpired(toast, navigateToLogin);
         }
       }
@@ -307,7 +367,7 @@ export async function handleSendMessage({
         variant: "destructive",
         duration: 2000,
       });
-      
+
       // Remove streaming message
       setMessages((prev) => prev.filter((msg) => msg.id !== streamingId));
     };
@@ -315,33 +375,32 @@ export async function handleSendMessage({
     // const reader = stream.getReader();
     const decoder = new TextDecoder();
 
-    let buffer = '';
-    let firstByte = false
-    let partialLine = '';
-    
+    let buffer = "";
+    let firstByte = false;
+    let partialLine = "";
+
     while (true) {
       const { done, value } = await reader.read();
-      console.log('done is ', done)
-      console.log('value is ', value)
+      console.log("done is ", done);
+      console.log("value is ", value);
       if (done) {
-        console.log('Stream ended.');
+        console.log("Stream ended.");
         aiResponse.onComplete?.();
         break;
       }
 
-      if(!firstByte) {
-        console.timeEnd('ttfb')
-        firstByte = true
+      if (!firstByte) {
+        console.timeEnd("ttfb");
+        firstByte = true;
       }
       buffer += decoder.decode(value, { stream: true });
-      console.log(buffer)
+      console.log(buffer);
       aiResponse.onChunk(buffer);
       // Combine leftover from last chunk
       // const lines = buffer.split('\n');
       // buffer = ''; // Clear buffer — we'll handle leftover manually
       // const lines = buffer.split('\n\n');
 
-      
       // buffer = lines.pop(); // Incomplete chunk for next round
 
       // for (let i = 0; i < lines.length; i++) {
@@ -393,27 +452,29 @@ export async function handleSendMessage({
         .from("profiles")
         .update({ query_count: newQueryCount })
         .eq("id", currentUserId);
-        
+
       // Check for JWT expired error
       if (queryCountError) {
-        if (queryCountError.code === "PGRST301" || queryCountError.message?.includes("JWT expired")) {
+        if (
+          queryCountError.code === "PGRST301" ||
+          queryCountError.message?.includes("JWT expired")
+        ) {
           handleTokenExpired(toast, navigateToLogin);
           return;
         }
       }
-      
+
       setQueryCount(newQueryCount);
     }
-
   } catch (error: any) {
     console.error("Error in handleSendMessage:", error);
-    
+
     // Check if this is a JWT expired error
     if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
       handleTokenExpired(toast, navigateToLogin);
       return;
     }
-    
+
     toast({
       title: "Error",
       description: "Failed to send message. Please try again.",
@@ -431,7 +492,7 @@ export async function handleSendMessage({
 // Helper function to handle JWT token expiration
 function handleTokenExpired(toast: any, navigateToLogin: () => void): void {
   console.log("JWT token expired. Logging out...");
-  
+
   // Show toast notification
   toast({
     title: "Session Expired",
@@ -439,7 +500,7 @@ function handleTokenExpired(toast: any, navigateToLogin: () => void): void {
     variant: "destructive",
     duration: 3000,
   });
-  
+
   // Sign out the user
   supabase.auth.signOut().then(() => {
     // Navigate to login page
@@ -448,18 +509,19 @@ function handleTokenExpired(toast: any, navigateToLogin: () => void): void {
 }
 
 // Helper function to insert AI messages
-async function insertAIMessage(content: string, conversationId: string): Promise<void> {
+async function insertAIMessage(
+  content: string,
+  conversationId: string
+): Promise<void> {
   try {
-    const { error } = await supabase
-      .from("messages")
-      .insert([
-        {
-          content,
-          user_id: null,
-          role: "assistant",
-          conversation_id: conversationId,
-        },
-      ]);
+    const { error } = await supabase.from("messages").insert([
+      {
+        content,
+        user_id: null,
+        role: "assistant",
+        conversation_id: conversationId,
+      },
+    ]);
 
     if (error) {
       if (error.code === "PGRST301" || error.message?.includes("JWT expired")) {
