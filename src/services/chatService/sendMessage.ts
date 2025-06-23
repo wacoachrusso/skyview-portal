@@ -254,6 +254,10 @@ export async function handleSendMessage({
         ? config.chat_service_url
         : "https://chat.skyguide.site/chat-completion";
 
+    const chatMaxToken = typeof config.chat_max_token === "string"
+    ? config.chat_max_token
+    : 700;
+
     console.log(`Using chat service URL: ${chatServiceUrl}`);
 
     const {
@@ -284,6 +288,7 @@ export async function handleSendMessage({
         conversationId: newConversationId,
         subscriptionPlan: profile?.subscription_plan || "free",
         assistantId: profile?.assistant_id || "default_assistant_id",
+        maxToken: chatMaxToken,
         priority: true,
         stream: true,
       }),
@@ -328,7 +333,11 @@ export async function handleSendMessage({
     };
 
     aiResponse.onChunk = (chunk: string) => {
-      fullContent = chunk;
+      if(chatServiceUrl.includes('chat.skyguide.io') || chatServiceUrl.includes('localhost:9999')) {
+        fullContent = chunk;
+      } else {
+        fullContent += chunk;
+      }
 
       // Update streaming message with new content
       setMessages((prev) =>
@@ -378,72 +387,96 @@ export async function handleSendMessage({
     let buffer = "";
     let firstByte = false;
     let partialLine = "";
+    const isAwsService = chatServiceUrl.includes('chat.skyguide.site') || chatServiceUrl.includes('localhost:9999')
+    if(isAwsService) {
+      while(true) {
+        const { done, value } = await reader.read();
+        console.log("done is ", done);
+        console.log("value is ", value);
+        if (done) {
+          console.log("Stream ended.");
+          aiResponse.onComplete?.();
+          break;
+        }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      console.log("done is ", done);
-      console.log("value is ", value);
-      if (done) {
-        console.log("Stream ended.");
-        aiResponse.onComplete?.();
-        break;
+        if (!firstByte) {
+          console.timeEnd("ttfb");
+          firstByte = true;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        console.log(buffer);
+        aiResponse.onChunk(buffer);
       }
-
-      if (!firstByte) {
-        console.timeEnd("ttfb");
-        firstByte = true;
+    } else {
+      // console.log('supabase endpiont triggered')
+      while (true) {
+        const { done, value } = await reader.read();
+        // console.log("done is ", done);
+        // console.log("value is ", value);
+        if (done) {
+          // console.log("Stream ended.");
+          aiResponse.onComplete?.();
+          break;
+        }
+  
+        if (!firstByte) {
+          console.timeEnd("ttfb");
+          firstByte = true;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        // console.log(buffer);
+        // Combine leftover from last chunk
+        const lines = buffer.split('\n');
+        buffer = ''; // Clear buffer — we'll handle leftover manually
+        // const lines = buffer.split('\n\n');
+        // buffer = lines.pop(); // Incomplete chunk for next round
+  
+        for (let i = 0; i < lines.length; i++) {
+          let line = lines[i];
+  
+          // First, combine with partialLine if it exists
+          if (partialLine) {
+            // console.log('we are on partial line', partialLine)
+            line = partialLine + line;
+            partialLine = '';
+          }
+  
+          if (!line.startsWith('data: ')) continue;
+  
+          let json = line.replace('data: ', '').trim();
+  
+          // If it's the last line and not complete, store for next round
+          if (i === lines.length - 1 && json[json.length - 1] !== '}') {
+            partialLine = json;
+            // console.log('continuing with partial line')
+            // console.log(partialLine)
+            continue;
+          }
+  
+          if (json === '[DONE]') continue;
+  
+          try {
+            // console.log('we are trying to parse json')
+            const event = JSON.parse(json);
+            console.log(JSON.parse(json))
+            if (event.object === 'thread.message.delta') {
+              // console.log(`we got into delta`)
+              const text = event.delta?.content?.[0]?.text?.value;
+              if (text) {
+                if (!fullContent) console.timeEnd('ttfb');
+                // console.log(`calling text updated with ${text}`)
+                aiResponse.onChunk(text);
+              }
+            }
+          } catch (err) {
+            console.error('Stream parse error:', err, '\nBroken JSON:', json);
+            // Keep partial if it's likely incomplete JSON
+            partialLine = json;
+          }
+        }
       }
-      buffer += decoder.decode(value, { stream: true });
-      console.log(buffer);
-      aiResponse.onChunk(buffer);
-      // Combine leftover from last chunk
-      // const lines = buffer.split('\n');
-      // buffer = ''; // Clear buffer — we'll handle leftover manually
-      // const lines = buffer.split('\n\n');
-
-      // buffer = lines.pop(); // Incomplete chunk for next round
-
-      // for (let i = 0; i < lines.length; i++) {
-      //   let line = lines[i];
-
-      //   // First, combine with partialLine if it exists
-      //   if (partialLine) {
-      //     line = partialLine + line;
-      //     partialLine = '';
-      //   }
-
-      //   if (!line.startsWith('data: ')) continue;
-
-      //   let json = line.replace('data: ', '').trim();
-
-      //   // If it's the last line and not complete, store for next round
-      //   if (i === lines.length - 1 && json[json.length - 1] !== '}') {
-      //     partialLine = json;
-      //     continue;
-      //   }
-
-      //   if (json === '[DONE]') continue;
-
-      //   try {
-      //     // const event = JSON.parse(json);
-      //     console.log(JSON.parse(json))
-      //     const delta = JSON.parse(json)?.choices?.[0]?.delta?.content
-      //     if(delta)
-      //       aiResponse.onChunk(delta);
-      //     // if (event.object === 'thread.message.delta') {
-      //     //   const text = event.delta?.content?.[0]?.text?.value;
-      //     //   if (text) {
-      //     //     if (!fullContent) console.timeEnd('ttfb');
-      //     //     aiResponse.onChunk(text);
-      //     //   }
-      //     // }
-      //   } catch (err) {
-      //     console.error('Stream parse error:', err, '\nBroken JSON:', json);
-      //     // Keep partial if it's likely incomplete JSON
-      //     partialLine = json;
-      //   }
-      // }
     }
+
 
     // Update query count
     if (profile && profile.subscription_plan === "free") {
