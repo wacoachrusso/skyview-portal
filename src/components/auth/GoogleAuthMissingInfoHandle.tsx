@@ -216,6 +216,14 @@ export const GoogleAuthMissingInfoHandler = () => {
         data
       );
 
+      // DEBUG: Log raw form data
+      console.log("🔍 DEBUG - Raw form data:", {
+        jobTitle: data.jobTitle,
+        airline: data.airline,
+        jobTitleType: typeof data.jobTitle,
+        airlineType: typeof data.airline
+      });
+
       if (!userId) {
         console.error(
           "GoogleAuthMissingInfoHandler: No userId found for form submission"
@@ -229,13 +237,128 @@ export const GoogleAuthMissingInfoHandler = () => {
         userId
       );
       
-      // Update the profile with the new information
+      // Look up the correct assistant based on airline and role
+      const airlineSearchTerm = data.airline.toLowerCase();
+      const roleSearchTerm = data.jobTitle.toLowerCase();
+      
+      console.log(
+        "🔍 DEBUG - Assistant lookup parameters:",
+        { 
+          airlineSearchTerm, 
+          roleSearchTerm,
+          originalAirline: data.airline,
+          originalJobTitle: data.jobTitle
+        }
+      );
+
+      // DEBUG: First, let's see all available assistants
+      const { data: allAssistants, error: allAssistantsError } = await supabase
+        .from("openai_assistants")
+        .select("*")
+        .eq("is_active", true);
+
+      if (allAssistantsError) {
+        console.error("🔍 DEBUG - Error fetching all assistants:", allAssistantsError);
+      } else {
+        console.log("🔍 DEBUG - All available assistants:", allAssistants);
+        console.log("🔍 DEBUG - Assistants for our search criteria:");
+        allAssistants.forEach(assistant => {
+          console.log(`  - ${assistant.airline} | ${assistant.work_group} | ${assistant.assistant_id} | Active: ${assistant.is_active}`);
+        });
+      }
+
+      // DEBUG: Now let's see what matches our exact criteria
+      console.log("🔍 DEBUG - Looking for exact matches with:");
+      console.log(`  - airline: "${airlineSearchTerm}"`);
+      console.log(`  - work_group: "${roleSearchTerm}"`);
+      console.log(`  - is_active: true`);
+      
+      const { data: assistant, error: assistantError } = await supabase
+        .from("openai_assistants")
+        .select("*")
+        .eq("airline", airlineSearchTerm)
+        .eq("work_group", roleSearchTerm)
+        .eq("is_active", true)
+        .single();
+
+      console.log("🔍 DEBUG - Assistant query result:", {
+        found: !!assistant,
+        error: assistantError,
+        assistantData: assistant
+      });
+
+      if (assistantError) {
+        console.error(
+          "GoogleAuthMissingInfoHandler: Error finding assistant:",
+          assistantError
+        );
+        
+        // DEBUG: Let's check what similar matches exist
+        console.log("🔍 DEBUG - Checking for similar matches...");
+        const { data: similarAssistants, error: similarError } = await supabase
+          .from("openai_assistants")
+          .select("*")
+          .or(`airline.eq.${airlineSearchTerm},work_group.eq.${roleSearchTerm}`)
+          .eq("is_active", true);
+        
+        if (!similarError && similarAssistants) {
+          console.log("🔍 DEBUG - Similar assistants found:", similarAssistants);
+        }
+        
+        setError(
+          "Could not find the appropriate assistant for your role. Please try again or contact support."
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!assistant) {
+        console.error(
+          "GoogleAuthMissingInfoHandler: No assistant found for combination:",
+          { airline: data.airline, role: data.jobTitle }
+        );
+        
+        // DEBUG: Let's see what's closest
+        const { data: debugAssistants, error: debugError } = await supabase
+          .from("openai_assistants")
+          .select("*")
+          .eq("is_active", true)
+          .limit(10);
+        
+        if (!debugError) {
+          console.log("🔍 DEBUG - Sample of available assistants:", debugAssistants);
+        }
+        
+        setError(
+          "No assistant available for your airline and role combination. Please contact support."
+        );
+        setLoading(false);
+        return;
+      }
+
+      console.log(
+        "🔍 DEBUG - Assistant found successfully:",
+        {
+          assistant_id: assistant.assistant_id,
+          airline: assistant.airline,
+          work_group: assistant.work_group,
+          is_active: assistant.is_active
+        }
+      );
+      
+      // DEBUG: Log what we're about to save to the profile
+      const profileUpdateData = {
+        user_type: data.jobTitle,
+        airline: data.airline,
+        assistant_id: assistant.assistant_id,
+      };
+      
+      console.log("🔍 DEBUG - Profile update data:", profileUpdateData);
+      
+      // Update the profile with the new information including assistant_id
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({
-          user_type: data.jobTitle,
-          airline: data.airline,
-        })
+        .update(profileUpdateData)
         .eq("id", userId);
 
       if (updateError) {
@@ -250,7 +373,15 @@ export const GoogleAuthMissingInfoHandler = () => {
         return;
       }
 
-      console.log("GoogleAuthMissingInfoHandler: Profile updated successfully");
+      console.log(
+        "🔍 DEBUG - Profile updated successfully with:",
+        {
+          userId,
+          user_type: data.jobTitle,
+          airline: data.airline,
+          assistant_id: assistant.assistant_id
+        }
+      );
 
       // Create session if needed
       // await createNewSession(userId);
@@ -272,12 +403,13 @@ export const GoogleAuthMissingInfoHandler = () => {
         console.log("GoogleAuthMissingInfoHandler: Proceeding with redirect despite profile fetch error");
       } else if (updatedProfile) {
         console.log(
-          "GoogleAuthMissingInfoHandler: Storing updated profile in localStorage:",
+          "🔍 DEBUG - Updated profile retrieved from database:",
           {
             id: updatedProfile.id,
             name: updatedProfile.full_name,
             job: updatedProfile.user_type,
             airline: updatedProfile.airline,
+            assistant_id: updatedProfile.assistant_id,
             is_admin: updatedProfile.is_admin || false,
           }
         );
@@ -285,6 +417,11 @@ export const GoogleAuthMissingInfoHandler = () => {
         // Store complete profile and name in localStorage
         localStorage.setItem("user_profile", JSON.stringify(updatedProfile));
         localStorage.setItem("auth_user_name", updatedProfile.full_name);
+
+        console.log("🔍 DEBUG - Data stored in localStorage:", {
+          profile: JSON.parse(localStorage.getItem("user_profile") || "{}"),
+          name: localStorage.getItem("auth_user_name")
+        });
 
         // Set admin status if applicable
         if (updatedProfile.is_admin) {
