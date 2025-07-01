@@ -74,12 +74,20 @@ export default function SignUp() {
   const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
     try {
+      console.log("SignUp: Starting signup process with data:", {
+        email: data.email,
+        fullName: data.fullName,
+        jobTitle: data.jobTitle,
+        airline: data.airline,
+      });
+
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
       });
 
       if (error) {
+        console.error("SignUp: Auth signup error:", error);
         toast({
           variant: "destructive",
           title: "Signup failed",
@@ -88,26 +96,92 @@ export default function SignUp() {
         return;
       }
 
-      // Insert profile even if session is not available yet
+      if (!authData.user?.id) {
+        console.error("SignUp: No user ID returned from auth signup");
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: "Failed to create user account. Please try again.",
+        });
+        return;
+      }
+
+      console.log("SignUp: User created successfully with ID:", authData.user.id);
+
+      // Look up the correct assistant based on airline and role
+      console.log("SignUp: Looking up assistant for:", {
+        airline: data.airline.toLowerCase(),
+        role: data.jobTitle.toLowerCase(),
+      });
+
+      const { data: assistant, error: assistantError } = await supabase
+        .from("openai_assistants")
+        .select("assistant_id")
+        .eq("airline", data.airline.toLowerCase())
+        .eq("work_group", data.jobTitle.toLowerCase())
+        .eq("is_active", true)
+        .single();
+
+      if (assistantError) {
+        console.error("SignUp: Error finding assistant:", assistantError);
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: "Could not find the appropriate assistant for your role. Please try again or contact support.",
+        });
+        return;
+      }
+
+      if (!assistant) {
+        console.error("SignUp: No assistant found for combination:", {
+          airline: data.airline,
+          role: data.jobTitle,
+        });
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: "No assistant available for your airline and role combination. Please contact support.",
+        });
+        return;
+      }
+
+      console.log("SignUp: Found assistant:", assistant.assistant_id);
+
+      // Insert profile with the correct assistant_id
       const { error: profileError } = await supabase.from("profiles").upsert({
-        id: authData.user?.id,
+        id: authData.user.id,
         email: data.email,
         full_name: data.fullName,
         user_type: data.jobTitle,
         airline: data.airline,
+        assistant_id: assistant.assistant_id,
         subscription_plan: "free",
         account_status: "active",
+        role_type: "Line Holder"
       });
 
       if (profileError) {
-        console.error("Error saving profile:", profileError);
+        console.error("SignUp: Error saving profile:", profileError);
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: "Failed to save your profile information. Please try again.",
+        });
+        return;
       }
-      await createNewSession(authData.session.user.id);
+
+      console.log("SignUp: Profile created successfully with assistant_id:", assistant.assistant_id);
+
+      // Create session
+      await createNewSession(authData.user.id);
 
       // Sign out the user after successful signup to force them to log in explicitly
       await supabase.auth.signOut();
+      
       // Clean up before navigation
       localStorage.removeItem("login_in_progress");
+
+      console.log("SignUp: Signup process completed successfully, redirecting to login");
 
       navigate("/login", {
         replace: true,
@@ -116,12 +190,13 @@ export default function SignUp() {
           email: data.email,
         },
       });
+      
       toast({
         title: "Signup successful",
-        description:
-          "Check your email to verify your account before logging in.",
+        description: "Check your email to verify your account before logging in.",
       });
     } catch (error) {
+      console.error("SignUp: Unexpected error during signup:", error);
       toast({
         variant: "destructive",
         title: "Error",
