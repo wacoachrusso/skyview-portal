@@ -7,12 +7,22 @@ import { SubscriptionStatusTracker } from "./SubscriptionStatusTracker";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { loadStripe } from "@stripe/stripe-js";
 
 interface SubscriptionInfoProps {
   profile: any;
   onPlanChange: (plan: string) => void;
   onCancelSubscription: () => void;
 }
+
+// Fallback public key (replace this with your test key)
+const DEFAULT_STRIPE_PUBLIC_KEY = "pk_test_51NHiocFKfk8cZ76rT92hd4ZNV9PyqTX1D6sYFphEcgs9Wy9x3G1BMYUDDqz1JIM2fmmTXZ5hhbWFXfReNbkJXQ7o00XXx4GbDY";
+
+// Use environment variable or fallback
+const stripePromise = loadStripe(
+  import.meta.env.REACT_APP_STRIPE_PUBLIC_KEY || DEFAULT_STRIPE_PUBLIC_KEY
+);
+
 
 export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }: SubscriptionInfoProps) => {
   const { toast } = useToast();
@@ -23,64 +33,120 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
   };
 
   const handleChangePlan = async (newPlan: string) => {
+    console.log("🔄 Starting plan change process...");
+    console.log("Current plan:", profile.subscription_plan);
+    console.log("Requested new plan:", newPlan);
+  
     if (newPlan === profile.subscription_plan) {
+      console.log("⚠️ Already on the requested plan.");
       toast({
         title: "Already Subscribed",
         description: `You are already on the ${formatPlanName(profile.subscription_plan)} plan.`,
       });
       return;
     }
-    
-    // For free users upgrading to paid plan
-    if (profile.subscription_plan === 'free' || profile.subscription_plan === 'trial_ended') {
-      onPlanChange(newPlan);
-      return;
-    }
-    
-    // For paid users changing between plans or downgrading
+  
     setIsUpdating(true);
-    
+  
     try {
-      // Send plan change request to server
-      const { data, error } = await supabase.functions.invoke('send-plan-change-email', {
+      // Step 1: Invoke `switch-plan` function
+      console.log("📡 Invoking switch-plan function with:", {
+        email: profile.email,
+        oldPlan: profile.subscription_plan,
+        newPlan,
+        fullName: profile.full_name || "User",
+      });
+  
+      const { data, error } = await supabase.functions.invoke("switch-plan", {
         body: {
           email: profile.email,
           oldPlan: profile.subscription_plan,
-          newPlan: newPlan,
-          fullName: profile.full_name || 'User'
+          newPlan,
+          fullName: profile.full_name || "User",
+        },
+      });
+  
+      if (error || !data) {
+        console.error("❌ Error from switch-plan:", error);
+        throw new Error(error?.message || "Unexpected error during plan switch.");
+      }
+  
+      console.log("✅ switch-plan response received:", data);
+  
+      // Step 2: Handle payment if required
+      if (data.status === "requires_payment") {
+        console.log("💳 Payment required. Initializing Stripe...");
+        const stripe = await stripePromise;
+  
+        if (!stripe) {
+          console.error("❌ Stripe initialization failed");
+          throw new Error("Stripe not initialized");
         }
-      });
-      
-      if (error) throw error;
-      
-      // Update local profile data
-      await supabase
-        .from('profiles')
-        .update({
-          subscription_plan: newPlan
-        })
-        .eq('id', profile.id);
-      
-      toast({
-        title: "Plan Updated",
-        description: `Your subscription has been changed to the ${formatPlanName(newPlan)} plan.`,
-      });
-      
-      // Redirect to pricing to complete payment if upgrading from monthly to annual
-      if (profile.subscription_plan === 'monthly' && newPlan === 'annual') {
+  
+        console.log("🚀 Confirming card payment with clientSecret:", data.clientSecret);
+  
+        const paymentResult = await stripe.confirmCardPayment(data.clientSecret);
+  
+        if (paymentResult.error) {
+          console.error("❌ Stripe payment failed:", paymentResult.error.message);
+          toast({
+            variant: "destructive",
+            title: "Payment Failed",
+            description: paymentResult.error.message || "Card payment failed. Please try again.",
+          });
+          return;
+        }
+  
+        console.log("✅ Payment successful");
+  
+        // Step 3: Notify via email function
+        console.log("📩 Invoking send-plan-change-email...");
+        await supabase.functions.invoke("send-plan-change-email", {
+          body: {
+            email: profile.email,
+            oldPlan: profile.subscription_plan,
+            newPlan,
+            fullName: profile.full_name || "User",
+          },
+        });
+  
+        console.log("📩 send-plan-change-email success");
+  
+        toast({
+          title: "Payment Successful",
+          description: `Your plan has been upgraded to ${formatPlanName(newPlan)}.`,
+        });
+  
         onPlanChange(newPlan);
       }
-    } catch (error) {
-      console.error('Error changing plan:', error);
+  
+      // Step 4: If plan switched without payment
+      else if (data.status === "success") {
+        console.log("✅ Plan switched successfully without payment:", data.subscription);
+  
+        toast({
+          title: "Plan Updated",
+          description: `You have successfully switched to the ${formatPlanName(newPlan)} plan.`,
+        });
+  
+        onPlanChange(newPlan);
+      } else {
+        console.warn("⚠️ Unknown response status from switch-plan:", data.status);
+      }
+    } catch (error: any) {
+      console.error("🚨 Exception in plan change:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update your subscription. Please try again or contact support.",
+        description: error.message || "Failed to switch plan. Please try again.",
       });
     } finally {
       setIsUpdating(false);
+      console.log("✅ Plan change process complete");
     }
   };
+  
+  
 
   const getButtonLabel = () => {
     if (profile.subscription_plan === 'monthly') {
