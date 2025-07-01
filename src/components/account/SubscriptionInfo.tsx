@@ -19,9 +19,7 @@ interface SubscriptionInfoProps {
 const DEFAULT_STRIPE_PUBLIC_KEY = "pk_test_51NHiocFKfk8cZ76rT92hd4ZNV9PyqTX1D6sYFphEcgs9Wy9x3G1BMYUDDqz1JIM2fmmTXZ5hhbWFXfReNbkJXQ7o00XXx4GbDY";
 
 // Use environment variable or fallback
-const stripePromise = loadStripe(
-  import.meta.env.REACT_APP_STRIPE_PUBLIC_KEY || DEFAULT_STRIPE_PUBLIC_KEY
-);
+const stripePromise = loadStripe( DEFAULT_STRIPE_PUBLIC_KEY);
 
 
 export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }: SubscriptionInfoProps) => {
