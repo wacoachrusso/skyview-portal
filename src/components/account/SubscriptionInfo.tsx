@@ -28,7 +28,7 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
   };
 
   const handleChangePlan = async (newPlan: string) => {
-    console.log("🔄 Starting plan change process...");
+    console.log("🔄 Starting plan change process.....");
     console.log("Current plan:", profile.subscription_plan);
     console.log("Requested new plan:", newPlan);
   
