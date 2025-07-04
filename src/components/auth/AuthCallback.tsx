@@ -64,21 +64,6 @@ const AuthCallback = () => {
           localStorage.setItem("direct_payment_redirect", "true");
           console.log(`[CALLBACK- Set direct_payment_redirect flag for post-payment flow`);
 
-          // Import and use the Stripe callback handler
-          console.log(`[CALLBACK- Importing Stripe callback handler...`);
-          try {
-            const { handleStripeCallback } = await import(
-              "@/utils/auth/stripeCallbackHandler"
-            );
-            console.log(`[CALLBACK- Stripe callback handler imported successfully`);
-            
-            console.log(`[CALLBACK- Calling handleStripeCallback with sessionId: ${sessionId}`);
-            await handleStripeCallback(sessionId, navigate);
-            console.log(`[CALLBACK- Stripe callback handling completed`);
-          } catch (importError) {
-            console.error(`[CALLBACK- Error importing or executing Stripe callback handler:`, importError);
-          }
-
           // After payment, send a thank you email via Resend
           try {
             console.log(`[CALLBACK- Getting session to send payment confirmation email`);
@@ -93,8 +78,18 @@ const AuthCallback = () => {
               errorMessage: sessionError?.message || 'None'
             });
             
+            let selectedPlan = null;
             if (session?.user) {
-              const selectedPlan = localStorage.getItem("selected_plan") || "monthly";
+              const { data: subData, error: subFuncError } = await supabase.functions.invoke(
+                "stripe-set-session",
+                {
+                  body: {
+                    userId: session.user.id,
+                    stripeSessionId: sessionId,
+                  },
+                }
+              );
+              selectedPlan = subData.plan;
               console.log(`[CALLBACK- Sending subscription confirmation email:`, {
                 email: session.user.email,
                 name: session.user.user_metadata?.full_name || session.user.email,
@@ -127,6 +122,21 @@ const AuthCallback = () => {
               `[CALLBACK- Failed to send payment confirmation email:`,
               emailError
             );
+          }
+
+          // Import and use the Stripe callback handler
+          console.log(`[CALLBACK- Importing Stripe callback handler...`);
+          try {
+            const { handleStripeCallback } = await import(
+              "@/utils/auth/stripeCallbackHandler"
+            );
+            console.log(`[CALLBACK- Stripe callback handler imported successfully`);
+            
+            console.log(`[CALLBACK- Calling handleStripeCallback with sessionId: ${sessionId}`);
+            await handleStripeCallback(sessionId, navigate);
+            console.log(`[CALLBACK- Stripe callback handling completed`);
+          } catch (importError) {
+            console.error(`[CALLBACK- Error importing or executing Stripe callback handler:`, importError);
           }
 
           return; // Let the Stripe handler take over the flow

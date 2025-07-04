@@ -122,44 +122,7 @@ export const handleStripeCallback = async (
       console.log("[stripeCallbackHandler] User is authenticated:", session.user.email);
       
       try {
-        // CRITICAL STEP 3: Update subscription status in profile after payment
-        const selectedPlan = localStorage.getItem('selected_plan') || 
-          (sessionId.includes('monthly') ? 'monthly' : 'annual');
-          
-        console.log("[stripeCallbackHandler] Setting subscription plan to:", selectedPlan);
-        
-        // Make multiple attempts to update the profile
-        let profileUpdateSuccess = false;
-        
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            console.log(`[stripeCallbackHandler] Profile update attempt ${attempt}`);
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({
-                subscription_status: 'active',
-                subscription_plan: selectedPlan
-              })
-              .eq('id', session.user.id);
-            
-            if (updateError) {
-              console.error(`[stripeCallbackHandler] Error updating subscription (attempt ${attempt}):`, updateError);
-              if (attempt < 3) await new Promise(r => setTimeout(r, 1000)); // Wait 1s before retry
-            } else {
-              console.log("[stripeCallbackHandler] Successfully updated subscription status");
-              profileUpdateSuccess = true;
-              break; // Success, exit retry loop
-            }
-          } catch (updateErr) {
-            console.error(`[stripeCallbackHandler] Exception in profile update (attempt ${attempt}):`, updateErr);
-            if (attempt < 3) await new Promise(r => setTimeout(r, 1000)); // Wait 1s before retry
-          }
-        }
-        
-        if (!profileUpdateSuccess) {
-          console.error("[stripeCallbackHandler] All profile update attempts failed");
-        }
-        
+        // CRITICAL STEP 3: Update subscription status in profile after payment (handled in Authcallback stripe-set-session)
         // CRITICAL STEP 4: Create a new session token for this user
         try {
           await createNewSession(session.user.id);
