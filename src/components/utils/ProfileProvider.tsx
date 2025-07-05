@@ -178,7 +178,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       // Call to your backend service to cancel subscription
-      const { error } = await supabase.functions.invoke("cancel-subscription", {
+      const { error } = await supabase.functions.invoke("stripe-cancel-subscription", {
         body: { user_id: authUser.id },
       });
 

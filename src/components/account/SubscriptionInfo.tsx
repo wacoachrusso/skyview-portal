@@ -140,8 +140,6 @@ export const SubscriptionInfo = ({ profile, onPlanChange, onCancelSubscription }
       console.log("✅ Plan change process complete");
     }
   };
-  
-  
 
   const getButtonLabel = () => {
     if (profile.subscription_plan === 'monthly') {
