@@ -6,9 +6,12 @@ import { PricingFeatures } from "./pricing-card/PricingFeatures";
 import { usePricingHandler } from "@/hooks/usePricingHandler";
 import { useEffect, useState } from "react";
 import { useProfileRefresh } from "@/utils/user/refreshProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { Subscription } from "@/types/subscription";
 
 interface UserProfile {
   id: string;
+  email: string;
   subscription_plan: string;
   subscription_status: string;
 }
@@ -40,61 +43,114 @@ export const PricingCard = ({
 }: PricingCardProps) => {
   const { handlePlanSelection } = usePricingHandler();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
   const [isActiveSubscription, setIsActiveSubscription] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   useProfileRefresh();
 
-  useEffect(() => {
-    // Get user profile from local storage when component mounts
-    try {
-      const profileData = localStorage.getItem("user_profile");
-      if (profileData) {
-        const profile = JSON.parse(profileData);
-        setUserProfile(profile);
-        
-        // Check if this plan is the user's active subscription
-        const isActive = (
-          // For paid plans: check if plan names match and subscription is active
-          ((profile.subscription_plan.toLowerCase() === name.toLowerCase() ||
-           (profile.subscription_plan === "monthly" && name.toLowerCase() === "monthly") ||
-           (profile.subscription_plan === "annual" && name.toLowerCase() === "annual")) &&
-           profile.subscription_status === "active") ||
-          // For free plan: check if user is on free plan and this is the free trial card
-          (profile.subscription_plan === "free" && 
-           (name.toLowerCase() === "free" || name.toLowerCase() === "free trial"))
-        );
-        
-        setIsActiveSubscription(isActive);
-      }
-    } catch (error) {
-      console.error("Error retrieving user profile from local storage:", error);
-    }
-  }, [name]);
+  // Get user profile from session storage (similar to SubscriptionInfo)
+  const getProfileData = async () => {
+    const cachedUser = sessionStorage.getItem("cached_auth_user");
 
-  // Add a window focus listener to refresh user profile data when the tab regains focus
-  // This helps catch profile updates after returning from payment providers
+    if (!cachedUser) {
+      console.error("No user found in session storage.");
+      setIsLoading(false);
+      return;
+    }
+
+    const user = JSON.parse(cachedUser);
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", user.email)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      setIsLoading(false);
+    } else {
+      setUserProfile(profile);
+    }
+  };
+
+  // Get subscription data from subscriptions table (similar to SubscriptionInfo)
+  const getSubscriptionData = async () => {
+    if (userProfile?.id) {
+      console.log("Fetching subscription by user_id:", userProfile.id);
+
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", userProfile.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching subscription by user_id:", error);
+      } else {
+        console.log("Subscription data by user_id:", data);
+        setSubscriptionData(data || []);
+      }
+    }
+    setIsLoading(false);
+  };
+
+  // Check if current plan is active subscription
+  const checkActiveSubscription = () => {
+    if (!userProfile || subscriptionData.length === 0) {
+      // For free plans, check if user is on free and this is free trial card
+      if (userProfile?.subscription_plan === "free" && 
+          (name.toLowerCase() === "free" || name.toLowerCase() === "free trial")) {
+        setIsActiveSubscription(true);
+      } else {
+        setIsActiveSubscription(false);
+      }
+      return;
+    }
+
+    const activeSubscription = subscriptionData[0]; // Most recent subscription
+    
+    // Check if this plan matches the user's active subscription
+    const isActive = (
+      // For paid plans: check if plan names match and subscription is active
+      ((activeSubscription.plan.toLowerCase() === name.toLowerCase() ||
+       (activeSubscription.plan === "monthly" && name.toLowerCase() === "monthly") ||
+       (activeSubscription.plan === "annual" && name.toLowerCase() === "annual")) &&
+       activeSubscription.payment_status === "active") ||
+      // For free plan: check if user is on free plan and this is the free trial card
+      (userProfile.subscription_plan === "free" && 
+       (name.toLowerCase() === "free" || name.toLowerCase() === "free trial"))
+    );
+    
+    setIsActiveSubscription(isActive);
+  };
+
+  // Initial data fetch
   useEffect(() => {
-    const handleFocus = () => {
+    getProfileData();
+  }, []);
+
+  // Fetch subscription data when profile is available
+  useEffect(() => {
+    if (userProfile?.id) {
+      getSubscriptionData();
+    }
+  }, [userProfile]);
+
+  // Update active subscription status when data changes
+  useEffect(() => {
+    checkActiveSubscription();
+  }, [userProfile, subscriptionData, name]);
+
+  // Add a window focus listener to refresh data when the tab regains focus
+  useEffect(() => {
+    const handleFocus = async () => {
       try {
-        // Re-read the profile from localStorage in case it was updated
-        const profileData = localStorage.getItem("user_profile");
-        if (profileData) {
-          const profile = JSON.parse(profileData);
-          setUserProfile(profile);
-          
-          // Re-check active subscription status
-          const isActive = (
-            ((profile.subscription_plan.toLowerCase() === name.toLowerCase() ||
-             (profile.subscription_plan === "monthly" && name.toLowerCase() === "monthly") ||
-             (profile.subscription_plan === "annual" && name.toLowerCase() === "annual")) &&
-             profile.subscription_status === "active") ||
-            (profile.subscription_plan === "free" && 
-             (name.toLowerCase() === "free" || name.toLowerCase() === "free trial"))
-          );
-          
-          setIsActiveSubscription(isActive);
-        }
+        console.log("Window focused, refreshing subscription data...");
+        await getProfileData();
+        // getSubscriptionData will be called automatically via useEffect when userProfile updates
       } catch (error) {
-        console.error("Error refreshing user profile on window focus:", error);
+        console.error("Error refreshing data on window focus:", error);
       }
     };
 
@@ -102,7 +158,7 @@ export const PricingCard = ({
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
-  }, [name]);
+  }, []);
 
   const handlePlanClick = async () => {
     try {
@@ -129,7 +185,9 @@ export const PricingCard = ({
 
   // Determine persuasive button text based on plan name and subscription status
   const getButtonText = () => {
-    if (isActiveSubscription) {
+    if (isLoading) {
+      return 'Loading...';
+    } else if (isActiveSubscription) {
       return 'Current Plan';
     } else if (name.toLowerCase() === 'free' || name.toLowerCase() === 'free trial') {
       return 'Start Your Free Trial';
@@ -178,7 +236,7 @@ export const PricingCard = ({
       <CardFooter>
         <Button
           onClick={handlePlanClick}
-          disabled={isActiveSubscription}
+          disabled={isActiveSubscription || isLoading}
           className={`w-full ${
             isActiveSubscription
               ? 'bg-gray-300 hover:bg-gray-300 text-gray-700 cursor-not-allowed'

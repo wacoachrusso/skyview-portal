@@ -246,6 +246,7 @@ const Account = () => {
             profile={profile}
             onPlanChange={handlePlanChange}
             onCancelSubscription={handleInitialCancelClick}
+            refreshProfile={refreshProfile}
           />
         </div>
       </div>

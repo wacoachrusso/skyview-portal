@@ -71,6 +71,27 @@ export default function SignUp() {
     },
   });
 
+  // Function to check if email already exists in profiles table
+  const checkEmailExists = async (email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("email", email.toLowerCase())
+        .single();
+
+      if (error && error.code !== "PGRST116") { // PGRST116 is "not found" error
+        console.error("SignUp: Error checking email existence:", error);
+        return { exists: false, error: error.message };
+      }
+
+      return { exists: !!data, error: null };
+    } catch (error) {
+      console.error("SignUp: Unexpected error checking email:", error);
+      return { exists: false, error: "Failed to check email availability" };
+    }
+  };
+
   const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
     try {
@@ -81,6 +102,31 @@ export default function SignUp() {
         airline: data.airline,
       });
 
+      // Check if email already exists in profiles table
+      console.log("SignUp: Checking if email already exists:", data.email);
+      const { exists, error: emailCheckError } = await checkEmailExists(data.email);
+
+      if (emailCheckError) {
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: emailCheckError,
+        });
+        return;
+      }
+
+      if (exists) {
+        console.log("SignUp: Email already exists in profiles table:", data.email);
+        toast({
+          variant: "destructive",
+          title: "Email already exists",
+          description: "This email address is already registered. Please use a different email or try logging in.",
+        });
+        return;
+      }
+
+      console.log("SignUp: Email is available, proceeding with signup");
+
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -88,11 +134,21 @@ export default function SignUp() {
 
       if (error) {
         console.error("SignUp: Auth signup error:", error);
-        toast({
-          variant: "destructive",
-          title: "Signup failed",
-          description: error.message,
-        });
+        
+        // Handle specific auth errors
+        if (error.message.includes("already registered")) {
+          toast({
+            variant: "destructive",
+            title: "Email already exists",
+            description: "This email address is already registered. Please use a different email or try logging in.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Signup failed",
+            description: error.message,
+          });
+        }
         return;
       }
 
@@ -147,10 +203,22 @@ export default function SignUp() {
 
       console.log("SignUp: Found assistant:", assistant.assistant_id);
 
+      // Double-check email availability before inserting profile
+      const { exists: emailExistsAgain } = await checkEmailExists(data.email);
+      if (emailExistsAgain) {
+        console.log("SignUp: Email became unavailable during signup process");
+        toast({
+          variant: "destructive",
+          title: "Email already exists",
+          description: "This email address was just registered by another user. Please use a different email.",
+        });
+        return;
+      }
+
       // Insert profile with the correct assistant_id
-      const { error: profileError } = await supabase.from("profiles").upsert({
+      const { error: profileError } = await supabase.from("profiles").insert({
         id: authData.user.id,
-        email: data.email,
+        email: data.email.toLowerCase(), // Store email in lowercase for consistency
         full_name: data.fullName,
         user_type: data.jobTitle,
         airline: data.airline,
@@ -162,11 +230,21 @@ export default function SignUp() {
 
       if (profileError) {
         console.error("SignUp: Error saving profile:", profileError);
-        toast({
-          variant: "destructive",
-          title: "Signup failed",
-          description: "Failed to save your profile information. Please try again.",
-        });
+        
+        // Handle specific profile errors
+        if (profileError.code === "23505") { // Unique constraint violation
+          toast({
+            variant: "destructive",
+            title: "Email already exists",
+            description: "This email address is already registered. Please use a different email.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Signup failed",
+            description: "Failed to save your profile information. Please try again.",
+          });
+        }
         return;
       }
 
