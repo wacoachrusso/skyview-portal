@@ -348,29 +348,17 @@ export const SubscriptionInfo = ({
                     handleChangePlan(getTargetPlan(subscriptionData[0]?.plan))
                   }
                   className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isButtonDisabled(
-                    subscriptionData[0]?.plan,
-                    isUpdating
-                  )}
+                  disabled={isUpdating}
                 >
                   {isUpdating ? (
                     <div className="flex items-center justify-center">
                       <LoadingSpinner size="sm" className="mr-2" />
                       Updating...
                     </div>
-                  ) : subscriptionData[0]?.plan === "annual" ? (
-                    "Currently on Annual Plan"
-                  ) : (
+                  ) :
                     getButtonLabel(subscriptionData[0]?.plan)
-                  )}
+                  }
                 </Button>
-
-                {subscriptionData[0]?.plan === "annual" && (
-                  <p className="text-sm text-gray-600 text-center">
-                    You're on the annual plan. Downgrade options will be
-                    available at renewal.
-                  </p>
-                )}
 
                 <Button
                   onClick={onCancelSubscription}
@@ -378,7 +366,7 @@ export const SubscriptionInfo = ({
                   className="w-full transition-colors"
                   disabled={isUpdating || profileData?.subscription_status === "cancelled"}
                 >
-                  Cancel Subscription
+                  {profileData?.subscription_status === "cancelled" ?"Cancelled":"Cancel Subscription"}
                 </Button>
               </div>
             )}
