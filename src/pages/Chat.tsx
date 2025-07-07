@@ -19,6 +19,7 @@ import ChatContainer from "@/components/chat/ChatContainer";
 import ChatInput from "@/components/chat/ChatInput";
 import { createNewChat } from "@/services/chatService/createNewChat";
 import { useProfile } from "@/components/utils/ProfileProvider";
+import { Subscription } from "@/types/subscription";
 
 export default function Chat() {
   const { isOffline } = useOfflineStatus();
@@ -48,6 +49,7 @@ export default function Chat() {
   const [isFetchingConversations, setIsFetchingConversations] = useState(false);
   const [isTrialEnded, setIsTrialEnded] = useState(false);
   const [currentRoleType, setCurrentRoleType] = useState<'Line Holder' | 'Reserve'>('Line Holder');
+  const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
   
   // Redirect to login if profile fails to load
   useEffect(() => {
@@ -56,16 +58,24 @@ export default function Chat() {
     }
   }, [isProfileLoading, profileError, authUser, navigate]);
 
-  // Load user conversations after profile is loaded
+  // Load user conversations and subscription data after profile is loaded
   useEffect(() => {
     if (!isProfileLoading && authUser?.id) {
       loadUserConversations(authUser.id);
+      getSubscriptionData();
       // Set initial role type from profile
       if (profile?.role_type) {
         setCurrentRoleType(profile.role_type as 'Line Holder' | 'Reserve');
       }
     }
   }, [isProfileLoading, authUser, profile?.role_type]);
+
+  // Fetch subscription data when profile changes
+  useEffect(() => {
+    if (profile?.id) {
+      getSubscriptionData();
+    }
+  }, [profile?.id]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -74,15 +84,33 @@ export default function Chat() {
     };
   }, []);
 
-  // Check if free trial is exhausted
+  // Check if free trial is exhausted using subscription data
   useEffect(() => {
+    const currentPlan = subscriptionData[0]?.plan || "free";
     const freeTrialExhausted = 
-      profile?.subscription_plan === "free" && (queryCount || 0) >= 2;
+      currentPlan === "free" && (queryCount || 0) >= 2;
     
     if (freeTrialExhausted && !isLoading) {
       setIsTrialEnded(true);
     }
-  }, [queryCount, profile?.subscription_plan, isLoading]);
+  }, [queryCount, subscriptionData, isLoading]);
+
+  // Get subscription data from subscriptions table
+  const getSubscriptionData = async () => {
+    if (profile?.id) {
+
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error fetching subscription by user_id:", error);
+      } else {
+        setSubscriptionData(data || []);
+      }
+    }
+  };
 
   // Handle role change
   const handleRoleChange = (newRole: 'Line Holder' | 'Reserve') => {
@@ -172,9 +200,10 @@ export default function Chat() {
       return;
     }
 
-    // Check if free trial is exhausted
+    // Check if free trial is exhausted using subscription data
+    const currentPlan = subscriptionData[0]?.plan || "free";
     const freeTrialExhausted = 
-      profile?.subscription_plan === "free" && (queryCount || 0) >= 2;
+      currentPlan === "free" && (queryCount || 0) >= 2;
 
     if (freeTrialExhausted) {
       toast({
@@ -397,6 +426,9 @@ export default function Chat() {
     navigate("/?scrollTo=pricing-section", { replace: true });
   };
 
+  // Get current plan from subscription data
+  const currentPlan = subscriptionData[0]?.plan || "free";
+
   return (
     <ChatLayout
       isSidebarOpen={isSidebarOpen}
@@ -456,7 +488,7 @@ export default function Chat() {
                     onSendMessage={onSendMessage}
                     isLoading={isLoading}
                     queryCount={queryCount}
-                    subscriptionPlan={profile?.subscription_plan}
+                    subscriptionPlan={currentPlan}
                     selectedQuestion={selectedQuestion}
                     userId={authUser?.id}
                     initialRoleType={currentRoleType}

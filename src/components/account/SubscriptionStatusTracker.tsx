@@ -1,43 +1,72 @@
-
-import { format, addMonths, addYears } from "date-fns";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Subscription } from "@/types/subscription";
 
 interface SubscriptionStatusTrackerProps {
   profile: {
     subscription_plan: string;
     last_query_timestamp: string | null;
     subscription_status?: string;
+    id: string;
   };
+  subscriptionData: Subscription[];
 }
 
-export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTrackerProps) => {
+export const SubscriptionStatusTracker = ({
+  profile,
+  subscriptionData,
+}: SubscriptionStatusTrackerProps) => {
   const getSubscriptionInfo = () => {
-    if (!profile.last_query_timestamp || profile.subscription_plan === 'free' || profile.subscription_status !== 'active') {
+    // Check if we have subscription data
+    if (subscriptionData.length === 0) {
       return {
         startDate: new Date(),
         endDate: new Date(),
         progress: 0,
         daysLeft: 0,
+        hasValidData: false,
       };
     }
 
-    const startDate = new Date(profile.last_query_timestamp);
-    const endDate = profile.subscription_plan === 'monthly' 
-      ? addMonths(startDate, 1)
-      : addYears(startDate, 1);
-    
+    // Get the most recent active subscription
+    const activeSubscription = subscriptionData.find(sub => sub.payment_status === 'active') || subscriptionData[0];
+
+    if (!activeSubscription.start_at || !activeSubscription.end_at) {
+      return {
+        startDate: new Date(),
+        endDate: new Date(),
+        progress: 0,
+        daysLeft: 0,
+        hasValidData: false,
+      };
+    }
+
+    const startDate = new Date(activeSubscription.start_at);
+    const endDate = new Date(activeSubscription.end_at);
+
     const totalDuration = endDate.getTime() - startDate.getTime();
     const elapsed = Date.now() - startDate.getTime();
-    const progress = Math.min(Math.round((elapsed / totalDuration) * 100), 100);
-    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    const progress = Math.min(Math.max(Math.round((elapsed / totalDuration) * 100), 0), 100);
+    const daysLeft = Math.max(
+      0,
+      Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    );
 
-    return { startDate, endDate, progress, daysLeft };
+    return { 
+      startDate, 
+      endDate, 
+      progress, 
+      daysLeft, 
+      hasValidData: true,
+      subscription: activeSubscription
+    };
   };
 
-  const { startDate, endDate, progress, daysLeft } = getSubscriptionInfo();
+  const { startDate, endDate, progress, daysLeft, hasValidData, subscription } = getSubscriptionInfo();
 
-  if (profile.subscription_plan === 'free' || profile.subscription_status !== 'active') {
+  // Don't render if no valid subscription data
+  if (!hasValidData || profile.subscription_plan === "free") {
     return null;
   }
 
@@ -51,7 +80,8 @@ export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTracker
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Current Period</span>
             <span className="text-gray-900 font-medium">
-              {format(startDate, 'MMM d, yyyy')} - {format(endDate, 'MMM d, yyyy')}
+              {format(startDate, "MMM d, yyyy")} -{" "}
+              {format(endDate, "MMM d, yyyy")}
             </span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -60,8 +90,34 @@ export const SubscriptionStatusTracker = ({ profile }: SubscriptionStatusTracker
               {daysLeft} days remaining
             </span>
             <span className="text-sm text-gray-600">
-              Auto-renews on {format(endDate, 'MMM d, yyyy')}
+              Auto-renews on {format(endDate, "MMM d, yyyy")}
             </span>
+          </div>
+        </div>
+
+        {/* Additional subscription details */}
+        <div className="pt-4 border-t border-gray-200">
+          <div className="grid gap-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Plan Type:</span>
+              <span className="text-sm text-gray-900 font-medium capitalize">
+                {subscription?.plan || profile.subscription_plan}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Status:</span>
+              <span className="text-sm text-gray-900 font-medium capitalize">
+                {subscription?.payment_status || 'Active'}
+              </span>
+            </div>
+            {subscription?.price && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Amount:</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  ${subscription.price}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

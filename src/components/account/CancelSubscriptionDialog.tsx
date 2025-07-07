@@ -24,7 +24,7 @@ export const CancelSubscriptionDialog = ({
 }: CancelSubscriptionDialogProps) => {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent className="w-fit">
         <AlertDialogHeader>
           <AlertDialogTitle>Before You Cancel</AlertDialogTitle>
           <AlertDialogDescription>
