@@ -107,7 +107,7 @@ export const SubscriptionStatusTracker = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Status:</span>
               <span className="text-sm text-gray-900 font-medium capitalize">
-                {subscription?.payment_status || 'Active'}
+                {profile?.subscription_status || 'Active'}
               </span>
             </div>
             {subscription?.price && (
