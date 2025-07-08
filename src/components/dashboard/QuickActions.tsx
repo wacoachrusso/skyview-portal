@@ -24,8 +24,9 @@ const QuickActions = () => {
   const { navigateTo } = useNavigation();
   const { toast } = useToast();
   const { theme } = useTheme();
-  const  userProfile  = sessionStorage.getItem('cached_user_profile');
-  const profile = JSON.parse(userProfile);
+  // Use profile from ProfileProvider instead of sessionStorage
+  const { profile } = useProfile();
+
   // URL mapper for different airline/user type combinations
   const contractUrlMapper: Record<string, string> = {
     "united airlines|pilot": "uap",
@@ -83,7 +84,7 @@ const QuickActions = () => {
       onClick: () => navigateTo('/referrals')
     },
     {
-      icon: <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-brand-purple" />,
+      icon: <FileText className="h-4 w-4 sm:ห-5 sm:w-5 text-brand-purple" />,
       title: "Your Contract",
       description: "View your union contract document",
       onClick: handleContractUpload

@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/theme-provider";
+import { useProfile } from "@/components/utils/ProfileProvider";
 
 export function AccountInfo() {
   const [userEmail, setUserEmail] = useState<string>("");
   const [plan, setPlan] = useState<string>("Free Trial");
   const [queriesRemaining, setQueriesRemaining] = useState<number>(0);
-  const { theme } = useTheme(); // You can still access this if needed
+  const { profile, refreshProfile } = useProfile();
 
   useEffect(() => {
     const cachedProfile = sessionStorage.getItem("cached_user_profile");
-    if (cachedProfile) {
+    if (profile) {
       try {
-        const profileData = JSON.parse(cachedProfile);
-        setUserEmail(profileData.email || "");
-        setPlan(profileData.subscription_plan || "Free Trial");
+        setUserEmail(profile.email || "");
+        setPlan(profile.subscription_plan || "Free Trial");
 
-        if (profileData.subscription_plan === "free") {
-          setQueriesRemaining(Math.max(0, 2 - (profileData.query_count || 0)));
-        } else if (profileData.subscription_plan === "trial_ended") {
+        if (profile.subscription_plan === "free") {
+          setQueriesRemaining(Math.max(0, 2 - (profile.query_count || 0)));
+        } else if (profile.subscription_plan === "trial_ended") {
           setQueriesRemaining(0);
         } else {
           setQueriesRemaining(-1); // Unlimited
@@ -54,11 +54,7 @@ export function AccountInfo() {
           } else {
             setQueriesRemaining(-1);
           }
-
-          sessionStorage.setItem(
-            "cached_user_profile",
-            JSON.stringify({ ...profile, email: user.email })
-          );
+          await refreshProfile();
         }
       }
     } catch (error) {

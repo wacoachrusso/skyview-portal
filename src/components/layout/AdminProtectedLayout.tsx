@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
-import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "../utils/ProfileProvider";
 
 interface AdminProtectedLayoutProps {
   children: React.ReactNode;
@@ -11,64 +11,44 @@ interface AdminProtectedLayoutProps {
 export const AdminProtectedLayout: React.FC<AdminProtectedLayoutProps> = ({ children }) => {
   const location = useLocation();
   const { toast } = useToast();
+  const { authUser, profile, isLoading: profileLoading, isAdmin } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
         setIsLoading(true);
 
-        // Get current authenticated user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          setIsAdmin(false);
+        // Wait for profile provider to finish loading
+        if (profileLoading) {
+          return;
+        }
+
+        // Check if user is authenticated and has admin rights
+        if (!authUser || !profile) {
           setIsLoading(false);
           return;
         }
 
-        // Query the profiles table directly for admin status
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("is_admin")
-          .eq("id", user.id)
-          .single();
-
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(profile?.is_admin || false);
-        }
+        // Admin status is already available from profile provider
+        setIsLoading(false);
       } catch (error) {
         console.error("Error checking admin status:", error);
-        setIsAdmin(false);
-      } finally {
         setIsLoading(false);
       }
     };
 
     checkAdminStatus();
-
-    // Optional: Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        checkAdminStatus();
-      } else if (event === 'SIGNED_OUT') {
-        setIsAdmin(false);
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  }, [authUser, profile, profileLoading, isAdmin]);
 
   // Show loading spinner while checking admin status
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return <AppLoadingSpinner />;
+  }
+
+  // If not authenticated, redirect to login
+  if (!authUser) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // If not admin, show error and redirect

@@ -10,37 +10,28 @@ import { useProfile } from "@/components/utils/ProfileProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/theme-provider";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useToast } from "@/hooks/use-toast";
+import { Subscription } from "@/types/subscription";
+import { Profile } from "@/types/profile";
 
 const Account = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-
-  // Use the profile context instead of manual loading
+  const { toast } = useToast();
+  const [profileData, setProfileData] = useState<Profile>(null);
+  const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
   const {
     isLoading,
-    loadError,
     userEmail,
     profile,
     authUser,
-    refreshProfile,
-    handleCancelSubscription,
-    logout,
+    refreshProfile
   } = useProfile();
 
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [mounted, setMounted] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-
-  // Handle custom sign out to clear cached data
-  const handleSignOut = async () => {
-    try {
-      // Use the logout function from the profile context
-      await logout();
-    } catch (error) {
-      console.error("Error during sign out:", error);
-    }
-  };
 
   const handlePlanChange = () => {
     navigate("/?scrollTo=pricing-section");
@@ -64,7 +55,102 @@ const Account = () => {
     refreshProfile();
     setLoadingTimeout(false);
   };
+  // Handle subscription cancellation
+  const handleCancelSubscription = async () => {
+    if (!authUser?.id) return;
 
+    try {
+      // Step 1: Cancel the subscription
+      const { error } = await supabase.functions.invoke(
+        "stripe-cancel-subscription",
+        {
+          body: { user_id: authUser.id },
+        }
+      );
+
+      if (error) throw error;
+
+      // Step 2: Send cancellation email
+      await supabase.functions.invoke("send-plan-change-email", {
+        body: {
+          email: profile.email,
+          oldPlan: subscriptionData[0]?.plan,
+          newPlan: "cancelled", // or null if appropriate
+          fullName: profile.full_name || "User",
+          status: "cancelled", // 👈 Make sure this reflects actual cancellation
+        },
+      });
+
+      // Step 3: Show success toast
+      toast({
+        title: "Subscription Cancelled",
+        description: "Your subscription has been cancelled successfully.",
+      });
+
+      // Step 4: Refresh profile data
+      await refreshProfile();
+      await getSubscriptionData();
+    } catch (error: any) {
+      console.error("Error cancelling subscription:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error.message || "Failed to cancel subscription. Please try again.",
+      });
+    }
+  };
+  const getProfileData = async () => {
+
+    if (!authUser) {
+      console.error("No user found in session storage.");
+      return;
+    }
+
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", authUser.email)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+    } else {
+      setProfileData(profile);
+    }
+  };
+
+  const getSubscriptionData = async () => {
+    // Fetch subscription data by user_id
+    if (profile?.id) {
+      console.log("Fetching subscription by user_id:", profile.id);
+
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching subscription by user_id:", error);
+      } else {
+        console.log("Subscription data by user_id:", data);
+        setSubscriptionData(data || []);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getProfileData();
+  }, []);
+
+  useEffect(() => {
+    // Call getSubscriptionData when profile is available
+    if (profile?.id) {
+      getSubscriptionData();
+    }
+  }, [profile]);
   // Modified to handle both first load and subsequent loads
   useEffect(() => {
     console.log("Account component mounted or profile updated:", profile?.id);
@@ -243,10 +329,13 @@ const Account = () => {
 
         <div className={`rounded-2xl shadow-md border ${cardBgClass} p-6`}>
           <SubscriptionInfo
-            profile={profile}
+            profileData={profileData}
+            subscriptionData={subscriptionData}
             onPlanChange={handlePlanChange}
             onCancelSubscription={handleInitialCancelClick}
             refreshProfile={refreshProfile}
+            setSubscriptionData={setSubscriptionData}
+            setProfileData={setProfileData}
           />
         </div>
       </div>

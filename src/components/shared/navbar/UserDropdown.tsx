@@ -5,50 +5,37 @@ import { Avatar, AvatarFallback } from '../../ui/avatar';
 import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/components/theme-provider';
-
+import { useProfile } from '@/components/utils/ProfileProvider';
 interface UserDropdownProps {
-  userName: string;
-  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsAuthenticated?: React.Dispatch<React.SetStateAction<boolean>>;
   isPublicRoute?: boolean;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
-  setIsAuthenticated, 
-  userName,
+  setIsAuthenticated,
   isPublicRoute = false
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
+  const { userName, logout } = useProfile();
   
-  const logout = async () => {
+  const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await logout();
       
-      localStorage.removeItem("auth_status");
-      localStorage.removeItem("userName");
-      localStorage.clear();
-      sessionStorage.removeItem("cached_user_profile");
-      sessionStorage.removeItem("cached_auth_user");
-      setIsAuthenticated(false);
-      navigate("/login");
+      // If setIsAuthenticated is provided, call it for backward compatibility
+      if (setIsAuthenticated) {
+        setIsAuthenticated(false);
+      }
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error("Error during sign out:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to sign out. Please try again.",
       });
-    }
-  };
-  
-  const handleSignOut = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Error during sign out:", error);
     }
   };
   
@@ -61,7 +48,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            className="flex items-center space-x-2 ml-2  text-gray-800 transition-colors focus:outline-none focus-visible:ring-0"
+            className="flex items-center space-x-2 ml-2 text-gray-800 transition-colors focus:outline-none focus-visible:ring-0"
           >
             <Avatar className="h-8 w-8 border border-gray-300">
               <AvatarFallback className="bg-indigo-700 text-white font-medium">
@@ -108,7 +95,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
       <DropdownMenuTrigger asChild className="focus-visible:ring-0">
         <Button
           size="sm"
-          className={`flex items-center space-x-2 ml-2 bg-transparent hover:bg-transparent  ${textColor} transition-colors focus:outline-none focus-visible:ring-0`}
+          className={`flex items-center space-x-2 ml-2 bg-transparent hover:bg-transparent ${textColor} transition-colors focus:outline-none focus-visible:ring-0`}
         >
           <Avatar className={`h-8 w-8 border ${theme === "dark" ? "border-white/20" : "border-gray-300"}`}>
             <AvatarFallback className="bg-indigo-700 text-white font-medium">
