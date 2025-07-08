@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useLogout } from "@/hooks/useLogout";
 import { forceNavigate } from "@/utils/navigation";
 import {
   ArrowLeft,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { ChatSettings } from "./ChatSettings";
 import { useTheme } from "../theme-provider";
+import { useProfile } from "../utils/ProfileProvider";
 import ChatHeaderButton from "./ChatHeaderButton";
 
 interface ChatHeaderProps {
@@ -19,29 +19,24 @@ interface ChatHeaderProps {
   setIsSidebarOpen: (value: boolean) => void;
   showBackButton?: boolean;
   isSidebarOpen?: boolean;
-  userName: string;
   onBack?: () => void;
 }
 
 const ChatHeader = ({
   isSidebarOpen,
   setIsSidebarOpen,
-  userName,
   startNewChat,
   onBack,
   showBackButton = false,
 }: ChatHeaderProps) => {
   const isMobile = useIsMobile();
-  const { handleLogout } = useLogout();
   const { theme } = useTheme();
-  // Handle custom sign out to clear cached data
+  const { userName, logout } = useProfile();
+
+  // Use the logout method from ProfileProvider
   const handleSignOut = async () => {
     try {
-      // Clear cached data on sign out
-      sessionStorage.removeItem("cached_user_profile");
-      sessionStorage.removeItem("cached_auth_user");
-      sessionStorage.removeItem("auth_status");
-      handleLogout();
+      await logout();
     } catch (error) {
       console.error("Error during sign out:", error);
     }
@@ -79,7 +74,7 @@ const ChatHeader = ({
             className={`p-2 transition-colors ${
               theme === "dark"
                 ? "text-slate-300 hover:text-white hover:bg-slate-700"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-300"
+                : "text-slate-600 hover:text-slate-900 ฟ้อมexitfirst"
             }`}
           >
             <Menu className="h-4 w-4" />
@@ -95,37 +90,7 @@ const ChatHeader = ({
           </h1>
         </div>
       </div>
-      <div className="hidden items-center">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`mr-4 p-2 rounded ${
-            theme === "dark" ? "hover:bg-slate-700" : "hover:bg-slate-300"
-          }`}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
-        <h1
-          className={`text-xl font-semibold ${
-            theme === "dark" ? "text-white" : "text-slate-900"
-          }`}
-        >
-          SkyGuide
-        </h1>
-      </div>
+
       <div className="flex items-center gap-4">
         <ChatHeaderButton
           icon={<LayoutDashboard className="h-4 w-4" />}
@@ -155,10 +120,7 @@ const ChatHeader = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={(e) => {
-            e.preventDefault();
-            handleSignOut();
-          }}
+          onClick={handleSignOut}
           className={`transition-colors ${
             theme === "dark"
               ? "text-slate-300 hover:text-red-400 hover:bg-red-900/20"

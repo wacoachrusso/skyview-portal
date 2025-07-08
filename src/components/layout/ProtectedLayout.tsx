@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import { DisclaimerDialog } from "../consent/DisclaimerDialog";
+import { useProfile } from "../utils/ProfileProvider";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,136 +19,66 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const location = useLocation();
   const { toast } = useToast();
+  const { authUser, profile, isLoading: profileLoading } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [disclaimerCheckComplete, setDisclaimerCheckComplete] = useState(false);
 
-  const checkAuthAndDisclaimer = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Check if there's an active session
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        console.error("Error checking auth:", sessionError);
-        setIsAuthenticated(false);
-        setShowDisclaimer(false);
-        setIsLoading(false);
-        return;
-      }
-
-      if (!session) {
-        setIsAuthenticated(false);
-        setShowDisclaimer(false);
-        setIsLoading(false);
-        return;
-      }
-
-      // Verify the session is still valid by making a simple authenticated request
-      const { error: validationError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", session.user.id)
-        .single();
-
-      if (validationError && validationError.code === 'PGRST301') {
-        // Session is expired or invalid, sign out
-        console.log("Session expired, signing out");
-        await supabase.auth.signOut();
-        setIsAuthenticated(false);
-        setShowDisclaimer(false);
-        setIsLoading(false);
-        return;
-      }
-
-      // User is authenticated with valid session
-      setIsAuthenticated(true);
-
-      // Check if profile is complete
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        setIsProfileComplete(false);
-        setIsLoading(false);
-        return;
-      }
-
-      // Check if profile has necessary fields
-      const isComplete = Boolean(
-        profileData &&
-          profileData.account_status !== "deleted" &&
-          profileData.full_name
-      );
-
-      setIsProfileComplete(isComplete);
-
-      // Store profile data in session storage for faster access
-      if (isComplete) {
-        try {
-          sessionStorage.setItem(
-            "cached_user_profile",
-            JSON.stringify(profileData)
-          );
-          sessionStorage.setItem(
-            "cached_auth_user",
-            JSON.stringify(session.user)
-          );
-        } catch (error) {
-          console.error("Failed to cache profile data:", error);
-        }
-      }
-
-      // If disclaimer is required, check its status
-      if (requireDisclaimer) {
-        const { data, error } = await supabase
-          .from("disclaimer_consents")
-          .select("status")
-          .eq("user_id", session.user.id)
-          .single();
-
-        if (error) {
-          // Show disclaimer if no record exists (PGRST116) or any other error occurred
-          console.error("Error checking disclaimer:", error);
-          setShowDisclaimer(true);
-        } else {
-          // Check if disclaimer has been accepted - show if not accepted or null
-          setShowDisclaimer(!data || data.status !== "accepted");
-        }
-      } else {
-        setShowDisclaimer(false);
-      }
-    } catch (err) {
-      console.error("Failed to check authentication:", err);
-      setIsAuthenticated(false);
-      setShowDisclaimer(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Check authentication and disclaimer status
   useEffect(() => {
+    const checkAuthAndDisclaimer = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Wait for profile provider to finish loading
+        if (profileLoading) {
+          return;
+        }
+
+        // Check if user is authenticated via profile provider
+        if (authUser) {
+          setIsAuthenticated(true);
+          
+          // Check disclaimer status if required
+          if (requireDisclaimer) {
+            const { data, error } = await supabase
+              .from("disclaimer_consents")
+              .select("status")
+              .eq("user_id", authUser.id)
+              .single();
+
+            if (error) {
+              console.error("Error checking disclaimer:", error);
+              setShowDisclaimer(true);
+            } else {
+              setShowDisclaimer(!data || data.status !== "accepted");
+            }
+          } else {
+            setShowDisclaimer(false);
+          }
+        } else {
+          setIsAuthenticated(false);
+          setShowDisclaimer(false);
+        }
+        
+        setDisclaimerCheckComplete(true);
+      } catch (error) {
+        console.error("Error in protected route check:", error);
+        setIsAuthenticated(false);
+        setShowDisclaimer(false);
+        setDisclaimerCheckComplete(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     checkAuthAndDisclaimer();
-  }, [requireAuth, requireDisclaimer]);
+  }, [authUser, profileLoading, requireDisclaimer]);
 
   const handleAcceptDisclaimer = async () => {
     try {
-      // Re-check authentication before accepting
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      
-      if (!session) {
-        // User is no longer authenticated, redirect to login
+      if (!authUser) {
         setIsAuthenticated(false);
         setShowDisclaimer(false);
         return;
@@ -155,7 +86,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
       const { error } = await supabase.from("disclaimer_consents").upsert(
         {
-          user_id: session.user.id,
+          user_id: authUser.id,
           status: "accepted",
           has_seen_chat_disclaimer: true,
           created_at: new Date().toISOString(),
@@ -192,21 +123,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   const handleRejectDisclaimer = async () => {
     try {
-      // Sign out the user
-      await supabase.auth.signOut();
+      // Use the logout method from ProfileProvider
+      const { logout } = useProfile();
+      await logout();
 
-      // Clear any authentication-related storage
-      localStorage.removeItem("auth_status");
-      localStorage.removeItem("user_profile");
-      sessionStorage.removeItem("cached_user_profile");
-      sessionStorage.removeItem("cached_auth_user");
-      
-      // Update state
       setIsAuthenticated(false);
       setShowDisclaimer(false);
-      setIsProfileComplete(false);
 
-      // Show toast notification
       toast({
         variant: "destructive",
         title: "Disclaimer Declined",
@@ -217,18 +140,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   };
 
-  // Loading state
-  if (isLoading) {
+  // Show loading while checking authentication or profile is loading
+  if (isLoading || profileLoading || !disclaimerCheckComplete) {
     return <AppLoadingSpinner />;
   }
 
-  // Check authentication first - if not authenticated, redirect to login
+  // Check authentication first
   if (requireAuth && !isAuthenticated) {
-    // Redirect to login but remember where they were trying to go
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If authenticated but disclaimer needs to be shown
+  // Show disclaimer if needed
   if (isAuthenticated && showDisclaimer) {
     return (
       <DisclaimerDialog
@@ -239,8 +161,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Check profile completion only if authenticated and disclaimer is handled
-  if (isAuthenticated && !isProfileComplete) {
+  // Check if profile is complete
+  if (isAuthenticated && profile && !profile.full_name) {
     return (
       <Navigate to="/auth/callback" state={{ needsProfile: true }} replace />
     );

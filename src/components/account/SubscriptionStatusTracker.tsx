@@ -2,14 +2,10 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Subscription } from "@/types/subscription";
+import { Profile } from "@/types/profile";
 
 interface SubscriptionStatusTrackerProps {
-  profile: {
-    subscription_plan: string;
-    last_query_timestamp: string | null;
-    subscription_status?: string;
-    id: string;
-  };
+  profile: Profile;
   subscriptionData: Subscription[];
 }
 
@@ -66,7 +62,7 @@ export const SubscriptionStatusTracker = ({
   const { startDate, endDate, progress, daysLeft, hasValidData, subscription } = getSubscriptionInfo();
 
   // Don't render if no valid subscription data
-  if (!hasValidData || profile.subscription_plan === "free") {
+  if (!hasValidData || subscriptionData[0].plan === "free") {
     return null;
   }
 
@@ -101,7 +97,7 @@ export const SubscriptionStatusTracker = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Plan Type:</span>
               <span className="text-sm text-gray-900 font-medium capitalize">
-                {subscription?.plan || profile.subscription_plan}
+                {subscriptionData[0]?.plan || "Free"}
               </span>
             </div>
             <div className="flex justify-between items-center">

@@ -22,12 +22,8 @@ export interface Profile {
   subscription_status?: string;
   query_count?: number;
   is_admin?: boolean;
-  [key: string]: any; // For any other fields
+  [key: string]: any;
 }
-
-// Session storage keys
-const PROFILE_STORAGE_KEY = "cached_user_profile";
-const AUTH_USER_STORAGE_KEY = "cached_auth_user";
 
 interface ProfileContextType {
   isLoading: boolean;
@@ -60,7 +56,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const navigate = useNavigate();
-  const location = useLocation(); // Get current location
+  const location = useLocation();
   const { toast } = useToast();
 
   // State for profile data
@@ -72,6 +68,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [queryCount, setQueryCount] = useState<number>(0);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  // In-memory cache - will persist during the session but reset on page refresh
+  const profileCache = useRef<{
+    profile: Profile | null;
+    authUser: User | null;
+    timestamp: number;
+  } | null>(null);
+
+  // Cache duration in milliseconds (5 minutes)
+  const CACHE_DURATION = 5 * 60 * 1000;
 
   // Refs for managing loading state
   const isMounted = useRef(true);
@@ -89,46 +95,36 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   }, [location.pathname]);
 
-  // Helper function to store profile in session storage
+  // Helper function to check if cached data is still valid
+  const isCacheValid = () => {
+    if (!profileCache.current) return false;
+    const now = Date.now();
+    return (now - profileCache.current.timestamp) < CACHE_DURATION;
+  };
+
+  // Helper function to cache profile data in memory
   const cacheProfileData = (profileData: Profile, user: User) => {
-    try {
-      sessionStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileData));
-      sessionStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
-      console.log("Profile data cached in session storage");
-    } catch (error) {
-      console.error("Failed to cache profile data:", error);
-    }
+    profileCache.current = {
+      profile: profileData,
+      authUser: user,
+      timestamp: Date.now(),
+    };
+    console.log("Profile data cached in memory");
   };
 
   // Helper function to get cached profile data
   const getCachedProfileData = () => {
-    try {
-      const cachedProfile = sessionStorage.getItem(PROFILE_STORAGE_KEY);
-      const cachedAuthUser = sessionStorage.getItem(AUTH_USER_STORAGE_KEY);
-
-      if (cachedProfile && cachedAuthUser) {
-        return {
-          profile: JSON.parse(cachedProfile),
-          authUser: JSON.parse(cachedAuthUser),
-        };
-      }
-    } catch (error) {
-      console.error("Failed to retrieve cached profile data:", error);
+    if (isCacheValid()) {
+      console.log("Using cached profile data");
+      return profileCache.current;
     }
-
     return null;
   };
 
   // Helper function to clear cached profile data
   const clearCachedProfileData = () => {
-    try {
-      sessionStorage.removeItem(PROFILE_STORAGE_KEY);
-      sessionStorage.removeItem(AUTH_USER_STORAGE_KEY);
-      sessionStorage.removeItem("auth_status");
-      console.log("Cached profile data cleared");
-    } catch (error) {
-      console.error("Failed to clear cached profile data:", error);
-    }
+    profileCache.current = null;
+    console.log("Cached profile data cleared");
   };
 
   // Reactivate deleted account
@@ -177,20 +173,33 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!authUser?.id) return;
 
     try {
-      // Call to your backend service to cancel subscription
+      // Step 1: Cancel the subscription
       const { error } = await supabase.functions.invoke("stripe-cancel-subscription", {
         body: { user_id: authUser.id },
       });
 
       if (error) throw error;
 
+      // Step 2: Send cancellation email
+      await supabase.functions.invoke("send-plan-change-email", {
+        body: {
+          email: profile?.email,
+          oldPlan: profile?.subscription_plan,
+          newPlan: "cancelled",
+          fullName: profile?.full_name || "User",
+          status: "cancelled",
+        },
+      });
+
+      // Step 3: Show success toast
       toast({
         title: "Subscription Cancelled",
         description: "Your subscription has been cancelled successfully.",
       });
 
-      // Refresh profile to get updated subscription status
-      refreshProfile();
+      // Step 4: Clear cache and refresh profile data
+      clearCachedProfileData();
+      await refreshProfile();
     } catch (error: any) {
       console.error("Error cancelling subscription:", error);
       toast({
@@ -246,12 +255,22 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
   // Logout function
   const logout = async () => {
     try {
+      // Clear Supabase session
       await supabase.auth.signOut();
+      
+      // Clear all in-memory data
       clearCachedProfileData();
       setProfile(null);
       setAuthUser(null);
       setUserEmail(null);
       setUserName(null);
+      setQueryCount(0);
+      setIsAdmin(false);
+      
+      // Clear any remaining storage (if needed for other data)
+      localStorage.clear();
+      sessionStorage.clear();
+      
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
@@ -276,10 +295,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
         if (isMounted.current) {
           setProfile(cachedData.profile);
           setAuthUser(cachedData.authUser);
-          setUserEmail(cachedData.authUser.email);
-          setUserName(cachedData.profile.full_name || null);
-          setQueryCount(cachedData.profile.query_count || 0);
-          setIsAdmin(cachedData.profile.is_admin || false);
+          setUserEmail(cachedData.authUser?.email || null);
+          setUserName(cachedData.profile?.full_name || null);
+          setQueryCount(cachedData.profile?.query_count || 0);
+          setIsAdmin(cachedData.profile?.is_admin || false);
           setIsLoading(false);
           setLoadError(null);
           return;
@@ -314,12 +333,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
           console.error("Error getting user:", userError);
         }
 
-        clearCachedProfileData(); // Clear any invalid cached data
+        clearCachedProfileData();
         if (isMounted.current) {
           setLoadError("Failed to authenticate user");
           setIsLoading(false);
 
-          // Only redirect if not on a public route
           if (!isPublicRoute()) {
             navigate("/login");
           }
@@ -329,12 +347,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (!user) {
         console.log("No authenticated user found");
-        clearCachedProfileData(); // Clear any invalid cached data
+        clearCachedProfileData();
         if (isMounted.current) {
           setLoadError("No authenticated user found");
           setIsLoading(false);
 
-          // Only redirect if not on a public route
           if (!isPublicRoute()) {
             navigate("/login");
           }
@@ -349,24 +366,21 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
 
       console.log("User authenticated:", { id: user.id, email: user.email });
 
-      // First try finding profile by user ID with timeout protection
+      // Try finding profile by user ID with timeout protection
       let profileByIdData;
       let profileByIdError;
 
       try {
-        // Use a promise with a timeout to prevent queries from hanging
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error("Profile query timeout")), 15000);
         });
 
-        // Query promise
         const profilePromise = supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .maybeSingle();
 
-        // Race between the profile query and timeout
         const result = (await Promise.race([
           profilePromise,
           timeoutPromise,
@@ -378,7 +392,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("Profile query timed out or failed:", error.message);
         profileByIdError = error;
       }
-      // profileByIdData = ""
 
       console.log("Profile by ID query result:", {
         data: profileByIdData ? "data found" : "no data",
@@ -419,7 +432,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
         let profileByEmailError;
 
         try {
-          // Try profile by email with timeout protection
           const timeoutPromise = new Promise((_, reject) => {
             setTimeout(
               () => reject(new Error("Email profile query timeout")),
@@ -501,7 +513,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
           } else {
             console.log("Updated profile ID to match auth ID");
 
-            // Check if component is still mounted before continuing
             if (!isMounted.current) return;
 
             // Refetch profile with updated ID
@@ -541,9 +552,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
             setIsLoading(false);
             clearCachedProfileData();
 
-            // Only redirect if not on a public route
             if (!isPublicRoute()) {
-              // Display toast only once
               if (!toastDisplayed.current) {
                 toastDisplayed.current = true;
                 toast({
@@ -578,9 +587,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsLoading(false);
         clearCachedProfileData();
 
-        // Only redirect if not on a public route
         if (!isPublicRoute()) {
-          // Display toast only once
           if (!toastDisplayed.current) {
             toastDisplayed.current = true;
             toast({
@@ -597,7 +604,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
         setLoadError(error.message || "Failed to load profile");
         clearCachedProfileData();
 
-        // Display toast only once for non-public routes
         if (!isPublicRoute() && !toastDisplayed.current) {
           toastDisplayed.current = true;
           toast({
@@ -630,7 +636,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Initialize profile on mount or when location changes
   useEffect(() => {
-    // Reset initialization when pathname changes to ensure proper auth checks
     if (location.pathname) {
       if (!loadInitiated.current) {
         loadInitiated.current = true;
@@ -648,11 +653,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
         abortController.current.abort();
       }
     };
-  }, [location.pathname]); // Run when pathname changes
+  }, [location.pathname]);
 
   // Reset loadInitiated when location changes significantly
   useEffect(() => {
-    // Reset initialization when pathname changes to ensure proper auth checks on navigation
     loadInitiated.current = false;
   }, [location.pathname]);
 

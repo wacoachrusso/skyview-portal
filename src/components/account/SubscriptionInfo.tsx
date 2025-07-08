@@ -15,38 +15,44 @@ import {
   getTargetPlan,
   isButtonDisabled,
 } from "@/utils/subscription/planUtils";
+import { Profile } from "@/types/profile";
 
 interface SubscriptionInfoProps {
-  profile: any;
+  profileData: Profile;
+  subscriptionData: Subscription[];
+  setSubscriptionData: React.Dispatch<React.SetStateAction<Subscription[]>>;
+  setProfileData:React.Dispatch<React.SetStateAction<Profile>>;
   onPlanChange: (plan: string) => void;
   onCancelSubscription: () => void;
-  refreshProfile?: () => void; // Add this prop to refresh profile data
+  refreshProfile?: () => void;
 }
 
 // Use environment variable or fallback
 const stripePromise = loadStripe(import.meta.env.VITE__STRIPE_PUBLIC_KEY);
 
 export const SubscriptionInfo = ({
-  profile,
+  profileData,
+  subscriptionData,
+  setSubscriptionData,
+  setProfileData,
   onPlanChange,
   onCancelSubscription,
   refreshProfile,
 }: SubscriptionInfoProps) => {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
-  const [profileData, setProfileData] = useState<any>(null);
+
   const handleChangePlan = async (newPlan: string) => {
     console.log("🔄 Starting plan change process.....");
-    console.log("Current plan:", profile.subscription_plan);
+    console.log("Current plan:",  subscriptionData[0].plan);
     console.log("Requested new plan:", newPlan);
 
-    if (newPlan === profile.subscription_plan) {
+    if (newPlan ===  subscriptionData[0].plan) {
       console.log("⚠️ Already on the requested plan.");
       toast({
         title: "Already Subscribed",
         description: `You are already on the ${formatPlanName(
-          profile.subscription_plan
+           subscriptionData[0].plan
         )} plan.`,
       });
       return;
@@ -56,19 +62,12 @@ export const SubscriptionInfo = ({
 
     try {
       // Step 1: Invoke `switch-plan` function
-      console.log("📡 Invoking switch-plan function with:", {
-        email: profile.email,
-        oldPlan: profile.subscription_plan,
-        newPlan,
-        fullName: profile.full_name || "User",
-      });
-
       const { data, error } = await supabase.functions.invoke("switch-plan", {
         body: {
-          email: profile.email,
-          oldPlan: profile.subscription_plan,
+          email: profileData.email,
+          oldPlan:  subscriptionData[0].plan,
           newPlan,
-          fullName: profile.full_name || "User",
+          fullName: profileData.full_name || "User",
         },
       });
 
@@ -121,10 +120,10 @@ export const SubscriptionInfo = ({
         console.log("📩 Invoking send-plan-change-email...");
         await supabase.functions.invoke("send-plan-change-email", {
           body: {
-            email: profile.email,
-            oldPlan: profile.subscription_plan,
+            email: profileData.email,
+            oldPlan:  subscriptionData[0].old_plan,
             newPlan,
-            fullName: profile.full_name || "User",
+            fullName: profileData.full_name || "User",
           },
         });
 
@@ -146,8 +145,8 @@ export const SubscriptionInfo = ({
 
         // Only call onPlanChange for navigation if upgrading from free to paid
         if (
-          profile.subscription_plan === "free" ||
-          profile.subscription_plan === "trial_ended"
+           subscriptionData[0].plan === "free" ||
+           subscriptionData[0].plan === "trial_ended"
         ) {
           onPlanChange(newPlan);
         }
@@ -178,8 +177,8 @@ export const SubscriptionInfo = ({
 
         // Only call onPlanChange for navigation if upgrading from free to paid
         if (
-          profile.subscription_plan === "free" ||
-          profile.subscription_plan === "trial_ended"
+          profileData.subscription_plan === "free" ||
+          profileData.subscription_plan === "trial_ended"
         ) {
           onPlanChange(newPlan);
         }
@@ -203,38 +202,15 @@ export const SubscriptionInfo = ({
     }
   };
 
-  const getProfileData = async () => {
-    const cachedUser = sessionStorage.getItem("cached_auth_user");
-
-    if (!cachedUser) {
-      console.error("No user found in session storage.");
-      return;
-    }
-
-    const user = JSON.parse(cachedUser);
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("email", user.email)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
-    } else {
-      setProfileData(profile);
-    }
-  };
-
   const getSubscriptionData = async () => {
     // Fetch subscription data by user_id
-    if (profile?.id) {
-      console.log("Fetching subscription by user_id:", profile.id);
+    if (profileData?.id) {
+      console.log("Fetching subscription by user_id:", profileData.id);
 
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
-        .eq("user_id", profile.id)
+        .eq("user_id", profileData.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -245,17 +221,6 @@ export const SubscriptionInfo = ({
       }
     }
   };
-
-  useEffect(() => {
-    getProfileData();
-  }, []);
-
-  useEffect(() => {
-    // Call getSubscriptionData when profile is available
-    if (profile?.id) {
-      getSubscriptionData();
-    }
-  }, [profile]);
 
   return (
     <div className="space-y-6">
@@ -300,20 +265,20 @@ export const SubscriptionInfo = ({
             <div className="grid-cols-3 items-center gap-4 hidden">
               <span className="font-medium text-brand-navy">Status:</span>
               <span className="col-span-2 text-gray-700 capitalize">
-                {profile?.subscription_status || "Inactive"}
+                {profileData?.subscription_status || "Inactive"}
               </span>
             </div>
             <div className="grid-cols-3 items-center gap-4 hidden">
               <span className="font-medium text-brand-navy">Queries Used:</span>
               <span className="col-span-2 text-gray-700">
-                {profile?.query_count || 0}
+                {profileData?.query_count || 0}
               </span>
             </div>
-            {profile?.last_query_timestamp && (
+            {profileData?.last_query_timestamp && (
               <div className="grid grid-cols-3 items-center gap-4">
                 <span className="font-medium text-brand-navy">Last Query:</span>
                 <span className="col-span-2 text-gray-700">
-                  {format(new Date(profile.last_query_timestamp), "PPpp")}
+                  {format(new Date(profileData.last_query_timestamp), "PPpp")}
                 </span>
               </div>
             )}
@@ -325,8 +290,8 @@ export const SubscriptionInfo = ({
             <h3 className="text-lg font-semibold text-brand-navy">
               Plan Management
             </h3>
-            {profile?.subscription_plan === "free" ||
-            profile?.subscription_plan === "trial_ended" ? (
+            {profileData?.subscription_plan === "free" ||
+            profileData?.subscription_plan === "trial_ended" ? (
               <Button
                 onClick={() => onPlanChange("paid")}
                 className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors"
@@ -374,10 +339,10 @@ export const SubscriptionInfo = ({
         </CardContent>
       </Card>
 
-      {profile?.subscription_plan !== "free" &&
-        profile?.subscription_plan !== "trial_ended" && (
+      {profileData?.subscription_plan !== "free" &&
+        profileData?.subscription_plan !== "trial_ended" && (
           <SubscriptionStatusTracker
-            profile={profile}
+            profile={profileData}
             subscriptionData={subscriptionData}
           />
         )}

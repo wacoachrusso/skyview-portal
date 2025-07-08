@@ -78,9 +78,9 @@ export default function SignUp() {
         .from("profiles")
         .select("email")
         .eq("email", email.toLowerCase())
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single()
 
-      if (error && error.code !== "PGRST116") { // PGRST116 is "not found" error
+      if (error) {
         console.error("SignUp: Error checking email existence:", error);
         return { exists: false, error: error.message };
       }
@@ -127,16 +127,43 @@ export default function SignUp() {
 
       console.log("SignUp: Email is available, proceeding with signup");
 
-      const { data: authData, error } = await supabase.auth.signUp({
+      // Look up the correct assistant based on airline and role BEFORE creating user
+      console.log("SignUp: Looking up assistant for:", {
+        airline: data.airline.toLowerCase(),
+        role: data.jobTitle.toLowerCase(),
+      });
+
+      const { data: assistant, error: assistantError } = await supabase
+        .from("openai_assistants")
+        .select("assistant_id")
+        .eq("airline", data.airline.toLowerCase())
+        .eq("work_group", data.jobTitle.toLowerCase())
+        .eq("is_active", true)
+        .single();
+
+      if (assistantError || !assistant) {
+        console.error("SignUp: Error finding assistant:", assistantError);
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: "Could not find the appropriate assistant for your role. Please try again or contact support.",
+        });
+        return;
+      }
+
+      console.log("SignUp: Found assistant:", assistant.assistant_id);
+
+      // Create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
       });
 
-      if (error) {
-        console.error("SignUp: Auth signup error:", error);
+      if (authError) {
+        console.error("SignUp: Auth signup error:", authError);
         
         // Handle specific auth errors
-        if (error.message.includes("already registered")) {
+        if (authError.message.includes("already registered") || authError.message.includes("User already registered")) {
           toast({
             variant: "destructive",
             title: "Email already exists",
@@ -146,7 +173,7 @@ export default function SignUp() {
           toast({
             variant: "destructive",
             title: "Signup failed",
-            description: error.message,
+            description: authError.message,
           });
         }
         return;
@@ -164,91 +191,34 @@ export default function SignUp() {
 
       console.log("SignUp: User created successfully with ID:", authData.user.id);
 
-      // Look up the correct assistant based on airline and role
-      console.log("SignUp: Looking up assistant for:", {
-        airline: data.airline.toLowerCase(),
-        role: data.jobTitle.toLowerCase(),
-      });
-
-      const { data: assistant, error: assistantError } = await supabase
-        .from("openai_assistants")
-        .select("assistant_id")
-        .eq("airline", data.airline.toLowerCase())
-        .eq("work_group", data.jobTitle.toLowerCase())
-        .eq("is_active", true)
-        .single();
-
-      if (assistantError) {
-        console.error("SignUp: Error finding assistant:", assistantError);
-        toast({
-          variant: "destructive",
-          title: "Signup failed",
-          description: "Could not find the appropriate assistant for your role. Please try again or contact support.",
-        });
-        return;
-      }
-
-      if (!assistant) {
-        console.error("SignUp: No assistant found for combination:", {
+      // Upsert profile with the correct assistant_id (handles both insert and update)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({
+          id: authData.user.id,
+          email: data.email.toLowerCase(),
+          full_name: data.fullName,
+          user_type: data.jobTitle,
           airline: data.airline,
-          role: data.jobTitle,
+          assistant_id: assistant.assistant_id,
+          subscription_plan: "free",
+          account_status: "active",
+          role_type: "Line Holder"
+        }, {
+          onConflict: 'id'
         });
-        toast({
-          variant: "destructive",
-          title: "Signup failed",
-          description: "No assistant available for your airline and role combination. Please contact support.",
-        });
-        return;
-      }
-
-      console.log("SignUp: Found assistant:", assistant.assistant_id);
-
-      // Double-check email availability before inserting profile
-      const { exists: emailExistsAgain } = await checkEmailExists(data.email);
-      if (emailExistsAgain) {
-        console.log("SignUp: Email became unavailable during signup process");
-        toast({
-          variant: "destructive",
-          title: "Email already exists",
-          description: "This email address was just registered by another user. Please use a different email.",
-        });
-        return;
-      }
-
-      // Insert profile with the correct assistant_id
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: authData.user.id,
-        email: data.email.toLowerCase(), // Store email in lowercase for consistency
-        full_name: data.fullName,
-        user_type: data.jobTitle,
-        airline: data.airline,
-        assistant_id: assistant.assistant_id,
-        subscription_plan: "free",
-        account_status: "active",
-        role_type: "Line Holder"
-      });
 
       if (profileError) {
         console.error("SignUp: Error saving profile:", profileError);
-        
-        // Handle specific profile errors
-        if (profileError.code === "23505") { // Unique constraint violation
-          toast({
-            variant: "destructive",
-            title: "Email already exists",
-            description: "This email address is already registered. Please use a different email.",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Signup failed",
-            description: "Failed to save your profile information. Please try again.",
-          });
-        }
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: "Failed to save your profile information. Please try again.",
+        });
         return;
       }
 
-      console.log("SignUp: Profile created successfully with assistant_id:", assistant.assistant_id);
+      console.log("SignUp: Profile created/updated successfully with assistant_id:", assistant.assistant_id);
 
       // Create session
       await createNewSession(authData.user.id);

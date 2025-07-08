@@ -21,7 +21,6 @@ import {
 } from "../../ui/dropdown-menu";
 import { NavButton } from "./NavButton";
 import { ChatSettings } from "../../chat/ChatSettings";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
 import UserDropdown from "./UserDropdown";
@@ -33,44 +32,36 @@ const GlobalNavbar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
+  
+  // Use ProfileProvider instead of localStorage
+  const { 
+    profile, 
+    authUser, 
+    userName, 
+    isAdmin, 
+    isLoading,
+    logout 
+  } = useProfile();
 
   const isPrivateRoute = ["/dashboard", "/account", "/chat", "/referrals"].some((path) =>
     location.pathname.startsWith(path)
   );
 
-  // Get user authentication state
-  const userName = localStorage.getItem("auth_user_name");
-  const  userProfile  = sessionStorage.getItem('cached_user_profile');
-  const profile = JSON.parse(userProfile);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Authentication state based on authUser from context
+  const isAuthenticated = !!authUser;
   const isAccountPage = location.pathname === "/account";
   const isDashboardPage = location.pathname === "/dashboard";
 
-  const logout = async () => {
+  const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      localStorage.removeItem("auth_status");
-      localStorage.removeItem("userName");
-      localStorage.clear();
-      sessionStorage.removeItem("cached_user_profile");
-      sessionStorage.removeItem("cached_auth_user");
-      sessionStorage.removeItem("auth_status");
-      setIsAuthenticated(false);
-      navigate("/login");
+      await logout(); // Use the logout function from ProfileProvider
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error("Error during sign out:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to sign out. Please try again.",
       });
-    }
-  };
-  const handleSignOut = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Error during sign out:", error);
     }
   };
 
@@ -113,12 +104,21 @@ const GlobalNavbar = () => {
   const dropdownBgClass = isPrivateRoute ? privateDropdownBgClass : publicDropdownBgClass;
   const hoverBgClass = isPrivateRoute ? privateHoverBgClass : publicHoverBgClass;
 
-  useEffect(() => {
-    const storedAuthStatus = localStorage.getItem("auth_status");
-    if (storedAuthStatus === "authenticated" || userName) {
-      setIsAuthenticated(true);
-    }
-  }, [userName]);
+  // Show loading state while profile is being fetched
+  if (isLoading && isPrivateRoute) {
+    return (
+      <nav className={navbarClasses}>
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3">
+          <div className="flex justify-between items-center h-14">
+            <Logo isPublicRoute={!isPrivateRoute} />
+            <div className="flex items-center space-x-4">
+              <div className="animate-pulse bg-gray-300 h-8 w-20 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className={navbarClasses}>
@@ -164,7 +164,7 @@ const GlobalNavbar = () => {
                 </NavButton>
 
                 {/* Admin Dashboard Button - only show if user is admin and on dashboard */}
-                {profile?.is_admin && isDashboardPage && (
+                {isAdmin && isDashboardPage && (
                   <NavButton
                     to="/admin"
                     icon={<Shield className="h-4 w-4" />}
@@ -179,7 +179,7 @@ const GlobalNavbar = () => {
                 {/* User Dropdown */}
                 <UserDropdown
                   userName={userName}
-                  setIsAuthenticated={setIsAuthenticated}
+                  setIsAuthenticated={() => {}} // Not needed anymore
                   isPublicRoute={!isPrivateRoute}
                 />
               </>
@@ -230,7 +230,7 @@ const GlobalNavbar = () => {
                 </Button>
 
                 {/* Admin button for mobile - only show if user is admin and on dashboard */}
-                {profile?.is_admin && isDashboardPage && (
+                {isAdmin && isDashboardPage && (
                   <Button
                     asChild
                     variant="ghost"
@@ -327,7 +327,7 @@ const GlobalNavbar = () => {
                     )}
 
                     {/* Admin Dashboard in mobile dropdown - only show if user is admin and on dashboard */}
-                    {profile?.is_admin && isDashboardPage && (
+                    {isAdmin && isDashboardPage && (
                       <DropdownMenuItem
                         asChild
                         className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
