@@ -313,7 +313,7 @@ export const SubscriptionInfo = ({
                     handleChangePlan(getTargetPlan(subscriptionData[0]?.plan))
                   }
                   className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isUpdating}
+                  disabled={isUpdating || profileData?.subscription_status === "cancelled"}
                 >
                   {isUpdating ? (
                     <div className="flex items-center justify-center">
