@@ -35,7 +35,7 @@ export const UsersTable = ({
 }: UsersTableProps) => {
   const getSubscriptionBadge = (plan: string | null, isAdmin: boolean) => {
     if (isAdmin) {
-      return <Badge className="bg-purple-500 hover:bg-purple-600">Admin Plan</Badge>;
+      return <Badge className="bg-purple-500 hover:bg-purple-600 whitespace-nowrap">Admin Plan</Badge>;
     }
     
     if (!plan || plan === 'free') {
@@ -46,8 +46,8 @@ export const UsersTable = ({
       return <Badge variant="default">Monthly</Badge>;
     }
     
-    if (plan === 'yearly') {
-      return <Badge variant="default">Yearly</Badge>;
+    if (plan === 'annual') {
+      return <Badge variant="default">Annual</Badge>;
     }
     
     return <Badge variant="outline">{plan}</Badge>;

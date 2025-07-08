@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { createNewSession } from "@/services/session";
+import { useProfile } from "@/components/utils/ProfileProvider";
 
 export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);
@@ -11,7 +12,7 @@ export const GoogleAuthHandler = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-
+  const { refreshProfile } = useProfile();
   useEffect(() => {
     const handleAuthCallback = async () => {
       console.log(`[AUTH-FLOW-] GoogleAuthHandler: Auth flow initiated`);
@@ -129,8 +130,7 @@ export const GoogleAuthHandler = () => {
           // Make sure profile info is stored even when resuming flow
           if (profile) {
             console.log(`[AUTH-FLOW-] Storing profile for resumed flow`);
-            localStorage.setItem("user_profile", JSON.stringify(profile));
-            localStorage.setItem("auth_user_name", profile.full_name);
+            await refreshProfile();
 
             // If profile was incomplete and we're resuming from profile completion,
             // ensure the needs_profile_completion flag is set
@@ -209,6 +209,7 @@ export const GoogleAuthHandler = () => {
               email_notifications: true,
               push_notifications: true,
               assistant_id: assistantId,
+              role_type: "Line Holder"
             });
 
           if (insertError) {
@@ -262,8 +263,7 @@ export const GoogleAuthHandler = () => {
               name: newProfile.full_name,
             });
             // Store profile in localStorage
-            localStorage.setItem("user_profile", JSON.stringify(newProfile));
-            localStorage.setItem("auth_user_name", newProfile.full_name);
+            await refreshProfile();
           } else {
             console.warn(
               `[AUTH-FLOW-] Could not fetch profile data after creation, error:`,
@@ -313,8 +313,7 @@ export const GoogleAuthHandler = () => {
             `[AUTH-FLOW-] Storing partial profile data before redirecting`
           );
           // Store available profile data before redirecting
-          localStorage.setItem("user_profile", JSON.stringify(profile));
-          localStorage.setItem("auth_user_name", profile.full_name);
+          await refreshProfile();
 
           // Set flag to indicate that profile needs completion
           localStorage.setItem("needs_profile_completion", "true");
@@ -378,20 +377,8 @@ export const GoogleAuthHandler = () => {
           is_admin: finalProfile.is_admin || false,
         });
 
-        // Set admin status in localStorage for quick access
-        if (finalProfile.is_admin) {
-          localStorage.setItem("user_is_admin", "true");
-          console.log(`[AUTH-FLOW-] User is admin, setting admin flag`);
-        } else {
-          localStorage.removeItem("user_is_admin");
-          console.log(
-            `[AUTH-FLOW-] User is not admin, removing admin flag if exists`
-          );
-        }
-
         // Store complete profile and name in localStorage
-        localStorage.setItem("user_profile", JSON.stringify(finalProfile));
-        localStorage.setItem("auth_user_name", finalProfile.full_name);
+        await refreshProfile();
         console.log(`[AUTH-FLOW-] Stored complete profile in localStorage`);
 
         toast({

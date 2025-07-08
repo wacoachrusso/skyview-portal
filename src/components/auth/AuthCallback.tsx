@@ -271,7 +271,7 @@ const AuthCallback = () => {
     };
 
     processCallback();
-  }, [navigate, toast, handleCallback, handleEmailConfirmation, searchParams, ]);
+  }, []);
 
   if (isOAuthFlow) {
     console.log(`[CALLBACK- Rendering GoogleAuthHandler component`);
