@@ -13,11 +13,22 @@ const formatPlanName = (plan: string): string => {
   }
 };
 
-export const getEmailTemplate = (oldPlan: string, newPlan: string, fullName: string = "User"): EmailTemplate => {
+export const getEmailTemplate = (oldPlan: string, newPlan: string, fullName: string = "User", status: string = "active"): EmailTemplate => {
   console.log(`Generating email template for plan change: ${oldPlan} -> ${newPlan}`);
   
   const formattedOldPlan = formatPlanName(oldPlan);
   const formattedNewPlan = formatPlanName(newPlan);
+
+  if(status !== 'active') {
+    return {
+      subject: "Your SkyGuide Subscription Has Been Cancelled",
+      preheader: `Your subscription has been cancelled`,
+      mainContent: `
+        <p>Thank you for being a valued user of [App Name]. We’ve processed your request to cancel your subscription. You’ll retain full access to all features until the end of your billing cycle.</p>
+      `,
+      callToAction: "View Your Account"
+    }
+  }
   
   if (oldPlan === "annual" && newPlan === "monthly") {
     return {
