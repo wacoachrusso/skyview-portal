@@ -1,13 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { useContractHandler } from "@/hooks/useContractHandler";
 
 export function ContractUpload() {
-  const { toast } = useToast();
-  const { userProfile } = useUserProfile();
   const { handleContractClick } = useContractHandler();
 
   return (

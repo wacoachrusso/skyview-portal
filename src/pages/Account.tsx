@@ -6,32 +6,31 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { CancelSubscriptionDialog } from "@/components/account/CancelSubscriptionDialog";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { useProfile } from "@/components/utils/ProfileProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/theme-provider";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 import { Subscription } from "@/types/subscription";
 import { Profile } from "@/types/profile";
+import { useAuthStore } from "@/stores/authStores";
 
 const Account = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { toast } = useToast();
-  const [profileData, setProfileData] = useState<Profile>(null);
   const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
-  const {
-    isLoading,
-    userEmail,
-    profile,
-    authUser,
-    refreshProfile
-  } = useProfile();
+  const { profile,authUser, isLoading: authLoading, refreshProfile } = useAuthStore();
 
+  // Local loading states
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [mounted, setMounted] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Combined loading state
+  const isLoading = authLoading || isProfileLoading || isSubscriptionLoading;
 
   const handlePlanChange = () => {
     navigate("/?scrollTo=pricing-section");
@@ -55,6 +54,7 @@ const Account = () => {
     refreshProfile();
     setLoadingTimeout(false);
   };
+
   // Handle subscription cancellation
   const handleCancelSubscription = async () => {
     if (!authUser?.id) return;
@@ -100,30 +100,14 @@ const Account = () => {
       });
     }
   };
-  const getProfileData = async () => {
 
-    if (!authUser) {
-      console.error("No user found in session storage.");
-      return;
-    }
-
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("email", authUser.email)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
-    } else {
-      setProfileData(profile);
-    }
-  };
 
   const getSubscriptionData = async () => {
-    // Fetch subscription data by user_id
-    if (profile?.id) {
+    // Only fetch if we have profile data
+    if (!profile?.id) return;
+
+    try {
+      setIsSubscriptionLoading(true);
       console.log("Fetching subscription by user_id:", profile.id);
 
       const { data, error } = await supabase
@@ -138,23 +122,19 @@ const Account = () => {
         console.log("Subscription data by user_id:", data);
         setSubscriptionData(data || []);
       }
+    } catch (error) {
+      console.error("Exception in getSubscriptionData:", error);
+    } finally {
+      setIsSubscriptionLoading(false);
     }
   };
 
+  // Fetch subscription data when profile is available
   useEffect(() => {
-    getProfileData();
-  }, []);
-
-  useEffect(() => {
-    // Call getSubscriptionData when profile is available
     if (profile?.id) {
       getSubscriptionData();
     }
-  }, [profile]);
-  // Modified to handle both first load and subsequent loads
-  useEffect(() => {
-    console.log("Account component mounted or profile updated:", profile?.id);
-  }, [profile]);
+  }, [profile?.id]);
 
   // Set a timeout for loading to improve user experience
   useEffect(() => {
@@ -207,7 +187,7 @@ const Account = () => {
     return () => {
       setMounted(false);
     };
-  }, [profile?.id, isLoading]);
+  }, [profile?.id]);
 
   // Theme-aware background styling for loading and error states
   const loadingBgClass =
@@ -235,7 +215,9 @@ const Account = () => {
                 theme === "dark" ? "text-white" : "text-gray-800"
               }`}
             >
-              Loading your account...
+              {isProfileLoading ? "Loading your account..." : 
+               isSubscriptionLoading ? "Loading subscription data..." : 
+               "Loading..."}
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
               This may take a moment
@@ -256,7 +238,7 @@ const Account = () => {
   }
 
   // If profile couldn't be loaded after all attempts
-  if (!profile) {
+  if (!profile && !isLoading) {
     console.log("No profile found for account page");
     return (
       <div className={loadingBgClass}>
@@ -301,10 +283,10 @@ const Account = () => {
       : "border-blue-200/70 bg-white shadow-md backdrop-blur-md";
 
   // Render account page when data is available
-  console.log("Account page rendering with profile:", profile.id);
+  console.log("Account page rendering with profile:", profile?.id);
   return (
     <AppLayout maxWidth="max-w-4xl">
-      <div className="flex items-center justify-between mb-6 ">
+      <div className="flex items-center justify-between mb-6">
         <Button
           variant="ghost"
           className={`text-sm ${
@@ -321,22 +303,30 @@ const Account = () => {
       <div className="space-y-6">
         <div className={`rounded-2xl shadow-md border ${cardBgClass} p-6`}>
           <AccountInfo
-            userEmail={userEmail}
+            userEmail={profile.email}
             profile={profile}
             showPasswordChange={showPasswordChange}
           />
         </div>
 
         <div className={`rounded-2xl shadow-md border ${cardBgClass} p-6`}>
-          <SubscriptionInfo
-            profileData={profileData}
-            subscriptionData={subscriptionData}
-            onPlanChange={handlePlanChange}
-            onCancelSubscription={handleInitialCancelClick}
-            refreshProfile={refreshProfile}
-            setSubscriptionData={setSubscriptionData}
-            setProfileData={setProfileData}
-          />
+          {isSubscriptionLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner size="md" className="mr-2" />
+              <span className="text-sm text-muted-foreground">
+                Loading subscription data...
+              </span>
+            </div>
+          ) : (
+            <SubscriptionInfo
+              profileData={profile}
+              subscriptionData={subscriptionData}
+              onPlanChange={handlePlanChange}
+              onCancelSubscription={handleInitialCancelClick}
+              refreshProfile={refreshProfile}
+              setSubscriptionData={setSubscriptionData}
+            />
+          )}
         </div>
       </div>
 

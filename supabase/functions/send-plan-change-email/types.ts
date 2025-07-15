@@ -2,6 +2,7 @@ export interface EmailRequest {
   email: string;
   oldPlan: string;
   newPlan: string;
+  status?: string;
   fullName?: string;
 }
 

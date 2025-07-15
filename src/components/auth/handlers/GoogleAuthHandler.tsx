@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { createNewSession } from "@/services/session";
-import { useProfile } from "@/components/utils/ProfileProvider";
+import { useAuthStore } from "@/stores/authStores";
 
 export const GoogleAuthHandler = () => {
   const [loading, setLoading] = useState(true);
@@ -12,7 +12,7 @@ export const GoogleAuthHandler = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const { refreshProfile } = useProfile();
+  const { refreshProfile } = useAuthStore();
   useEffect(() => {
     const handleAuthCallback = async () => {
       console.log(`[AUTH-FLOW-] GoogleAuthHandler: Auth flow initiated`);

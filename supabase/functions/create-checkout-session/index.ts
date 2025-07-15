@@ -263,7 +263,7 @@ serve(async (req) => {
       
       console.log('[create-checkout-session] Creating checkout session with price:', priceId);
       
-      const session = await stripe.checkout.sessions.create({
+      const stripePayload = {
         payment_method_types: ['card'],
         line_items: [
           {
@@ -280,7 +280,9 @@ serve(async (req) => {
           email: email,
           environment: isTestMode() ? 'test' : 'production'
         },
-      });
+      }
+      console.log(stripePayload)
+      const session = await stripe.checkout.sessions.create(stripePayload);
 
       console.log('[create-checkout-session] Session created successfully:', { 
         id: session.id, 

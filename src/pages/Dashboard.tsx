@@ -4,9 +4,9 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
 import { FAQ } from "@/components/dashboard/FAQ";
-import { useProfile } from "@/components/utils/ProfileProvider";
 import { useTheme } from "@/components/theme-provider";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useAuthStore } from "@/stores/authStores";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -15,10 +15,10 @@ export default function Dashboard() {
   // Use the ProfileProvider hook
   const { 
     isLoading: profileLoading, 
-    loadError,
-    authUser, 
-    userName
-  } = useProfile();
+    profileError,
+    authUser,
+    profile
+  } = useAuthStore();
   
   const [isLoading, setIsLoading] = useState(true);
   const bgStyles =
@@ -58,12 +58,12 @@ export default function Dashboard() {
     );
   }
 
-  if (loadError) {
+  if (profileError) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${bgStyles}`}>
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">Failed to load profile</h2>
-          <p className="text-muted-foreground mb-4">{loadError}</p>
+          <p className="text-muted-foreground mb-4">{profileError}</p>
           <button 
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
             onClick={() => navigate('/login')}
@@ -79,7 +79,7 @@ export default function Dashboard() {
     <AppLayout>
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
         <div className="w-full">
-          <WelcomeCard userName={userName} />
+          <WelcomeCard userName={profile.full_name} />
         </div>
         
         <div className="w-full">

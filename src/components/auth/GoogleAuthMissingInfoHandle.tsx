@@ -8,8 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { JobAndAirlineSelector } from "@/components/auth/JobAndAirlineSelector";
-import { createNewSession } from "@/services/session";
-import { useProfile } from "../utils/ProfileProvider";
+import { useAuthStore } from "@/stores/authStores";
+
 
 const infoFormSchema = z.object({
   jobTitle: z.string().min(1, "Please select a job title."),
@@ -25,7 +25,7 @@ export const GoogleAuthMissingInfoHandler = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile, refreshProfile } = useProfile();
+  const { profile, refreshProfile } = useAuthStore();
   // Get existing profile data to pre-populate form if available
   const form = useForm<InfoFormValues>({
     resolver: zodResolver(infoFormSchema),

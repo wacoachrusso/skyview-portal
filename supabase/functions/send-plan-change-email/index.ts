@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const { email, oldPlan, newPlan, fullName }: EmailRequest = await req.json();
+    const { email, oldPlan, newPlan, fullName, status }: EmailRequest = await req.json();
     console.log(`Processing plan change email request:`, {
       email,
       oldPlan,
@@ -35,7 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
       timestamp: new Date().toISOString()
     });
 
-    const template = getEmailTemplate(oldPlan, newPlan, fullName);
+    const template = getEmailTemplate(oldPlan, newPlan, fullName, status);
     console.log(`Email template generated with subject: ${template.subject}`);
 
     const html = buildEmailHtml(template, fullName);

@@ -55,6 +55,68 @@ export async function handleSendMessage({
   let isNewConversation = !currentConversationId;
 
   try {
+    // Get user profile for subscription info and role type
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUserId)
+      .single();
+
+    // Check for JWT expired error
+    if (profileError) {
+      if (
+        profileError.code === "PGRST301" ||
+        profileError.message?.includes("JWT expired")
+      ) {
+        handleTokenExpired(toast, navigateToLogin);
+        return;
+      }
+    }
+
+    // Fetch chat service configuration from app_configs table
+    const { data: configData, error: configError } = await supabase
+      .from("app_configs")
+      .select("key, value")
+      .in("key", ["chat_service_url", "chat_max_token"]);
+
+    // Check for JWT expired error
+    if (configError) {
+      if (
+        configError.code === "PGRST301" ||
+        configError.message?.includes("JWT expired")
+      ) {
+        handleTokenExpired(toast, navigateToLogin);
+        return;
+      }
+      console.error("Error fetching app config:", configError);
+    }
+
+    // Parse configuration data
+    const config = Object.fromEntries(
+      (configData || []).map((item) => [item.key, item.value])
+    );
+
+    // Use configured chat service URL or fallback to default
+    const chatServiceUrl =
+      typeof config.chat_service_url === "string"
+        ? config.chat_service_url
+        : "https://chat.skyguide.site/chat-completion";
+
+    const chatMaxToken = typeof config.chat_max_token === "string"
+      ? config.chat_max_token
+      : 700;
+
+    console.log(`Using chat service URL: ${chatServiceUrl}`);
+
+    // Modify content based on chat service URL and role type
+    let modifiedContent = content;
+    const isSupabaseService = !chatServiceUrl.includes('chat.skyguide.site') && !chatServiceUrl.includes('localhost:9999');
+    
+    if (isSupabaseService && profile?.role_type) {
+      modifiedContent = `As a ${profile.role_type}, ${content}`;
+      console.log(`Modified content with role prefix: ${modifiedContent}`);
+    }
+
     // Create a new conversation if one doesn't exist
     if (!newConversationId) {
       const { data: newConversation, error } = await supabase
@@ -86,7 +148,7 @@ export async function handleSendMessage({
       setConversations((prev) => [newConversation, ...prev]);
     }
 
-    // Add temporary user message to the UI
+    // Add temporary user message to the UI (using original content for display)
     const tempUserMessage: MessageWithStreamingProps = {
       id: tempUserMessageId,
       content,
@@ -99,7 +161,7 @@ export async function handleSendMessage({
 
     setMessages((prev) => [...prev, tempUserMessage]);
 
-    // Insert the user message into the database
+    // Insert the user message into the database (using original content)
     const { data: userMessage, error: userMessageError } = await supabase
       .from("messages")
       .insert([
@@ -208,58 +270,6 @@ export async function handleSendMessage({
 
     setMessages((prev) => [...prev, streamingMessage]);
 
-    // Get user profile for subscription info
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUserId)
-      .single();
-
-    // Check for JWT expired error
-    if (profileError) {
-      if (
-        profileError.code === "PGRST301" ||
-        profileError.message?.includes("JWT expired")
-      ) {
-        handleTokenExpired(toast, navigateToLogin);
-        return;
-      }
-    }
-    // Fetch chat service configuration from app_configs table
-    const { data: configData, error: configError } = await supabase
-      .from("app_configs")
-      .select("key, value")
-      .in("key", ["chat_service_url", "chat_max_token"]);
-
-    // Check for JWT expired error
-    if (configError) {
-      if (
-        configError.code === "PGRST301" ||
-        configError.message?.includes("JWT expired")
-      ) {
-        handleTokenExpired(toast, navigateToLogin);
-        return;
-      }
-      console.error("Error fetching app config:", configError);
-    }
-
-    // Parse configuration data
-    const config = Object.fromEntries(
-      (configData || []).map((item) => [item.key, item.value])
-    );
-
-    // Use configured chat service URL or fallback to default
-    const chatServiceUrl =
-      typeof config.chat_service_url === "string"
-        ? config.chat_service_url
-        : "https://chat.skyguide.site/chat-completion";
-
-    const chatMaxToken = typeof config.chat_max_token === "string"
-    ? config.chat_max_token
-    : 700;
-
-    console.log(`Using chat service URL: ${chatServiceUrl}`);
-
     const {
       data: { session },
       error: sessionError,
@@ -273,7 +283,7 @@ export async function handleSendMessage({
     }
 
     console.log(`access token is found, so we can proceed for chat`);
-    // Call the AI service
+    // Call the AI service (using modified content for the API call)
     console.time("benchmark");
     console.time("ttfb");
     const res = await fetch(chatServiceUrl, {
@@ -284,7 +294,7 @@ export async function handleSendMessage({
         Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
-        content,
+        content: modifiedContent, // Use modified content with role prefix
         conversationId: newConversationId,
         subscriptionPlan: profile?.subscription_plan || "free",
         assistantId: profile?.assistant_id || "default_assistant_id",
@@ -476,7 +486,6 @@ export async function handleSendMessage({
         }
       }
     }
-
 
     // Update query count
     if (profile && profile.subscription_plan === "free") {

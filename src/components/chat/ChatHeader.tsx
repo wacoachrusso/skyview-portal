@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { forceNavigate } from "@/utils/navigation";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -11,8 +10,8 @@ import {
 } from "lucide-react";
 import { ChatSettings } from "./ChatSettings";
 import { useTheme } from "../theme-provider";
-import { useProfile } from "../utils/ProfileProvider";
 import ChatHeaderButton from "./ChatHeaderButton";
+import { useAuthStore } from "@/stores/authStores";
 
 interface ChatHeaderProps {
   startNewChat: () => void;
@@ -31,12 +30,12 @@ const ChatHeader = ({
 }: ChatHeaderProps) => {
   const isMobile = useIsMobile();
   const { theme } = useTheme();
-  const { userName, logout } = useProfile();
-
+  const { profile, logout: storeLogout } = useAuthStore();
+  const userName = profile.full_name;
   // Use the logout method from ProfileProvider
   const handleSignOut = async () => {
     try {
-      await logout();
+      await storeLogout();
     } catch (error) {
       console.error("Error during sign out:", error);
     }
