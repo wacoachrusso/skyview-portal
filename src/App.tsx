@@ -6,9 +6,9 @@ import { Suspense } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
 import { BrowserRouter } from "react-router-dom";
 import { ViewportManager } from "@/components/utils/ViewportManager";
-import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
-import { ProfileProvider } from "./components/utils/ProfileProvider";
-
+import * as Sentry from "@sentry/react";
+import { AuthProvider } from "./components/utils/AuthProvider";
+import { AppLoadingSpinner } from "./components/ui/app-loading-spinner";
 
 // Create QueryClient with default options
 const queryClient = new QueryClient({
@@ -19,28 +19,32 @@ const queryClient = new QueryClient({
     },
   },
 });
-
+function FallbackComponent() {
+  return <div>An error has occurred</div>;
+}
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <LazyMotion features={domAnimation}>
-          <BrowserRouter>
-            {/* Handle viewport meta tag */}
-            <ViewportManager />
-            
-            <div className="min-h-[100dvh] bg-luxury-dark">
-              <Suspense fallback={<AppLoadingSpinner />}>
-                <ProfileProvider>
-                  <AppRoutes />
-                </ProfileProvider>
-              </Suspense>
-            </div>
-            <Toaster />
-          </BrowserRouter>
-        </LazyMotion>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <Sentry.ErrorBoundary fallback={FallbackComponent} showDialog>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <LazyMotion features={domAnimation}>
+            <BrowserRouter>
+              {/* Handle viewport meta tag */}
+              <ViewportManager />
+
+              <div className="min-h-[100dvh] bg-luxury-dark">
+                <Suspense fallback={<AppLoadingSpinner />}>
+                  <AuthProvider>
+                    <AppRoutes />
+                  </AuthProvider>
+                </Suspense>
+              </div>
+              <Toaster />
+            </BrowserRouter>
+          </LazyMotion>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   );
 }
 

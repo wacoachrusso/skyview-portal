@@ -1,3 +1,17 @@
+/**
+ * PricingCard.tsx
+ *
+ * 📄 Description:
+ * This component renders a single pricing plan card with UI and logic for
+ * subscription status, feature listing, and button handling.
+ *
+ * ✅ Responsibilities:
+ * - Display pricing, features, and action button for a plan
+ * - Detect active subscription and update button state
+ * - Handle subscription plan click via onSelect or usePricingHandler
+ * - Show savings badge and "Current Plan" badge if applicable
+ */
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,11 +19,12 @@ import { PricingHeader } from "./pricing-card/PricingHeader";
 import { PricingFeatures } from "./pricing-card/PricingFeatures";
 import { usePricingHandler } from "@/hooks/usePricingHandler";
 import { useEffect, useState } from "react";
-import { useProfileRefresh } from "@/utils/user/refreshProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { Subscription } from "@/types/subscription";
+import { useAuthStore } from "@/stores/authStores";
+import chalk from "chalk";
 
-interface UserProfile {
+interface profile {
   id: string;
   email: string;
   subscription_plan: string;
@@ -22,85 +37,59 @@ interface PricingCardProps {
   description: string;
   features: string[];
   priceId: string;
-  mode?: 'subscription' | 'payment';
+  mode?: "subscription" | "payment";
   popular?: boolean;
   onSelect?: () => Promise<void>;
   savingsBadge?: string;
   returnUrl?: string;
 }
 
-export const PricingCard = ({ 
-  name, 
-  price, 
-  description, 
-  features, 
+export const PricingCard = ({
+  name,
+  price,
+  description,
+  features,
   priceId,
-  mode = 'subscription',
+  mode = "subscription",
   popular = false,
   onSelect,
   savingsBadge,
-  returnUrl = '/chat'
+  returnUrl = "/chat",
 }: PricingCardProps) => {
   const { handlePlanSelection } = usePricingHandler();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
   const [isActiveSubscription, setIsActiveSubscription] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  useProfileRefresh();
+  const { profile, isLoading: authLoading } = useAuthStore();
 
-  // Get user profile from session storage (similar to SubscriptionInfo)
-  const getProfileData = async () => {
-    const cachedUser = sessionStorage.getItem("cached_auth_user");
-
-    if (!cachedUser) {
-      console.error("No user found in session storage.");
-      setIsLoading(false);
-      return;
-    }
-
-    const user = JSON.parse(cachedUser);
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("email", user.email)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
-      setIsLoading(false);
-    } else {
-      setUserProfile(profile);
-    }
-  };
-
-  // Get subscription data from subscriptions table (similar to SubscriptionInfo)
+  // Step 1: Get user's subscriptions
   const getSubscriptionData = async () => {
-    if (userProfile?.id) {
-      console.log("Fetching subscription by user_id:", userProfile.id);
+    if (profile?.id) {
+      console.log(chalk.bgBlue.white.bold(`[PricingCard] Step 1: Fetching subscriptions for user ${profile.id}`));
 
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
-        .eq("user_id", userProfile.id)
+        .eq("user_id", profile.id)
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching subscription by user_id:", error);
+        console.error(chalk.bgRed.white.bold("[PricingCard] Step 1.1: Error fetching subscriptions:"), error);
       } else {
-        console.log("Subscription data by user_id:", data);
+        console.log(chalk.bgGreen.black.bold("[PricingCard] Step 1.2: Subscription data retrieved:"), data);
         setSubscriptionData(data || []);
       }
     }
     setIsLoading(false);
   };
 
-  // Check if current plan is active subscription
+  // Step 2: Check if current plan is active
   const checkActiveSubscription = () => {
-    if (!userProfile || subscriptionData.length === 0) {
-      // For free plans, check if user is on free and this is free trial card
-      if (userProfile?.subscription_plan === "free" && 
-          (name.toLowerCase() === "free" || name.toLowerCase() === "free trial")) {
+    if (!profile || subscriptionData.length === 0) {
+      if (
+        profile?.subscription_plan === "free" &&
+        (name.toLowerCase() === "free" || name.toLowerCase() === "free trial")
+      ) {
         setIsActiveSubscription(true);
       } else {
         setIsActiveSubscription(false);
@@ -108,106 +97,77 @@ export const PricingCard = ({
       return;
     }
 
-    const activeSubscription = subscriptionData[0]; // Most recent subscription
-    
-    // Check if this plan matches the user's active subscription
-    const isActive = (
-      // For paid plans: check if plan names match and subscription is active
+    const activeSubscription = subscriptionData[0];
+    const isActive =
       ((activeSubscription.plan.toLowerCase() === name.toLowerCase() ||
-       (activeSubscription.plan === "monthly" && name.toLowerCase() === "monthly") ||
-       (activeSubscription.plan === "annual" && name.toLowerCase() === "annual")) &&
-       activeSubscription.payment_status === "active") ||
-      // For free plan: check if user is on free plan and this is the free trial card
-      (userProfile.subscription_plan === "free" && 
-       (name.toLowerCase() === "free" || name.toLowerCase() === "free trial"))
-    );
-    
+        (activeSubscription.plan === "monthly" && name.toLowerCase() === "monthly") ||
+        (activeSubscription.plan === "annual" && name.toLowerCase() === "annual")) &&
+        activeSubscription.payment_status === "active") ||
+      (profile.subscription_plan === "free" &&
+        (name.toLowerCase() === "free" || name.toLowerCase() === "free trial"));
+
     setIsActiveSubscription(isActive);
+
+    console.log(
+      chalk.bgMagenta.white.bold(`[PricingCard] Step 2: Checked active subscription → ${isActive ? "Active" : "Not Active"}`)
+    );
   };
 
-  // Initial data fetch
+  // Step 3: Fetch data when profile is ready
   useEffect(() => {
-    getProfileData();
-  }, []);
-
-  // Fetch subscription data when profile is available
-  useEffect(() => {
-    if (userProfile?.id) {
+    if (profile?.id) {
       getSubscriptionData();
     }
-  }, [userProfile]);
+  }, [profile]);
 
-  // Update active subscription status when data changes
+  // Step 4: Recheck plan status when relevant data changes
   useEffect(() => {
     checkActiveSubscription();
-  }, [userProfile, subscriptionData, name]);
+  }, [profile, subscriptionData, name]);
 
-  // Add a window focus listener to refresh data when the tab regains focus
-  useEffect(() => {
-    const handleFocus = async () => {
-      try {
-        console.log("Window focused, refreshing subscription data...");
-        await getProfileData();
-        // getSubscriptionData will be called automatically via useEffect when userProfile updates
-      } catch (error) {
-        console.error("Error refreshing data on window focus:", error);
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, []);
-
+  // Step 5: Handle plan click
   const handlePlanClick = async () => {
     try {
-      console.log(`Plan clicked: ${name} with priceId: ${priceId}`);
-      
-      // First try the direct handler if provided
+      console.log(chalk.bgYellow.black.bold(`[PricingCard] Step 5: Plan clicked → ${name} (${priceId})`));
+
       if (onSelect) {
+        console.log(chalk.bgCyan.black.bold("[PricingCard] Step 5.1: Using external onSelect handler"));
         await onSelect();
         return;
       }
-      
-      // Use the unified pricing handler
+
+      console.log(chalk.bgCyan.black.bold("[PricingCard] Step 5.2: Using internal pricing handler"));
       await handlePlanSelection({
-        name: name,
-        priceId: priceId,
-        mode: mode,
-        returnUrl: returnUrl
+        name,
+        priceId,
+        mode,
+        returnUrl,
       });
-      
     } catch (error) {
-      console.error("Error handling plan selection:", error);
+      console.error(chalk.bgRed.white.bold("[PricingCard] Step 5.3: Error handling plan selection"), error);
     }
   };
 
-  // Determine persuasive button text based on plan name and subscription status
+  // Step 6: Determine button text
   const getButtonText = () => {
-    if (isLoading) {
-      return 'Loading...';
-    } else if (isActiveSubscription) {
-      return 'Current Plan';
-    } else if (name.toLowerCase() === 'free' || name.toLowerCase() === 'free trial') {
-      return 'Start Your Free Trial';
-    } else if (name.toLowerCase() === 'monthly') {
-      return 'Get Monthly Access';
-    } else if (name.toLowerCase() === 'annual') {
-      return 'Unlock Best Value';
-    } else {
-      return 'Choose This Plan';
-    }
+    if (isLoading) return "Loading...";
+    if (isActiveSubscription) return "Current Plan";
+    if (name.toLowerCase() === "free" || name.toLowerCase() === "free trial") return "Start Your Free Trial";
+    if (name.toLowerCase() === "monthly") return "Get Monthly Access";
+    if (name.toLowerCase() === "annual") return "Unlock Best Value";
+    return "Choose This Plan";
   };
 
   return (
-    <Card 
-      className={`w-full max-w-sm mx-auto relative ${popular ? 'border-brand-gold shadow-xl hover-lift-gold' : 'border-gray-200 hover-lift'}`}
-      aria-labelledby={`pricing-plan-${name.toLowerCase().replace(/\s+/g, '-')}`}
+    <Card
+      className={`w-full max-w-sm mx-auto relative ${
+        popular ? "border-brand-gold shadow-xl hover-lift-gold" : "border-gray-200 hover-lift"
+      }`}
+      aria-labelledby={`pricing-plan-${name.toLowerCase().replace(/\s+/g, "-")}`}
     >
       {savingsBadge && (
-        <Badge 
-          variant="success" 
+        <Badge
+          variant="success"
           className="absolute -top-3 right-4 px-3 py-1 font-semibold shadow-md animate-pulse-subtle"
           aria-label={`Special offer: ${savingsBadge}`}
         >
@@ -215,7 +175,7 @@ export const PricingCard = ({
         </Badge>
       )}
       {isActiveSubscription && (
-        <Badge 
+        <Badge
           variant="secondary"
           className="absolute -top-3 left-4 px-3 py-1 font-semibold shadow-md bg-brand-navy text-white"
           aria-label="This is your current active plan"
@@ -223,13 +183,7 @@ export const PricingCard = ({
           Current Plan
         </Badge>
       )}
-      <PricingHeader
-        name={name}
-        price={price}
-        description={description}
-        mode={mode}
-        popular={popular}
-      />
+      <PricingHeader name={name} price={price} description={description} mode={mode} popular={popular} />
       <CardContent>
         <PricingFeatures features={features} />
       </CardContent>
@@ -239,10 +193,10 @@ export const PricingCard = ({
           disabled={isActiveSubscription || isLoading}
           className={`w-full ${
             isActiveSubscription
-              ? 'bg-gray-300 hover:bg-gray-300 text-gray-700 cursor-not-allowed'
+              ? "bg-gray-300 hover:bg-gray-300 text-gray-700 cursor-not-allowed"
               : popular
-                ? 'cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-black'
-                : 'cta-button primary-cta bg-brand-navy hover:bg-brand-navy/90 text-white'
+              ? "cta-button primary-cta gold-cta bg-brand-gold hover:bg-brand-gold/90 text-black"
+              : "cta-button primary-cta bg-brand-navy hover:bg-brand-navy/90 text-white"
           } high-contrast-focus`}
           aria-label={`${getButtonText()} for ${name} plan at ${price}`}
         >

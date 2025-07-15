@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useTheme } from "@/components/theme-provider";
-import { useProfile } from "@/components/utils/ProfileProvider";
+import { useAuthStore } from "@/stores/authStores";
 
 export function AccountInfo() {
   const [userEmail, setUserEmail] = useState<string>("");
   const [plan, setPlan] = useState<string>("Free Trial");
   const [queriesRemaining, setQueriesRemaining] = useState<number>(0);
-  const { profile, refreshProfile } = useProfile();
+  const { profile, refreshProfile } = useAuthStore();
 
   useEffect(() => {
     const cachedProfile = sessionStorage.getItem("cached_user_profile");

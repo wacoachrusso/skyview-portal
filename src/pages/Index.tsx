@@ -226,6 +226,7 @@ export default function Index() {
 
   return (
     <PublicLayout>
+      
       <main className="flex-1 w-full">
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import { DisclaimerDialog } from "../consent/DisclaimerDialog";
-import { useProfile } from "../utils/ProfileProvider";
+import { useAuthStore } from "@/stores/authStores";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const location = useLocation();
   const { toast } = useToast();
-  const { authUser, profile, isLoading: profileLoading } = useProfile();
+  const { authUser, profile, isLoading: profileLoading } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
@@ -124,7 +124,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const handleRejectDisclaimer = async () => {
     try {
       // Use the logout method from ProfileProvider
-      const { logout } = useProfile();
+      const { logout } = useAuthStore();
       await logout();
 
       setIsAuthenticated(false);
