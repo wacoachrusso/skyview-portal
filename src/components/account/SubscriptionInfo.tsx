@@ -1,3 +1,18 @@
+/**
+ * SubscriptionInfo.tsx
+ *
+ * 📄 Description:
+ * This component displays the user's current subscription details and allows them
+ * to manage their plan including upgrades, downgrades, and cancellations.
+ *
+ * ✅ Responsibilities:
+ * - Display current subscription data
+ * - Allow switching between plans via Supabase function
+ * - Handle Stripe payments if required
+ * - Trigger email notifications for plan changes
+ * - Show loading and error feedback using toasts
+ */
+
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,25 +31,24 @@ import {
   isButtonDisabled,
 } from "@/utils/subscription/planUtils";
 import { Profile } from "@/types/profile";
+import chalk from "chalk";
 
 interface SubscriptionInfoProps {
   profileData: Profile;
   subscriptionData: Subscription[];
   setSubscriptionData: React.Dispatch<React.SetStateAction<Subscription[]>>;
-  setProfileData:React.Dispatch<React.SetStateAction<Profile>>;
   onPlanChange: (plan: string) => void;
   onCancelSubscription: () => void;
   refreshProfile?: () => void;
 }
 
-// Use environment variable or fallback
+// Load Stripe instance
 const stripePromise = loadStripe(import.meta.env.VITE__STRIPE_PUBLIC_KEY);
 
 export const SubscriptionInfo = ({
   profileData,
   subscriptionData,
   setSubscriptionData,
-  setProfileData,
   onPlanChange,
   onCancelSubscription,
   refreshProfile,
@@ -42,18 +56,17 @@ export const SubscriptionInfo = ({
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Step 1: Handle changing plan
   const handleChangePlan = async (newPlan: string) => {
-    console.log("🔄 Starting plan change process.....");
-    console.log("Current plan:",  subscriptionData[0].plan);
-    console.log("Requested new plan:", newPlan);
+    console.log(chalk.bgBlue.white.bold("[SubscriptionInfo] Step 1: Starting plan change process"));
+    console.log("➡️ Current plan:", subscriptionData[0].plan);
+    console.log("➡️ Requested plan:", newPlan);
 
-    if (newPlan ===  subscriptionData[0].plan) {
-      console.log("⚠️ Already on the requested plan.");
+    if (newPlan === subscriptionData[0].plan) {
+      console.warn(chalk.bgYellow.black.bold("[SubscriptionInfo] Already on requested plan"));
       toast({
         title: "Already Subscribed",
-        description: `You are already on the ${formatPlanName(
-           subscriptionData[0].plan
-        )} plan.`,
+        description: `You are already on the ${formatPlanName(subscriptionData[0].plan)} plan.`,
       });
       return;
     }
@@ -61,152 +74,117 @@ export const SubscriptionInfo = ({
     setIsUpdating(true);
 
     try {
-      // Step 1: Invoke `switch-plan` function
+      // Step 2: Call Supabase function to switch plan
+      console.log(chalk.bgCyan.white.bold("[SubscriptionInfo] Step 2: Calling Supabase function `switch-plan`"));
       const { data, error } = await supabase.functions.invoke("switch-plan", {
         body: {
           email: profileData.email,
-          oldPlan:  subscriptionData[0].plan,
+          oldPlan: subscriptionData[0].plan,
           newPlan,
           fullName: profileData.full_name || "User",
         },
       });
 
       if (error || !data) {
-        console.error("❌ Error from switch-plan:", error);
-        throw new Error(
-          error?.message || "Unexpected error during plan switch."
-        );
+        console.error(chalk.bgRed.white.bold("[SubscriptionInfo] Step 2.1: Error from switch-plan"), error);
+        throw new Error(error?.message || "Unexpected error during plan switch.");
       }
 
-      console.log("✅ switch-plan response received:", data);
+      console.log(chalk.bgGreen.black.bold("[SubscriptionInfo] Step 2.2: Response from switch-plan"), data);
 
-      // Step 2: Handle payment if required
+      // Step 3: If payment is required
       if (data.status === "requires_payment") {
-        console.log("💳 Payment required. Initializing Stripe...");
+        console.log(chalk.bgYellow.black.bold("[SubscriptionInfo] Step 3: Payment required. Loading Stripe..."));
         const stripe = await stripePromise;
 
         if (!stripe) {
-          console.error("❌ Stripe initialization failed");
+          console.error("[SubscriptionInfo] Stripe failed to initialize");
           throw new Error("Stripe not initialized");
         }
 
-        console.log(
-          "🚀 Confirming card payment with clientSecret:",
-          data.clientSecret
-        );
-
-        const paymentResult = await stripe.confirmCardPayment(
-          data.clientSecret
-        );
+        console.log("💳 Confirming payment with clientSecret:", data.clientSecret);
+        const paymentResult = await stripe.confirmCardPayment(data.clientSecret);
 
         if (paymentResult.error) {
-          console.error(
-            "❌ Stripe payment failed:",
-            paymentResult.error.message
-          );
+          console.error(chalk.bgRed.white.bold("[SubscriptionInfo] Payment failed"), paymentResult.error.message);
           toast({
             variant: "destructive",
             title: "Payment Failed",
-            description:
-              paymentResult.error.message ||
-              "Card payment failed. Please try again.",
+            description: paymentResult.error.message || "Card payment failed. Please try again.",
           });
           return;
         }
 
-        console.log("✅ Payment successful");
+        console.log(chalk.bgGreen.black.bold("[SubscriptionInfo] Payment successful"));
 
-        // Step 3: Notify via email function
-        console.log("📩 Invoking send-plan-change-email...");
+        // Step 4: Send plan change email
+        console.log("[SubscriptionInfo] Step 4: Sending confirmation email...");
         await supabase.functions.invoke("send-plan-change-email", {
           body: {
             email: profileData.email,
-            oldPlan:  subscriptionData[0].old_plan,
+            oldPlan: subscriptionData[0].old_plan,
             newPlan,
             fullName: profileData.full_name || "User",
           },
         });
-
-        console.log("📩 send-plan-change-email success");
+        console.log("[SubscriptionInfo] Plan change email sent ✅");
 
         toast({
           title: "Payment Successful",
-          description: `Your plan has been upgraded to ${formatPlanName(
-            newPlan
-          )}.`,
+          description: `Your plan has been upgraded to ${formatPlanName(newPlan)}.`,
         });
 
-        // Refresh profile data after successful payment
+        // Step 5: Refresh profile & data
         if (refreshProfile) {
-          console.log("🔄 Refreshing profile data after successful payment...");
+          console.log("[SubscriptionInfo] Refreshing profile after successful payment...");
           await refreshProfile();
           await getSubscriptionData();
         }
 
-        // Only call onPlanChange for navigation if upgrading from free to paid
-        if (
-           subscriptionData[0].plan === "free" ||
-           subscriptionData[0].plan === "trial_ended"
-        ) {
+        if (subscriptionData[0].plan === "free" || subscriptionData[0].plan === "trial_ended") {
           onPlanChange(newPlan);
         }
       }
 
-      // Step 4: If plan switched without payment
+      // Step 6: Plan switched without payment
       else if (data.status === "success") {
-        console.log(
-          "✅ Plan switched successfully without payment:",
-          data.subscription
-        );
+        console.log(chalk.bgGreen.black.bold("[SubscriptionInfo] Step 6: Plan switched successfully without payment"));
 
         toast({
           title: "Plan Updated",
-          description: `You have successfully switched to the ${formatPlanName(
-            newPlan
-          )} plan.`,
+          description: `You have successfully switched to the ${formatPlanName(newPlan)} plan.`,
         });
 
-        // Refresh profile data after successful plan switch
         if (refreshProfile) {
-          console.log(
-            "🔄 Refreshing profile data after successful plan switch..."
-          );
+          console.log("[SubscriptionInfo] Refreshing profile after successful plan switch...");
           await refreshProfile();
           await getSubscriptionData();
         }
 
-        // Only call onPlanChange for navigation if upgrading from free to paid
-        if (
-          profileData.subscription_plan === "free" ||
-          profileData.subscription_plan === "trial_ended"
-        ) {
+        if (profileData.subscription_plan === "free" || profileData.subscription_plan === "trial_ended") {
           onPlanChange(newPlan);
         }
       } else {
-        console.warn(
-          "⚠️ Unknown response status from switch-plan:",
-          data.status
-        );
+        console.warn("[SubscriptionInfo] Unknown status returned:", data.status);
       }
     } catch (error: any) {
-      console.error("🚨 Exception in plan change:", error);
+      console.error(chalk.bgRed.white.bold("[SubscriptionInfo] Step X: Plan switch error"), error);
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error.message || "Failed to switch plan. Please try again.",
+        description: error.message || "Failed to switch plan. Please try again.",
       });
     } finally {
+      console.log("[SubscriptionInfo] ✅ Plan change process completed");
       setIsUpdating(false);
-      console.log("✅ Plan change process complete");
     }
   };
 
+  // Fetch subscriptions from Supabase
   const getSubscriptionData = async () => {
-    // Fetch subscription data by user_id
-    if (profileData?.id) {
-      console.log("Fetching subscription by user_id:", profileData.id);
+    console.log(chalk.bgBlue.white.bold("[SubscriptionInfo] Fetching subscriptions..."));
 
+    if (profileData?.id) {
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
@@ -214,9 +192,9 @@ export const SubscriptionInfo = ({
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching subscription by user_id:", error);
+        console.error("[SubscriptionInfo] Subscription fetch error:", error);
       } else {
-        console.log("Subscription data by user_id:", data);
+        console.log("[SubscriptionInfo] Subscription data fetched:", data);
         setSubscriptionData(data || []);
       }
     }
@@ -226,9 +204,7 @@ export const SubscriptionInfo = ({
     <div className="space-y-6">
       <Card className="bg-white/95 shadow-xl">
         <CardHeader>
-          <CardTitle className="text-brand-navy">
-            Subscription Details
-          </CardTitle>
+          <CardTitle className="text-brand-navy">Subscription Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4">
@@ -239,13 +215,10 @@ export const SubscriptionInfo = ({
               </span>
             </div>
 
-            {/* Display subscription data if available */}
             {subscriptionData.length > 0 && (
               <>
                 <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium text-brand-navy">
-                    Payment Status:
-                  </span>
+                  <span className="font-medium text-brand-navy">Payment Status:</span>
                   <span className="col-span-2 text-gray-700 capitalize">
                     {subscriptionData[0]?.payment_status || "N/A"}
                   </span>
@@ -254,26 +227,12 @@ export const SubscriptionInfo = ({
                 {subscriptionData[0]?.price && (
                   <div className="grid grid-cols-3 items-center gap-4">
                     <span className="font-medium text-brand-navy">Price:</span>
-                    <span className="col-span-2 text-gray-700">
-                      ${subscriptionData[0].price}
-                    </span>
+                    <span className="col-span-2 text-gray-700">${subscriptionData[0].price}</span>
                   </div>
                 )}
               </>
             )}
 
-            <div className="grid-cols-3 items-center gap-4 hidden">
-              <span className="font-medium text-brand-navy">Status:</span>
-              <span className="col-span-2 text-gray-700 capitalize">
-                {profileData?.subscription_status || "Inactive"}
-              </span>
-            </div>
-            <div className="grid-cols-3 items-center gap-4 hidden">
-              <span className="font-medium text-brand-navy">Queries Used:</span>
-              <span className="col-span-2 text-gray-700">
-                {profileData?.query_count || 0}
-              </span>
-            </div>
             {profileData?.last_query_timestamp && (
               <div className="grid grid-cols-3 items-center gap-4">
                 <span className="font-medium text-brand-navy">Last Query:</span>
@@ -287,9 +246,8 @@ export const SubscriptionInfo = ({
           <Separator className="bg-gray-200" />
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-brand-navy">
-              Plan Management
-            </h3>
+            <h3 className="text-lg font-semibold text-brand-navy">Plan Management</h3>
+
             {profileData?.subscription_plan === "free" ||
             profileData?.subscription_plan === "trial_ended" ? (
               <Button
@@ -309,9 +267,7 @@ export const SubscriptionInfo = ({
             ) : (
               <div className="space-y-2">
                 <Button
-                  onClick={() =>
-                    handleChangePlan(getTargetPlan(subscriptionData[0]?.plan))
-                  }
+                  onClick={() => handleChangePlan(getTargetPlan(subscriptionData[0]?.plan))}
                   className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isUpdating || profileData?.subscription_status === "cancelled"}
                 >
@@ -320,9 +276,9 @@ export const SubscriptionInfo = ({
                       <LoadingSpinner size="sm" className="mr-2" />
                       Updating...
                     </div>
-                  ) :
+                  ) : (
                     getButtonLabel(subscriptionData[0]?.plan)
-                  }
+                  )}
                 </Button>
 
                 <Button
@@ -331,7 +287,7 @@ export const SubscriptionInfo = ({
                   className="w-full transition-colors"
                   disabled={isUpdating || profileData?.subscription_status === "cancelled"}
                 >
-                  {profileData?.subscription_status === "cancelled" ?"Cancelled":"Cancel Subscription"}
+                  {profileData?.subscription_status === "cancelled" ? "Cancelled" : "Cancel Subscription"}
                 </Button>
               </div>
             )}
@@ -341,10 +297,7 @@ export const SubscriptionInfo = ({
 
       {profileData?.subscription_plan !== "free" &&
         profileData?.subscription_plan !== "trial_ended" && (
-          <SubscriptionStatusTracker
-            profile={profileData}
-            subscriptionData={subscriptionData}
-          />
+          <SubscriptionStatusTracker profile={profileData} subscriptionData={subscriptionData} />
         )}
     </div>
   );

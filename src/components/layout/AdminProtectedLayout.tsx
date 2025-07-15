@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
-import { useProfile } from "../utils/ProfileProvider";
+import { useAuthStore } from "@/stores/authStores";
 
 interface AdminProtectedLayoutProps {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ interface AdminProtectedLayoutProps {
 export const AdminProtectedLayout: React.FC<AdminProtectedLayoutProps> = ({ children }) => {
   const location = useLocation();
   const { toast } = useToast();
-  const { authUser, profile, isLoading: profileLoading, isAdmin } = useProfile();
+  const { authUser, profile, isLoading: profileLoading } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export const AdminProtectedLayout: React.FC<AdminProtectedLayoutProps> = ({ chil
     };
 
     checkAdminStatus();
-  }, [authUser, profile, profileLoading, isAdmin]);
+  }, [authUser, profile, profileLoading, profile.is_admin]);
 
   // Show loading spinner while checking admin status
   if (isLoading || profileLoading) {
@@ -52,7 +52,7 @@ export const AdminProtectedLayout: React.FC<AdminProtectedLayoutProps> = ({ chil
   }
 
   // If not admin, show error and redirect
-  if (!isAdmin) {
+  if (!profile.is_admin) {
     toast({
       variant: "destructive",
       title: "Access Denied",

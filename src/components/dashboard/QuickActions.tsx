@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { useNavigation } from "@/hooks/useNavigation";
 import { useTheme } from "@/components/theme-provider";
-import { useProfile } from "@/components/utils/ProfileProvider";
+import { useAuthStore } from "@/stores/authStores";
 
 // Custom icon wrapper component with animations
 const IconWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -25,7 +25,7 @@ const QuickActions = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
   // Use profile from ProfileProvider instead of sessionStorage
-  const { profile } = useProfile();
+  const { profile } = useAuthStore();
 
   // URL mapper for different airline/user type combinations
   const contractUrlMapper: Record<string, string> = {

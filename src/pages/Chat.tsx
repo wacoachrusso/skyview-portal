@@ -18,25 +18,67 @@ import {
 import ChatContainer from "@/components/chat/ChatContainer";
 import ChatInput from "@/components/chat/ChatInput";
 import { createNewChat } from "@/services/chatService/createNewChat";
-import { useProfile } from "@/components/utils/ProfileProvider";
 import { Subscription } from "@/types/subscription";
+import { useAuthStore } from "@/stores/authStores";
+import chalk from "chalk";
+
+/**
+ * CHAT COMPONENT DOCUMENTATION
+ * ============================
+ * 
+ * Purpose: Main chat interface component that handles user conversations, messaging, and subscription management
+ * 
+ * Key Responsibilities:
+ * 1. Authentication and session management
+ * 2. Loading and managing user conversations
+ * 3. Real-time messaging functionality
+ * 4. Subscription plan validation and free trial limits
+ * 5. Role-based chat experience (Line Holder vs Reserve)
+ * 6. Offline status handling
+ * 7. Message operations (send, copy, delete)
+ * 8. Conversation management (create, delete, select)
+ * 
+ * State Management:
+ * - User authentication via useAuthStore
+ * - Local state for conversations, messages, and UI controls
+ * - Subscription data for plan validation
+ * - Role type management for different user experiences
+ * 
+ * Data Flow:
+ * 1. Component mounts → Check auth status
+ * 2. Load user profile → Fetch conversations and subscription data
+ * 3. Select conversation → Load messages
+ * 4. Send message → Validate limits → Update conversation
+ * 5. Manage subscription limits → Show trial ended state or allow messaging
+ * 
+ * Integration Points:
+ * - Supabase for data persistence
+ * - Auth store for user management
+ * - Chat service for message handling
+ * - Navigation for routing
+ * - Toast notifications for user feedback
+ */
 
 export default function Chat() {
+  console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 1: Component initialization started`));
+  
   const { isOffline } = useOfflineStatus();
   const { copyToClipboard } = useCopyToClipboard();
   const { toast } = useToast();
   const navigate = useNavigate();
   const mounted = useRef(true);
-  const {
-    profile,
-    authUser,
-    userName,
+  const { 
+    authUser, 
+    profile, 
+    isLoading:isProfileLoading, 
+    refreshProfile,
+    logout: storeLogout,
+    profileError,
     queryCount,
-    setQueryCount,
-    isLoading: isProfileLoading,
-    loadError: profileError,
-    refreshProfile, // Add this to refresh profile after role change
-  } = useProfile();
+    setQueryCount
+  } = useAuthStore();
+
+  console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 2: Auth state retrieved → User: ${authUser?.id || 'none'}, Profile Loading: ${isProfileLoading}`));
 
   // State variables
   const [currentConversationId, setCurrentConversationId] = useState(null);
@@ -51,20 +93,30 @@ export default function Chat() {
   const [currentRoleType, setCurrentRoleType] = useState<'Line Holder' | 'Reserve'>('Line Holder');
   const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
   
+  console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 3: State variables initialized → Conversations: ${conversations.length}, Messages: ${messages.length}`));
+  
   // Redirect to login if profile fails to load
   useEffect(() => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 4: Profile validation effect → Loading: ${isProfileLoading}, Error: ${!!profileError}, User: ${!!authUser}`));
+    
     if (!isProfileLoading && (profileError || !authUser)) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 4a: Authentication failed → Redirecting to login`));
       navigate("/login");
     }
   }, [isProfileLoading, profileError, authUser, navigate]);
 
   // Load user conversations and subscription data after profile is loaded
   useEffect(() => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 5: User data loading effect → Profile Loading: ${isProfileLoading}, User ID: ${authUser?.id || 'none'}`));
+    
     if (!isProfileLoading && authUser?.id) {
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 5a: Starting user data load → User ID: ${authUser.id}`));
       loadUserConversations(authUser.id);
       getSubscriptionData();
+      
       // Set initial role type from profile
       if (profile?.role_type) {
+        console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 5b: Setting role type from profile → Role: ${profile.role_type}`));
         setCurrentRoleType(profile.role_type as 'Line Holder' | 'Reserve');
       }
     }
@@ -72,14 +124,20 @@ export default function Chat() {
 
   // Fetch subscription data when profile changes
   useEffect(() => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 6: Subscription data effect → Profile ID: ${profile?.id || 'none'}`));
+    
     if (profile?.id) {
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 6a: Fetching subscription data → Profile ID: ${profile.id}`));
       getSubscriptionData();
     }
   }, [profile?.id]);
 
   // Cleanup on unmount
   useEffect(() => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 7: Cleanup effect registered`));
+    
     return () => {
+      console.log(chalk.bgYellow.black.bold(`[Chat] Step 7a: Component unmounting → Setting mounted to false`));
       mounted.current = false;
     };
   }, []);
@@ -87,44 +145,61 @@ export default function Chat() {
   // Check if free trial is exhausted using subscription data
   useEffect(() => {
     const currentPlan = subscriptionData[0]?.plan || "free";
-    const freeTrialExhausted = 
-      currentPlan === "free" && (queryCount || 0) >= 2;
+    const freeTrialExhausted = currentPlan === "free" && (queryCount || 0) >= 2;
+    
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 8: Trial validation effect → Plan: ${currentPlan}, Query Count: ${queryCount || 0}, Trial Exhausted: ${freeTrialExhausted}`));
     
     if (freeTrialExhausted && !isLoading) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 8a: Free trial exhausted → Setting trial ended state`));
       setIsTrialEnded(true);
     }
   }, [queryCount, subscriptionData, isLoading]);
 
   // Get subscription data from subscriptions table
   const getSubscriptionData = async () => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 9: Getting subscription data → Profile ID: ${profile?.id || 'none'}`));
+    
     if (profile?.id) {
-
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
-      if (error) {
-        console.error("Error fetching subscription by user_id:", error);
-      } else {
-        setSubscriptionData(data || []);
+      try {
+        const { data, error } = await supabase
+          .from("subscriptions")
+          .select("*")
+          .eq("user_id", profile.id)
+          .order("created_at", { ascending: false });
+          
+        if (error) {
+          console.log(chalk.bgRed.white.bold(`[Chat] Step 9a: Subscription fetch error → ${error.message}`));
+          console.error("Error fetching subscription by user_id:", error);
+        } else {
+          console.log(chalk.bgGreen.black.bold(`[Chat] Step 9b: Subscription data retrieved → Count: ${data?.length || 0}, Current Plan: ${data?.[0]?.plan || 'none'}`));
+          setSubscriptionData(data || []);
+        }
+      } catch (err) {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 9c: Subscription fetch exception → ${err}`));
       }
     }
   };
 
   // Handle role change
   const handleRoleChange = (newRole: 'Line Holder' | 'Reserve') => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 10: Role change initiated → From: ${currentRoleType} To: ${newRole}`));
+    
     setCurrentRoleType(newRole);
+    
     // Optionally refresh profile to get updated data
     if (refreshProfile) {
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 10a: Refreshing profile after role change`));
       refreshProfile();
     }
   };
 
   // Load user conversations
   const loadUserConversations = async (userId) => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 11: Loading conversations → User ID: ${userId}`));
+    
     try {
       setIsFetchingConversations(true);
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 11a: Fetching conversations from database`));
 
       const {
         data: conversationsData,
@@ -138,7 +213,7 @@ export default function Chat() {
 
       // Handle potential 401 error
       if (status === 401) {
-        console.log("401 error loading conversations");
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 11b: 401 error loading conversations → Redirecting to login`));
         toast({
           variant: "destructive",
           title: "Session Error",
@@ -148,13 +223,19 @@ export default function Chat() {
         return;
       }
 
-      if (error) throw error;
+      if (error) {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 11c: Conversation fetch error → ${error.message}`));
+        throw error;
+      }
+
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 11d: Conversations loaded successfully → Count: ${conversationsData?.length || 0}`));
 
       if (mounted.current) {
         setConversations(conversationsData || []);
         handleFirstConversation(conversationsData);
       }
     } catch (err) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 11e: Conversation loading exception → ${err}`));
       console.error("Error loading conversations:", err);
       toast({
         title: "Error",
@@ -164,6 +245,7 @@ export default function Chat() {
       });
     } finally {
       if (mounted.current) {
+        console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 11f: Conversation loading completed → Setting loading to false`));
         setIsLoading(false);
       }
       setIsFetchingConversations(false);
@@ -172,26 +254,36 @@ export default function Chat() {
 
   // Helper function to handle the first conversation
   const handleFirstConversation = async (conversationsData) => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 12: Handling first conversation → Available: ${conversationsData?.length || 0}`));
+    
     if (conversationsData && conversationsData.length > 0) {
       const conversationId = conversationsData[0].id;
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 12a: Setting current conversation → ID: ${conversationId}`));
       setCurrentConversationId(conversationId);
 
       try {
-        const conversationMessages = await loadConversationMessages(
-          conversationId
-        );
+        console.log(chalk.bgGreen.black.bold(`[Chat] Step 12b: Loading messages for conversation → ID: ${conversationId}`));
+        const conversationMessages = await loadConversationMessages(conversationId);
+        
         if (mounted.current) {
+          console.log(chalk.bgGreen.black.bold(`[Chat] Step 12c: Messages loaded successfully → Count: ${conversationMessages?.length || 0}`));
           setMessages(conversationMessages || []);
         }
       } catch (err) {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 12d: Message loading error → ${err}`));
         console.error("Error loading messages:", err);
       }
+    } else {
+      console.log(chalk.bgYellow.black.bold(`[Chat] Step 12e: No conversations available → Starting fresh`));
     }
   };
 
   // Message sending handler
   const onSendMessage = async (content) => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 13: Message send initiated → Content Length: ${content?.length || 0}, User: ${authUser?.id || 'none'}`));
+    
     if (!authUser?.id) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 13a: Send message failed → No authenticated user`));
       toast({
         variant: "destructive",
         title: "Not Logged In",
@@ -202,10 +294,12 @@ export default function Chat() {
 
     // Check if free trial is exhausted using subscription data
     const currentPlan = subscriptionData[0]?.plan || "free";
-    const freeTrialExhausted = 
-      currentPlan === "free" && (queryCount || 0) >= 2;
+    const freeTrialExhausted = currentPlan === "free" && (queryCount || 0) >= 2;
+
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 13b: Trial validation → Plan: ${currentPlan}, Query Count: ${queryCount || 0}, Exhausted: ${freeTrialExhausted}`));
 
     if (freeTrialExhausted) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 13c: Message blocked → Free trial exhausted`));
       toast({
         variant: "destructive",
         title: "Free Trial Ended",
@@ -215,6 +309,7 @@ export default function Chat() {
     }
 
     // Reset the trial ended indicator when sending a new message
+    console.log(chalk.bgGreen.black.bold(`[Chat] Step 13d: Proceeding with message send → Resetting trial ended state`));
     setIsTrialEnded(false);
     
     await handleSendMessage({
@@ -229,12 +324,17 @@ export default function Chat() {
       toast,
       navigateToLogin: () => navigate("/login"),
     });
+    
+    console.log(chalk.bgGreen.black.bold(`[Chat] Step 13e: Message send completed`));
   };
 
   // Delete a conversation
   const handleDeleteConversation = async (conversationId) => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 14: Deleting conversation → ID: ${conversationId}`));
+    
     try {
       setIsLoading(true);
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 14a: Deleting conversation from database`));
 
       // Delete the conversation from the database
       const { error } = await supabase
@@ -242,7 +342,12 @@ export default function Chat() {
         .delete()
         .eq("id", conversationId);
 
-      if (error) throw error;
+      if (error) {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 14b: Conversation deletion error → ${error.message}`));
+        throw error;
+      }
+
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 14c: Conversation deleted successfully → Updating state`));
 
       // Update the conversations list
       setConversations((prev) =>
@@ -251,6 +356,7 @@ export default function Chat() {
 
       // If the deleted conversation was the current one, clear messages and set current ID to null
       if (conversationId === currentConversationId) {
+        console.log(chalk.bgYellow.black.bold(`[Chat] Step 14d: Deleted conversation was current → Clearing messages`));
         setMessages([]);
         setCurrentConversationId(null);
 
@@ -260,10 +366,9 @@ export default function Chat() {
             (convo) => convo.id !== conversationId
           );
           if (nextConversation) {
+            console.log(chalk.bgGreen.black.bold(`[Chat] Step 14e: Selecting next conversation → ID: ${nextConversation.id}`));
             setCurrentConversationId(nextConversation.id);
-            const nextMessages = await loadConversationMessages(
-              nextConversation.id
-            );
+            const nextMessages = await loadConversationMessages(nextConversation.id);
 
             // Transform the messages to match the Message type
             const transformedMessages = (nextMessages || []).map((msg) => ({
@@ -276,17 +381,20 @@ export default function Chat() {
                   : "user",
             })) as Message[];
 
+            console.log(chalk.bgGreen.black.bold(`[Chat] Step 14f: Next conversation messages loaded → Count: ${transformedMessages.length}`));
             setMessages(transformedMessages);
           }
         }
       }
 
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 14g: Conversation deletion completed successfully`));
       toast({
         title: "Success",
         description: "Conversation deleted successfully",
         duration: 2000,
       });
     } catch (error) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 14h: Conversation deletion exception → ${error}`));
       console.error("Error deleting conversation:", error);
       toast({
         title: "Error",
@@ -301,6 +409,8 @@ export default function Chat() {
   };
 
   const createNewConversation = async (userId) => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 15: Creating new conversation → User ID: ${userId}`));
+    
     try {
       const { data: newConversation, error } = await supabase
         .from("conversations")
@@ -313,13 +423,19 @@ export default function Chat() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 15a: New conversation creation error → ${error.message}`));
+        throw error;
+      }
+
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 15b: New conversation created → ID: ${newConversation.id}`));
 
       // Update conversations state
       setConversations((prev) => [newConversation, ...prev]);
 
       return newConversation.id;
     } catch (error) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 15c: New conversation creation exception → ${error}`));
       console.error("Error creating new conversation:", error);
       return null;
     }
@@ -337,8 +453,11 @@ export default function Chat() {
 
   // Delete all conversations
   const handleDeleteAllConversations = async () => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 16: Deleting all conversations → User ID: ${authUser?.id || 'none'}`));
+    
     try {
       setIsLoading(true);
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 16a: Deleting all conversations from database`));
 
       // Delete all user's conversations from the database
       const { error } = await supabase
@@ -346,7 +465,12 @@ export default function Chat() {
         .delete()
         .eq("user_id", authUser?.id);
 
-      if (error) throw error;
+      if (error) {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 16b: Delete all conversations error → ${error.message}`));
+        throw error;
+      }
+
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 16c: All conversations deleted → Clearing state`));
 
       // Clear state
       setConversations([]);
@@ -359,6 +483,7 @@ export default function Chat() {
         duration: 2000,
       });
     } catch (error) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 16d: Delete all conversations exception → ${error}`));
       console.error("Error deleting all conversations:", error);
       toast({
         title: "Error",
@@ -372,6 +497,8 @@ export default function Chat() {
   };
 
   const handleCopyMessage = (content) => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 17: Copying message → Content Length: ${content?.length || 0}`));
+    
     copyToClipboard(content);
     toast({
       title: "Copied",
@@ -381,18 +508,20 @@ export default function Chat() {
   };
 
   const handleSelectConversation = async (conversationId) => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 18: Selecting conversation → ID: ${conversationId}, Current: ${currentConversationId}`));
+    
     if (conversationId === currentConversationId) {
+      console.log(chalk.bgYellow.black.bold(`[Chat] Step 18a: Same conversation selected → Closing sidebar`));
       setIsSidebarOpen(false);
       return;
     }
 
     setIsLoading(true);
     setMessages([]);
+    console.log(chalk.bgGreen.black.bold(`[Chat] Step 18b: Loading new conversation messages`));
 
     try {
-      const conversationMessages = await loadConversationMessages(
-        conversationId
-      );
+      const conversationMessages = await loadConversationMessages(conversationId);
 
       // Transform the messages to match the Message type
       const transformedMessages = (conversationMessages || []).map((msg) => ({
@@ -405,9 +534,11 @@ export default function Chat() {
             : "user",
       })) as Message[];
 
+      console.log(chalk.bgGreen.black.bold(`[Chat] Step 18c: Conversation messages loaded → Count: ${transformedMessages.length}`));
       setMessages(transformedMessages);
       setCurrentConversationId(conversationId);
     } catch (error) {
+      console.log(chalk.bgRed.white.bold(`[Chat] Step 18d: Conversation selection error → ${error}`));
       console.error("Error loading conversation:", error);
       toast({
         title: "Error",
@@ -423,11 +554,13 @@ export default function Chat() {
 
   // Redirect to pricing section
   const handleViewPricingPlans = () => {
+    console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 19: Redirecting to pricing plans`));
     navigate("/?scrollTo=pricing-section", { replace: true });
   };
 
   // Get current plan from subscription data
   const currentPlan = subscriptionData[0]?.plan || "free";
+  console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 20: Rendering component → Current Plan: ${currentPlan}, Trial Ended: ${isTrialEnded}, Offline: ${isOffline}`));
 
   return (
     <ChatLayout
@@ -446,7 +579,6 @@ export default function Chat() {
         <ChatHeader
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
-          userName={userName}
           startNewChat={startNewChat}
         />
 

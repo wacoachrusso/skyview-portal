@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { NotificationBell } from "../NotificationBell";
 import { Button } from "../../ui/button";
@@ -25,36 +24,32 @@ import { useToast } from "@/hooks/use-toast";
 import Logo from "./Logo";
 import UserDropdown from "./UserDropdown";
 import { useTheme } from "@/components/theme-provider";
-import { useProfile } from "@/components/utils/ProfileProvider";
+import { SignInButtons } from "./SignInButtons";
+import { useAuthStore } from "@/stores/authStores";
 
 const GlobalNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
-  
-  // Use ProfileProvider instead of localStorage
-  const { 
-    profile, 
-    authUser, 
-    userName, 
-    isAdmin, 
-    isLoading,
-    logout 
-  } = useProfile();
 
-  const isPrivateRoute = ["/dashboard", "/account", "/chat", "/referrals"].some((path) =>
-    location.pathname.startsWith(path)
+  const isPrivateRoute = ["/dashboard", "/account", "/chat", "/referrals"].some(
+    (path) => location.pathname.startsWith(path)
   );
 
   // Authentication state based on authUser from context
+  const { authUser, profile, isLoading, logout: storeLogout } = useAuthStore();
+
   const isAuthenticated = !!authUser;
+  const userName = profile?.full_name || null;
+  const isAdmin = profile?.is_admin || false;
   const isAccountPage = location.pathname === "/account";
   const isDashboardPage = location.pathname === "/dashboard";
 
   const handleSignOut = async () => {
     try {
-      await logout(); // Use the logout function from ProfileProvider
+      await storeLogout();
+      navigate("/login");
     } catch (error) {
       console.error("Error during sign out:", error);
       toast({
@@ -64,14 +59,12 @@ const GlobalNavbar = () => {
       });
     }
   };
-
   const scrollToPricing = () => {
     const pricingSection = document.getElementById("pricing-section");
     if (pricingSection) {
       pricingSection.scrollIntoView({ behavior: "smooth" });
     }
   };
-
   // Choose the appropriate navbar style based on private/public route and theme
   const privateRouteNavbarClasses =
     theme === "dark"
@@ -94,15 +87,21 @@ const GlobalNavbar = () => {
 
   // Private route buttons follow the theme
   const privateTextColor = theme === "dark" ? "text-white" : "text-gray-800";
-  const privateDropdownBgClass = theme === "dark" 
-    ? "bg-slate-900/95 border-gray-700" 
-    : "bg-white border-blue-200 shadow-lg";
-  const privateHoverBgClass = theme === "dark" ? "hover:bg-white/10" : "hover:bg-black/10";
+  const privateDropdownBgClass =
+    theme === "dark"
+      ? "bg-slate-900/95 border-gray-700"
+      : "bg-white border-blue-200 shadow-lg";
+  const privateHoverBgClass =
+    theme === "dark" ? "hover:bg-white/10" : "hover:bg-black/10";
 
   // Use the appropriate styling based on route type
   const textColor = isPrivateRoute ? privateTextColor : publicButtonTextColor;
-  const dropdownBgClass = isPrivateRoute ? privateDropdownBgClass : publicDropdownBgClass;
-  const hoverBgClass = isPrivateRoute ? privateHoverBgClass : publicHoverBgClass;
+  const dropdownBgClass = isPrivateRoute
+    ? privateDropdownBgClass
+    : publicDropdownBgClass;
+  const hoverBgClass = isPrivateRoute
+    ? privateHoverBgClass
+    : publicHoverBgClass;
 
   // Show loading state while profile is being fetched
   if (isLoading && isPrivateRoute) {
@@ -184,31 +183,7 @@ const GlobalNavbar = () => {
                 />
               </>
             ) : (
-              // Public navigation options
-              <div className="flex items-center gap-4">
-                <Button
-                  asChild
-                  variant="secondary"
-                  size="sm"
-                  className={`text-white hover:opacity-90 cta-button high-contrast-focus`}
-                  aria-label="Sign in to your account"
-                >
-                  <Link to="/login">
-                    <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
-                    <span>Sign In</span>
-                  </Link>
-                </Button>
-
-                <Button
-                  onClick={scrollToPricing}
-                  size="sm"
-                  variant="default"
-                  className={`primary-cta tezt-white hover:opacity-90 cta-button high-contrast-focus`}
-                  aria-label="Get started with a free trial"
-                >
-                  Get Started Free
-                </Button>
-              </div>
+              <SignInButtons scrollToPricing={scrollToPricing} />
             )}
           </div>
 
@@ -266,37 +241,23 @@ const GlobalNavbar = () => {
                   <DropdownMenuContent
                     align="end"
                     sideOffset={5}
-                    className={`w-56 ${dropdownBgClass} backdrop-blur-lg shadow-xl mt-2`}
+                    className={`w-56 bg-slate-900/95 border-gray-700 backdrop-blur-lg shadow-xl mt-2`}
                   >
-                    <DropdownMenuLabel
-                      className={
-                        isPrivateRoute && theme === "dark"
-                          ? "text-white/70 px-3 py-2"
-                          : "text-gray-600 px-3 py-2"
-                      }
-                    >
+                    <DropdownMenuLabel className="text-white/70 px-3 py-2">
                       Hello,{" "}
-                      <span
-                        className={
-                          isPrivateRoute && theme === "dark"
-                            ? "font-semibold text-white"
-                            : "font-semibold text-gray-900"
-                        }
-                      >
+                      <span className="font-semibold text-white">
                         {userName || "User"}
                       </span>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator
-                      className={
-                        isPrivateRoute && theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
-                      }
-                    />
+                    <DropdownMenuSeparator className="bg-gray-700/50" />
 
                     {!isDashboardPage && (
                       <DropdownMenuItem
                         asChild
                         className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
-                          isPrivateRoute && theme === "dark" ? "bg-white/10" : "bg-black/10"
+                          isPrivateRoute && theme === "dark"
+                            ? "bg-white/10"
+                            : "bg-black/10"
                         }`}
                       >
                         <Link
@@ -312,9 +273,8 @@ const GlobalNavbar = () => {
                     {!isAccountPage && (
                       <DropdownMenuItem
                         asChild
-                        className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
-                          isPrivateRoute && theme === "dark" ? "bg-white/10" : "bg-black/10"
-                        }`}
+                        className="rounded-md my-1 px-3 py-2 hover:bg-secondary focus:bg-white/10
+                            bg-black/10"
                       >
                         <Link
                           to="/account"
@@ -331,13 +291,12 @@ const GlobalNavbar = () => {
                       <DropdownMenuItem
                         asChild
                         className={`rounded-md my-1 px-3 py-2 hover:bg-secondary focus:${
-                          isPrivateRoute && theme === "dark" ? "bg-white/10" : "bg-black/10"
+                          isPrivateRoute && theme === "dark"
+                            ? "bg-white/10"
+                            : "bg-black/10"
                         }`}
                       >
-                        <Link
-                          to="/admin"
-                          className="flex items-center w-full"
-                        >
+                        <Link to="/admin" className="flex items-center w-full">
                           <Shield className="mr-2 h-4 w-4" />
                           Admin Dashboard
                         </Link>
@@ -346,7 +305,9 @@ const GlobalNavbar = () => {
 
                     <DropdownMenuSeparator
                       className={
-                        isPrivateRoute && theme === "dark" ? "bg-gray-700/50" : "bg-gray-300/50"
+                        isPrivateRoute && theme === "dark"
+                          ? "bg-gray-700/50"
+                          : "bg-gray-300/50"
                       }
                     />
                     <DropdownMenuItem
