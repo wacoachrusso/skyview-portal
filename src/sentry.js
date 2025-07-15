@@ -1,7 +1,7 @@
 // src/sentry.js
 import * as Sentry from "@sentry/react";
 import { v4 as uuidv4 } from "uuid";
-
+import { BrowserTracing } from '@sentry/tracing';
 // const getSessionUUID = () => {
 //   let sessionUUID = sessionStorage.getItem("sessionUUID");
 //   if (!sessionUUID) {
