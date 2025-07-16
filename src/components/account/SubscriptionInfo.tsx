@@ -6,7 +6,7 @@
  * to manage their plan including upgrades, downgrades, and cancellations.
  *
  * ✅ Responsibilities:
- * - Display current subscription data
+ * - Display current subscription data from profile
  * - Allow switching between plans via Supabase function
  * - Handle Stripe payments if required
  * - Trigger email notifications for plan changes
@@ -18,11 +18,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SubscriptionStatusTracker } from "./SubscriptionStatusTracker";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { loadStripe } from "@stripe/stripe-js";
-import { Subscription } from "@/types/subscription";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import {
   formatPlanName,
@@ -35,8 +34,6 @@ import chalk from "chalk";
 
 interface SubscriptionInfoProps {
   profileData: Profile;
-  subscriptionData: Subscription[];
-  setSubscriptionData: React.Dispatch<React.SetStateAction<Subscription[]>>;
   onPlanChange: (plan: string) => void;
   onCancelSubscription: () => void;
   refreshProfile?: () => void;
@@ -47,8 +44,6 @@ const stripePromise = loadStripe(import.meta.env.VITE__STRIPE_PUBLIC_KEY);
 
 export const SubscriptionInfo = ({
   profileData,
-  subscriptionData,
-  setSubscriptionData,
   onPlanChange,
   onCancelSubscription,
   refreshProfile,
@@ -56,17 +51,26 @@ export const SubscriptionInfo = ({
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Extract subscription data from profile with proper type checking
+  const subscriptionData = profileData.subscription_id && 
+    typeof profileData.subscription_id === 'object' && 
+    !('error' in profileData.subscription_id)
+      ? profileData.subscription_id 
+      : null;
+
   // Step 1: Handle changing plan
   const handleChangePlan = async (newPlan: string) => {
+    const currentPlan = profileData.subscription_plan || 'free';
+    
     console.log(chalk.bgBlue.white.bold("[SubscriptionInfo] Step 1: Starting plan change process"));
-    console.log("➡️ Current plan:", subscriptionData[0].plan);
+    console.log("➡️ Current plan:", currentPlan);
     console.log("➡️ Requested plan:", newPlan);
 
-    if (newPlan === subscriptionData[0].plan) {
+    if (newPlan === currentPlan) {
       console.warn(chalk.bgYellow.black.bold("[SubscriptionInfo] Already on requested plan"));
       toast({
         title: "Already Subscribed",
-        description: `You are already on the ${formatPlanName(subscriptionData[0].plan)} plan.`,
+        description: `You are already on the ${formatPlanName(currentPlan)} plan.`,
       });
       return;
     }
@@ -79,7 +83,7 @@ export const SubscriptionInfo = ({
       const { data, error } = await supabase.functions.invoke("switch-plan", {
         body: {
           email: profileData.email,
-          oldPlan: subscriptionData[0].plan,
+          oldPlan: currentPlan,
           newPlan,
           fullName: profileData.full_name || "User",
         },
@@ -122,7 +126,7 @@ export const SubscriptionInfo = ({
         await supabase.functions.invoke("send-plan-change-email", {
           body: {
             email: profileData.email,
-            oldPlan: subscriptionData[0].old_plan,
+            oldPlan: currentPlan,
             newPlan,
             fullName: profileData.full_name || "User",
           },
@@ -138,10 +142,9 @@ export const SubscriptionInfo = ({
         if (refreshProfile) {
           console.log("[SubscriptionInfo] Refreshing profile after successful payment...");
           await refreshProfile();
-          await getSubscriptionData();
         }
 
-        if (subscriptionData[0].plan === "free" || subscriptionData[0].plan === "trial_ended") {
+        if (currentPlan === "free" || currentPlan === "trial_ended") {
           onPlanChange(newPlan);
         }
       }
@@ -158,10 +161,9 @@ export const SubscriptionInfo = ({
         if (refreshProfile) {
           console.log("[SubscriptionInfo] Refreshing profile after successful plan switch...");
           await refreshProfile();
-          await getSubscriptionData();
         }
 
-        if (profileData.subscription_plan === "free" || profileData.subscription_plan === "trial_ended") {
+        if (currentPlan === "free" || currentPlan === "trial_ended") {
           onPlanChange(newPlan);
         }
       } else {
@@ -180,25 +182,9 @@ export const SubscriptionInfo = ({
     }
   };
 
-  // Fetch subscriptions from Supabase
-  const getSubscriptionData = async () => {
-    console.log(chalk.bgBlue.white.bold("[SubscriptionInfo] Fetching subscriptions..."));
-
-    if (profileData?.id) {
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", profileData.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("[SubscriptionInfo] Subscription fetch error:", error);
-      } else {
-        console.log("[SubscriptionInfo] Subscription data fetched:", data);
-        setSubscriptionData(data || []);
-      }
-    }
-  };
+  // Get current plan and status from profile
+  const currentPlan = profileData?.subscription_plan || 'free';
+  const currentStatus = profileData?.subscription_status || subscriptionData?.payment_status || 'N/A';
 
   return (
     <div className="space-y-6">
@@ -211,36 +197,16 @@ export const SubscriptionInfo = ({
             <div className="grid grid-cols-3 items-center gap-4">
               <span className="font-medium text-brand-navy">Current Plan:</span>
               <span className="col-span-2 text-gray-700 capitalize">
-                {subscriptionData[0]?.plan || "Free"}
+                {formatPlanName(currentPlan)}
               </span>
             </div>
 
-            {subscriptionData.length > 0 && (
-              <>
-                <div className="grid grid-cols-3 items-center gap-4">
-                  <span className="font-medium text-brand-navy">Payment Status:</span>
-                  <span className="col-span-2 text-gray-700 capitalize">
-                    {subscriptionData[0]?.payment_status || "N/A"}
-                  </span>
-                </div>
-
-                {subscriptionData[0]?.price && (
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <span className="font-medium text-brand-navy">Price:</span>
-                    <span className="col-span-2 text-gray-700">${subscriptionData[0].price}</span>
-                  </div>
-                )}
-              </>
-            )}
-
-            {profileData?.last_query_timestamp && (
-              <div className="grid grid-cols-3 items-center gap-4">
-                <span className="font-medium text-brand-navy">Last Query:</span>
-                <span className="col-span-2 text-gray-700">
-                  {format(new Date(profileData.last_query_timestamp), "PPpp")}
-                </span>
-              </div>
-            )}
+            <div className="grid grid-cols-3 items-center gap-4">
+              <span className="font-medium text-brand-navy">Payment Status:</span>
+              <span className="col-span-2 text-gray-700 capitalize">
+                {currentStatus}
+              </span>
+            </div>
           </div>
 
           <Separator className="bg-gray-200" />
@@ -248,8 +214,7 @@ export const SubscriptionInfo = ({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-brand-navy">Plan Management</h3>
 
-            {profileData?.subscription_plan === "free" ||
-            profileData?.subscription_plan === "trial_ended" ? (
+            {currentPlan === "free" || currentPlan === "trial_ended" ? (
               <Button
                 onClick={() => onPlanChange("paid")}
                 className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors"
@@ -267,7 +232,7 @@ export const SubscriptionInfo = ({
             ) : (
               <div className="space-y-2">
                 <Button
-                  onClick={() => handleChangePlan(getTargetPlan(subscriptionData[0]?.plan))}
+                  onClick={() => handleChangePlan(getTargetPlan(currentPlan))}
                   className="w-full bg-brand-gold hover:bg-brand-gold/90 text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isUpdating || profileData?.subscription_status === "cancelled"}
                 >
@@ -277,7 +242,7 @@ export const SubscriptionInfo = ({
                       Updating...
                     </div>
                   ) : (
-                    getButtonLabel(subscriptionData[0]?.plan)
+                    getButtonLabel(currentPlan)
                   )}
                 </Button>
 
@@ -295,10 +260,12 @@ export const SubscriptionInfo = ({
         </CardContent>
       </Card>
 
-      {profileData?.subscription_plan !== "free" &&
-        profileData?.subscription_plan !== "trial_ended" && (
-          <SubscriptionStatusTracker profile={profileData} subscriptionData={subscriptionData} />
-        )}
+      {currentPlan !== "free" && currentPlan !== "trial_ended" && (
+        <SubscriptionStatusTracker 
+          profile={profileData} 
+          subscriptionData={subscriptionData} 
+        />
+      )}
     </div>
   );
 };

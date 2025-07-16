@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,7 +18,10 @@ interface FormData {
   [key: string]: string;
 }
 
-export const useAccountForm = (profile: ProfileData | null) => {
+export const useAccountForm = (
+  profile: ProfileData | null, 
+  onProfileUpdate?: (updatedProfile: ProfileData) => void
+) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
@@ -66,6 +68,21 @@ export const useAccountForm = (profile: ProfileData | null) => {
   useEffect(() => {
     if (profile?.airline && profile?.user_type) {
       setHasSetAirlineAndJobRole(true);
+    }
+  }, [profile]);
+
+  // Update formData when profile changes
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || '',
+        user_type: profile.user_type || '',
+        airline: profile.airline || '',
+        employee_id: profile.employee_id || '',
+        assistant_id: profile.assistant_id || '',
+        address: profile.address || '',
+        phone_number: profile.phone_number || '',
+      });
     }
   }, [profile]);
 
@@ -155,6 +172,13 @@ export const useAccountForm = (profile: ProfileData | null) => {
       }
 
       console.log('Profile updated successfully');
+      
+      // Update the profile state in parent component
+      if (onProfileUpdate && profile) {
+        const updatedProfile = { ...profile, ...updatedFormData };
+        onProfileUpdate(updatedProfile);
+      }
+
       toast({
         title: "Success",
         description: "Your profile has been updated successfully.",

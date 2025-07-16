@@ -18,8 +18,7 @@ const Account = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { toast } = useToast();
-  const [subscriptionData, setSubscriptionData] = useState<Subscription[]>([]);
-  const { profile,authUser, isLoading: authLoading, refreshProfile } = useAuthStore();
+  const { profile, authUser, isLoading: authLoading, refreshProfile } = useAuthStore();
 
   // Local loading states
   const [isProfileLoading, setIsProfileLoading] = useState(true);
@@ -60,6 +59,8 @@ const Account = () => {
     if (!authUser?.id) return;
 
     try {
+      setIsSubscriptionLoading(true);
+      
       // Step 1: Cancel the subscription
       const { error } = await supabase.functions.invoke(
         "stripe-cancel-subscription",
@@ -73,11 +74,11 @@ const Account = () => {
       // Step 2: Send cancellation email
       await supabase.functions.invoke("send-plan-change-email", {
         body: {
-          email: profile.email,
-          oldPlan: subscriptionData[0]?.plan,
-          newPlan: "cancelled", // or null if appropriate
-          fullName: profile.full_name || "User",
-          status: "cancelled", // 👈 Make sure this reflects actual cancellation
+          email: profile?.email,
+          oldPlan: profile?.subscription_plan,
+          newPlan: "cancelled",
+          fullName: profile?.full_name || "User",
+          status: "cancelled",
         },
       });
 
@@ -89,7 +90,6 @@ const Account = () => {
 
       // Step 4: Refresh profile data
       await refreshProfile();
-      await getSubscriptionData();
     } catch (error: any) {
       console.error("Error cancelling subscription:", error);
       toast({
@@ -98,66 +98,10 @@ const Account = () => {
         description:
           error.message || "Failed to cancel subscription. Please try again.",
       });
-    }
-  };
-
-
-  const getSubscriptionData = async () => {
-    // Only fetch if we have profile data
-    if (!profile?.id) return;
-
-    try {
-      setIsSubscriptionLoading(true);
-      console.log("Fetching subscription by user_id:", profile.id);
-
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching subscription by user_id:", error);
-      } else {
-        console.log("Subscription data by user_id:", data);
-        setSubscriptionData(data || []);
-      }
-    } catch (error) {
-      console.error("Exception in getSubscriptionData:", error);
     } finally {
       setIsSubscriptionLoading(false);
     }
   };
-
-  // Fetch subscription data when profile is available
-  useEffect(() => {
-    if (profile?.id) {
-      getSubscriptionData();
-    }
-  }, [profile?.id]);
-
-  // Set a timeout for loading to improve user experience
-  useEffect(() => {
-    let timeoutId: number;
-
-    if (isLoading && !loadingTimeout) {
-      timeoutId = window.setTimeout(() => {
-        if (mounted) {
-          console.log("Setting loading timeout flag");
-          setLoadingTimeout(true);
-        }
-      }, 12000); // Increased timeout to 12 seconds
-    }
-
-    // Reset timeout flag if loading state changes
-    if (!isLoading) {
-      setLoadingTimeout(false);
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isLoading, loadingTimeout]);
 
   useEffect(() => {
     setMounted(true);
@@ -182,6 +126,7 @@ const Account = () => {
 
     if (profile?.id) {
       checkAlphaTester();
+      setIsProfileLoading(false);
     }
 
     return () => {
@@ -201,7 +146,7 @@ const Account = () => {
       : "bg-black/10 border-black/20 hover:bg-black/20 text-gray-800";
 
   // Show loading state
-  if (isLoading && !loadingTimeout) {
+  if (isLoading) {
     return (
       <div className={loadingBgClass}>
         <div className="flex items-center justify-center min-h-screen">
@@ -237,46 +182,6 @@ const Account = () => {
     );
   }
 
-  // If profile couldn't be loaded after all attempts
-  if (!profile && !isLoading) {
-    console.log("No profile found for account page");
-    return (
-      <div className={loadingBgClass}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center max-w-md px-4">
-            <h2
-              className={`text-xl font-semibold mb-4 ${
-                theme === "dark" ? "text-white" : "text-gray-800"
-              }`}
-            >
-              Profile Not Found
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Unable to load your profile information. Please try again later or
-              contact support.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                onClick={handleRefresh}
-                variant="outline"
-                className={buttonClass}
-              >
-                Try Again
-              </Button>
-              <Button
-                onClick={() => navigate("/dashboard")}
-                variant="default"
-                className="bg-gradient-to-r from-brand-purple to-brand-magenta text-white hover:opacity-90"
-              >
-                Return to Dashboard
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const cardBgClass =
     theme === "dark"
       ? "border-white/10 bg-white/5 backdrop-blur-md"
@@ -303,7 +208,7 @@ const Account = () => {
       <div className="space-y-6">
         <div className={`rounded-2xl shadow-md border ${cardBgClass} p-6`}>
           <AccountInfo
-            userEmail={profile.email}
+            userEmail={profile?.email}
             profile={profile}
             showPasswordChange={showPasswordChange}
           />
@@ -320,11 +225,9 @@ const Account = () => {
           ) : (
             <SubscriptionInfo
               profileData={profile}
-              subscriptionData={subscriptionData}
               onPlanChange={handlePlanChange}
               onCancelSubscription={handleInitialCancelClick}
               refreshProfile={refreshProfile}
-              setSubscriptionData={setSubscriptionData}
             />
           )}
         </div>

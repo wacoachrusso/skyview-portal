@@ -39,7 +39,7 @@ const ChatHeader = ({
     try {
       await storeLogout();
       console.log("We are doing signout");
-      navigate('/login');
+      // navigate('/login');
     } catch (error) {
       console.error("Error during sign out:", error);
     }
