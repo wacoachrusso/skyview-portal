@@ -1,8 +1,7 @@
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Subscription } from "@/types/subscription";
-import { Profile } from "@/types/profile";
+import { Profile, SubscriptionInfo } from "@/types/profile";
 import chalk from "chalk";
 
 /**
@@ -18,8 +17,8 @@ import chalk from "chalk";
  * - Auto-hides for free plan users
  * 
  * Flow:
- * 1. Validates subscription data availability
- * 2. Finds active subscription or falls back to most recent
+ * 1. Validates subscription data availability from profile
+ * 2. Extracts subscription info from profile.subscription_id
  * 3. Calculates billing period progress and remaining days
  * 4. Renders progress visualization with key subscription info
  * 5. Returns null for free users or invalid data
@@ -27,7 +26,7 @@ import chalk from "chalk";
 
 interface SubscriptionStatusTrackerProps {
   profile: Profile;
-  subscriptionData: Subscription[];
+  subscriptionData: SubscriptionInfo | null;
 }
 
 export const SubscriptionStatusTracker = ({
@@ -42,7 +41,7 @@ export const SubscriptionStatusTracker = ({
     console.log(chalk.bgBlue.black.bold(`[SubscriptionStatusTracker] Step 2: Getting subscription info`));
 
     // Check if we have subscription data
-    if (subscriptionData.length === 0) {
+    if (!subscriptionData) {
       console.log(chalk.bgYellow.black.bold(`[SubscriptionStatusTracker] Step 3: No subscription data available`));
       return {
         startDate: new Date(),
@@ -54,18 +53,12 @@ export const SubscriptionStatusTracker = ({
     }
 
     console.log(chalk.bgGreen.black.bold(`[SubscriptionStatusTracker] Step 4: Subscription data found`));
-    console.log(chalk.green(`[SubscriptionStatusTracker] Total subscriptions: ${subscriptionData.length}`));
+    console.log(chalk.green(`[SubscriptionStatusTracker] Subscription:`, subscriptionData));
 
-    // Get the most recent active subscription
-    const activeSubscription = subscriptionData.find(sub => sub.payment_status === 'active') || subscriptionData[0];
-    
-    console.log(chalk.bgMagenta.black.bold(`[SubscriptionStatusTracker] Step 5: Selected subscription`));
-    console.log(chalk.magenta(`[SubscriptionStatusTracker] Active subscription:`, activeSubscription));
-
-    if (!activeSubscription.start_at || !activeSubscription.end_at) {
-      console.log(chalk.bgRed.white.bold(`[SubscriptionStatusTracker] Step 6: Missing start_at or end_at dates`));
-      console.log(chalk.red(`[SubscriptionStatusTracker] start_at: ${activeSubscription.start_at}`));
-      console.log(chalk.red(`[SubscriptionStatusTracker] end_at: ${activeSubscription.end_at}`));
+    if (!subscriptionData.start_at || !subscriptionData.end_at) {
+      console.log(chalk.bgRed.white.bold(`[SubscriptionStatusTracker] Step 5: Missing start_at or end_at dates`));
+      console.log(chalk.red(`[SubscriptionStatusTracker] start_at: ${subscriptionData.start_at}`));
+      console.log(chalk.red(`[SubscriptionStatusTracker] end_at: ${subscriptionData.end_at}`));
       return {
         startDate: new Date(),
         endDate: new Date(),
@@ -75,10 +68,10 @@ export const SubscriptionStatusTracker = ({
       };
     }
 
-    console.log(chalk.bgGreen.black.bold(`[SubscriptionStatusTracker] Step 7: Calculating subscription progress`));
+    console.log(chalk.bgGreen.black.bold(`[SubscriptionStatusTracker] Step 6: Calculating subscription progress`));
 
-    const startDate = new Date(activeSubscription.start_at);
-    const endDate = new Date(activeSubscription.end_at);
+    const startDate = new Date(subscriptionData.start_at);
+    const endDate = new Date(subscriptionData.end_at);
 
     console.log(chalk.green(`[SubscriptionStatusTracker] Start date: ${startDate.toISOString()}`));
     console.log(chalk.green(`[SubscriptionStatusTracker] End date: ${endDate.toISOString()}`));
@@ -92,7 +85,7 @@ export const SubscriptionStatusTracker = ({
       Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     );
 
-    console.log(chalk.bgBlue.black.bold(`[SubscriptionStatusTracker] Step 8: Progress calculations complete`));
+    console.log(chalk.bgBlue.black.bold(`[SubscriptionStatusTracker] Step 7: Progress calculations complete`));
     console.log(chalk.blue(`[SubscriptionStatusTracker] Total duration (ms): ${totalDuration}`));
     console.log(chalk.blue(`[SubscriptionStatusTracker] Elapsed time (ms): ${elapsed}`));
     console.log(chalk.blue(`[SubscriptionStatusTracker] Progress percentage: ${progress}%`));
@@ -104,21 +97,22 @@ export const SubscriptionStatusTracker = ({
       progress, 
       daysLeft, 
       hasValidData: true,
-      subscription: activeSubscription
+      subscription: subscriptionData
     };
   };
 
   const { startDate, endDate, progress, daysLeft, hasValidData, subscription } = getSubscriptionInfo();
 
-  // Don't render if no valid subscription data
-  if (!hasValidData || subscriptionData[0]?.plan === "free") {
-    console.log(chalk.bgYellow.black.bold(`[SubscriptionStatusTracker] Step 9: Component will not render`));
+  // Don't render if no valid subscription data or free plan
+  if (!hasValidData || subscriptionData?.plan === "free" || profile?.subscription_plan === "free") {
+    console.log(chalk.bgYellow.black.bold(`[SubscriptionStatusTracker] Step 8: Component will not render`));
     console.log(chalk.yellow(`[SubscriptionStatusTracker] hasValidData: ${hasValidData}`));
-    console.log(chalk.yellow(`[SubscriptionStatusTracker] Plan: ${subscriptionData[0]?.plan || 'N/A'}`));
+    console.log(chalk.yellow(`[SubscriptionStatusTracker] Subscription plan: ${subscriptionData?.plan || 'N/A'}`));
+    console.log(chalk.yellow(`[SubscriptionStatusTracker] Profile plan: ${profile?.subscription_plan || 'N/A'}`));
     return null;
   }
 
-  console.log(chalk.bgGreen.black.bold(`[SubscriptionStatusTracker] Step 10: Rendering component`));
+  console.log(chalk.bgGreen.black.bold(`[SubscriptionStatusTracker] Step 9: Rendering component`));
 
   return (
     <Card className="bg-white/95 shadow-xl">
@@ -151,7 +145,7 @@ export const SubscriptionStatusTracker = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Plan Type:</span>
               <span className="text-sm text-gray-900 font-medium capitalize">
-                {subscriptionData[0]?.plan || "Free"}
+                {subscriptionData?.plan || profile?.subscription_plan || "Free"}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -165,6 +159,14 @@ export const SubscriptionStatusTracker = ({
                 <span className="text-sm text-gray-600">Amount:</span>
                 <span className="text-sm text-gray-900 font-medium">
                   ${subscription.price}
+                </span>
+              </div>
+            )}
+            {subscription?.old_plan && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Previous Plan:</span>
+                <span className="text-sm text-gray-900 font-medium capitalize">
+                  {subscription.old_plan}
                 </span>
               </div>
             )}
