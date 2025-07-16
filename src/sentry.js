@@ -1,5 +1,6 @@
 // src/sentry.js
 import * as Sentry from "@sentry/react";
+import * as SentryIntegration from "@sentry/browser";
 import { v4 as uuidv4 } from "uuid";
 
 const getSessionUUID = () => {
@@ -16,7 +17,7 @@ export const initSentry = () => {
 
   Sentry.init({
     dsn: import.meta.env.VITE__SENTRY_DSN_KEY, // Use .env for DSN
-    integrations: [new BrowserTracing()],
+    integrations: [SentryIntegration.browserTracingIntegration()],
     tracesSampleRate: 1.0,
     initialScope: (scope) => {
       scope.setTag("session_uuid", sessionUUID);
