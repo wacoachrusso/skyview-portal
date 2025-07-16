@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +11,22 @@ interface AccountInfoProps {
   showPasswordChange?: boolean;
 }
 
-export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: AccountInfoProps) => {
+export const AccountInfo = ({ 
+  userEmail, 
+  profile, 
+  showPasswordChange = true 
+}: AccountInfoProps) => {
+  const [localProfile, setLocalProfile] = useState(profile);
+
+  // Update local profile when prop changes
+  useEffect(() => {
+    setLocalProfile(profile);
+  }, [profile]);
+
+  const handleProfileUpdate = (updatedProfile: any) => {
+    setLocalProfile(updatedProfile);
+  };
+
   const {
     isEditing,
     setIsEditing,
@@ -21,7 +35,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
     formData,
     handleInputChange,
     handleSubmit
-  } = useAccountForm(profile);
+  } = useAccountForm(localProfile, handleProfileUpdate);
 
   return (
     <div className="space-y-6">
@@ -30,7 +44,7 @@ export const AccountInfo = ({ userEmail, profile, showPasswordChange = true }: A
         isEditing={isEditing}
         formData={formData}
         handleInputChange={handleInputChange}
-        profile={profile}
+        profile={localProfile}
         hasSetAirlineAndJobRole={hasSetAirlineAndJobRole}
         onSave={handleSubmit}
         onEdit={() => setIsEditing(true)}
