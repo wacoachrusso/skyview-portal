@@ -49,7 +49,7 @@ const GlobalNavbar = () => {
   const handleSignOut = async () => {
     try {
       await storeLogout();
-      navigate("/login");
+      // navigate("/login");
     } catch (error) {
       console.error("Error during sign out:", error);
       toast({

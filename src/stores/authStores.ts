@@ -328,6 +328,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await supabase.auth.signOut();
       get().clearAuth();
       logger.info('Logout completed successfully');
+      window.location.href = '/login'
     } catch (error) {
       logger.error('Error during logout', error);
       throw error;
@@ -336,14 +337,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearAuth: () => {
     logger.info('Clearing auth state');
-    set({ 
-      authUser: null, 
-      profile: null, 
-      queryCount: 0,
-      isLoading: false, 
-      isInitialized: true,
-      profileError: null
-    });
+    setTimeout(() => {
+      
+    })
+    // set({ 
+    //   authUser: null, 
+    //   profile: null, 
+    //   queryCount: 0,
+    //   isLoading: false, 
+    //   isInitialized: true,
+    //   profileError: null
+    // });
   },
 
   handleJWTExpiration: async (error: any) => {
