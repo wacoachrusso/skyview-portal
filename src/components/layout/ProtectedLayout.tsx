@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLoadingSpinner } from "@/components/ui/app-loading-spinner";
 import { useToast } from "@/hooks/use-toast";
@@ -135,6 +135,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         title: "Disclaimer Declined",
         description: "You must accept the disclaimer to use the service.",
       });
+      // const navigate = useNavigate();
+      // navigate('/login');
     } catch (error) {
       console.error("Error during logout:", error);
     }

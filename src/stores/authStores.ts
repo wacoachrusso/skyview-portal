@@ -156,23 +156,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
+      console.log('Starting logout process');
       await supabase.auth.signOut();
       get().clearAuth();
-    } catch (err) {
-      console.error("Logout failed", err);
-      throw err;
+      console.log('Logout completed successfully');
+      window.location.href = '/login'
+    } catch (error) {
+      console.log('Error during logout', error);
+      throw error;
     }
   },
 
   clearAuth: () => {
-    set({
-      authUser: null,
-      profile: null,
-      queryCount: 0,
-      isLoading: false,
-      isInitialized: true,
-      profileError: null,
-    });
+    console.log('Clearing auth state');
+    setTimeout(() => {
+      
+    })
+    // set({ 
+    //   authUser: null, 
+    //   profile: null, 
+    //   queryCount: 0,
+    //   isLoading: false, 
+    //   isInitialized: true,
+    //   profileError: null
+    // });
   },
 
   handleJWTExpiration: async (error: any) =>

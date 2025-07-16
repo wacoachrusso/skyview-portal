@@ -8,6 +8,7 @@ import {
   Plus,
   UserCircle,
 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ChatSettings } from "./ChatSettings";
 import { useTheme } from "../theme-provider";
 import ChatHeaderButton from "./ChatHeaderButton";
@@ -31,11 +32,14 @@ const ChatHeader = ({
   const isMobile = useIsMobile();
   const { theme } = useTheme();
   const { profile, logout: storeLogout } = useAuthStore();
-  const userName = profile.full_name;
+  const userName = profile?.full_name;
   // Use the logout method from ProfileProvider
+  const navigate = useNavigate();
   const handleSignOut = async () => {
     try {
       await storeLogout();
+      console.log("We are doing signout");
+      // navigate('/login');
     } catch (error) {
       console.error("Error during sign out:", error);
     }
