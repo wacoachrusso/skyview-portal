@@ -38,7 +38,7 @@ const ChatHeader = ({
   const handleSignOut = async () => {
     try {
       await storeLogout();
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error("Error during sign out:", error);
     }
