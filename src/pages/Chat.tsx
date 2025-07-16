@@ -149,10 +149,16 @@ export default function Chat() {
     
     console.log(chalk.bgBlueBright.black.bold(`[Chat] Step 8: Trial validation effect → Plan: ${currentPlan}, Query Count: ${queryCount || 0}, Trial Exhausted: ${freeTrialExhausted}`));
     
-    if (freeTrialExhausted && !isLoading) {
-      console.log(chalk.bgRed.white.bold(`[Chat] Step 8a: Free trial exhausted → Setting trial ended state`));
-      setIsTrialEnded(true);
+    if (!isLoading) {
+      if (freeTrialExhausted) {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 8a: Free trial exhausted → Setting trial ended state`));
+        setIsTrialEnded(true);
+      } else {
+        console.log(chalk.bgRed.white.bold(`[Chat] Step 8b: User is in premium plan, so no free trial implied`));
+        setIsTrialEnded(false);
+      }
     }
+    
   }, [queryCount, subscriptionData, isLoading]);
 
   // Get subscription data from subscriptions table
