@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast as toastFunction } from "@/hooks/use-toast";
 import { handleSessionInvalidation } from "./sessionInvalidation";
 import { updateSessionApiActivity } from "@/services/session/validateSession";
+import { useSessionStore } from "@/stores/session";
 
 interface ValidationProps {
   navigate: NavigateFunction;
@@ -13,9 +14,10 @@ export const validateSessionToken = async (currentToken: string | null, { naviga
   if (!currentToken) return false;
 
   try {
+    const { apiCallInProgress } = useSessionStore.getState();
+    
     // Critical: ALWAYS skip full validation during API calls
-    const isApiCall = sessionStorage.getItem('api_call_in_progress') === 'true';
-    if (isApiCall) {
+    if (apiCallInProgress) {
       console.log("API call in progress, skipping ALL session validation checks");
       // Just update the timestamp without any validation
       try {
@@ -80,8 +82,10 @@ export const checkActiveSession = async (userId: string, sessionToken: string): 
   try {
     console.log('Checking active session for user:', userId);
     
+    const { apiCallInProgress } = useSessionStore.getState();
+    
     // ALWAYS skip ALL session checks during API calls
-    if (sessionStorage.getItem('api_call_in_progress') === 'true') {
+    if (apiCallInProgress) {
       console.log("API call in progress, skipping ALL session checks");
       return true;
     }

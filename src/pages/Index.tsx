@@ -16,44 +16,25 @@ import { motion } from "framer-motion";
 import { HomeFAQ } from "@/components/landing/HomeFAQ";
 import { Button } from "@/components/ui/button";
 import PublicLayout from "@/components/layout/PublicLayout";
+import { useAuthStore } from "@/stores/authStores";
 
 export default function Index() {
   const location = useLocation();
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
+  
+  // Zustand store state and actions
+  const { 
+    isAuthenticated, 
+    isLoading, 
+    isInitialized, 
+    loginInProgress,
+    authUser,
+    initializeAuth,
+    checkAuthStatus 
+  } = useAuthStore();
+  
+  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const hasPricingSectionScrolled = useRef(false);
-
-  // Enhanced authentication check function
-  const checkAuthenticationStatus = () => {
-    try {
-      // Check multiple possible auth indicators
-      const authStatus = localStorage.getItem("auth_status");
-      const authToken = localStorage.getItem("auth_token"); // if you use tokens
-      const userSession = localStorage.getItem("user_session"); // if you store user data
-      const loginInProgress = localStorage.getItem("login_in_progress");
-      // You might also want to check sessionStorage as a fallback
-      const sessionAuth = sessionStorage.getItem("auth_status");
-
-      // Don't redirect if login is in progress (OAuth flow)
-      if (loginInProgress === "true") {
-        console.log("Login in progress, skipping auth redirect");
-        return false;
-      }
-
-      // Return true if any authentication indicator is present
-      return (
-        authStatus === "authenticated" ||
-        authToken !== null ||
-        userSession !== null ||
-        sessionAuth === "authenticated"
-      );
-    } catch (error) {
-      console.error("Error checking authentication:", error);
-      return false;
-    }
-  };
 
   // Check if running as PWA with better type safety
   const isPWA = () => {
@@ -89,91 +70,93 @@ export default function Index() {
     );
   };
 
+  // Initialize auth on component mount
   useEffect(() => {
     console.log("Index page mounted");
     console.log("Is PWA:", isPWA());
 
-    // Add a small delay for PWA context to fully initialize
-    const authCheckDelay = isPWA() ? 500 : 100;
+    if (!isInitialized) {
+      initializeAuth();
+    }
+  }, [isInitialized, initializeAuth]);
 
-    setTimeout(() => {
-      const isAuthenticated = checkAuthenticationStatus();
-
-      // Enhanced debugging for PWA testing
-      const debugInfo = {
-        isPWA: isPWA(),
-        isAuthenticated,
-        displayMode: window.matchMedia("(display-mode: standalone)").matches,
-        fullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
-        minimalUI: window.matchMedia("(display-mode: minimal-ui)").matches,
-        referrer: document.referrer,
-        searchParams: location.search,
-        pathname: location.pathname,
-        localStorage: {
-          auth_status: localStorage.getItem("auth_status"),
-          auth_token: localStorage.getItem("auth_token"),
-        },
-      };
-
-      console.log("🔍 PWA Debug Info:", debugInfo);
-      console.log("🔐 Authentication status:", isAuthenticated);
-
-      // Get URL parameters
-      const searchParams = new URLSearchParams(location.search);
-
-      // Check if the user is authenticated and there are no URL parameters
-      if (isAuthenticated && searchParams.toString() === "") {
-        console.log("Redirecting authenticated user to /chat");
-        // For PWA, use replace to avoid back button issues
-        navigate("/chat", { replace: true });
-        return;
-      }
-
-      // Handle pricing section scrolling
-      const scrollTo = searchParams.get("scrollTo");
-      const needsToScrollToPricing = scrollTo === "pricing-section";
-
-      if (needsToScrollToPricing && !hasPricingSectionScrolled.current) {
-        setTimeout(() => {
-          const pricingSection = document.getElementById("pricing-section");
-          if (pricingSection) {
-            pricingSection.scrollIntoView({ behavior: "smooth" });
-            hasPricingSectionScrolled.current = true;
-          }
-        }, 500);
-      }
-
-      setAuthChecked(true);
-      setIsLoading(false);
-
-      // Handle iOS install prompt (only for iOS, not Android PWA)
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isStandalone = window.matchMedia(
-        "(display-mode: standalone)"
-      ).matches;
-      const hasShownPrompt = localStorage.getItem("iosInstallPromptShown");
-
-      if (isIOS && !isStandalone && !hasShownPrompt) {
-        setShowIOSPrompt(true);
-        localStorage.setItem("iosInstallPromptShown", "true");
-      }
-    }, authCheckDelay);
-
-    return () => {
-      console.log("Index page unmounted");
-    };
-  }, [location, navigate]);
-
-  // Also add a secondary auth check that runs periodically for PWAs
+  // Handle authentication-based navigation
   useEffect(() => {
-    if (!isPWA() || !authChecked) return;
+    if (!isInitialized || isLoading) return;
 
-    const authCheckInterval = setInterval(() => {
-      const isAuthenticated = checkAuthenticationStatus();
+    // Don't redirect if login is in progress (OAuth flow)
+    if (loginInProgress) {
+      console.log("Login in progress, skipping auth redirect");
+      return;
+    }
+
+    // Enhanced debugging for PWA testing
+    const debugInfo = {
+      isPWA: isPWA(),
+      isAuthenticated,
+      isInitialized,
+      isLoading,
+      loginInProgress,
+      authUser: authUser?.id,
+      displayMode: window.matchMedia("(display-mode: standalone)").matches,
+      fullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
+      minimalUI: window.matchMedia("(display-mode: minimal-ui)").matches,
+      referrer: document.referrer,
+      searchParams: location.search,
+      pathname: location.pathname,
+    };
+
+    console.log("🔍 PWA Debug Info:", debugInfo);
+    console.log("🔐 Authentication status:", isAuthenticated);
+
+    // Get URL parameters
+    const searchParams = new URLSearchParams(location.search);
+
+    // Check if the user is authenticated and there are no URL parameters
+    if (isAuthenticated && searchParams.toString() === "") {
+      console.log("Redirecting authenticated user to /chat");
+      // For PWA, use replace to avoid back button issues
+      navigate("/chat", { replace: true });
+      return;
+    }
+
+    // Handle pricing section scrolling
+    const scrollTo = searchParams.get("scrollTo");
+    const needsToScrollToPricing = scrollTo === "pricing-section";
+
+    if (needsToScrollToPricing && !hasPricingSectionScrolled.current) {
+      setTimeout(() => {
+        const pricingSection = document.getElementById("pricing-section");
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: "smooth" });
+          hasPricingSectionScrolled.current = true;
+        }
+      }, 500);
+    }
+
+    // Handle iOS install prompt (only for iOS, not Android PWA)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches;
+    const hasShownPrompt = localStorage.getItem("iosInstallPromptShown");
+
+    if (isIOS && !isStandalone && !hasShownPrompt) {
+      setShowIOSPrompt(true);
+      localStorage.setItem("iosInstallPromptShown", "true");
+    }
+  }, [isAuthenticated, isInitialized, isLoading, loginInProgress, location, navigate, authUser]);
+
+  // Secondary auth check for PWAs (periodic check)
+  useEffect(() => {
+    if (!isPWA() || !isInitialized || isLoading) return;
+
+    const authCheckInterval = setInterval(async () => {
+      const currentAuthStatus = await checkAuthStatus();
       const searchParams = new URLSearchParams(location.search);
 
       if (
-        isAuthenticated &&
+        currentAuthStatus &&
         searchParams.toString() === "" &&
         location.pathname === "/"
       ) {
@@ -191,14 +174,20 @@ export default function Index() {
       clearInterval(authCheckInterval);
       clearTimeout(clearTimer);
     };
-  }, [authChecked, location, navigate]);
+  }, [isInitialized, isLoading, location, navigate, checkAuthStatus]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log("Index page unmounted");
+    };
+  }, []);
 
   const handleClosePrompt = () => {
     setShowIOSPrompt(false);
   };
 
   const handleReferralClick = () => {
-    const isAuthenticated = checkAuthenticationStatus();
     if (isAuthenticated) {
       navigate("/referrals");
     } else {
@@ -213,7 +202,7 @@ export default function Index() {
   };
 
   // Show loading state while checking auth
-  if (isLoading) {
+  if (isLoading || !isInitialized) {
     return (
       <div className="min-h-screen bg-luxury-dark flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -221,12 +210,8 @@ export default function Index() {
     );
   }
 
-  // Get current auth status for rendering
-  const isAuthenticated = checkAuthenticationStatus();
-
   return (
     <PublicLayout>
-      
       <main className="flex-1 w-full">
         <div className="max-w-[100vw] overflow-x-hidden">
           <Hero />

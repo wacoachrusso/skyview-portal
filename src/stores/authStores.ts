@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
+
 // JWT expiration handler
 const handleJWTExpiration = async (error: any, clearAuth: () => void) => {
   if (error?.code === "PGRST301" && error?.message === "JWT expired") {
@@ -44,17 +45,37 @@ export interface AuthState {
   isLoading: boolean;
   isInitialized: boolean;
   profileError: string | null;
+  // New authentication status flags
+  isAuthenticated: boolean;
+  rememberMe: boolean;
+  extendedSession: boolean;
+  loginInProgress: boolean;
+  skipInitialRedirect: boolean;
+  
+  // Actions
   setAuthUser: (user: User | null) => void;
   setProfile: (profile: Profile | null) => void;
   setQueryCount: (count: number) => void;
   setLoading: (loading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
   setProfileError: (error: string | null) => void;
+  setAuthenticated: (authenticated: boolean) => void;
+  setRememberMe: (remember: boolean) => void;
+  setExtendedSession: (extended: boolean) => void;
+  setLoginInProgress: (inProgress: boolean) => void;
+  setSkipInitialRedirect: (skip: boolean) => void;
+  
+  // Main methods
   fetchSessionAndProfile: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   logout: () => Promise<void>;
   clearAuth: () => void;
   handleJWTExpiration: (error: any) => Promise<boolean>;
+  
+  // Authentication flow methods
+  handleSuccessfulLogin: (user: User, rememberMe?: boolean) => Promise<void>;
+  checkAuthStatus: () => Promise<boolean>;
+  initializeAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -64,6 +85,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isInitialized: false,
   profileError: null,
+  isAuthenticated: false,
+  rememberMe: false,
+  extendedSession: false,
+  loginInProgress: false,
+  skipInitialRedirect: false,
 
   setAuthUser: (user) => {
     console.log("Setting auth user", { userId: user?.id });
@@ -81,6 +107,61 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setInitialized: (initialized) => set({ isInitialized: initialized }),
   setProfileError: (error) => set({ profileError: error }),
+  setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+  setRememberMe: (remember) => set({ rememberMe: remember }),
+  setExtendedSession: (extended) => set({ extendedSession: extended }),
+  setLoginInProgress: (inProgress) => set({ loginInProgress: inProgress }),
+  setSkipInitialRedirect: (skip) => set({ skipInitialRedirect: skip }),
+
+  handleSuccessfulLogin: async (user: User, rememberMe = false) => {
+    const { setAuthUser, setAuthenticated, setRememberMe, setExtendedSession, refreshProfile } = get();
+    
+    // Set authentication state
+    setAuthUser(user);
+    setAuthenticated(true);
+    setRememberMe(rememberMe);
+    
+    if (rememberMe) {
+      setExtendedSession(true);
+    }
+    
+    // Fetch user profile
+    await refreshProfile();
+    
+    console.log("Successful login handled in Zustand store");
+  },
+
+  checkAuthStatus: async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const isAuth = !!session;
+      
+      set({ isAuthenticated: isAuth });
+      
+      if (isAuth && session.user) {
+        set({ authUser: session.user });
+      }
+      
+      return isAuth;
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      set({ isAuthenticated: false });
+      return false;
+    }
+  },
+
+  initializeAuth: async () => {
+    const { setLoading, setInitialized, fetchSessionAndProfile } = get();
+    
+    setLoading(true);
+    
+    try {
+      await fetchSessionAndProfile();
+    } finally {
+      setLoading(false);
+      setInitialized(true);
+    }
+  },
 
   fetchSessionAndProfile: async () => {
     const clear = get().clearAuth;
@@ -98,6 +179,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profile: null,
           queryCount: 0,
           isLoading: false,
+          isAuthenticated: false,
           profileError: error.message,
         });
       }
@@ -109,11 +191,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profile: null,
           queryCount: 0,
           isLoading: false,
+          isAuthenticated: false,
           profileError: "No user found",
         });
       }
 
-      set({ authUser: user });
+      set({ authUser: user, isAuthenticated: true });
       await get().refreshProfile();
     } catch (err: any) {
       if (await handleJWTExpiration(err, clear)) return;
@@ -121,6 +204,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         authUser: null,
         profile: null,
         queryCount: 0,
+        isAuthenticated: false,
         profileError: err.message,
       });
     } finally {
@@ -169,17 +253,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearAuth: () => {
     console.log('Clearing auth state');
-    setTimeout(() => {
-      
-    })
-    // set({ 
-    //   authUser: null, 
-    //   profile: null, 
-    //   queryCount: 0,
-    //   isLoading: false, 
-    //   isInitialized: true,
-    //   profileError: null
-    // });
+    set({ 
+      authUser: null, 
+      profile: null, 
+      queryCount: 0,
+      isLoading: false, 
+      isInitialized: true,
+      profileError: null,
+      isAuthenticated: false,
+      rememberMe: false,
+      extendedSession: false,
+      loginInProgress: false,
+      skipInitialRedirect: false
+    });
   },
 
   handleJWTExpiration: async (error: any) =>

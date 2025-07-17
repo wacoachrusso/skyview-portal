@@ -1,16 +1,17 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceInfo } from "./deviceInfo";
-
+import { useSessionStore } from "@/stores/session";
 export const createNewSession = async (userId: string): Promise<any> => {
   console.log('Creating new session for user:', userId);
+  
+  const { sessionToken: currentToken, setSessionToken, setUserId, setAuthTokens } = useSessionStore.getState();
   
   try {
     // First invalidate any existing sessions - forcefully end all other sessions
     const { error: invalidateError } = await supabase
       .rpc('invalidate_other_sessions', {
         p_user_id: userId,
-        p_current_session_token: localStorage.getItem('session_token') || ''
+        p_current_session_token: currentToken || ''
       });
 
     if (invalidateError) {
@@ -48,13 +49,14 @@ export const createNewSession = async (userId: string): Promise<any> => {
       throw createError;
     }
 
-    // Store session token
-    localStorage.setItem('session_token', sessionToken);
+    // Store session token and user ID in Zustand store
+    setSessionToken(sessionToken);
+    setUserId(userId);
     
-    // Ensure refresh token is stored in both localStorage and secure cookie
+    // Ensure refresh token is stored in both Zustand and secure cookie
     const { data: { session: authSession } } = await supabase.auth.getSession();
-    if (authSession?.refresh_token) {
-      localStorage.setItem('supabase.refresh-token', authSession.refresh_token);
+    if (authSession?.refresh_token && authSession?.access_token) {
+      setAuthTokens(authSession.access_token, authSession.refresh_token);
       document.cookie = `sb-refresh-token=${authSession.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`; // 7 days
     }
 
