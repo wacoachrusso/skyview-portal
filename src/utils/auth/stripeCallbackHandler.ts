@@ -1,8 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NavigateFunction } from "react-router-dom";
 import { createNewSession } from "@/services/session/createSession";
+import { useSessionStore } from "@/stores/session";
 
 interface PendingSignup {
   email: string;
@@ -20,14 +20,17 @@ export const handleStripeCallback = async (
 ) => {
   console.log("[stripeCallbackHandler] Processing payment callback with session ID:", sessionId);
   
+  // Get store instance
+  const store = useSessionStore.getState();
+  
   try {
     // Set a flag to indicate payment processing in progress
-    localStorage.setItem('payment_in_progress', 'true');
+    store.setPaymentInProgress(true);
     
-    // CRITICAL STEP 1: Restore auth state from localStorage if available
+    // CRITICAL STEP 1: Restore auth state from store if available
     let authRestored = false;
-    const savedAccessToken = localStorage.getItem('auth_access_token');
-    const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+    const savedAccessToken = store.accessToken;
+    const savedRefreshToken = store.refreshToken;
     
     if (savedAccessToken && savedRefreshToken) {
       console.log("[stripeCallbackHandler] Found saved auth tokens, attempting to restore session");
@@ -132,13 +135,19 @@ export const handleStripeCallback = async (
           // Non-critical error, continue
         }
         
-        // CRITICAL STEP 5: Set tokens in cookies for added persistence
+        // CRITICAL STEP 5: Update store with auth tokens and user info
+        store.setAuthTokens(session.access_token, session.refresh_token);
+        store.setUserId(session.user.id);
+        store.setUserEmail(session.user.email || null);
+        
+        // Set tokens in cookies for added persistence
         document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
         document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
         document.cookie = `session_user_id=${session.user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
         
         // CRITICAL STEP 6: Set flag for post-payment state
-        localStorage.setItem('subscription_activated', 'true');
+        store.setSubscriptionActivated(true);
+        store.setPostPaymentConfirmation(true);
         
         console.log("[stripeCallbackHandler] All critical post-payment steps completed successfully");
         
@@ -152,23 +161,10 @@ export const handleStripeCallback = async (
         // Add a short delay to ensure all state is properly updated
         console.log("[stripeCallbackHandler] Waiting before redirect to ensure state is updated");
         
-        // Store the session token in localStorage for additional persistence
-        localStorage.setItem('session_token_backup', localStorage.getItem('session_token') || '');
-        
-        // Set a flag to indicate successful payment and subscription activation
-        localStorage.setItem('subscription_activated', 'true');
-        
-        // Ensure we have the latest tokens stored
-        localStorage.setItem('auth_access_token', session.access_token);
-        localStorage.setItem('auth_refresh_token', session.refresh_token);
-        localStorage.setItem('auth_user_id', session.user.id);
-        localStorage.setItem('auth_user_email', session.user.email || '');
-        
         setTimeout(() => {
           console.log("[stripeCallbackHandler] Now redirecting to chat page");
-          // Add a special flag to indicate this is a direct redirect from payment
-          // This will help prevent redirect loops
-          localStorage.setItem('direct_payment_redirect', 'true');
+          // Skip initial redirect since we're coming from payment
+          store.setSkipInitialRedirect(true);
           window.location.href = `${window.location.origin}/chat`;
         }, 2000); // Increased delay to ensure all state is updated
         
@@ -178,7 +174,7 @@ export const handleStripeCallback = async (
         
         // If anything fails in the critical path, set the subscription flag anyway
         // and redirect to chat - better to give access and fix later than deny service
-        localStorage.setItem('subscription_activated', 'true');
+        store.setSubscriptionActivated(true);
         
         // Force a page reload to get a clean slate
         window.location.href = `${window.location.origin}/chat`;
@@ -229,7 +225,7 @@ export const handleStripeCallback = async (
         description: "Your signup data was not found. Please try signing up again or contact support if the issue persists.",
         duration: 10000,
       });
-      localStorage.removeItem('payment_in_progress');
+      store.setPaymentInProgress(false);
       navigate('/?scrollTo=pricing-section', { replace: true });
       return null;
     }
@@ -243,7 +239,7 @@ export const handleStripeCallback = async (
       description: error.message || "An unexpected error occurred. Please try again or contact support.",
       duration: 10000,
     });
-    localStorage.removeItem('payment_in_progress');
+    store.setPaymentInProgress(false);
     navigate('/login');
     return null;
   }

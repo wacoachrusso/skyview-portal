@@ -1,24 +1,25 @@
 import { NavigateFunction } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { disableRedirects } from "@/utils/navigation";
+import { useSessionStore } from "@/stores/session";
+
 
 /**
  * Checks for new user signup and handles redirect if needed
  */
 export const handleNewUserSignup = (navigate: NavigateFunction): boolean => {
-  const isNewUserSignup = localStorage.getItem('new_user_signup') === 'true';
+  const { isNewUserSignup, setIsNewUserSignup } = useSessionStore.getState();
   
   // Only redirect to chat if not already on the chat page
   if (isNewUserSignup && window.location.pathname !== '/chat') {
     console.log("New user signup detected, redirecting to chat");
-    localStorage.removeItem('new_user_signup'); // Clear the flag immediately to prevent future redirects
+    setIsNewUserSignup(false); // Clear the flag immediately to prevent future redirects
     navigate('/chat', { replace: true });
     return true;
   }
   
   // Clear the flag if we're already on the chat page to prevent future redirects
   if (isNewUserSignup && window.location.pathname === '/chat') {
-    localStorage.removeItem('new_user_signup');
+    setIsNewUserSignup(false);
   }
   
   return false;
@@ -30,16 +31,14 @@ export const handleNewUserSignup = (navigate: NavigateFunction): boolean => {
 export const tryRestoreSession = async (pathname: string): Promise<boolean> => {
   console.log("Attempting to restore session from saved tokens");
   
-  // Try to restore session from saved tokens
-  const savedAccessToken = localStorage.getItem('auth_access_token');
-  const savedRefreshToken = localStorage.getItem('auth_refresh_token');
+  const { accessToken, refreshToken } = useSessionStore.getState();
   
-  if (savedAccessToken && savedRefreshToken) {
+  if (accessToken && refreshToken) {
     try {
       // First try: Use setSession with saved tokens
       const { data: sessionData, error: restoreError } = await supabase.auth.setSession({
-        access_token: savedAccessToken,
-        refresh_token: savedRefreshToken
+        access_token: accessToken,
+        refresh_token: refreshToken
       });
       
       if (!restoreError && sessionData.session) {
@@ -131,6 +130,8 @@ export const isPublicRoute = (pathname: string): boolean => {
  * Checks if the user has an active subscription
  */
 export const checkSubscriptionStatus = async (userId: string, navigate: NavigateFunction): Promise<void> => {
+  const { redirectToPricing, setRedirectToPricing, setIsAdmin } = useSessionStore.getState();
+  
   // Prevent redirect loop by checking if we're already on the pricing page
   const isPricingPage = window.location.pathname === '/' && window.location.search.includes('scrollTo=pricing-section');
   if (isPricingPage) {
@@ -152,7 +153,7 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
   // Check if user is admin
   if (profile?.is_admin) {
     console.log("[Initial Session] Admin user detected in initial check");
-    localStorage.setItem('user_is_admin', 'true');
+    setIsAdmin(true);
     
     // Only redirect admin if they're on login/signup pages
     if (window.location.pathname === '/login' || 
@@ -162,7 +163,7 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
     }
     return;
   } else {
-    localStorage.removeItem('user_is_admin');
+    setIsAdmin(false);
   }
   
   // Check for active paid subscription
@@ -171,7 +172,7 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
       profile?.subscription_plan !== 'trial_ended') {
     console.log("[Initial Session] User has active subscription");
     
-    // Only redirect if on login/signup pages - MODIFIED HERE
+    // Only redirect if on login/signup pages
     if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
       navigate('/chat', { replace: true });
     }
@@ -183,14 +184,14 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
       (profile?.subscription_status === 'inactive' && profile?.subscription_plan !== 'free')) {
     console.log("[Initial Session] Free trial ended/inactive subscription, going to pricing");
     
-    // Add a flag to localStorage to prevent redirect loops
-    if (!localStorage.getItem('redirect_to_pricing')) {
-      localStorage.setItem('redirect_to_pricing', 'true');
+    // Add a flag to prevent redirect loops
+    if (!redirectToPricing) {
+      setRedirectToPricing(true);
       navigate('/?scrollTo=pricing-section', { replace: true });
       
       // Clear the flag after a delay to allow future redirects after the user navigates elsewhere
       setTimeout(() => {
-        localStorage.removeItem('redirect_to_pricing');
+        setRedirectToPricing(false);
       }, 5000);
     } else {
       console.log("[Initial Session] Preventing redirect loop to pricing page");
@@ -202,12 +203,16 @@ export const checkSubscriptionStatus = async (userId: string, navigate: Navigate
  * Handles recovery after payment interruption
  */
 export const handlePaymentRecovery = async (navigate: NavigateFunction): Promise<boolean> => {
-  const paymentInProgress = localStorage.getItem('payment_in_progress') === 'true';
-  const postPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
-  const subscriptionActivated = localStorage.getItem('subscription_activated') === 'true';
+  const { 
+    paymentInProgress, 
+    postPaymentConfirmation, 
+    subscriptionActivated,
+    clearPaymentFlags,
+    clearSession
+  } = useSessionStore.getState();
   
   // If we're at the login page but we have payment flags, attempt to recover the session
-  if ((paymentInProgress || postPayment || subscriptionActivated) && 
+  if ((paymentInProgress || postPaymentConfirmation || subscriptionActivated) && 
       (window.location.pathname === '/login' || window.location.pathname === '/')) {
     console.log("[Initial Session] Payment flow interrupted, attempting to recover session");
     
@@ -217,13 +222,8 @@ export const handlePaymentRecovery = async (navigate: NavigateFunction): Promise
     if (!restored) {
       // All restoration attempts failed, clear payment flags
       console.log("[Initial Session] All session restoration attempts failed, clearing flags");
-      localStorage.removeItem('payment_in_progress');
-      localStorage.removeItem('postPaymentConfirmation');
-      localStorage.removeItem('subscription_activated');
-      localStorage.removeItem('auth_access_token');
-      localStorage.removeItem('auth_refresh_token');
-      localStorage.removeItem('auth_user_id');
-      localStorage.removeItem('auth_user_email');
+      clearPaymentFlags();
+      clearSession();
     }
     
     return restored;
@@ -239,11 +239,19 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
   try {
     console.log("Checking initial session on app load");
     
+    const { 
+      skipInitialRedirect, 
+      setSkipInitialRedirect, 
+      recentlySignedUp, 
+      setRecentlySignedUp,
+      postPaymentConfirmation,
+      clearPaymentFlags
+    } = useSessionStore.getState();
+    
     // Skip initial redirect if flag is set
-    const skipInitialRedirect = localStorage.getItem('skip_initial_redirect') === 'true';
     if (skipInitialRedirect) {
       console.log("[Initial Session] Skipping initial redirect due to flag");
-      localStorage.removeItem('skip_initial_redirect');
+      setSkipInitialRedirect(false);
       return;
     }
     
@@ -271,7 +279,7 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
     }
     
     // For recently signed up users, ONLY redirect if we're not already on the chat page
-    if (sessionStorage.getItem('recently_signed_up') === 'true') {
+    if (recentlySignedUp) {
       console.log("[Initial Session] Recently signed up user detected");
       if (window.location.pathname !== '/chat') {
         console.log("[Initial Session] Redirecting recent signup to chat page");
@@ -279,7 +287,7 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
         return;
       } else {
         // Clear the flag to prevent future redirects
-        sessionStorage.removeItem('recently_signed_up');
+        setRecentlySignedUp(false);
       }
     }
     
@@ -293,8 +301,7 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
       await checkSubscriptionStatus(data.session.user.id, navigate);
       
       // Check if user just completed payment
-      const postPayment = localStorage.getItem('postPaymentConfirmation') === 'true';
-      if (postPayment) {
+      if (postPaymentConfirmation) {
         console.log("[Initial Session] Post-payment user with active session");
         // Only redirect if not already on the chat page
         if (window.location.pathname !== '/chat') {
@@ -304,14 +311,12 @@ export const performInitialSessionCheck = async (navigate: NavigateFunction): Pr
         } else {
           // Already on chat page, clear the flags to prevent future redirects
           console.log("[Initial Session] Already on chat page, clearing post-payment flags");
-          localStorage.removeItem('postPaymentConfirmation');
-          localStorage.removeItem('payment_in_progress');
-          localStorage.removeItem('subscription_activated');
+          clearPaymentFlags();
           return;
         }
       }
       
-      // MODIFIED HERE: Only redirect from login/signup pages, allow access to home page
+      // Only redirect from login/signup pages, allow access to home page
       if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
         navigate('/chat', { replace: true });
       }

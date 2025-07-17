@@ -18,20 +18,33 @@ import AuthButton from "@/components/auth/AuthButton";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthFooter from "@/components/auth/AuthFooter";
 import { fetchUserProfile } from "@/utils/user/fetchUserProfile";
+import { useAuthStore } from "@/stores/authStores";
+
 const loginFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
+
 const Login = () => {
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const location = useLocation();
+  const {
+    isInitialized,
+    loginInProgress,
+    rememberMe,
+    setLoginInProgress,
+    setRememberMe,
+    setSkipInitialRedirect,
+    handleSuccessfulLogin,
+    checkAuthStatus,
+    initializeAuth
+  } = useAuthStore();
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -39,11 +52,13 @@ const Login = () => {
       password: "",
     },
   });
+
   // Store redirectTo path from state if it exists
   const redirectPath = location.state?.redirectTo || "/chat";
 
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true);
+    setLoginInProgress(true);
 
     try {
       // Login
@@ -60,22 +75,19 @@ const Login = () => {
           description: error.message,
         });
         setLoading(false);
+        setLoginInProgress(false);
         return;
       }
 
       if (authData.session) {
-        // IMPORTANT: Set auth status immediately for instant UI updates
-        localStorage.setItem("auth_status", "authenticated");
-        sessionStorage.setItem("auth_status", "authenticated");
+        // Handle successful login through Zustand store
+        await handleSuccessfulLogin(authData.session.user, rememberMe);
+        
         toast({
           title: "Login successful",
           description: "Welcome back!",
         });
 
-        // If rememberMe is checked, set session expiry to 30 days
-        if (rememberMe) {
-          localStorage.setItem("extended_session", "true");
-        }
         // Create new session
         await createNewSession(authData.session.user.id);
 
@@ -95,42 +107,47 @@ const Login = () => {
       });
     } finally {
       setLoading(false);
+      setLoginInProgress(false);
     }
   };
+
   // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
       // Skip this check if we're already in login flow
-      if (localStorage.getItem("login_in_progress") === "true") {
-        setInitialCheckDone(true);
+      if (loginInProgress) {
         return;
       }
 
       // Check if user is already logged in
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
+      const isAuth = await checkAuthStatus();
+      if (isAuth) {
         console.log(
           `User already authenticated, redirecting to ${redirectPath}`
         );
-        // Set auth status in local storage
-        localStorage.setItem("auth_status", "authenticated");
-        sessionStorage.setItem("auth_status", "authenticated");
+        
         // Use the utility to break potential redirect loops
-        localStorage.setItem("skip_initial_redirect", "true");
+        setSkipInitialRedirect(true);
         navigate(redirectPath, { replace: true });
       }
-      setInitialCheckDone(true);
     };
 
-    checkAuth();
-  }, [navigate, redirectPath]);
+    if (isInitialized) {
+      checkAuth();
+    }
+  }, [isInitialized, loginInProgress, redirectPath, navigate, checkAuthStatus, setSkipInitialRedirect]);
+
+  // Initialize auth store on component mount
+  useEffect(() => {
+    if (!isInitialized) {
+      initializeAuth();
+    }
+  }, [isInitialized, initializeAuth]);
 
   // Check for error param in URL (from Google auth callback)
   const errorParam = searchParams.get("error");
   useEffect(() => {
-    if (errorParam && initialCheckDone) {
+    if (errorParam && isInitialized) {
       toast({
         variant: "destructive",
         title: "Authentication Error",
@@ -138,10 +155,10 @@ const Login = () => {
           errorParam || "Failed to complete authentication. Please try again.",
       });
     }
-  }, [errorParam, toast, initialCheckDone]);
+  }, [errorParam, toast, isInitialized]);
 
   // Hide the login form until initial check is complete to prevent flashing
-  if (!initialCheckDone) {
+  if (!isInitialized) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-luxury-dark px-4 py-8 sm:px-6">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

@@ -1,16 +1,17 @@
-
 import { useState, useEffect } from "react";
 import { updateSessionApiActivity } from "@/services/session";
+import { useSessionStore } from "@/stores/session";
 
 /**
  * Hook to manage API call state and session activity
  */
 export function useApiCallState() {
+  const store = useSessionStore();
+  
   // Set up and clear API call flags
   const setupApiCall = () => {
     const apiCallId = Date.now().toString();
-    sessionStorage.setItem('api_call_in_progress', 'true');
-    sessionStorage.setItem('api_call_id', apiCallId);
+    store.setApiCallInProgress(true);
     console.log(`API call started with ID: ${apiCallId}`);
     return apiCallId;
   };
@@ -19,15 +20,14 @@ export function useApiCallState() {
     console.log(`API call with ID ${apiCallId} completed, clearing flag after delay`);
     
     setTimeout(() => {
-      sessionStorage.removeItem('api_call_in_progress');
-      sessionStorage.removeItem('api_call_id');
+      store.setApiCallInProgress(false);
       console.log("API call flag cleared");
     }, 500);
   };
 
   // Update session activity to prevent timeout during API calls
   const updateSessionActivity = async () => {
-    const currentToken = localStorage.getItem('session_token');
+    const currentToken = store.sessionToken;
     if (currentToken) {
       await updateSessionApiActivity(currentToken);
     }
@@ -36,6 +36,7 @@ export function useApiCallState() {
   return {
     setupApiCall,
     clearApiCall,
-    updateSessionActivity
+    updateSessionActivity,
+    apiCallInProgress: store.apiCallInProgress
   };
 }
