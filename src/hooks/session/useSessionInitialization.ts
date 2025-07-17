@@ -1,13 +1,14 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { createNewSession } from "./useSessionCreation";
+import { useSessionStore } from "@/stores/session";
 
 export const useSessionInitialization = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const store = useSessionStore();
   const [isLoading, setIsLoading] = useState(true);
 
   const initializeSession = async () => {
@@ -29,9 +30,13 @@ export const useSessionInitialization = () => {
         return;
       }
 
-      // Ensure refresh token is properly stored
+      // Store auth tokens in store and ensure refresh token is properly stored
+      store.setAuthTokens(session.access_token, session.refresh_token);
+      store.setUserId(session.user.id);
+      store.setUserEmail(session.user.email || null);
+      
       if (session.refresh_token) {
-        localStorage.setItem('supabase.refresh-token', session.refresh_token);
+        // Keep cookie as backup for persistence across page reloads
         document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; secure; samesite=strict; max-age=${7 * 24 * 60 * 60}`;
       }
 
@@ -47,17 +52,13 @@ export const useSessionInitialization = () => {
       } else if (profile) {
         console.log("User profile loaded:", profile.email, "Is admin:", profile.is_admin);
         
-        // Store admin status in local storage for quick access
-        if (profile.is_admin) {
-          localStorage.setItem('user_is_admin', 'true');
-          console.log("Admin status set in local storage");
-        } else {
-          localStorage.removeItem('user_is_admin');
-        }
+        // Store admin status in store
+        store.setIsAdmin(profile.is_admin || false);
+        console.log("Admin status set in store:", profile.is_admin);
       }
 
-      // Get current session token
-      const sessionToken = localStorage.getItem('session_token');
+      // Get current session token from store
+      const sessionToken = store.sessionToken;
       if (!sessionToken) {
         // Create a new session if none exists
         await createNewSession(session.user.id);

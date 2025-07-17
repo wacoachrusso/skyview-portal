@@ -1,29 +1,15 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import AuthLayout from "@/components/auth/AuthLayout";
 import {
   Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import "@/styles/auth-autofill.css";
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { JobAndAirlineSelector } from "@/components/auth/JobAndAirlineSelector";
@@ -31,6 +17,7 @@ import AuthDivider from "@/components/auth/AuthDivider";
 import AuthButton from "@/components/auth/AuthButton";
 import AuthFooter from "@/components/auth/AuthFooter";
 import { createNewSession } from "@/services/session";
+import { useAuthStore } from "@/stores/authStores";
 
 const signupFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required."),
@@ -59,6 +46,9 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Zustand store
+  const { setLoginInProgress } = useAuthStore();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
@@ -226,8 +216,8 @@ export default function SignUp() {
       // Sign out the user after successful signup to force them to log in explicitly
       await supabase.auth.signOut();
       
-      // Clean up before navigation
-      localStorage.removeItem("login_in_progress");
+      // Clean up login progress state instead of localStorage
+      setLoginInProgress(false);
 
       console.log("SignUp: Signup process completed successfully, redirecting to login");
 

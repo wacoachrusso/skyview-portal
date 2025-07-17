@@ -1,7 +1,7 @@
-
 import { NavigateFunction } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as toastFunction } from "@/hooks/use-toast";
+import { useSessionStore } from "@/stores/session";
 
 interface AuthCallbackProps {
   navigate: NavigateFunction;
@@ -30,8 +30,9 @@ export const handleStripeCheckout = async (priceId: string, email?: string) => {
     throw new Error('User email not found. Please update your profile.');
   }
   
-  // Get session token for additional security
-  const sessionToken = localStorage.getItem('session_token') || '';
+  // Get session token from store for additional security
+  const store = useSessionStore.getState();
+  const sessionToken = store.sessionToken || '';
   console.log('Session token available in handleStripeCheckout:', !!sessionToken);
   
   const response = await supabase.functions.invoke('create-checkout-session', {
