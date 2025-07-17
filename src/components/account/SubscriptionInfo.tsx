@@ -165,6 +165,18 @@ export const SubscriptionInfo = ({
 
         if (currentPlan === "free" || currentPlan === "trial_ended") {
           onPlanChange(newPlan);
+        } else {
+          // Step 4: Send plan change email
+          console.log("[SubscriptionInfo] Step 4: Sending confirmation email...");
+          await supabase.functions.invoke("send-plan-change-email", {
+            body: {
+              email: profileData.email,
+              oldPlan: currentPlan,
+              newPlan,
+              fullName: profileData.full_name || "User",
+            },
+          });
+          console.log("[SubscriptionInfo] Plan change email sent ✅");
         }
       } else {
         console.warn("[SubscriptionInfo] Unknown status returned:", data.status);
